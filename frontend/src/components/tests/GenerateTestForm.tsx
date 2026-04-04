@@ -45,7 +45,7 @@ export default function GenerateTestForm({ bank, categories }: Props) {
 
   const handleGenerate = async () => {
     const test = await generate.mutateAsync({
-      name: name.trim() || `${bank.name} — ${new Date().toLocaleDateString()}`,
+      name: name.trim() || `${bank.name} — ${new Date().toLocaleString()}`,
       config: {
         easy_count:   easy,
         medium_count: medium,
