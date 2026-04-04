@@ -11,7 +11,7 @@ import (
 type QuestionFilter struct {
 	CategoryIDs []string
 	Difficulty  *string
-	Type        *string
+	Types       []string
 	Tags        []string
 }
 
@@ -86,8 +86,8 @@ func applyQuestionFilter(q *gorm.DB, filter QuestionFilter) *gorm.DB {
 	if filter.Difficulty != nil {
 		q = q.Where("difficulty = ?", *filter.Difficulty)
 	}
-	if filter.Type != nil {
-		q = q.Where("type = ?", *filter.Type)
+	if len(filter.Types) > 0 {
+		q = q.Where("type = ANY(?)", pq.Array(filter.Types))
 	}
 	if len(filter.Tags) > 0 {
 		q = q.Where("tags && ?", pq.Array(filter.Tags))

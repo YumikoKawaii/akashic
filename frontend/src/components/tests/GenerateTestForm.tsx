@@ -24,8 +24,15 @@ export default function GenerateTestForm({ bank, categories }: Props) {
   const generate    = useGenerateTest(bank.id)
   const start       = useStartAttempt()
   const def = bank.default_config
+  const TYPE_OPTIONS = [
+    { value: 'mcq',        label: 'MCQ' },
+    { value: 'true_false', label: 'True / False' },
+    { value: 'open',       label: 'Open' },
+  ]
+
   const [name,        setName]        = useState('')
   const [categoryIds, setCategoryIds] = useState<string[]>([])
+  const [types,       setTypes]       = useState<string[]>([])
   const [easy,       setEasy]       = useState(def.easy_count   ?? 3)
   const [medium,     setMedium]     = useState(def.medium_count ?? 5)
   const [hard,       setHard]       = useState(def.hard_count   ?? 2)
@@ -44,6 +51,7 @@ export default function GenerateTestForm({ bank, categories }: Props) {
         medium_count: medium,
         hard_count:   hard,
         ...(categoryIds.length ? { category_ids: categoryIds } : {}),
+        ...(types.length       ? { types }                     : {}),
       },
     })
     const attempt = await start.mutateAsync({ bankId: bank.id, testId: test.id })
@@ -57,7 +65,7 @@ export default function GenerateTestForm({ bank, categories }: Props) {
       <div className="section-title" style={{ marginBottom: 18 }}>Quick Generate</div>
 
       {/* Row 1: Name + Category */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginBottom: 14 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ marginBottom: 14 }}>
         <FormField label="Test Name">
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="Morning Practice" />
         </FormField>
@@ -67,6 +75,14 @@ export default function GenerateTestForm({ bank, categories }: Props) {
             onChange={setCategoryIds}
             placeholder="All Categories"
             options={categories.map(c => ({ value: c.id, label: c.name }))}
+          />
+        </FormField>
+        <FormField label="Types">
+          <MultiSelect
+            value={types}
+            onChange={setTypes}
+            placeholder="All Types"
+            options={TYPE_OPTIONS}
           />
         </FormField>
       </div>

@@ -26,8 +26,8 @@ func (h *QuestionHandler) List(c *gin.Context) {
 	if v := c.Query("difficulty"); v != "" {
 		filter.Difficulty = &v
 	}
-	if v := c.Query("type"); v != "" {
-		filter.Type = &v
+	if types := c.QueryArray("type"); len(types) > 0 {
+		filter.Types = types
 	}
 	if tags := c.QueryArray("tags"); len(tags) > 0 {
 		filter.Tags = tags

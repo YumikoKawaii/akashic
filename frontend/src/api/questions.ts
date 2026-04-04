@@ -12,7 +12,7 @@ export const questionsApi = {
     const params = new URLSearchParams()
     filter.category_ids?.forEach(id => params.append('category_id', id))
     if (filter.difficulty)   params.set('difficulty',  filter.difficulty)
-    if (filter.type)         params.set('type',        filter.type)
+    filter.types?.forEach(t => params.append('type', t))
     filter.tags?.forEach(t => params.append('tags', t))
     return client.get<Question[]>(`/banks/${bankId}/questions`, { params }).then(r => r.data)
   },

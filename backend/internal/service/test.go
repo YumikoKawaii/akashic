@@ -56,7 +56,7 @@ func (s *TestService) Generate(bankID string, input GenerateTestInput) (*model.T
 
 	filter := repository.QuestionFilter{
 		CategoryIDs: config.CategoryIDs,
-		Type:        config.Type,
+		Types:       config.Types,
 		Tags:        config.Tags,
 	}
 

@@ -63,8 +63,14 @@ export default function BankPage() {
   const medium = questions.filter(q => q.difficulty === 'medium').length
   const hard   = questions.filter(q => q.difficulty === 'hard').length
 
-  const toggleFilter = (key: keyof QuestionFilter, val: string) =>
+  const toggleFilter = (key: 'difficulty', val: string) =>
     setFilter(f => ({ ...f, [key]: f[key] === val ? undefined : val }))
+
+  const toggleTypeFilter = (val: string) =>
+    setFilter(f => {
+      const current = f.types ?? []
+      return { ...f, types: current.includes(val) ? current.filter(t => t !== val) : [...current, val] }
+    })
 
   return (
     <>
@@ -140,7 +146,7 @@ export default function BankPage() {
           <div className="flex gap-2 flex-wrap items-center">
             <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>Filter</span>
             {(['mcq', 'true_false', 'open'] as const).map(t => (
-              <button key={t} className={`filter-chip ${filter.type === t ? 'active' : ''}`} onClick={() => toggleFilter('type', t)}>
+              <button key={t} className={`filter-chip ${filter.types?.includes(t) ? 'active' : ''}`} onClick={() => toggleTypeFilter(t)}>
                 {t === 'mcq' ? 'MCQ' : t === 'true_false' ? 'True / False' : 'Open'}
               </button>
             ))}
