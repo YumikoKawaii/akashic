@@ -554,6 +554,35 @@ input[type=number].form-input::-webkit-inner-spin-button,
 input[type=number].form-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type=number].form-input { -moz-appearance: textfield; }
 
+/* Save-default tooltip */
+.save-default-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  background: #1a1208;
+  color: var(--gold-dim);
+  font-family: 'EB Garamond', serif;
+  font-size: 0.78rem;
+  padding: 6px 10px;
+  white-space: nowrap;
+  border: 1px solid var(--border-dim);
+  pointer-events: none;
+  z-index: 50;
+}
+.save-default-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  right: 16px;
+  width: 8px; height: 8px;
+  background: #1a1208;
+  border-right: 1px solid var(--border-dim);
+  border-bottom: 1px solid var(--border-dim);
+  transform: rotate(45deg);
+}
+.save-default-wrap:hover .save-default-tooltip { display: block; }
+
 /* ─── Attempt / Test taking ───────────────────────────────────── */
 .attempt-layout {
   height: 100vh;
