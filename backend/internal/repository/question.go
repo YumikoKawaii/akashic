@@ -83,6 +83,9 @@ func applyQuestionFilter(q *gorm.DB, filter QuestionFilter) *gorm.DB {
 	if filter.CategoryID != nil {
 		q = q.Where("category_id = ?", *filter.CategoryID)
 	}
+	if filter.Difficulty != nil {
+		q = q.Where("difficulty = ?", *filter.Difficulty)
+	}
 	if filter.Type != nil {
 		q = q.Where("type = ?", *filter.Type)
 	}
