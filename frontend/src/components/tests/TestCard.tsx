@@ -48,7 +48,7 @@ export default function TestCard({ test, bankId }: Props) {
             </span>
             <button
               className="btn btn-ghost"
-              style={{ fontSize: '0.6rem', padding: '4px 10px' }}
+              style={{ fontSize: '0.6rem', padding: '4px 10px', color: '#b03030', borderColor: 'rgba(176,48,48,0.4)' }}
               onClick={() => del.mutate(test.id)}
               disabled={del.isPending}
             >
