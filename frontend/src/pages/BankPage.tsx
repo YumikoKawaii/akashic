@@ -180,41 +180,37 @@ export default function BankPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 flex-wrap" style={{ marginTop: 8 }}>
+              <div className="flex items-center justify-center gap-2" style={{ marginTop: 8 }}>
                 <button
                   className="btn btn-ghost"
                   onClick={() => setPage(p => p - 1)}
                   disabled={page <= 1}
-                  style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                  style={{ padding: '6px 14px', fontSize: '0.8rem' }}
                 >
-                  ←
+                  ← Prev
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    style={{
-                      padding: '4px 10px',
-                      fontFamily: 'Cinzel, serif',
-                      fontSize: '0.75rem',
-                      letterSpacing: '0.05em',
-                      border: '1px solid',
-                      borderColor: p === page ? 'var(--gold)' : 'var(--border-dim)',
-                      color: p === page ? 'var(--gold)' : 'var(--ink-dim)',
-                      background: p === page ? 'rgba(154,112,24,0.08)' : 'transparent',
-                      cursor: p === page ? 'default' : 'pointer',
-                    }}
-                  >
-                    {p}
-                  </button>
-                ))}
+                <input
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  value={page}
+                  onChange={e => {
+                    const v = Math.max(1, Math.min(totalPages, Number(e.target.value)))
+                    if (!isNaN(v)) setPage(v)
+                  }}
+                  className="form-input"
+                  style={{ width: 56, textAlign: 'center', padding: '5px 4px' }}
+                />
+                <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'var(--ink-dim)', letterSpacing: '0.1em' }}>
+                  / {totalPages}
+                </span>
                 <button
                   className="btn btn-ghost"
                   onClick={() => setPage(p => p + 1)}
                   disabled={page >= totalPages}
-                  style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                  style={{ padding: '6px 14px', fontSize: '0.8rem' }}
                 >
-                  →
+                  Next →
                 </button>
               </div>
             )}
