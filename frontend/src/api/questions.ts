@@ -8,7 +8,7 @@ export interface IngestResult {
 }
 
 export const questionsApi = {
-  list: (bankId: string, filter: QuestionFilter = {}, page = 1, limit = 20) => {
+  list: (bankId: string, filter: QuestionFilter = {}, page = 1, limit = 5) => {
     const params = new URLSearchParams()
     filter.category_ids?.forEach(id => params.append('category_id', id))
     if (filter.difficulty)   params.set('difficulty',  filter.difficulty)

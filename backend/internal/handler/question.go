@@ -19,7 +19,7 @@ func NewQuestionHandler(svc *service.QuestionService, ingestSvc *service.IngestS
 	return &QuestionHandler{svc: svc, ingestSvc: ingestSvc}
 }
 
-const defaultPageSize = 20
+const defaultPageSize = 5
 
 func (h *QuestionHandler) List(c *gin.Context) {
 	filter := repository.QuestionFilter{}
