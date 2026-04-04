@@ -1,0 +1,63 @@
+- text: "What is the past tense of 'go'?"
+  type: mcq
+  difficulty: easy
+  category_name: Verb Tenses
+  options:
+    - goed
+    - gone
+    - went
+    - go
+  correct_answer: went
+  tags:
+    - verbs
+    - past-tense
+
+- text: "'She don't know' is grammatically correct."
+  type: true_false
+  difficulty: easy
+  category_name: Grammar
+  options:
+    - "True"
+    - "False"
+  correct_answer: "False"
+  tags:
+    - grammar
+    - common-mistakes
+
+- text: "Which sentence uses the present perfect correctly?"
+  type: mcq
+  difficulty: medium
+  category_name: Verb Tenses
+  options:
+    - I have seen that movie yesterday.
+    - I have seen that movie three times.
+    - I have saw that movie.
+    - I seen that movie.
+  correct_answer: I have seen that movie three times.
+  tags:
+    - present-perfect
+    - verbs
+
+- text: "Write a sentence using the word 'ephemeral' correctly."
+  type: open
+  difficulty: hard
+  category_name: Vocabulary
+  options: []
+  correct_answer: ""
+  tags:
+    - vocabulary
+    - writing
+
+- text: "Which word is a synonym for 'ubiquitous'?"
+  type: mcq
+  difficulty: hard
+  category_name: Vocabulary
+  options:
+    - rare
+    - omnipresent
+    - fleeting
+    - obscure
+  correct_answer: omnipresent
+  tags:
+    - vocabulary
+    - synonyms

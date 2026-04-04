@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { useBank } from '../hooks/useBanks'
 import { useQuestions } from '../hooks/useQuestions'
 import { useTests } from '../hooks/useTests'
 import { useCategories } from '../hooks/useCategories'
 import { QuestionFilter } from '../types'
+import { questionsApi } from '../api/questions'
 import QuestionCard from '../components/questions/QuestionCard'
 import TestCard from '../components/tests/TestCard'
 import GenerateTestForm from '../components/tests/GenerateTestForm'
@@ -15,13 +17,39 @@ type Tab = 'questions' | 'tests'
 export default function BankPage() {
   const { bankId = '' } = useParams<{ bankId: string }>()
   const navigate        = useNavigate()
+  const queryClient     = useQueryClient()
 
   const { data: bank }             = useBank(bankId)
   const { data: categories = [] }  = useCategories(bankId)
   const { data: tests = [] }       = useTests(bankId)
 
-  const [tab,    setTab]    = useState<Tab>('questions')
-  const [filter, setFilter] = useState<QuestionFilter>({})
+  const [tab,           setTab]           = useState<Tab>('questions')
+  const [filter,        setFilter]        = useState<QuestionFilter>({})
+  const [importing,     setImporting]     = useState(false)
+  const [importMessage, setImportMessage] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setImporting(true)
+    setImportMessage(null)
+    try {
+      const result = await questionsApi.ingest(bankId, file)
+      setImportMessage(`Imported ${result.created} question${result.created !== 1 ? 's' : ''} successfully.`)
+      queryClient.invalidateQueries({ queryKey: ['questions', bankId] })
+    } catch (err: any) {
+      const data = err?.response?.data?.data
+      if (data?.errors?.length) {
+        setImportMessage(`Import failed: ${data.errors.map((e: any) => `row ${e.row}: ${e.message}`).join('; ')}`)
+      } else {
+        setImportMessage('Import failed. Please check the file format.')
+      }
+    } finally {
+      setImporting(false)
+    }
+  }
 
   const { data: questions = [] } = useQuestions(bankId, filter)
 
@@ -47,6 +75,17 @@ export default function BankPage() {
           <p className="page-meta">{questions.length} questions · {categories.length} categories</p>
         </div>
         <div className="page-header-actions">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,.yaml,.yml,.csv"
+            style={{ display: 'none' }}
+            onChange={handleImport}
+          />
+          <button className="btn btn-ghost" disabled={importing} onClick={() => fileInputRef.current?.click()}>
+            <span className="hidden sm:inline">{importing ? 'Importing…' : '⬆ Import'}</span>
+            <span className="sm:hidden">⬆</span>
+          </button>
           <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}/questions/new`)}>
             <span className="hidden sm:inline">＋ Add Question</span>
             <span className="sm:hidden">＋</span>
@@ -74,6 +113,23 @@ export default function BankPage() {
           </div>
         ))}
       </div>
+
+      {importMessage && (
+        <div
+          style={{
+            padding: '10px 16px',
+            borderRadius: 4,
+            border: `1px solid ${importMessage.startsWith('Import failed') ? '#b03030' : '#2a8a3a'}`,
+            background: importMessage.startsWith('Import failed') ? 'rgba(176,48,48,0.08)' : 'rgba(42,138,58,0.08)',
+            color: importMessage.startsWith('Import failed') ? '#b03030' : '#2a8a3a',
+            fontSize: '0.85rem',
+            cursor: 'pointer',
+          }}
+          onClick={() => setImportMessage(null)}
+        >
+          {importMessage} <span style={{ opacity: 0.6 }}>✕</span>
+        </div>
+      )}
 
       {tab === 'questions' && (
         <>

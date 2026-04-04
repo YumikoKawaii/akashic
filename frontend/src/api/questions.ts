@@ -1,6 +1,12 @@
 import client from './client'
 import { Question, QuestionFilter } from '../types'
 
+export interface IngestResult {
+  created: number
+  failed: number
+  errors?: Array<{ row: number; text?: string; message: string }>
+}
+
 export const questionsApi = {
   list: (bankId: string, filter: QuestionFilter = {}) => {
     const params = new URLSearchParams()
@@ -18,4 +24,11 @@ export const questionsApi = {
     client.put<Question>(`/banks/${bankId}/questions/${id}`, data).then(r => r.data),
   delete: (bankId: string, id: string) =>
     client.delete(`/banks/${bankId}/questions/${id}`),
+  ingest: (bankId: string, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return client.post<IngestResult>(`/banks/${bankId}/questions/ingest`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => r.data)
+  },
 }

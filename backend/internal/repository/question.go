@@ -20,6 +20,7 @@ type QuestionRepository interface {
 	FindByBankAndDifficulty(bankID, difficulty string, filter QuestionFilter) ([]model.Question, error)
 	FindByBankAndID(bankID, id string) (*model.Question, error)
 	Create(question *model.Question) error
+	BulkCreate(questions []*model.Question) error
 	Save(question *model.Question) error
 	Delete(bankID, id string) error
 }
@@ -57,6 +58,10 @@ func (r *questionRepo) FindByBankAndID(bankID, id string) (*model.Question, erro
 
 func (r *questionRepo) Create(question *model.Question) error {
 	return r.db.Create(question).Error
+}
+
+func (r *questionRepo) BulkCreate(questions []*model.Question) error {
+	return r.db.Create(questions).Error
 }
 
 func (r *questionRepo) Save(question *model.Question) error {

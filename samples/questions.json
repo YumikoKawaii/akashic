@@ -1,0 +1,47 @@
+[
+  {
+    "text": "What is the capital of Japan?",
+    "type": "mcq",
+    "difficulty": "easy",
+    "category_name": "Geography",
+    "options": ["Tokyo", "Osaka", "Kyoto", "Hiroshima"],
+    "correct_answer": "Tokyo",
+    "tags": ["japan", "cities"]
+  },
+  {
+    "text": "Mount Fuji is the tallest mountain in the world.",
+    "type": "true_false",
+    "difficulty": "easy",
+    "category_name": "Geography",
+    "options": ["True", "False"],
+    "correct_answer": "False",
+    "tags": ["japan", "mountains"]
+  },
+  {
+    "text": "Which particle marks the subject of a sentence in Japanese?",
+    "type": "mcq",
+    "difficulty": "medium",
+    "category_name": "Grammar",
+    "options": ["は (wa)", "が (ga)", "を (wo)", "に (ni)"],
+    "correct_answer": "が (ga)",
+    "tags": ["particles", "grammar"]
+  },
+  {
+    "text": "Translate to Japanese: 'I eat sushi every day.'",
+    "type": "open",
+    "difficulty": "hard",
+    "category_name": "Translation",
+    "options": [],
+    "correct_answer": "私は毎日寿司を食べます。",
+    "tags": ["translation", "food"]
+  },
+  {
+    "text": "Which of the following is a Japanese counter for flat objects?",
+    "type": "mcq",
+    "difficulty": "hard",
+    "category_name": "Grammar",
+    "options": ["本 (hon)", "枚 (mai)", "匹 (hiki)", "台 (dai)"],
+    "correct_answer": "枚 (mai)",
+    "tags": ["counters", "grammar"]
+  }
+]

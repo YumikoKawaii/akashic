@@ -1,0 +1,7 @@
+text,type,difficulty,category_name,options,correct_answer,tags
+"What does 'merci' mean in English?",mcq,easy,Vocabulary,"Thank you|Please|Excuse me|Sorry",Thank you,french|basics
+"French is an official language of Canada.",true_false,easy,Culture,"True|False",True,canada|francophonie
+"Which verb form completes: 'Hier, je ___ au cinéma.' (Yesterday I went to the cinema)",mcq,medium,Verb Conjugation,"allais|suis allé|vais|aille","suis allé",past-tense|verbs
+"Conjugate 'avoir' in the present tense for all six persons.",open,hard,Verb Conjugation,,j'ai / tu as / il a / nous avons / vous avez / ils ont,conjugation|avoir
+"Which article is used with the word 'soleil' (sun)?",mcq,medium,Articles,"le|la|les|l'",le,articles|gender
+"The subjunctive mood is never used in French.",true_false,hard,Grammar,"True|False",False,subjunctive|grammar

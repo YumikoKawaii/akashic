@@ -26,7 +26,7 @@ func (h *BankHandler) List(c *gin.Context) {
 }
 
 func (h *BankHandler) Get(c *gin.Context) {
-	bank, err := h.svc.GetByID(c.Param("id"))
+	bank, err := h.svc.GetByID(c.Param("bankId"))
 	if err != nil {
 		handleError(c, err)
 		return
@@ -54,7 +54,7 @@ func (h *BankHandler) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	bank, err := h.svc.Update(c.Param("id"), input)
+	bank, err := h.svc.Update(c.Param("bankId"), input)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -68,7 +68,7 @@ func (h *BankHandler) UpdateDefaultConfig(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	bank, err := h.svc.UpdateDefaultConfig(c.Param("id"), config)
+	bank, err := h.svc.UpdateDefaultConfig(c.Param("bankId"), config)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -77,7 +77,7 @@ func (h *BankHandler) UpdateDefaultConfig(c *gin.Context) {
 }
 
 func (h *BankHandler) Delete(c *gin.Context) {
-	if err := h.svc.Delete(c.Param("id")); err != nil {
+	if err := h.svc.Delete(c.Param("bankId")); err != nil {
 		handleError(c, err)
 		return
 	}

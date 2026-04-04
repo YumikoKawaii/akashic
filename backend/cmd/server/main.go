@@ -49,11 +49,12 @@ func main() {
 	questionSvc := service.NewQuestionService(questionRepo, bankRepo, categoryRepo)
 	testSvc     := service.NewTestService(unitOfWork, testRepo, questionRepo, bankRepo)
 	attemptSvc  := service.NewAttemptService(attemptRepo, testRepo)
+	ingestSvc   := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo)
 
 	handlers := handler.Handlers{
 		Bank:      handler.NewBankHandler(bankSvc),
 		Category:  handler.NewCategoryHandler(categorySvc),
-		Question:  handler.NewQuestionHandler(questionSvc),
+		Question:  handler.NewQuestionHandler(questionSvc, ingestSvc),
 		Test:      handler.NewTestHandler(testSvc),
 		Attempt:   handler.NewAttemptHandler(attemptSvc),
 		StaticDir: cfg.StaticDir,

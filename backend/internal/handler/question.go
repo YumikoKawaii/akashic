@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yumikokawaii/akashic/internal/repository"
@@ -9,11 +10,12 @@ import (
 )
 
 type QuestionHandler struct {
-	svc *service.QuestionService
+	svc       *service.QuestionService
+	ingestSvc *service.IngestService
 }
 
-func NewQuestionHandler(svc *service.QuestionService) *QuestionHandler {
-	return &QuestionHandler{svc: svc}
+func NewQuestionHandler(svc *service.QuestionService, ingestSvc *service.IngestService) *QuestionHandler {
+	return &QuestionHandler{svc: svc, ingestSvc: ingestSvc}
 }
 
 func (h *QuestionHandler) List(c *gin.Context) {
@@ -82,4 +84,25 @@ func (h *QuestionHandler) Delete(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+func (h *QuestionHandler) Ingest(c *gin.Context) {
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file is required"})
+		return
+	}
+	defer file.Close()
+
+	ext := filepath.Ext(header.Filename)
+	result, err := h.ingestSvc.Ingest(c.Param("bankId"), file, ext)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	if result.Failed > 0 {
+		c.JSON(http.StatusUnprocessableEntity, result)
+		return
+	}
+	ok(c, result)
 }

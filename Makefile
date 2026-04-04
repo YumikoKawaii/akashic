@@ -5,7 +5,7 @@ include .env.example
 
 # Start full stack (builds image if needed)
 up:
-	docker compose up --build
+	docker compose up --build -d
 
 # Start in detached mode
 up-d:
