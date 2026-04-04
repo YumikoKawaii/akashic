@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"path/filepath"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yumikokawaii/akashic/internal/repository"
@@ -17,6 +18,8 @@ type QuestionHandler struct {
 func NewQuestionHandler(svc *service.QuestionService, ingestSvc *service.IngestService) *QuestionHandler {
 	return &QuestionHandler{svc: svc, ingestSvc: ingestSvc}
 }
+
+const defaultPageSize = 20
 
 func (h *QuestionHandler) List(c *gin.Context) {
 	filter := repository.QuestionFilter{}
@@ -33,12 +36,28 @@ func (h *QuestionHandler) List(c *gin.Context) {
 		filter.Tags = tags
 	}
 
-	questions, err := h.svc.ListByBank(c.Param("bankId"), filter)
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", strconv.Itoa(defaultPageSize)))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = defaultPageSize
+	}
+	filter.Limit  = limit
+	filter.Offset = (page - 1) * limit
+
+	questions, total, err := h.svc.ListByBank(c.Param("bankId"), filter)
 	if err != nil {
 		handleError(c, err)
 		return
 	}
-	ok(c, questions)
+	ok(c, gin.H{
+		"data":  questions,
+		"total": total,
+		"page":  page,
+		"limit": limit,
+	})
 }
 
 func (h *QuestionHandler) Get(c *gin.Context) {

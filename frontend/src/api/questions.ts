@@ -1,5 +1,5 @@
 import client from './client'
-import { Question, QuestionFilter } from '../types'
+import { Question, QuestionFilter, Paginated } from '../types'
 
 export interface IngestResult {
   created: number
@@ -8,13 +8,15 @@ export interface IngestResult {
 }
 
 export const questionsApi = {
-  list: (bankId: string, filter: QuestionFilter = {}) => {
+  list: (bankId: string, filter: QuestionFilter = {}, page = 1, limit = 20) => {
     const params = new URLSearchParams()
     filter.category_ids?.forEach(id => params.append('category_id', id))
     if (filter.difficulty)   params.set('difficulty',  filter.difficulty)
     filter.types?.forEach(t => params.append('type', t))
     filter.tags?.forEach(t => params.append('tags', t))
-    return client.get<Question[]>(`/banks/${bankId}/questions`, { params }).then(r => r.data)
+    params.set('page',  String(page))
+    params.set('limit', String(limit))
+    return client.get<Paginated<Question>>(`/banks/${bankId}/questions`, { params }).then(r => r.data)
   },
   get: (bankId: string, id: string) =>
     client.get<Question>(`/banks/${bankId}/questions/${id}`).then(r => r.data),

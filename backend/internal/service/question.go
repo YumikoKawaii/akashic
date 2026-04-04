@@ -19,11 +19,16 @@ func NewQuestionService(
 	return &QuestionService{repo: repo, bankRepo: bankRepo, categoryRepo: categoryRepo}
 }
 
-func (s *QuestionService) ListByBank(bankID string, filter repository.QuestionFilter) ([]model.Question, error) {
+func (s *QuestionService) ListByBank(bankID string, filter repository.QuestionFilter) ([]model.Question, int64, error) {
 	if _, err := s.bankRepo.FindByID(bankID); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return s.repo.FindByBank(bankID, filter)
+	total, err := s.repo.CountByBank(bankID, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+	questions, err := s.repo.FindByBank(bankID, filter)
+	return questions, total, err
 }
 
 func (s *QuestionService) GetByID(bankID, id string) (*model.Question, error) {

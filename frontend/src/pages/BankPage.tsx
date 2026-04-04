@@ -25,6 +25,7 @@ export default function BankPage() {
 
   const [tab,           setTab]           = useState<Tab>('questions')
   const [filter,        setFilter]        = useState<QuestionFilter>({})
+  const [page,          setPage]          = useState(1)
   const [importing,     setImporting]     = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -51,7 +52,10 @@ export default function BankPage() {
     }
   }
 
-  const { data: questions = [] } = useQuestions(bankId, filter)
+  const { data: paged } = useQuestions(bankId, filter, page)
+  const questions = paged?.data ?? []
+  const total     = paged?.total ?? 0
+  const totalPages = paged ? Math.ceil(paged.total / paged.limit) : 1
 
   if (!bank) return (
     <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.8rem', letterSpacing: '0.2em' }}>
@@ -59,18 +63,19 @@ export default function BankPage() {
     </div>
   )
 
-  const easy   = questions.filter(q => q.difficulty === 'easy').length
-  const medium = questions.filter(q => q.difficulty === 'medium').length
-  const hard   = questions.filter(q => q.difficulty === 'hard').length
 
-  const toggleFilter = (key: 'difficulty', val: string) =>
+  const toggleFilter = (key: 'difficulty', val: string) => {
+    setPage(1)
     setFilter(f => ({ ...f, [key]: f[key] === val ? undefined : val }))
+  }
 
-  const toggleTypeFilter = (val: string) =>
+  const toggleTypeFilter = (val: string) => {
+    setPage(1)
     setFilter(f => {
       const current = f.types ?? []
       return { ...f, types: current.includes(val) ? current.filter(t => t !== val) : [...current, val] }
     })
+  }
 
   return (
     <>
@@ -78,7 +83,7 @@ export default function BankPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">{bank.name} — <span>Question Bank</span></h1>
-          <p className="page-meta">{questions.length} questions · {categories.length} categories</p>
+          <p className="page-meta">{total} questions · {categories.length} categories</p>
         </div>
         <div className="page-header-actions">
           <input
@@ -108,10 +113,9 @@ export default function BankPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { value: questions.length, label: 'Total',  color: 'var(--gold)' },
-          { value: easy,             label: 'Easy',   color: '#2a8a3a' },
-          { value: medium,           label: 'Medium', color: 'var(--gold)' },
-          { value: hard,             label: 'Hard',   color: '#b03030' },
+          { value: total,                    label: 'Total',      color: 'var(--gold)' },
+          { value: categories.length,        label: 'Categories', color: 'var(--ink-dim)' },
+          { value: tests.length,             label: 'Tests',      color: 'var(--ink-dim)' },
         ].map(s => (
           <div key={s.label} className="stat-card">
             <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
@@ -172,6 +176,31 @@ export default function BankPage() {
               questions.map((q, i) => (
                 <QuestionCard key={q.id} question={q} index={i} bankId={bankId} />
               ))
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2" style={{ marginTop: 8 }}>
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => setPage(p => p - 1)}
+                  disabled={page <= 1}
+                  style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+                >
+                  ← Prev
+                </button>
+                <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'var(--ink-dim)', letterSpacing: '0.1em', minWidth: 80, textAlign: 'center' }}>
+                  {page} / {totalPages}
+                </span>
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page >= totalPages}
+                  style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+                >
+                  Next →
+                </button>
+              </div>
             )}
           </div>
         </>

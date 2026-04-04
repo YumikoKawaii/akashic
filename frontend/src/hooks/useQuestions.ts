@@ -7,10 +7,10 @@ export const questionKeys = {
   detail: (bankId: string, id: string)              => ['questions', bankId, id] as const,
 }
 
-export function useQuestions(bankId: string, filter: QuestionFilter = {}) {
+export function useQuestions(bankId: string, filter: QuestionFilter = {}, page = 1) {
   return useQuery({
-    queryKey: questionKeys.all(bankId, filter),
-    queryFn:  () => questionsApi.list(bankId, filter),
+    queryKey: [...questionKeys.all(bankId, filter), page],
+    queryFn:  () => questionsApi.list(bankId, filter, page),
     enabled:  !!bankId,
   })
 }

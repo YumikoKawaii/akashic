@@ -13,10 +13,13 @@ type QuestionFilter struct {
 	Difficulty  *string
 	Types       []string
 	Tags        []string
+	Limit       int
+	Offset      int
 }
 
 type QuestionRepository interface {
 	FindByBank(bankID string, filter QuestionFilter) ([]model.Question, error)
+	CountByBank(bankID string, filter QuestionFilter) (int64, error)
 	FindByBankAndDifficulty(bankID, difficulty string, filter QuestionFilter) ([]model.Question, error)
 	FindByBankAndID(bankID, id string) (*model.Question, error)
 	Create(question *model.Question) error
@@ -36,8 +39,18 @@ func NewQuestionRepo(db *gorm.DB) QuestionRepository {
 func (r *questionRepo) FindByBank(bankID string, filter QuestionFilter) ([]model.Question, error) {
 	q := r.db.Where("bank_id = ?", bankID)
 	q = applyQuestionFilter(q, filter)
+	if filter.Limit > 0 {
+		q = q.Limit(filter.Limit).Offset(filter.Offset)
+	}
 	var questions []model.Question
 	return questions, q.Preload("Category").Order("created_at DESC").Find(&questions).Error
+}
+
+func (r *questionRepo) CountByBank(bankID string, filter QuestionFilter) (int64, error) {
+	q := r.db.Model(&model.Question{}).Where("bank_id = ?", bankID)
+	q = applyQuestionFilter(q, filter)
+	var count int64
+	return count, q.Count(&count).Error
 }
 
 func (r *questionRepo) FindByBankAndDifficulty(bankID, difficulty string, filter QuestionFilter) ([]model.Question, error) {
