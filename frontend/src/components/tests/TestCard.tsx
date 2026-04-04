@@ -47,7 +47,7 @@ export default function TestCard({ test, bankId }: Props) {
               Delete?
             </span>
             <button
-              className="btn-danger"
+              className="btn btn-ghost"
               style={{ fontSize: '0.6rem', padding: '4px 10px' }}
               onClick={() => del.mutate(test.id)}
               disabled={del.isPending}
