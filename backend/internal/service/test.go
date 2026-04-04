@@ -3,6 +3,7 @@ package service
 import (
 	"math/rand"
 
+	"github.com/google/uuid"
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
 	"github.com/yumikokawaii/akashic/internal/uow"
@@ -83,6 +84,7 @@ func (s *TestService) Generate(bankID string, input GenerateTestInput) (*model.T
 	}
 
 	test := &model.Test{
+		ID:          uuid.New().String(),
 		BankID:      bankID,
 		Name:        input.Name,
 		Description: input.Description,
