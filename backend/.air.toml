@@ -1,0 +1,9 @@
+[build]
+  cmd = "go build -o ./bin/server ./cmd/server"
+  bin = "./bin/server"
+  include_ext = ["go"]
+  exclude_dir = ["bin", "db"]
+  delay = 500
+
+[log]
+  time = true

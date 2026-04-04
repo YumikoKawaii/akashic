@@ -1,0 +1,82 @@
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
+	"github.com/yumikokawaii/akashic/internal/config"
+	"github.com/yumikokawaii/akashic/internal/handler"
+	"github.com/yumikokawaii/akashic/internal/repository"
+	"github.com/yumikokawaii/akashic/internal/service"
+	"github.com/yumikokawaii/akashic/internal/uow"
+)
+
+func main() {
+	cfg := config.Load()
+
+	// Run migrations
+	if err := runMigrations(cfg); err != nil {
+		log.Fatalf("migration failed: %v", err)
+	}
+
+	// Connect GORM
+	db, err := gorm.Open(postgres.Open(cfg.DSN()), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+	if err != nil {
+		log.Fatalf("failed to connect database: %v", err)
+	}
+
+	// Wire dependencies
+	unitOfWork := uow.New(db)
+
+	bankRepo     := repository.NewBankRepo(db)
+	categoryRepo := repository.NewCategoryRepo(db)
+	questionRepo := repository.NewQuestionRepo(db)
+	testRepo     := repository.NewTestRepo(db)
+	attemptRepo  := repository.NewAttemptRepo(db)
+
+	bankSvc     := service.NewBankService(bankRepo)
+	categorySvc := service.NewCategoryService(categoryRepo, bankRepo)
+	questionSvc := service.NewQuestionService(questionRepo, bankRepo, categoryRepo)
+	testSvc     := service.NewTestService(unitOfWork, testRepo, questionRepo, bankRepo)
+	attemptSvc  := service.NewAttemptService(attemptRepo, testRepo)
+
+	handlers := handler.Handlers{
+		Bank:     handler.NewBankHandler(bankSvc),
+		Category: handler.NewCategoryHandler(categorySvc),
+		Question: handler.NewQuestionHandler(questionSvc),
+		Test:     handler.NewTestHandler(testSvc),
+		Attempt:  handler.NewAttemptHandler(attemptSvc),
+	}
+
+	router := handler.NewRouter(handlers)
+
+	addr := fmt.Sprintf(":%s", cfg.ServerPort)
+	log.Printf("server listening on %s", addr)
+	if err := router.Run(addr); err != nil {
+		log.Fatalf("server failed: %v", err)
+	}
+}
+
+func runMigrations(cfg *config.Config) error {
+	m, err := migrate.New("file://db/migrations", cfg.MigrateURL())
+	if err != nil {
+		return err
+	}
+	defer m.Close()
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+	log.Println("migrations applied")
+	return nil
+}

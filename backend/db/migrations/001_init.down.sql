@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS test_attempts;
+DROP TABLE IF EXISTS test_questions;
+DROP TABLE IF EXISTS tests;
+DROP TABLE IF EXISTS questions;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS banks;
+DROP EXTENSION IF EXISTS "uuid-ossp";
