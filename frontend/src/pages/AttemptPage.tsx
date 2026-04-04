@@ -28,7 +28,14 @@ export default function AttemptPage() {
   const progress   = questions.length > 0 ? (answered / questions.length) * 100 : 0
 
   const handleAnswer = (questionId: string, value: string) =>
-    setAnswers(prev => ({ ...prev, [questionId]: value }))
+    setAnswers(prev => {
+      if (prev[questionId] === value) {
+        const next = { ...prev }
+        delete next[questionId]
+        return next
+      }
+      return { ...prev, [questionId]: value }
+    })
 
   const handleSubmit = async () => {
     await submit.mutateAsync({ id, answers })
@@ -94,8 +101,8 @@ export default function AttemptPage() {
                     {(q.options ?? []).map((opt, i) => (
                       <button
                         key={i}
-                        className={`answer-option ${selected === String(i) ? 'selected' : ''}`}
-                        onClick={() => handleAnswer(q.id, String(i))}
+                        className={`answer-option ${selected === opt ? 'selected' : ''}`}
+                        onClick={() => handleAnswer(q.id, opt)}
                       >
                         <span className="answer-key">{OPTION_KEYS[i]}</span>
                         <span className="answer-text">{opt}</span>
@@ -107,14 +114,14 @@ export default function AttemptPage() {
                 {/* True / False */}
                 {q.type === 'true_false' && (
                   <div className="answer-options" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                    {(['true', 'false'] as const).map(val => (
+                    {(q.options?.length ? q.options : ['True', 'False']).map(val => (
                       <button
                         key={val}
                         className={`answer-option ${selected === val ? 'selected' : ''}`}
                         onClick={() => handleAnswer(q.id, val)}
                         style={{ justifyContent: 'center' }}
                       >
-                        <span className="answer-text" style={{ textAlign: 'center', textTransform: 'capitalize' }}>{val}</span>
+                        <span className="answer-text" style={{ textAlign: 'center' }}>{val}</span>
                       </button>
                     ))}
                   </div>

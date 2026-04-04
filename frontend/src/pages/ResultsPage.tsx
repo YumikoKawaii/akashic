@@ -105,8 +105,8 @@ export default function ResultsPage() {
                       {q.type === 'mcq' && (
                         <div className="flex flex-col gap-2">
                           {options.map((opt, i) => {
-                            const isCorrect  = String(i) === q.correct_answer
-                            const isSelected = String(i) === userAns
+                            const isCorrect  = opt === q.correct_answer
+                            const isSelected = opt === userAns
                             return (
                               <div key={i} style={{
                                 padding: '8px 12px',
