@@ -4,18 +4,35 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: ${DB_USER:-akashic}
+      POSTGRES_USER:     ${DB_USER:-akashic}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-akashic}
-      POSTGRES_DB: ${DB_NAME:-akashic}
-    ports:
-      - "5432:5432"
+      POSTGRES_DB:       ${DB_NAME:-akashic}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-akashic}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    environment:
+      DB_HOST:     postgres
+      DB_PORT:     5432
+      DB_USER:     ${DB_USER:-akashic}
+      DB_PASSWORD: ${DB_PASSWORD:-akashic}
+      DB_NAME:     ${DB_NAME:-akashic}
+      SERVER_PORT: 8080
+      STATIC_DIR:  ./static
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   postgres_data:

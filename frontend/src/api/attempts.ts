@@ -1,0 +1,11 @@
+import client from './client'
+import { TestAttempt } from '../types'
+
+export const attemptsApi = {
+  start: (bankId: string, testId: string) =>
+    client.post<TestAttempt>(`/banks/${bankId}/attempts`, { test_id: testId }).then(r => r.data),
+  get: (id: string) =>
+    client.get<TestAttempt>(`/attempts/${id}`).then(r => r.data),
+  submit: (id: string, answers: Record<string, string>) =>
+    client.put<TestAttempt>(`/attempts/${id}/submit`, { answers }).then(r => r.data),
+}

@@ -12,6 +12,7 @@ type Config struct {
 	DBPassword string
 	DBName     string
 	ServerPort string
+	StaticDir  string
 }
 
 func Load() *Config {
@@ -22,6 +23,7 @@ func Load() *Config {
 		DBPassword: getEnv("DB_PASSWORD", "akashic"),
 		DBName:     getEnv("DB_NAME", "akashic"),
 		ServerPort: getEnv("SERVER_PORT", "8080"),
+		StaticDir:  getEnv("STATIC_DIR", "./static"),
 	}
 }
 

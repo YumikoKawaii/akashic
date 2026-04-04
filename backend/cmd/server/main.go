@@ -51,11 +51,12 @@ func main() {
 	attemptSvc  := service.NewAttemptService(attemptRepo, testRepo)
 
 	handlers := handler.Handlers{
-		Bank:     handler.NewBankHandler(bankSvc),
-		Category: handler.NewCategoryHandler(categorySvc),
-		Question: handler.NewQuestionHandler(questionSvc),
-		Test:     handler.NewTestHandler(testSvc),
-		Attempt:  handler.NewAttemptHandler(attemptSvc),
+		Bank:      handler.NewBankHandler(bankSvc),
+		Category:  handler.NewCategoryHandler(categorySvc),
+		Question:  handler.NewQuestionHandler(questionSvc),
+		Test:      handler.NewTestHandler(testSvc),
+		Attempt:   handler.NewAttemptHandler(attemptSvc),
+		StaticDir: cfg.StaticDir,
 	}
 
 	router := handler.NewRouter(handlers)
