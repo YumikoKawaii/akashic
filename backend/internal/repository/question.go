@@ -9,10 +9,10 @@ import (
 )
 
 type QuestionFilter struct {
-	CategoryID *string
-	Difficulty *string
-	Type       *string
-	Tags       []string
+	CategoryIDs []string
+	Difficulty  *string
+	Type        *string
+	Tags        []string
 }
 
 type QuestionRepository interface {
@@ -80,8 +80,8 @@ func (r *questionRepo) Delete(bankID, id string) error {
 }
 
 func applyQuestionFilter(q *gorm.DB, filter QuestionFilter) *gorm.DB {
-	if filter.CategoryID != nil {
-		q = q.Where("category_id = ?", *filter.CategoryID)
+	if len(filter.CategoryIDs) > 0 {
+		q = q.Where("category_id = ANY(?)", pq.Array(filter.CategoryIDs))
 	}
 	if filter.Difficulty != nil {
 		q = q.Where("difficulty = ?", *filter.Difficulty)

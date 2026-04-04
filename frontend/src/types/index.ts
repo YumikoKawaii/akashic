@@ -2,7 +2,7 @@ export interface TestConfig {
   easy_count: number
   medium_count: number
   hard_count: number
-  category_id?: string
+  category_ids?: string[]
   type?: string
   tags?: string[]
 }
@@ -73,7 +73,7 @@ export interface TestAttempt {
 }
 
 export interface QuestionFilter {
-  category_id?: string
+  category_ids?: string[]
   difficulty?: string
   type?: string
   tags?: string[]

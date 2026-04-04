@@ -10,7 +10,7 @@ export interface IngestResult {
 export const questionsApi = {
   list: (bankId: string, filter: QuestionFilter = {}) => {
     const params = new URLSearchParams()
-    if (filter.category_id) params.set('category_id', filter.category_id)
+    filter.category_ids?.forEach(id => params.append('category_id', id))
     if (filter.difficulty)   params.set('difficulty',  filter.difficulty)
     if (filter.type)         params.set('type',        filter.type)
     filter.tags?.forEach(t => params.append('tags', t))

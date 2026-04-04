@@ -20,8 +20,8 @@ func NewQuestionHandler(svc *service.QuestionService, ingestSvc *service.IngestS
 
 func (h *QuestionHandler) List(c *gin.Context) {
 	filter := repository.QuestionFilter{}
-	if v := c.Query("category_id"); v != "" {
-		filter.CategoryID = &v
+	if ids := c.QueryArray("category_id"); len(ids) > 0 {
+		filter.CategoryIDs = ids
 	}
 	if v := c.Query("difficulty"); v != "" {
 		filter.Difficulty = &v

@@ -14,7 +14,7 @@ type TestConfig struct {
 	EasyCount   int      `json:"easy_count"`
 	MediumCount int      `json:"medium_count"`
 	HardCount   int      `json:"hard_count"`
-	CategoryID  *string  `json:"category_id,omitempty"`
+	CategoryIDs []string `json:"category_ids,omitempty"`
 	Type        *string  `json:"type,omitempty"`
 	Tags        []string `json:"tags,omitempty"`
 }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Bank, Category } from '../../types'
 import OrnatePanel from '../ui/OrnatePanel'
 import { FormField, Input } from '../ui/FormField'
-import Select from '../ui/Select'
+import MultiSelect from '../ui/MultiSelect'
 import { useGenerateTest } from '../../hooks/useTests'
 import { useStartAttempt } from '../../hooks/useAttempts'
 
@@ -24,8 +24,8 @@ export default function GenerateTestForm({ bank, categories }: Props) {
   const generate    = useGenerateTest(bank.id)
   const start       = useStartAttempt()
   const def = bank.default_config
-  const [name,       setName]       = useState('')
-  const [categoryId, setCategoryId] = useState('')
+  const [name,        setName]        = useState('')
+  const [categoryIds, setCategoryIds] = useState<string[]>([])
   const [easy,       setEasy]       = useState(def.easy_count   ?? 3)
   const [medium,     setMedium]     = useState(def.medium_count ?? 5)
   const [hard,       setHard]       = useState(def.hard_count   ?? 2)
@@ -43,7 +43,7 @@ export default function GenerateTestForm({ bank, categories }: Props) {
         easy_count:   easy,
         medium_count: medium,
         hard_count:   hard,
-        ...(categoryId ? { category_id: categoryId } : {}),
+        ...(categoryIds.length ? { category_ids: categoryIds } : {}),
       },
     })
     const attempt = await start.mutateAsync({ bankId: bank.id, testId: test.id })
@@ -61,10 +61,10 @@ export default function GenerateTestForm({ bank, categories }: Props) {
         <FormField label="Test Name">
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="Morning Practice" />
         </FormField>
-        <FormField label="Category">
-          <Select
-            value={categoryId}
-            onChange={setCategoryId}
+        <FormField label="Categories">
+          <MultiSelect
+            value={categoryIds}
+            onChange={setCategoryIds}
             placeholder="All Categories"
             options={categories.map(c => ({ value: c.id, label: c.name }))}
           />
