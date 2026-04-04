@@ -39,6 +39,13 @@ func (s *AttemptService) GetByID(id string) (*model.TestAttempt, error) {
 	return s.repo.FindByID(id)
 }
 
+func (s *AttemptService) ListByTest(bankID, testID string) ([]model.TestAttempt, error) {
+	if _, err := s.testRepo.FindByBankAndID(bankID, testID); err != nil {
+		return nil, err
+	}
+	return s.repo.FindByTest(testID)
+}
+
 type SubmitAttemptInput struct {
 	Answers map[string]string `json:"answers" binding:"required"`
 }

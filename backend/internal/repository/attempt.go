@@ -9,6 +9,7 @@ import (
 
 type AttemptRepository interface {
 	FindByID(id string) (*model.TestAttempt, error)
+	FindByTest(testID string) ([]model.TestAttempt, error)
 	Create(attempt *model.TestAttempt) error
 	Save(attempt *model.TestAttempt) error
 }
@@ -34,6 +35,16 @@ func (r *attemptRepo) FindByID(id string) (*model.TestAttempt, error) {
 		return nil, ErrNotFound
 	}
 	return &attempt, err
+}
+
+func (r *attemptRepo) FindByTest(testID string) ([]model.TestAttempt, error) {
+	var attempts []model.TestAttempt
+	err := r.db.
+		Select("id, test_id, score, total, started_at, completed_at").
+		Where("test_id = ?", testID).
+		Order("started_at DESC").
+		Find(&attempts).Error
+	return attempts, err
 }
 
 func (r *attemptRepo) Create(attempt *model.TestAttempt) error {

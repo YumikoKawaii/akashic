@@ -50,6 +50,7 @@ func NewRouter(h Handlers) *gin.Engine {
 		bank.POST("/tests/generate", h.Test.Generate)
 		bank.GET("/tests/:id", h.Test.Get)
 		bank.DELETE("/tests/:id", h.Test.Delete)
+		bank.GET("/tests/:id/attempts", h.Attempt.ListByTest)
 
 		bank.POST("/attempts", h.Attempt.Start)
 	}

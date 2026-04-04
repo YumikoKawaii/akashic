@@ -30,6 +30,15 @@ func (h *AttemptHandler) Start(c *gin.Context) {
 	created(c, attempt)
 }
 
+func (h *AttemptHandler) ListByTest(c *gin.Context) {
+	attempts, err := h.svc.ListByTest(c.Param("bankId"), c.Param("id"))
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	ok(c, attempts)
+}
+
 func (h *AttemptHandler) Get(c *gin.Context) {
 	attempt, err := h.svc.GetByID(c.Param("id"))
 	if err != nil {
