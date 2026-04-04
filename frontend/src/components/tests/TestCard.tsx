@@ -11,7 +11,8 @@ export default function TestCard({ test, bankId }: Props) {
   const navigate    = useNavigate()
   const del         = useDeleteTest(bankId)
   const start       = useStartAttempt()
-  const [showHistory, setShowHistory] = useState(false)
+  const [showHistory,  setShowHistory]  = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const { data: attempts = [] } = useTestAttempts(bankId, test.id)
 
   const handleStart = async () => {
@@ -40,23 +41,48 @@ export default function TestCard({ test, bankId }: Props) {
       />
 
       <div className="test-card-footer">
-        <button className="btn btn-primary" style={{ fontSize: '0.6rem', padding: '6px 14px' }} onClick={handleStart} disabled={start.isPending}>
-          {start.isPending ? '…' : '▶ Start'}
-        </button>
-        {completed.length > 0 && (
-          <button
-            className="btn btn-ghost"
-            style={{ fontSize: '0.6rem', padding: '6px 14px' }}
-            onClick={() => setShowHistory(v => !v)}
-          >
-            {showHistory ? '▴ History' : `▾ History (${completed.length})`}
-          </button>
+        {confirmDelete ? (
+          <>
+            <span style={{ fontSize: '0.68rem', color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', letterSpacing: '0.05em' }}>
+              Delete?
+            </span>
+            <button
+              className="btn-danger"
+              style={{ fontSize: '0.6rem', padding: '4px 10px' }}
+              onClick={() => del.mutate(test.id)}
+              disabled={del.isPending}
+            >
+              {del.isPending ? '…' : 'Yes'}
+            </button>
+            <button
+              className="btn btn-ghost"
+              style={{ fontSize: '0.6rem', padding: '4px 10px' }}
+              onClick={() => setConfirmDelete(false)}
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="btn btn-primary" style={{ fontSize: '0.6rem', padding: '6px 14px' }} onClick={handleStart} disabled={start.isPending}>
+              {start.isPending ? '…' : '▶ Start'}
+            </button>
+            {completed.length > 0 && (
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: '0.6rem', padding: '6px 14px' }}
+                onClick={() => setShowHistory(v => !v)}
+              >
+                {showHistory ? '▴ History' : `▾ History (${completed.length})`}
+              </button>
+            )}
+            <button
+              className="btn-danger"
+              style={{ marginLeft: 'auto' }}
+              onClick={() => setConfirmDelete(true)}
+            >✕</button>
+          </>
         )}
-        <button
-          className="btn-danger"
-          style={{ marginLeft: 'auto' }}
-          onClick={() => { if (confirm('Delete this test?')) del.mutate(test.id) }}
-        >✕</button>
       </div>
 
       {showHistory && completed.length > 0 && (
