@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { questionsApi } from '../api/questions'
 import { Question, QuestionFilter } from '../types'
 
@@ -9,9 +9,10 @@ export const questionKeys = {
 
 export function useQuestions(bankId: string, filter: QuestionFilter = {}, page = 1) {
   return useQuery({
-    queryKey: [...questionKeys.all(bankId, filter), page],
-    queryFn:  () => questionsApi.list(bankId, filter, page),
-    enabled:  !!bankId,
+    queryKey:        [...questionKeys.all(bankId, filter), page],
+    queryFn:         () => questionsApi.list(bankId, filter, page),
+    enabled:         !!bankId,
+    placeholderData: keepPreviousData,
   })
 }
 
