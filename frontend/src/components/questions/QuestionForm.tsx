@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Category, Question, QuestionDifficulty, QuestionType } from '../../types'
-import { FormField, Input, Select, Textarea } from '../ui/FormField'
+import { FormField, Input, Textarea } from '../ui/FormField'
+import Select from '../ui/Select'
 import OrnatePanel from '../ui/OrnatePanel'
 import { useCreateQuestion, useUpdateQuestion } from '../../hooks/useQuestions'
 
@@ -11,9 +12,20 @@ interface Props {
   initial?: Question
 }
 
-const TYPES: QuestionType[]       = ['mcq', 'true_false', 'open']
-const DIFFICULTIES: QuestionDifficulty[] = ['easy', 'medium', 'hard']
-const TYPE_LABELS: Record<QuestionType, string> = { mcq: 'MCQ', true_false: 'True / False', open: 'Open' }
+const TYPE_OPTIONS   = [
+  { value: 'mcq',        label: 'MCQ' },
+  { value: 'true_false', label: 'True / False' },
+  { value: 'open',       label: 'Open' },
+]
+const DIFF_OPTIONS   = [
+  { value: 'easy',   label: 'Easy' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'hard',   label: 'Hard' },
+]
+const TF_OPTIONS     = [
+  { value: 'True',  label: 'True' },
+  { value: 'False', label: 'False' },
+]
 
 export default function QuestionForm({ bankId, categories, initial }: Props) {
   const navigate    = useNavigate()
@@ -29,8 +41,14 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
   const [correctAnswer, setCorrectAnswer] = useState(initial?.correct_answer ?? '')
   const [tags,          setTags]          = useState(initial?.tags?.join(', ') ?? '')
 
-  const updateOption = (i: number, val: string) =>
-    setOptions(prev => prev.map((o, idx) => idx === i ? val : o))
+  const updateOption = (i: number, val: string) => {
+    setOptions(prev => {
+      const next = prev.map((o, idx) => idx === i ? val : o)
+      // keep correctAnswer in sync if it pointed to the old text
+      if (correctAnswer === prev[i]) setCorrectAnswer(val)
+      return next
+    })
+  }
 
   const handleSubmit = async () => {
     const payload = {
@@ -70,19 +88,26 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <FormField label="Category">
-            <Select value={categoryId} onChange={e => setCategoryId(e.target.value)}>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </Select>
+            <Select
+              value={categoryId}
+              onChange={setCategoryId}
+              options={categories.map(c => ({ value: c.id, label: c.name }))}
+              placeholder="Select category"
+            />
           </FormField>
           <FormField label="Type">
-            <Select value={type} onChange={e => setType(e.target.value as QuestionType)}>
-              {TYPES.map(t => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
-            </Select>
+            <Select
+              value={type}
+              onChange={v => { setType(v as QuestionType); setCorrectAnswer('') }}
+              options={TYPE_OPTIONS}
+            />
           </FormField>
           <FormField label="Difficulty">
-            <Select value={difficulty} onChange={e => setDifficulty(e.target.value as QuestionDifficulty)}>
-              {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
-            </Select>
+            <Select
+              value={difficulty}
+              onChange={v => setDifficulty(v as QuestionDifficulty)}
+              options={DIFF_OPTIONS}
+            />
           </FormField>
         </div>
 
@@ -102,9 +127,9 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
                 <input
                   type="radio"
                   name="correct"
-                  checked={correctAnswer === String(i)}
-                  onChange={() => setCorrectAnswer(String(i))}
-                  style={{ accentColor: 'var(--gold)', width: 16, height: 16 }}
+                  checked={correctAnswer === opt && opt !== ''}
+                  onChange={() => setCorrectAnswer(opt)}
+                  style={{ accentColor: 'var(--gold)', width: 16, height: 16, flexShrink: 0 }}
                 />
               </div>
             ))}
@@ -114,11 +139,12 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
 
         {type === 'true_false' && (
           <FormField label="Correct Answer">
-            <Select value={correctAnswer} onChange={e => setCorrectAnswer(e.target.value)}>
-              <option value="">— Select —</option>
-              <option value="true">True</option>
-              <option value="false">False</option>
-            </Select>
+            <Select
+              value={correctAnswer}
+              onChange={setCorrectAnswer}
+              options={TF_OPTIONS}
+              placeholder="— Select —"
+            />
           </FormField>
         )}
 

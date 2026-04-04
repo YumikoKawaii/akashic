@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bank, Category } from '../../types'
 import OrnatePanel from '../ui/OrnatePanel'
-import { FormField, Input, Select } from '../ui/FormField'
+import { FormField, Input } from '../ui/FormField'
+import Select from '../ui/Select'
 import { useGenerateTest } from '../../hooks/useTests'
 import { useStartAttempt } from '../../hooks/useAttempts'
 import { useUpdateDefaultConfig } from '../../hooks/useBanks'
@@ -70,10 +71,12 @@ export default function GenerateTestForm({ bank, categories }: Props) {
         </FormField>
 
         <FormField label="Category">
-          <Select value={categoryId} onChange={e => setCategoryId(e.target.value)}>
-            <option value="">All Categories</option>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </Select>
+          <Select
+            value={categoryId}
+            onChange={setCategoryId}
+            placeholder="All Categories"
+            options={categories.map(c => ({ value: c.id, label: c.name }))}
+          />
         </FormField>
 
         <FormField label={`Difficulty Split · Total: ${total}`}>
