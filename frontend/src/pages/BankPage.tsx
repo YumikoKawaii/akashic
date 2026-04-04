@@ -26,6 +26,7 @@ export default function BankPage() {
   const [tab,           setTab]           = useState<Tab>('questions')
   const [filter,        setFilter]        = useState<QuestionFilter>({})
   const [page,          setPage]          = useState(1)
+  const [pageInput,     setPageInput]     = useState('1')
   const [importing,     setImporting]     = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -65,12 +66,12 @@ export default function BankPage() {
 
 
   const toggleFilter = (key: 'difficulty', val: string) => {
-    setPage(1)
+    setPage(1); setPageInput('1')
     setFilter(f => ({ ...f, [key]: f[key] === val ? undefined : val }))
   }
 
   const toggleTypeFilter = (val: string) => {
-    setPage(1)
+    setPage(1); setPageInput('1')
     setFilter(f => {
       const current = f.types ?? []
       return { ...f, types: current.includes(val) ? current.filter(t => t !== val) : [...current, val] }
@@ -183,7 +184,7 @@ export default function BankPage() {
               <div className="flex items-center justify-center gap-2" style={{ marginTop: 8 }}>
                 <button
                   className="btn btn-ghost"
-                  onClick={() => setPage(p => p - 1)}
+                  onClick={() => { setPage(p => { setPageInput(String(p - 1)); return p - 1 }) }}
                   disabled={page <= 1}
                   style={{ padding: '6px 14px', fontSize: '0.8rem' }}
                 >
@@ -193,11 +194,15 @@ export default function BankPage() {
                   type="number"
                   min={1}
                   max={totalPages}
-                  value={page}
-                  onChange={e => {
-                    const v = Math.max(1, Math.min(totalPages, Number(e.target.value)))
-                    if (!isNaN(v)) setPage(v)
+                  value={pageInput}
+                  onChange={e => setPageInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      const v = Math.max(1, Math.min(totalPages, parseInt(pageInput, 10)))
+                      if (!isNaN(v)) { setPage(v); setPageInput(String(v)) }
+                    }
                   }}
+                  onBlur={() => setPageInput(String(page))}
                   className="form-input"
                   style={{ width: 56, textAlign: 'center', padding: '5px 4px' }}
                 />
@@ -206,7 +211,7 @@ export default function BankPage() {
                 </span>
                 <button
                   className="btn btn-ghost"
-                  onClick={() => setPage(p => p + 1)}
+                  onClick={() => { setPage(p => { setPageInput(String(p + 1)); return p + 1 }) }}
                   disabled={page >= totalPages}
                   style={{ padding: '6px 14px', fontSize: '0.8rem' }}
                 >
