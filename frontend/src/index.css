@@ -154,6 +154,8 @@ body {
 }
 .sidebar-item:hover::before,
 .sidebar-item.active::before { transform: scaleY(1); }
+.sidebar-item:hover .bank-delete-btn { opacity: 0.5 !important; }
+.sidebar-item:hover .bank-delete-btn:hover { opacity: 1 !important; color: #b03030 !important; }
 
 .sidebar-badge {
   margin-left: auto;
