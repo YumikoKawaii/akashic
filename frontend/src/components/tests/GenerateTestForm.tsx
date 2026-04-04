@@ -6,7 +6,6 @@ import { FormField, Input } from '../ui/FormField'
 import Select from '../ui/Select'
 import { useGenerateTest } from '../../hooks/useTests'
 import { useStartAttempt } from '../../hooks/useAttempts'
-import { useUpdateDefaultConfig } from '../../hooks/useBanks'
 
 interface Props { bank: Bank; categories: Category[] }
 
@@ -24,27 +23,17 @@ export default function GenerateTestForm({ bank, categories }: Props) {
   const navigate    = useNavigate()
   const generate    = useGenerateTest(bank.id)
   const start       = useStartAttempt()
-  const saveDefault = useUpdateDefaultConfig()
-
   const def = bank.default_config
   const [name,       setName]       = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [easy,       setEasy]       = useState(def.easy_count   ?? 3)
   const [medium,     setMedium]     = useState(def.medium_count ?? 5)
   const [hard,       setHard]       = useState(def.hard_count   ?? 2)
-  const [saved,      setSaved]      = useState(false)
-
   const total = easy + medium + hard
 
   const handleTotalChange = (n: number) => {
     const [e, m, h] = autoSplit(Math.max(0, n))
     setEasy(e); setMedium(m); setHard(h)
-  }
-
-  const handleSaveDefault = async () => {
-    await saveDefault.mutateAsync({ id: bank.id, config: { easy_count: easy, medium_count: medium, hard_count: hard } })
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
   }
 
   const handleGenerate = async () => {
@@ -115,31 +104,14 @@ export default function GenerateTestForm({ bank, categories }: Props) {
           </div>
         </FormField>
 
-        <div className="flex gap-2 items-end" style={{ marginLeft: 'auto' }}>
-          {/* Save default button with tooltip */}
-          <div style={{ position: 'relative' }} className="save-default-wrap">
-            <button
-              className="btn btn-ghost"
-              onClick={handleSaveDefault}
-              disabled={saveDefault.isPending}
-              style={{ height: 38, padding: '0 12px', fontSize: '0.75rem', whiteSpace: 'nowrap' }}
-            >
-              {saved ? '✓ Saved' : '⚙ Set Default'}
-            </button>
-            <div className="save-default-tooltip">
-              Save current split as the bank default — pre-fills this form on next visit
-            </div>
-          </div>
-
-          <button
-            className="btn btn-primary"
-            onClick={handleGenerate}
-            disabled={isPending}
-            style={{ height: 38, padding: '0 20px', whiteSpace: 'nowrap' }}
-          >
-            {isPending ? '…' : '⚔ Generate'}
-          </button>
-        </div>
+        <button
+          className="btn btn-primary"
+          onClick={handleGenerate}
+          disabled={isPending}
+          style={{ height: 38, padding: '0 20px', whiteSpace: 'nowrap', marginLeft: 'auto' }}
+        >
+          {isPending ? '…' : '⚔ Generate'}
+        </button>
       </div>
     </OrnatePanel>
   )
