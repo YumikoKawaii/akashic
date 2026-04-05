@@ -607,8 +607,8 @@ input[type=number].form-input { -moz-appearance: textfield; }
 }
 
 .question-text {
-  font-size: 1.15rem;
-  line-height: 1.7;
+  font-size: 1.35rem;
+  line-height: 1.75;
   color: var(--ink);
 }
 
@@ -622,7 +622,7 @@ input[type=number].form-input { -moz-appearance: textfield; }
 }
 .answer-option {
   position: relative;
-  padding: 18px 22px;
+  padding: 22px 28px;
   background: var(--bg-card);
   border: 1px solid var(--border-dim);
   cursor: pointer;
@@ -651,11 +651,11 @@ input[type=number].form-input { -moz-appearance: textfield; }
 .answer-option.wrong    { border-color: var(--hard); background: rgba(176,48,48,0.08); }
 .answer-key {
   font-family: 'Cinzel', serif;
-  font-size: 0.8rem;
+  font-size: 1rem;
   color: var(--gold-dim);
-  min-width: 20px;
+  min-width: 24px;
 }
-.answer-text { font-size: 0.92rem; color: var(--ink); flex: 1; }
+.answer-text { font-size: 1.1rem; color: var(--ink); flex: 1; }
 
 /* ─── Results ─────────────────────────────────────────────────── */
 .results-score {

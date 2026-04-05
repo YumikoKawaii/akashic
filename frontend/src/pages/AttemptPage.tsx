@@ -106,7 +106,7 @@ export default function AttemptPage() {
           <div className="w-full" style={{ maxWidth: 720 }}>
             <OrnatePanel style={{ marginBottom: 14 } as React.CSSProperties}>
               <div className="flex items-start gap-4">
-                <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'var(--gold-dim)', paddingTop: 2, minWidth: 28 }}>
+                <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'var(--gold-dim)', paddingTop: 2, minWidth: 32 }}>
                   {String(currentIdx + 1).padStart(2, '0')}
                 </span>
                 <div style={{ flex: 1 }}>
@@ -186,7 +186,8 @@ export default function AttemptPage() {
               <div style={{ width: '100%' }}>
                 <textarea
                   className="form-input"
-                  rows={4}
+                  rows={6}
+                  style={{ fontSize: '1.1rem' }}
                   placeholder="Write your answer…"
                   value={selected}
                   onChange={e => { if (!revealed) setSelected(e.target.value) }}
