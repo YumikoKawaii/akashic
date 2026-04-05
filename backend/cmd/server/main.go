@@ -41,13 +41,15 @@ func main() {
 	bankRepo     := repository.NewBankRepo(db)
 	categoryRepo := repository.NewCategoryRepo(db)
 	questionRepo := repository.NewQuestionRepo(db)
+	passageRepo  := repository.NewPassageRepo(db)
 	testRepo     := repository.NewTestRepo(db)
 	attemptRepo  := repository.NewAttemptRepo(db)
 
 	bankSvc     := service.NewBankService(bankRepo)
 	categorySvc := service.NewCategoryService(categoryRepo, bankRepo)
 	questionSvc := service.NewQuestionService(questionRepo, bankRepo, categoryRepo)
-	testSvc     := service.NewTestService(unitOfWork, testRepo, questionRepo, bankRepo)
+	passageSvc  := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
+	testSvc     := service.NewTestService(unitOfWork, testRepo, questionRepo, passageRepo, bankRepo)
 	attemptSvc  := service.NewAttemptService(attemptRepo, testRepo)
 	ingestSvc   := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo)
 
@@ -55,6 +57,7 @@ func main() {
 		Bank:      handler.NewBankHandler(bankSvc),
 		Category:  handler.NewCategoryHandler(categorySvc),
 		Question:  handler.NewQuestionHandler(questionSvc, ingestSvc),
+		Passage:   handler.NewPassageHandler(passageSvc),
 		Test:      handler.NewTestHandler(testSvc),
 		Attempt:   handler.NewAttemptHandler(attemptSvc),
 		StaticDir: cfg.StaticDir,

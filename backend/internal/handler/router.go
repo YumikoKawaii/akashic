@@ -11,6 +11,7 @@ type Handlers struct {
 	Bank      *BankHandler
 	Category  *CategoryHandler
 	Question  *QuestionHandler
+	Passage   *PassageHandler
 	Test      *TestHandler
 	Attempt   *AttemptHandler
 	StaticDir string
@@ -45,6 +46,12 @@ func NewRouter(h Handlers) *gin.Engine {
 		bank.GET("/questions/:id", h.Question.Get)
 		bank.PUT("/questions/:id", h.Question.Update)
 		bank.DELETE("/questions/:id", h.Question.Delete)
+
+		bank.GET("/passages", h.Passage.List)
+		bank.POST("/passages", h.Passage.Create)
+		bank.GET("/passages/:id", h.Passage.Get)
+		bank.PUT("/passages/:id", h.Passage.Update)
+		bank.DELETE("/passages/:id", h.Passage.Delete)
 
 		bank.GET("/tests", h.Test.List)
 		bank.POST("/tests/generate", h.Test.Generate)

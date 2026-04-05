@@ -25,14 +25,29 @@ export interface Category {
   updated_at: string
 }
 
-export type QuestionType       = 'mcq' | 'true_false' | 'open'
+export type QuestionType       = 'mcq' | 'true_false' | 'open' | 'tf_ng'
 export type QuestionDifficulty = 'easy' | 'medium' | 'hard'
+
+export interface Passage {
+  id: string
+  bank_id: string
+  category_id: string
+  category?: Category
+  title: string
+  body: string
+  difficulty: QuestionDifficulty
+  questions?: Question[]
+  created_at: string
+  updated_at: string
+}
 
 export interface Question {
   id: string
   bank_id: string
   category_id: string
   category?: Category
+  passage_id?: string
+  passage?: Passage
   text: string
   type: QuestionType
   difficulty: QuestionDifficulty

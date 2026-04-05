@@ -104,6 +104,25 @@ export default function AttemptPage() {
         {/* Question */}
         <div className="attempt-body">
           <div className="w-full" style={{ maxWidth: 720 }}>
+
+            {/* Passage context */}
+            {q.passage && (
+              <div style={{
+                marginBottom: 18,
+                padding: '18px 24px',
+                background: 'rgba(154,112,24,0.04)',
+                border: '1px solid var(--border-dim)',
+                borderLeft: '3px solid var(--gold-dim)',
+              }}>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.68rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', marginBottom: 10, textTransform: 'uppercase' }}>
+                  {q.passage.title}
+                </div>
+                <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: 'var(--ink)', whiteSpace: 'pre-wrap' }}>
+                  {q.passage.body}
+                </p>
+              </div>
+            )}
+
             <OrnatePanel style={{ marginBottom: 14 } as React.CSSProperties}>
               <div className="flex items-start gap-4">
                 <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'var(--gold-dim)', paddingTop: 2, minWidth: 32 }}>
@@ -160,6 +179,31 @@ export default function AttemptPage() {
             {q.type === 'true_false' && (
               <div className="answer-options" style={{ gridTemplateColumns: '1fr 1fr' }}>
                 {(q.options?.length ? q.options : ['True', 'False']).map(val => {
+                  const isCorrectOpt = revealed && val === q.correct_answer
+                  const isWrongSel   = revealed && val === selected && val !== q.correct_answer
+                  return (
+                    <button
+                      key={val}
+                      className={`answer-option ${!revealed && selected === val ? 'selected' : ''}`}
+                      onClick={() => handleOptionClick(val)}
+                      style={{
+                        justifyContent: 'center', cursor: revealed ? 'default' : 'pointer',
+                        borderColor: isCorrectOpt ? 'rgba(42,138,58,0.6)' : isWrongSel ? 'rgba(176,48,48,0.6)' : undefined,
+                        background:  isCorrectOpt ? 'rgba(42,138,58,0.08)' : isWrongSel ? 'rgba(176,48,48,0.06)' : undefined,
+                      }}
+                    >
+                      <span className="answer-text" style={{ textAlign: 'center' }}>{val}</span>
+                      {isCorrectOpt && <span style={{ marginLeft: 8, color: '#2a8a3a', fontSize: '0.8rem' }}>✓</span>}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* True / False / Not Given */}
+            {q.type === 'tf_ng' && (
+              <div className="answer-options" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                {(['True', 'False', 'Not Given'] as const).map(val => {
                   const isCorrectOpt = revealed && val === q.correct_answer
                   const isWrongSel   = revealed && val === selected && val !== q.correct_answer
                   return (

@@ -36,6 +36,7 @@ func (r *testRepo) FindByBankAndID(bankID, id string) (*model.Test, error) {
 		}).
 		Preload("TestQuestions.Question").
 		Preload("TestQuestions.Question.Category").
+		Preload("TestQuestions.Question.Passage").
 		First(&test, "bank_id = ? AND id = ?", bankID, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound

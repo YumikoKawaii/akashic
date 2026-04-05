@@ -28,6 +28,8 @@ export default function GenerateTestForm({ bank, categories }: Props) {
     { value: 'mcq',        label: 'MCQ' },
     { value: 'true_false', label: 'True / False' },
     { value: 'open',       label: 'Open' },
+    { value: 'tf_ng',      label: 'T / F / NG' },
+    { value: 'passage',    label: 'Passage' },
   ]
 
   const [name,        setName]        = useState('')

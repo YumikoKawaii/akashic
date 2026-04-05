@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Category, Question, QuestionDifficulty, QuestionType } from '../../types'
+import { Category, Passage, Question, QuestionDifficulty, QuestionType } from '../../types'
 import { FormField, Input, Textarea } from '../ui/FormField'
 import Select from '../ui/Select'
 import OrnatePanel from '../ui/OrnatePanel'
@@ -9,6 +9,7 @@ import { useCreateQuestion, useUpdateQuestion } from '../../hooks/useQuestions'
 interface Props {
   bankId: string
   categories: Category[]
+  passages?: Passage[]
   initial?: Question
 }
 
@@ -16,6 +17,7 @@ const TYPE_OPTIONS   = [
   { value: 'mcq',        label: 'MCQ' },
   { value: 'true_false', label: 'True / False' },
   { value: 'open',       label: 'Open' },
+  { value: 'tf_ng',      label: 'T / F / Not Given' },
 ]
 const DIFF_OPTIONS   = [
   { value: 'easy',   label: 'Easy' },
@@ -27,7 +29,7 @@ const TF_OPTIONS     = [
   { value: 'False', label: 'False' },
 ]
 
-export default function QuestionForm({ bankId, categories, initial }: Props) {
+export default function QuestionForm({ bankId, categories, passages = [], initial }: Props) {
   const navigate    = useNavigate()
   const create      = useCreateQuestion(bankId)
   const update      = useUpdateQuestion(bankId)
@@ -40,6 +42,7 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
   const [options,       setOptions]       = useState<string[]>(initial?.options ?? ['', '', '', ''])
   const [correctAnswer, setCorrectAnswer] = useState(initial?.correct_answer ?? '')
   const [tags,          setTags]          = useState(initial?.tags?.join(', ') ?? '')
+  const [passageId,     setPassageId]     = useState(initial?.passage_id ?? '')
 
   const updateOption = (i: number, val: string) => {
     setOptions(prev => {
@@ -59,6 +62,7 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
       options:        type !== 'open' ? options.filter(Boolean) : [],
       correct_answer: type !== 'open' ? correctAnswer : '',
       tags:           tags.split(',').map(t => t.trim()).filter(Boolean),
+      ...(passageId ? { passage_id: passageId } : {}),
     }
     if (isEdit) {
       await update.mutateAsync({ id: initial!.id, data: payload })
@@ -144,6 +148,32 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
               onChange={setCorrectAnswer}
               options={TF_OPTIONS}
               placeholder="— Select —"
+            />
+          </FormField>
+        )}
+
+        {type === 'tf_ng' && (
+          <FormField label="Correct Answer">
+            <Select
+              value={correctAnswer}
+              onChange={setCorrectAnswer}
+              options={[
+                { value: 'True',      label: 'True' },
+                { value: 'False',     label: 'False' },
+                { value: 'Not Given', label: 'Not Given' },
+              ]}
+              placeholder="— Select —"
+            />
+          </FormField>
+        )}
+
+        {passages.length > 0 && (
+          <FormField label="Passage (optional)">
+            <Select
+              value={passageId}
+              onChange={setPassageId}
+              options={passages.map(p => ({ value: p.id, label: p.title }))}
+              placeholder="— Standalone question —"
             />
           </FormField>
         )}

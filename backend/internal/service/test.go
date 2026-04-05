@@ -13,6 +13,7 @@ type TestService struct {
 	uow          *uow.UnitOfWork
 	testRepo     repository.TestRepository
 	questionRepo repository.QuestionRepository
+	passageRepo  repository.PassageRepository
 	bankRepo     repository.BankRepository
 }
 
@@ -20,9 +21,10 @@ func NewTestService(
 	u *uow.UnitOfWork,
 	testRepo repository.TestRepository,
 	questionRepo repository.QuestionRepository,
+	passageRepo repository.PassageRepository,
 	bankRepo repository.BankRepository,
 ) *TestService {
-	return &TestService{uow: u, testRepo: testRepo, questionRepo: questionRepo, bankRepo: bankRepo}
+	return &TestService{uow: u, testRepo: testRepo, questionRepo: questionRepo, passageRepo: passageRepo, bankRepo: bankRepo}
 }
 
 func (s *TestService) ListByBank(bankID string) ([]model.Test, error) {
@@ -42,25 +44,48 @@ type GenerateTestInput struct {
 	Config      *model.TestConfig `json:"config"`
 }
 
+// unit is either a standalone question or a passage (atomic group of questions).
+type unit struct {
+	question *model.Question
+	passage  *model.Passage
+}
+
 func (s *TestService) Generate(bankID string, input GenerateTestInput) (*model.Test, error) {
 	bank, err := s.bankRepo.FindByID(bankID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Resolve config: use provided config or fall back to bank default
 	config := bank.DefaultConfig
 	if input.Config != nil {
 		config = *input.Config
 	}
 
-	filter := repository.QuestionFilter{
+	// Determine what goes into the pool: passages, standalone questions, or both.
+	wantPassages    := len(config.Types) == 0
+	wantStandalone  := len(config.Types) == 0
+	standaloneTypes := []string{}
+	for _, t := range config.Types {
+		if t == "passage" {
+			wantPassages = true
+		} else {
+			wantStandalone = true
+			standaloneTypes = append(standaloneTypes, t)
+		}
+	}
+
+	passageFilter := repository.PassageFilter{
 		CategoryIDs: config.CategoryIDs,
-		Types:       config.Types,
-		Tags:        config.Tags,
+	}
+	questionFilter := repository.QuestionFilter{
+		CategoryIDs:    config.CategoryIDs,
+		Tags:           config.Tags,
+		Types:          standaloneTypes,
+		StandaloneOnly: true,
 	}
 
 	var picked []model.Question
+
 	for _, bucket := range []struct {
 		difficulty string
 		count      int
@@ -72,15 +97,43 @@ func (s *TestService) Generate(bankID string, input GenerateTestInput) (*model.T
 		if bucket.count <= 0 {
 			continue
 		}
-		questions, err := s.questionRepo.FindByBankAndDifficulty(bankID, bucket.difficulty, filter)
-		if err != nil {
-			return nil, err
+
+		var units []unit
+
+		if wantStandalone {
+			questions, err := s.questionRepo.FindByBankAndDifficulty(bankID, bucket.difficulty, questionFilter)
+			if err != nil {
+				return nil, err
+			}
+			for i := range questions {
+				units = append(units, unit{question: &questions[i]})
+			}
 		}
-		rand.Shuffle(len(questions), func(i, j int) {
-			questions[i], questions[j] = questions[j], questions[i]
-		})
-		n := min(bucket.count, len(questions))
-		picked = append(picked, questions[:n]...)
+
+		if wantPassages {
+			passages, err := s.passageRepo.FindByBankAndDifficulty(bankID, bucket.difficulty, passageFilter)
+			if err != nil {
+				return nil, err
+			}
+			for i := range passages {
+				units = append(units, unit{passage: &passages[i]})
+			}
+		}
+
+		rand.Shuffle(len(units), func(i, j int) { units[i], units[j] = units[j], units[i] })
+
+		n := min(bucket.count, len(units))
+		for _, u := range units[:n] {
+			if u.question != nil {
+				picked = append(picked, *u.question)
+			} else {
+				questions, err := s.questionRepo.FindByPassage(u.passage.ID)
+				if err != nil {
+					return nil, err
+				}
+				picked = append(picked, questions...)
+			}
+		}
 	}
 
 	test := &model.Test{
@@ -100,7 +153,6 @@ func (s *TestService) Generate(bankID string, input GenerateTestInput) (*model.T
 		}
 	}
 
-	// UoW: insert test + test_questions in one transaction
 	tx := s.uow.Begin()
 	defer tx.Rollback()
 

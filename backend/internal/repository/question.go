@@ -9,18 +9,20 @@ import (
 )
 
 type QuestionFilter struct {
-	CategoryIDs []string
-	Difficulty  *string
-	Types       []string
-	Tags        []string
-	Limit       int
-	Offset      int
+	CategoryIDs    []string
+	Difficulty     *string
+	Types          []string
+	Tags           []string
+	StandaloneOnly bool
+	Limit          int
+	Offset         int
 }
 
 type QuestionRepository interface {
 	FindByBank(bankID string, filter QuestionFilter) ([]model.Question, error)
 	CountByBank(bankID string, filter QuestionFilter) (int64, error)
 	FindByBankAndDifficulty(bankID, difficulty string, filter QuestionFilter) ([]model.Question, error)
+	FindByPassage(passageID string) ([]model.Question, error)
 	FindByBankAndID(bankID, id string) (*model.Question, error)
 	Create(question *model.Question) error
 	BulkCreate(questions []*model.Question) error
@@ -58,6 +60,11 @@ func (r *questionRepo) FindByBankAndDifficulty(bankID, difficulty string, filter
 	q = applyQuestionFilter(q, filter)
 	var questions []model.Question
 	return questions, q.Find(&questions).Error
+}
+
+func (r *questionRepo) FindByPassage(passageID string) ([]model.Question, error) {
+	var questions []model.Question
+	return questions, r.db.Where("passage_id = ?", passageID).Order("created_at ASC").Find(&questions).Error
 }
 
 func (r *questionRepo) FindByBankAndID(bankID, id string) (*model.Question, error) {
@@ -104,6 +111,9 @@ func applyQuestionFilter(q *gorm.DB, filter QuestionFilter) *gorm.DB {
 	}
 	if len(filter.Tags) > 0 {
 		q = q.Where("tags && ?", pq.Array(filter.Tags))
+	}
+	if filter.StandaloneOnly {
+		q = q.Where("passage_id IS NULL")
 	}
 	return q
 }

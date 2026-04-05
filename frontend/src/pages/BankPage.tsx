@@ -5,14 +5,17 @@ import { useBank } from '../hooks/useBanks'
 import { useQuestions } from '../hooks/useQuestions'
 import { useTests } from '../hooks/useTests'
 import { useCategories } from '../hooks/useCategories'
+import { usePassages, useCreatePassage, useDeletePassage } from '../hooks/usePassages'
 import { QuestionFilter } from '../types'
 import { questionsApi } from '../api/questions'
 import QuestionCard from '../components/questions/QuestionCard'
 import TestCard from '../components/tests/TestCard'
 import GenerateTestForm from '../components/tests/GenerateTestForm'
 import OrnateDivider from '../components/ui/OrnateDivider'
+import { FormField, Input, Textarea } from '../components/ui/FormField'
+import Select from '../components/ui/Select'
 
-type Tab = 'questions' | 'tests'
+type Tab = 'questions' | 'tests' | 'passages'
 
 export default function BankPage() {
   const { bankId = '' } = useParams<{ bankId: string }>()
@@ -22,6 +25,9 @@ export default function BankPage() {
   const { data: bank }             = useBank(bankId)
   const { data: categories = [] }  = useCategories(bankId)
   const { data: tests = [] }       = useTests(bankId)
+  const { data: passages = [] }    = usePassages(bankId)
+  const createPassage              = useCreatePassage(bankId)
+  const deletePassage              = useDeletePassage(bankId)
 
   const [tab,           setTab]           = useState<Tab>('questions')
   const [filter,        setFilter]        = useState<QuestionFilter>({})
@@ -29,6 +35,13 @@ export default function BankPage() {
   const [pageInput,     setPageInput]     = useState('1')
   const [importing,     setImporting]     = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
+
+  // New passage form state
+  const [pTitle,      setPTitle]      = useState('')
+  const [pBody,       setPBody]       = useState('')
+  const [pDifficulty, setPDifficulty] = useState('medium')
+  const [pCategoryId, setPCategoryId] = useState('')
+  const [pConfirmDel, setPConfirmDel] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,12 +115,16 @@ export default function BankPage() {
             <span className="hidden sm:inline">＋ Add Question</span>
             <span className="sm:hidden">＋</span>
           </button>
-          <button
-            className={`btn ${tab === 'questions' ? 'btn-ghost' : 'btn-primary'}`}
-            onClick={() => setTab(t => t === 'questions' ? 'tests' : 'questions')}
-          >
-            {tab === 'questions' ? 'Tests' : 'Questions'}
-          </button>
+          {(['questions', 'passages', 'tests'] as Tab[]).map(t => (
+            <button
+              key={t}
+              className={`btn ${tab === t ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setTab(t)}
+              style={{ textTransform: 'capitalize' }}
+            >
+              {t}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -220,6 +237,99 @@ export default function BankPage() {
               </div>
             )}
           </div>
+        </>
+      )}
+
+      {tab === 'passages' && (
+        <>
+          <OrnateDivider />
+
+          {/* Create passage form */}
+          <div className="section-title">New Passage</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 720 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <FormField label="Title">
+                <Input value={pTitle} onChange={e => setPTitle(e.target.value)} placeholder="Passage title" />
+              </FormField>
+              <FormField label="Category">
+                <Select
+                  value={pCategoryId}
+                  onChange={setPCategoryId}
+                  options={categories.map(c => ({ value: c.id, label: c.name }))}
+                  placeholder="Select category"
+                />
+              </FormField>
+              <FormField label="Difficulty">
+                <Select
+                  value={pDifficulty}
+                  onChange={setPDifficulty}
+                  options={[
+                    { value: 'easy',   label: 'Easy' },
+                    { value: 'medium', label: 'Medium' },
+                    { value: 'hard',   label: 'Hard' },
+                  ]}
+                />
+              </FormField>
+            </div>
+            <FormField label="Body">
+              <Textarea value={pBody} onChange={e => setPBody(e.target.value)} placeholder="Paste or type the passage text…" rows={6} />
+            </FormField>
+            <div>
+              <button
+                className="btn btn-primary"
+                disabled={!pTitle.trim() || !pCategoryId || createPassage.isPending}
+                onClick={async () => {
+                  await createPassage.mutateAsync({ title: pTitle.trim(), body: pBody, difficulty: pDifficulty, category_id: pCategoryId })
+                  setPTitle(''); setPBody('')
+                }}
+              >
+                {createPassage.isPending ? '…' : '＋ Add Passage'}
+              </button>
+            </div>
+          </div>
+
+          <OrnateDivider />
+
+          {/* Passage list */}
+          <div className="section-title">Passages ({passages.length})</div>
+          {passages.length === 0 ? (
+            <div style={{ color: 'var(--ink-dim)', fontSize: '0.88rem', padding: '24px 0', textAlign: 'center' }}>
+              No passages yet.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4" style={{ maxWidth: 720 }}>
+              {passages.map(p => (
+                <div key={p.id} style={{ border: '1px solid var(--border-dim)', padding: '16px 20px' }}>
+                  <div className="flex items-start justify-between gap-4" style={{ marginBottom: 8 }}>
+                    <div>
+                      <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'var(--ink)' }}>{p.title}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--ink-dim)', marginTop: 2 }}>
+                        {p.category?.name} · {p.difficulty} · {p.questions?.length ?? 0} questions
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {pConfirmDel === p.id ? (
+                        <>
+                          <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px', color: '#b03030', borderColor: 'rgba(176,48,48,0.4)' }}
+                            onClick={() => { deletePassage.mutate(p.id); setPConfirmDel(null) }}>Yes</button>
+                          <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px' }}
+                            onClick={() => setPConfirmDel(null)}>Cancel</button>
+                        </>
+                      ) : (
+                        <button className="btn-danger" onClick={() => setPConfirmDel(p.id)}>✕</button>
+                      )}
+                    </div>
+                  </div>
+                  {p.body && (
+                    <p style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', lineHeight: 1.6, whiteSpace: 'pre-wrap',
+                      maxHeight: 120, overflow: 'hidden', maskImage: 'linear-gradient(to bottom, black 60%, transparent)' }}>
+                      {p.body}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
 

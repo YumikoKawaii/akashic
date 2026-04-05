@@ -5,6 +5,7 @@ export function TypeTag({ type }: { type: QuestionType }) {
     mcq:        'MCQ',
     true_false: 'True / False',
     open:       'Open',
+    tf_ng:      'T / F / NG',
   }
   return <span className="tag tag-type">{label[type]}</span>
 }

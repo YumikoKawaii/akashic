@@ -57,22 +57,46 @@ func (c *Category) BeforeCreate(_ *gorm.DB) error {
 	return nil
 }
 
+// Passage is a reading text that groups related questions.
+// It is treated as an atomic unit during test generation.
+type Passage struct {
+	ID         string     `gorm:"type:uuid;primaryKey"     json:"id"`
+	BankID     string     `gorm:"type:uuid;not null;index" json:"bank_id"`
+	CategoryID string     `gorm:"type:uuid;not null;index" json:"category_id"`
+	Category   *Category  `gorm:"foreignKey:CategoryID"    json:"category,omitempty"`
+	Title      string     `gorm:"not null"                 json:"title"`
+	Body       string     `gorm:"not null;default:''"      json:"body"`
+	Difficulty string     `gorm:"not null"                 json:"difficulty"`
+	Questions  []Question `gorm:"foreignKey:PassageID"     json:"questions,omitempty"`
+	CreatedAt  time.Time  `                                json:"created_at"`
+	UpdatedAt  time.Time  `                                json:"updated_at"`
+}
+
+func (p *Passage) BeforeCreate(_ *gorm.DB) error {
+	if p.ID == "" {
+		p.ID = uuid.New().String()
+	}
+	return nil
+}
+
 // Question belongs to one bank and one category.
-// Type: mcq | true_false | open
+// Type: mcq | true_false | open | tf_ng
 // Difficulty: easy | medium | hard
 type Question struct {
-	ID            string         `gorm:"type:uuid;primaryKey"  json:"id"`
+	ID            string         `gorm:"type:uuid;primaryKey"     json:"id"`
 	BankID        string         `gorm:"type:uuid;not null;index" json:"bank_id"`
 	CategoryID    string         `gorm:"type:uuid;not null;index" json:"category_id"`
-	Category      *Category      `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
-	Text          string         `gorm:"not null"              json:"text"`
-	Type          string         `gorm:"not null"              json:"type"`
-	Difficulty    string         `gorm:"not null"              json:"difficulty"`
-	Options       pq.StringArray `gorm:"type:text[]"           json:"options"`
-	CorrectAnswer string         `gorm:"not null;default:''"   json:"correct_answer"`
-	Tags          pq.StringArray `gorm:"type:text[]"           json:"tags"`
-	CreatedAt     time.Time      `                             json:"created_at"`
-	UpdatedAt     time.Time      `                             json:"updated_at"`
+	Category      *Category      `gorm:"foreignKey:CategoryID"    json:"category,omitempty"`
+	PassageID     *string        `gorm:"type:uuid;index"          json:"passage_id,omitempty"`
+	Passage       *Passage       `gorm:"foreignKey:PassageID"     json:"passage,omitempty"`
+	Text          string         `gorm:"not null"                 json:"text"`
+	Type          string         `gorm:"not null"                 json:"type"`
+	Difficulty    string         `gorm:"not null"                 json:"difficulty"`
+	Options       pq.StringArray `gorm:"type:text[]"              json:"options"`
+	CorrectAnswer string         `gorm:"not null;default:''"      json:"correct_answer"`
+	Tags          pq.StringArray `gorm:"type:text[]"              json:"tags"`
+	CreatedAt     time.Time      `                                json:"created_at"`
+	UpdatedAt     time.Time      `                                json:"updated_at"`
 }
 
 func (q *Question) BeforeCreate(_ *gorm.DB) error {

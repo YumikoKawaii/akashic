@@ -1,11 +1,13 @@
 import { useParams } from 'react-router-dom'
 import { useCategories } from '../hooks/useCategories'
 import { useQuestion } from '../hooks/useQuestions'
+import { usePassages } from '../hooks/usePassages'
 import QuestionForm from '../components/questions/QuestionForm'
 
 export default function QuestionFormPage() {
   const { bankId = '', questionId } = useParams<{ bankId: string; questionId?: string }>()
   const { data: categories = [] }   = useCategories(bankId)
+  const { data: passages = [] }     = usePassages(bankId)
   const { data: question }          = useQuestion(bankId, questionId ?? '')
 
   const isEdit = !!questionId
@@ -25,6 +27,7 @@ export default function QuestionFormPage() {
       <QuestionForm
         bankId={bankId}
         categories={categories}
+        passages={passages}
         initial={question}
       />
     </>
