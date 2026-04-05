@@ -51,7 +51,7 @@ func main() {
 	passageSvc  := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
 	testSvc     := service.NewTestService(unitOfWork, testRepo, questionRepo, passageRepo, bankRepo)
 	attemptSvc  := service.NewAttemptService(attemptRepo, testRepo)
-	ingestSvc   := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo)
+	ingestSvc   := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo, passageRepo)
 
 	handlers := handler.Handlers{
 		Bank:      handler.NewBankHandler(bankSvc),

@@ -22,6 +22,7 @@ type Transaction struct {
 	Banks      repository.BankRepository
 	Categories repository.CategoryRepository
 	Questions  repository.QuestionRepository
+	Passages   repository.PassageRepository
 	Tests      repository.TestRepository
 	Attempts   repository.AttemptRepository
 }
@@ -35,6 +36,7 @@ func (u *UnitOfWork) Begin() *Transaction {
 		Banks:      repository.NewBankRepo(tx),
 		Categories: repository.NewCategoryRepo(tx),
 		Questions:  repository.NewQuestionRepo(tx),
+		Passages:   repository.NewPassageRepo(tx),
 		Tests:      repository.NewTestRepo(tx),
 		Attempts:   repository.NewAttemptRepo(tx),
 	}

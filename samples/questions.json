@@ -43,5 +43,47 @@
     "options": ["本 (hon)", "枚 (mai)", "匹 (hiki)", "台 (dai)"],
     "correct_answer": "枚 (mai)",
     "tags": ["counters", "grammar"]
+  },
+  {
+    "type": "passage",
+    "title": "The Role of Forests in Climate Regulation",
+    "body": "Forests cover approximately 31% of the Earth's land surface and play a critical role in regulating the global climate. Through photosynthesis, trees absorb carbon dioxide and release oxygen, acting as carbon sinks that slow the accumulation of greenhouse gases in the atmosphere.\n\nDeforestation, however, reverses this process. When forests are cleared, the stored carbon is released back into the atmosphere, contributing significantly to global warming. The Amazon rainforest alone is estimated to store over 150 billion tons of carbon.\n\nBeyond carbon storage, forests regulate local climates by influencing rainfall patterns and moderating temperatures. The water cycle is also deeply connected to forest health — trees release water vapour through transpiration, which contributes to cloud formation and precipitation.",
+    "difficulty": "medium",
+    "category_name": "Reading",
+    "questions": [
+      {
+        "text": "Forests absorb oxygen and release carbon dioxide through photosynthesis.",
+        "type": "tf_ng",
+        "options": [],
+        "correct_answer": "False",
+        "tags": ["climate", "photosynthesis"]
+      },
+      {
+        "text": "The Amazon rainforest stores more than 150 billion tons of carbon.",
+        "type": "tf_ng",
+        "options": [],
+        "correct_answer": "True",
+        "tags": ["amazon", "carbon"]
+      },
+      {
+        "text": "Deforestation has no significant effect on atmospheric greenhouse gas levels.",
+        "type": "tf_ng",
+        "options": [],
+        "correct_answer": "False",
+        "tags": ["deforestation", "climate"]
+      },
+      {
+        "text": "Which of the following best describes the role of forests in the water cycle?",
+        "type": "mcq",
+        "options": [
+          "They absorb rainfall and prevent evaporation",
+          "They release water vapour through transpiration, contributing to cloud formation",
+          "They convert ocean water into freshwater",
+          "They have no measurable effect on precipitation"
+        ],
+        "correct_answer": "They release water vapour through transpiration, contributing to cloud formation",
+        "tags": ["water cycle", "transpiration"]
+      }
+    ]
   }
 ]
