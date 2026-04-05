@@ -6,12 +6,15 @@ import { useQuestions } from '../hooks/useQuestions'
 import { useTests } from '../hooks/useTests'
 import { useCategories } from '../hooks/useCategories'
 import { usePassages, useCreatePassage, useDeletePassage } from '../hooks/usePassages'
+import { useGenerateTest } from '../hooks/useTests'
+import { useStartAttempt } from '../hooks/useAttempts'
 import { QuestionFilter } from '../types'
 import { questionsApi } from '../api/questions'
 import QuestionCard from '../components/questions/QuestionCard'
 import TestCard from '../components/tests/TestCard'
 import GenerateTestForm from '../components/tests/GenerateTestForm'
 import OrnateDivider from '../components/ui/OrnateDivider'
+import OrnatePanel from '../components/ui/OrnatePanel'
 import { FormField, Input, Textarea } from '../components/ui/FormField'
 import Select from '../components/ui/Select'
 
@@ -28,6 +31,8 @@ export default function BankPage() {
   const { data: passages = [] }    = usePassages(bankId)
   const createPassage              = useCreatePassage(bankId)
   const deletePassage              = useDeletePassage(bankId)
+  const generateTest               = useGenerateTest(bankId)
+  const startAttempt               = useStartAttempt()
 
   const [tab,           setTab]           = useState<Tab>('questions')
   const [filter,        setFilter]        = useState<QuestionFilter>({})
@@ -42,6 +47,12 @@ export default function BankPage() {
   const [pDifficulty, setPDifficulty] = useState('medium')
   const [pCategoryId, setPCategoryId] = useState('')
   const [pConfirmDel, setPConfirmDel] = useState<string | null>(null)
+
+  // Passage test generate form state
+  const [pgName,   setPgName]   = useState('')
+  const [pgEasy,   setPgEasy]   = useState(0)
+  const [pgMedium, setPgMedium] = useState(1)
+  const [pgHard,   setPgHard]   = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -287,6 +298,49 @@ export default function BankPage() {
               </button>
             </div>
           </div>
+
+          <OrnateDivider />
+
+          {/* Generate passage test */}
+          <OrnatePanel>
+            <div className="section-title" style={{ marginBottom: 14 }}>Generate Passage Test</div>
+            <div className="flex flex-wrap gap-4 items-end">
+              <FormField label="Test Name">
+                <Input value={pgName} onChange={e => setPgName(e.target.value)} placeholder={`${bank?.name} — ${new Date().toLocaleString()}`} />
+              </FormField>
+              {(['easy', 'medium', 'hard'] as const).map(d => (
+                <FormField key={d} label={d.charAt(0).toUpperCase() + d.slice(1)}>
+                  <input
+                    type="number" min={0} max={20}
+                    value={d === 'easy' ? pgEasy : d === 'medium' ? pgMedium : pgHard}
+                    onChange={e => {
+                      const v = Math.max(0, Number(e.target.value))
+                      if (d === 'easy') setPgEasy(v)
+                      else if (d === 'medium') setPgMedium(v)
+                      else setPgHard(v)
+                    }}
+                    className="form-input"
+                    style={{ width: 56, textAlign: 'center', padding: '7px 4px' }}
+                  />
+                </FormField>
+              ))}
+              <button
+                className="btn btn-primary"
+                disabled={pgEasy + pgMedium + pgHard === 0 || generateTest.isPending || startAttempt.isPending}
+                style={{ height: 38, padding: '0 20px', whiteSpace: 'nowrap' }}
+                onClick={async () => {
+                  const test = await generateTest.mutateAsync({
+                    name: pgName.trim() || `${bank?.name} — ${new Date().toLocaleString()}`,
+                    config: { easy_count: pgEasy, medium_count: pgMedium, hard_count: pgHard, types: ['passage'] },
+                  })
+                  const attempt = await startAttempt.mutateAsync({ bankId, testId: test.id })
+                  navigate(`/attempts/${attempt.id}`)
+                }}
+              >
+                {generateTest.isPending || startAttempt.isPending ? '…' : '⚔ Generate'}
+              </button>
+            </div>
+          </OrnatePanel>
 
           <OrnateDivider />
 
