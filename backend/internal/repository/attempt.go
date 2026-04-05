@@ -30,6 +30,7 @@ func (r *attemptRepo) FindByID(id string) (*model.TestAttempt, error) {
 			return db.Order("test_questions.position ASC")
 		}).
 		Preload("Test.TestQuestions.Question").
+		Preload("Test.TestQuestions.Question.Passage").
 		First(&attempt, "id = ?", id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
