@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useBank } from '../hooks/useBanks'
 import { useQuestions } from '../hooks/useQuestions'
 import { useTests } from '../hooks/useTests'
 import { useCategories } from '../hooks/useCategories'
-import { usePassages, useCreatePassage, useDeletePassage } from '../hooks/usePassages'
+import { usePassages, useDeletePassage } from '../hooks/usePassages'
 import { useGenerateTest } from '../hooks/useTests'
 import { useStartAttempt } from '../hooks/useAttempts'
 import { QuestionFilter } from '../types'
@@ -15,37 +15,31 @@ import TestCard from '../components/tests/TestCard'
 import GenerateTestForm from '../components/tests/GenerateTestForm'
 import OrnateDivider from '../components/ui/OrnateDivider'
 import OrnatePanel from '../components/ui/OrnatePanel'
-import { FormField, Input, Textarea } from '../components/ui/FormField'
-import Select from '../components/ui/Select'
+import { FormField, Input } from '../components/ui/FormField'
 
 type Tab = 'questions' | 'tests' | 'passages'
 
 export default function BankPage() {
-  const { bankId = '' } = useParams<{ bankId: string }>()
-  const navigate        = useNavigate()
-  const queryClient     = useQueryClient()
+  const { bankId = '' }       = useParams<{ bankId: string }>()
+  const navigate              = useNavigate()
+  const queryClient           = useQueryClient()
+  const [searchParams]        = useSearchParams()
 
   const { data: bank }             = useBank(bankId)
   const { data: categories = [] }  = useCategories(bankId)
   const { data: tests = [] }       = useTests(bankId)
   const { data: passages = [] }    = usePassages(bankId)
-  const createPassage              = useCreatePassage(bankId)
   const deletePassage              = useDeletePassage(bankId)
   const generateTest               = useGenerateTest(bankId)
   const startAttempt               = useStartAttempt()
 
-  const [tab,           setTab]           = useState<Tab>('questions')
+  const [tab,           setTab]           = useState<Tab>((searchParams.get('tab') as Tab) ?? 'questions')
   const [filter,        setFilter]        = useState<QuestionFilter>({})
   const [page,          setPage]          = useState(1)
   const [pageInput,     setPageInput]     = useState('1')
   const [importing,     setImporting]     = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
 
-  // New passage form state
-  const [pTitle,      setPTitle]      = useState('')
-  const [pBody,       setPBody]       = useState('')
-  const [pDifficulty, setPDifficulty] = useState('medium')
-  const [pCategoryId, setPCategoryId] = useState('')
   const [pConfirmDel, setPConfirmDel] = useState<string | null>(null)
 
   // Passage test generate form state
@@ -122,10 +116,6 @@ export default function BankPage() {
             <span className="hidden sm:inline">{importing ? 'Importing…' : '⬆ Import'}</span>
             <span className="sm:hidden">⬆</span>
           </button>
-          <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}/questions/new`)}>
-            <span className="hidden sm:inline">＋ Add Question</span>
-            <span className="sm:hidden">＋</span>
-          </button>
           {(['questions', 'passages', 'tests'] as Tab[]).map(t => (
             <button
               key={t}
@@ -192,7 +182,10 @@ export default function BankPage() {
           </div>
 
           {/* Questions */}
-          <div className="section-title">Questions</div>
+          <div className="flex items-center justify-between">
+            <div className="section-title" style={{ marginBottom: 0 }}>Questions</div>
+            <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}/questions/new`)}>＋ Add Question</button>
+          </div>
           <div className="flex flex-col gap-3">
             {questions.length === 0 ? (
               <div style={{ color: 'var(--ink-dim)', fontSize: '0.88rem', padding: '24px 0', textAlign: 'center' }}>
@@ -255,52 +248,6 @@ export default function BankPage() {
         <>
           <OrnateDivider />
 
-          {/* Create passage form */}
-          <div className="section-title">New Passage</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 720 }}>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <FormField label="Title">
-                <Input value={pTitle} onChange={e => setPTitle(e.target.value)} placeholder="Passage title" />
-              </FormField>
-              <FormField label="Category">
-                <Select
-                  value={pCategoryId}
-                  onChange={setPCategoryId}
-                  options={categories.map(c => ({ value: c.id, label: c.name }))}
-                  placeholder="Select category"
-                />
-              </FormField>
-              <FormField label="Difficulty">
-                <Select
-                  value={pDifficulty}
-                  onChange={setPDifficulty}
-                  options={[
-                    { value: 'easy',   label: 'Easy' },
-                    { value: 'medium', label: 'Medium' },
-                    { value: 'hard',   label: 'Hard' },
-                  ]}
-                />
-              </FormField>
-            </div>
-            <FormField label="Body">
-              <Textarea value={pBody} onChange={e => setPBody(e.target.value)} placeholder="Paste or type the passage text…" rows={6} />
-            </FormField>
-            <div>
-              <button
-                className="btn btn-primary"
-                disabled={!pTitle.trim() || !pCategoryId || createPassage.isPending}
-                onClick={async () => {
-                  await createPassage.mutateAsync({ title: pTitle.trim(), body: pBody, difficulty: pDifficulty, category_id: pCategoryId })
-                  setPTitle(''); setPBody('')
-                }}
-              >
-                {createPassage.isPending ? '…' : '＋ Add Passage'}
-              </button>
-            </div>
-          </div>
-
-          <OrnateDivider />
-
           {/* Generate passage test */}
           <OrnatePanel>
             <div className="section-title" style={{ marginBottom: 14 }}>Generate Passage Test</div>
@@ -345,7 +292,10 @@ export default function BankPage() {
           <OrnateDivider />
 
           {/* Passage list */}
-          <div className="section-title">Passages ({passages.length})</div>
+          <div className="flex items-center justify-between">
+            <div className="section-title" style={{ marginBottom: 0 }}>Passages ({passages.length})</div>
+            <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}/passages/new`)}>＋ Add Passage</button>
+          </div>
           {passages.length === 0 ? (
             <div style={{ color: 'var(--ink-dim)', fontSize: '0.88rem', padding: '24px 0', textAlign: 'center' }}>
               No passages yet.

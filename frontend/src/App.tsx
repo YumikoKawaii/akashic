@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Layout from './components/layout/Layout'
 import BankPage from './pages/BankPage'
 import QuestionFormPage from './pages/QuestionFormPage'
+import PassageFormPage from './pages/PassageFormPage'
 import AttemptPage from './pages/AttemptPage'
 import ResultsPage from './pages/ResultsPage'
 
@@ -26,6 +27,8 @@ export default function App() {
             <Route path="/banks/:bankId" element={<BankPage />} />
             <Route path="/banks/:bankId/questions/new" element={<QuestionFormPage />} />
             <Route path="/banks/:bankId/questions/:questionId/edit" element={<QuestionFormPage />} />
+            <Route path="/banks/:bankId/passages/new" element={<PassageFormPage />} />
+            <Route path="/banks/:bankId/passages/:passageId/edit" element={<PassageFormPage />} />
           </Route>
 
           {/* Full-screen (no sidebar) */}
