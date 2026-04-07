@@ -14,12 +14,16 @@ type TestConfig struct {
 	EasyCount   int      `json:"easy_count"`
 	MediumCount int      `json:"medium_count"`
 	HardCount   int      `json:"hard_count"`
+	TotalCount  int      `json:"total_count,omitempty"`
 	CategoryIDs []string `json:"category_ids,omitempty"`
 	Types       []string `json:"types,omitempty"`
 	Tags        []string `json:"tags,omitempty"`
 }
 
-func (t TestConfig) TotalCount() int {
+func (t TestConfig) QuestionCount() int {
+	if t.TotalCount > 0 {
+		return t.TotalCount
+	}
 	return t.EasyCount + t.MediumCount + t.HardCount
 }
 

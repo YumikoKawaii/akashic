@@ -86,44 +86,34 @@ func (s *TestService) Generate(bankID string, input GenerateTestInput) (*model.T
 
 	var picked []model.Question
 
-	for _, bucket := range []struct {
-		difficulty string
-		count      int
-	}{
-		{"easy", config.EasyCount},
-		{"medium", config.MediumCount},
-		{"hard", config.HardCount},
-	} {
-		if bucket.count <= 0 {
-			continue
-		}
+	if config.TotalCount > 0 {
+		// Flat-pool mode: pick N units regardless of difficulty.
+		var pool []unit
 
-		var units []unit
-
-		if wantStandalone {
-			questions, err := s.questionRepo.FindByBankAndDifficulty(bankID, bucket.difficulty, questionFilter)
-			if err != nil {
-				return nil, err
+		for _, diff := range []string{"easy", "medium", "hard"} {
+			if wantStandalone {
+				questions, err := s.questionRepo.FindByBankAndDifficulty(bankID, diff, questionFilter)
+				if err != nil {
+					return nil, err
+				}
+				for i := range questions {
+					pool = append(pool, unit{question: &questions[i]})
+				}
 			}
-			for i := range questions {
-				units = append(units, unit{question: &questions[i]})
-			}
-		}
-
-		if wantPassages {
-			passages, err := s.passageRepo.FindByBankAndDifficulty(bankID, bucket.difficulty, passageFilter)
-			if err != nil {
-				return nil, err
-			}
-			for i := range passages {
-				units = append(units, unit{passage: &passages[i]})
+			if wantPassages {
+				passages, err := s.passageRepo.FindByBankAndDifficulty(bankID, diff, passageFilter)
+				if err != nil {
+					return nil, err
+				}
+				for i := range passages {
+					pool = append(pool, unit{passage: &passages[i]})
+				}
 			}
 		}
 
-		rand.Shuffle(len(units), func(i, j int) { units[i], units[j] = units[j], units[i] })
-
-		n := min(bucket.count, len(units))
-		for _, u := range units[:n] {
+		rand.Shuffle(len(pool), func(i, j int) { pool[i], pool[j] = pool[j], pool[i] })
+		n := min(config.TotalCount, len(pool))
+		for _, u := range pool[:n] {
 			if u.question != nil {
 				picked = append(picked, *u.question)
 			} else {
@@ -132,6 +122,57 @@ func (s *TestService) Generate(bankID string, input GenerateTestInput) (*model.T
 					return nil, err
 				}
 				picked = append(picked, questions...)
+			}
+		}
+	} else {
+		// Per-difficulty mode.
+		for _, bucket := range []struct {
+			difficulty string
+			count      int
+		}{
+			{"easy", config.EasyCount},
+			{"medium", config.MediumCount},
+			{"hard", config.HardCount},
+		} {
+			if bucket.count <= 0 {
+				continue
+			}
+
+			var units []unit
+
+			if wantStandalone {
+				questions, err := s.questionRepo.FindByBankAndDifficulty(bankID, bucket.difficulty, questionFilter)
+				if err != nil {
+					return nil, err
+				}
+				for i := range questions {
+					units = append(units, unit{question: &questions[i]})
+				}
+			}
+
+			if wantPassages {
+				passages, err := s.passageRepo.FindByBankAndDifficulty(bankID, bucket.difficulty, passageFilter)
+				if err != nil {
+					return nil, err
+				}
+				for i := range passages {
+					units = append(units, unit{passage: &passages[i]})
+				}
+			}
+
+			rand.Shuffle(len(units), func(i, j int) { units[i], units[j] = units[j], units[i] })
+
+			n := min(bucket.count, len(units))
+			for _, u := range units[:n] {
+				if u.question != nil {
+					picked = append(picked, *u.question)
+				} else {
+					questions, err := s.questionRepo.FindByPassage(u.passage.ID)
+					if err != nil {
+						return nil, err
+					}
+					picked = append(picked, questions...)
+				}
 			}
 		}
 	}

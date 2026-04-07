@@ -35,10 +35,12 @@ export default function GenerateTestForm({ bank, categories }: Props) {
   const [name,        setName]        = useState('')
   const [categoryIds, setCategoryIds] = useState<string[]>([])
   const [types,       setTypes]       = useState<string[]>([])
+  const [mode,        setMode]        = useState<'difficulty' | 'count'>('difficulty')
   const [easy,       setEasy]       = useState(def.easy_count   ?? 3)
   const [medium,     setMedium]     = useState(def.medium_count ?? 5)
   const [hard,       setHard]       = useState(def.hard_count   ?? 2)
-  const total = easy + medium + hard
+  const [totalCount, setTotalCount] = useState(10)
+  const diffTotal = easy + medium + hard
 
   const handleTotalChange = (n: number) => {
     const [e, m, h] = autoSplit(Math.max(0, n))
@@ -46,15 +48,23 @@ export default function GenerateTestForm({ bank, categories }: Props) {
   }
 
   const handleGenerate = async () => {
+    const config = mode === 'count'
+      ? {
+          easy_count: 0, medium_count: 0, hard_count: 0,
+          total_count: totalCount,
+          ...(categoryIds.length ? { category_ids: categoryIds } : {}),
+          ...(types.length       ? { types }                     : {}),
+        }
+      : {
+          easy_count:   easy,
+          medium_count: medium,
+          hard_count:   hard,
+          ...(categoryIds.length ? { category_ids: categoryIds } : {}),
+          ...(types.length       ? { types }                     : {}),
+        }
     const test = await generate.mutateAsync({
       name: name.trim() || `${bank.name} — ${new Date().toLocaleString()}`,
-      config: {
-        easy_count:   easy,
-        medium_count: medium,
-        hard_count:   hard,
-        ...(categoryIds.length ? { category_ids: categoryIds } : {}),
-        ...(types.length       ? { types }                     : {}),
-      },
+      config,
     })
     const attempt = await start.mutateAsync({ bankId: bank.id, testId: test.id })
     navigate(`/attempts/${attempt.id}`)
@@ -89,38 +99,69 @@ export default function GenerateTestForm({ bank, categories }: Props) {
         </FormField>
       </div>
 
-      {/* Row 2: Difficulty + Actions */}
+      {/* Row 2: Mode toggle + count inputs + Generate */}
       <div className="flex flex-wrap gap-4 items-end">
-        <FormField label={`Questions · Total ${total}`}>
-          <div className="flex gap-2 items-center">
+        {/* Mode toggle */}
+        <div className="flex gap-1" style={{ border: '1px solid var(--border-dim)', padding: 3, borderRadius: 4 }}>
+          {(['difficulty', 'count'] as const).map(m => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              style={{
+                fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.1em',
+                padding: '4px 10px', border: 'none', cursor: 'pointer', borderRadius: 2,
+                background: mode === m ? 'var(--gold-dim)' : 'transparent',
+                color: mode === m ? 'var(--bg)' : 'var(--ink-dim)',
+                textTransform: 'uppercase',
+              }}
+            >
+              {m === 'difficulty' ? 'By Difficulty' : 'By Count'}
+            </button>
+          ))}
+        </div>
+
+        {mode === 'difficulty' ? (
+          <FormField label={`Questions · Total ${diffTotal}`}>
+            <div className="flex gap-2 items-center">
+              <input
+                type="number" min={1} max={100}
+                value={diffTotal}
+                onChange={e => handleTotalChange(Number(e.target.value))}
+                className="form-input"
+                style={{ width: 54, textAlign: 'center', padding: '7px 4px' }}
+                title="Set total — auto-splits 25% easy / 50% medium / 25% hard"
+              />
+              <span style={{ color: 'var(--border-dim)', fontSize: '0.65rem', padding: '0 2px' }}>▸</span>
+              {([['easy', easy, setEasy], ['medium', medium, setMedium], ['hard', hard, setHard]] as const).map(
+                ([diff, val, set]) => (
+                  <div key={diff} className="flex items-center gap-1">
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: DIFF_COLORS[diff], boxShadow: `0 0 4px ${DIFF_COLORS[diff]}`, flexShrink: 0, display: 'inline-block' }} />
+                    <span style={{ fontSize: '0.65rem', color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', letterSpacing: '0.05em' }}>
+                      {DIFF_LABELS[diff]}
+                    </span>
+                    <input
+                      type="number" min={0} max={50}
+                      value={val}
+                      onChange={e => set(Math.max(0, Number(e.target.value)))}
+                      className="form-input"
+                      style={{ width: 46, textAlign: 'center', padding: '7px 4px' }}
+                    />
+                  </div>
+                )
+              )}
+            </div>
+          </FormField>
+        ) : (
+          <FormField label="Questions">
             <input
-              type="number" min={1} max={100}
-              value={total}
-              onChange={e => handleTotalChange(Number(e.target.value))}
+              type="number" min={1} max={200}
+              value={totalCount}
+              onChange={e => setTotalCount(Math.max(1, Number(e.target.value)))}
               className="form-input"
-              style={{ width: 54, textAlign: 'center', padding: '7px 4px' }}
-              title="Set total — auto-splits 25% easy / 50% medium / 25% hard"
+              style={{ width: 72, textAlign: 'center', padding: '7px 4px' }}
             />
-            <span style={{ color: 'var(--border-dim)', fontSize: '0.65rem', padding: '0 2px' }}>▸</span>
-            {([['easy', easy, setEasy], ['medium', medium, setMedium], ['hard', hard, setHard]] as const).map(
-              ([diff, val, set]) => (
-                <div key={diff} className="flex items-center gap-1">
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: DIFF_COLORS[diff], boxShadow: `0 0 4px ${DIFF_COLORS[diff]}`, flexShrink: 0, display: 'inline-block' }} />
-                  <span style={{ fontSize: '0.65rem', color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', letterSpacing: '0.05em' }}>
-                    {DIFF_LABELS[diff]}
-                  </span>
-                  <input
-                    type="number" min={0} max={50}
-                    value={val}
-                    onChange={e => set(Math.max(0, Number(e.target.value)))}
-                    className="form-input"
-                    style={{ width: 46, textAlign: 'center', padding: '7px 4px' }}
-                  />
-                </div>
-              )
-            )}
-          </div>
-        </FormField>
+          </FormField>
+        )}
 
         <button
           className="btn btn-primary"

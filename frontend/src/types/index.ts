@@ -2,6 +2,7 @@ export interface TestConfig {
   easy_count: number
   medium_count: number
   hard_count: number
+  total_count?: number
   category_ids?: string[]
   types?: string[]
   tags?: string[]
