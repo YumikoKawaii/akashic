@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAttempt, useSubmitAttempt } from '../hooks/useAttempts'
 import { Passage, TestQuestion } from '../types'
@@ -18,9 +18,20 @@ function AnswerOptions({ q, selected, onSelect, revealed }: {
 }) {
   const locked = !!revealed
 
+  // Shuffle MCQ options once per question (stable across re-renders).
+  const shuffledOptions = useMemo(() => {
+    const opts = [...(q.options ?? [])]
+    for (let i = opts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [opts[i], opts[j]] = [opts[j], opts[i]]
+    }
+    return opts
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q.id])
+
   if (q.type === 'mcq') return (
     <div className="answer-options">
-      {(q.options ?? []).map((opt, i) => {
+      {shuffledOptions.map((opt, i) => {
         const isCorrectOpt = locked && opt === q.correct_answer
         const isWrongSel   = locked && opt === selected && opt !== q.correct_answer
         return (
