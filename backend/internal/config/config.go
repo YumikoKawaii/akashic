@@ -19,6 +19,9 @@ type Config struct {
 	GoogleCallbackURL  string
 	JWTSecret          string
 	FrontendURL        string
+
+	LocalAuthEmail    string
+	LocalAuthPassword string
 }
 
 func Load() *Config {
@@ -36,6 +39,9 @@ func Load() *Config {
 		GoogleCallbackURL:  getEnv("GOOGLE_CALLBACK_URL", "http://localhost:8080/api/v1/auth/google/callback"),
 		JWTSecret:          getEnv("JWT_SECRET", "change-me-in-production"),
 		FrontendURL:        getEnv("FRONTEND_URL", "http://localhost:5173"),
+
+		LocalAuthEmail:    getEnv("LOCAL_AUTH_EMAIL", ""),
+		LocalAuthPassword: getEnv("LOCAL_AUTH_PASSWORD", ""),
 	}
 }
 

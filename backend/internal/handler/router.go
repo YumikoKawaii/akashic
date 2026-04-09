@@ -27,6 +27,7 @@ func NewRouter(h Handlers) *gin.Engine {
 	auth := r.Group("/api/v1/auth")
 	auth.GET("/google", h.Auth.Login)
 	auth.GET("/google/callback", h.Auth.Callback)
+	auth.POST("/login", h.Auth.LocalLogin)
 	auth.GET("/me", h.AuthMW, h.Auth.Me)
 	auth.POST("/logout", h.AuthMW, h.Auth.Logout)
 
