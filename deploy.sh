@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-ENV_FILE="/app/akashic.env"
+ENV_FILE="$HOME/.env.akashic"
 CONTAINER="akashic"
 IMAGE="yumikokawaii/akashic"
 

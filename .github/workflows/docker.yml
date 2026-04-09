@@ -35,13 +35,4 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker load -i /tmp/akashic.tar
-            docker stop akashic || true
-            docker rm akashic || true
-            docker run -d \
-              --name akashic \
-              --restart unless-stopped \
-              -p 8080:8080 \
-              --env-file /app/akashic.env \
-              yumikokawaii/akashic:${{ github.ref_name }}
-            rm /tmp/akashic.tar
+            bash ~/deploy.sh ${{ github.ref_name }}
