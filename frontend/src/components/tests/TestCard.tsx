@@ -21,7 +21,9 @@ export default function TestCard({ test, bankId }: Props) {
   }
 
   const cfg   = test.config
-  const total = (cfg.easy_count ?? 0) + (cfg.medium_count ?? 0) + (cfg.hard_count ?? 0)
+  const total = cfg.total_count && cfg.total_count > 0
+    ? cfg.total_count
+    : (cfg.easy_count ?? 0) + (cfg.medium_count ?? 0) + (cfg.hard_count ?? 0)
 
   const completed = attempts.filter(a => a.completed_at)
 
@@ -37,7 +39,7 @@ export default function TestCard({ test, bankId }: Props) {
         easy={cfg.easy_count ?? 0}
         medium={cfg.medium_count ?? 0}
         hard={cfg.hard_count ?? 0}
-        total={10}
+        total={total}
       />
 
       <div className="test-card-footer">
