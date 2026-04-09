@@ -12,6 +12,8 @@ if [ -z "$1" ]; then
 fi
 
 TAG="$1"
+PORT=$(grep -E '^SERVER_PORT=' "$ENV_FILE" | cut -d= -f2)
+PORT="${PORT:-8080}"
 
 # ── Load image ────────────────────────────────────────────────
 echo "Loading image from /tmp/akashic.tar..."
@@ -27,7 +29,7 @@ echo "Starting $IMAGE:$TAG..."
 docker run -d \
   --name "$CONTAINER" \
   --restart unless-stopped \
-  -p 8080:8080 \
+  -p "$PORT:$PORT" \
   --env-file "$ENV_FILE" \
   "$IMAGE:$TAG"
 
