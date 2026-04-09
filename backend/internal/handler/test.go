@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/yumikokawaii/akashic/internal/middleware"
 	"github.com/yumikokawaii/akashic/internal/service"
 )
 
@@ -16,7 +17,7 @@ func NewTestHandler(svc *service.TestService) *TestHandler {
 }
 
 func (h *TestHandler) List(c *gin.Context) {
-	tests, err := h.svc.ListByBank(c.Param("bankId"))
+	tests, err := h.svc.ListByBank(c.Param("bankId"), middleware.UserID(c))
 	if err != nil {
 		handleError(c, err)
 		return
@@ -39,7 +40,7 @@ func (h *TestHandler) Generate(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	test, err := h.svc.Generate(c.Param("bankId"), input)
+	test, err := h.svc.Generate(c.Param("bankId"), middleware.UserID(c), input)
 	if err != nil {
 		handleError(c, err)
 		return

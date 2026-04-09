@@ -27,8 +27,8 @@ func NewTestService(
 	return &TestService{uow: u, testRepo: testRepo, questionRepo: questionRepo, passageRepo: passageRepo, bankRepo: bankRepo}
 }
 
-func (s *TestService) ListByBank(bankID string) ([]model.Test, error) {
-	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+func (s *TestService) ListByBank(bankID, userID string) ([]model.Test, error) {
+	if _, err := s.bankRepo.FindByIDForUser(bankID, userID); err != nil {
 		return nil, err
 	}
 	return s.testRepo.FindByBank(bankID)
@@ -50,8 +50,8 @@ type unit struct {
 	passage  *model.Passage
 }
 
-func (s *TestService) Generate(bankID string, input GenerateTestInput) (*model.Test, error) {
-	bank, err := s.bankRepo.FindByID(bankID)
+func (s *TestService) Generate(bankID, userID string, input GenerateTestInput) (*model.Test, error) {
+	bank, err := s.bankRepo.FindByIDForUser(bankID, userID)
 	if err != nil {
 		return nil, err
 	}
