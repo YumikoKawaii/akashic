@@ -84,7 +84,8 @@ auth.GET("/me", h.AuthMW, h.Auth.Me)
 	// ── Static frontend ────────────────────────────────────────────────────────
 	if h.StaticDir != "" {
 		r.Static("/assets", h.StaticDir+"/assets")
-		r.StaticFile("/favicon.ico", h.StaticDir+"/favicon.ico")
+		r.Static("/favicon", h.StaticDir+"/favicon")
+		r.StaticFile("/favicon.ico", h.StaticDir+"/favicon/favicon.ico")
 
 		r.NoRoute(func(c *gin.Context) {
 			if strings.HasPrefix(c.Request.URL.Path, "/api") {
