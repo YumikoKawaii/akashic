@@ -24,6 +24,7 @@ rm -f /tmp/akashic.tar
 echo "Stopping existing container..."
 docker stop "$CONTAINER" 2>/dev/null || true
 docker rm   "$CONTAINER" 2>/dev/null || true
+sleep 2
 
 echo "Starting $IMAGE:$TAG..."
 docker run -d \
