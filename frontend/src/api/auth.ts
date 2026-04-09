@@ -7,9 +7,6 @@ export const authApi = {
   me: (): Promise<User> =>
     api.get('/auth/me').then(r => r.data),
 
-  localLogin: (email: string, password: string): Promise<void> =>
-    api.post('/auth/login', { email, password }).then(() => undefined),
-
-  logout: (): Promise<void> =>
+logout: (): Promise<void> =>
     api.post('/auth/logout').then(() => undefined),
 }

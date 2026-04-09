@@ -12,14 +12,12 @@ import (
 )
 
 type AuthHandler struct {
-	svc               *service.AuthService
-	frontendURL       string
-	localAuthEmail    string
-	localAuthPassword string
+	svc         *service.AuthService
+	frontendURL string
 }
 
-func NewAuthHandler(svc *service.AuthService, frontendURL, localEmail, localPassword string) *AuthHandler {
-	return &AuthHandler{svc: svc, frontendURL: frontendURL, localAuthEmail: localEmail, localAuthPassword: localPassword}
+func NewAuthHandler(svc *service.AuthService, frontendURL string) *AuthHandler {
+	return &AuthHandler{svc: svc, frontendURL: frontendURL}
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -42,12 +40,11 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 		return
 	}
 
-	user, jwtToken, err := h.svc.HandleCallback(code)
+	_, jwtToken, err := h.svc.HandleCallback(code)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	_ = user
 
 	maxAge := int((7 * 24 * time.Hour).Seconds())
 	c.SetCookie("auth_token", jwtToken, maxAge, "/", "", false, true)
@@ -61,25 +58,6 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		"name":       c.GetString(middleware.CtxUserName),
 		"avatar_url": c.GetString(middleware.CtxAvatarURL),
 	})
-}
-
-func (h *AuthHandler) LocalLogin(c *gin.Context) {
-	var body struct {
-		Email    string `json:"email"    binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
-	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	_, jwtToken, err := h.svc.LocalLogin(body.Email, body.Password, h.localAuthEmail, h.localAuthPassword)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
-	maxAge := int((7 * 24 * time.Hour).Seconds())
-	c.SetCookie("auth_token", jwtToken, maxAge, "/", "", false, true)
-	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {

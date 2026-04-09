@@ -106,30 +106,6 @@ func (s *AuthService) IssueJWT(user *model.User) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(s.jwtSecret))
 }
 
-// LocalLogin authenticates with a static email/password from env vars.
-// Uses "local:<email>" as google_id so it doesn't conflict with real Google accounts.
-func (s *AuthService) LocalLogin(email, password, expectedEmail, expectedPassword string) (*model.User, string, error) {
-	if expectedEmail == "" || expectedPassword == "" {
-		return nil, "", fmt.Errorf("local auth is not enabled")
-	}
-	if email != expectedEmail || password != expectedPassword {
-		return nil, "", fmt.Errorf("invalid credentials")
-	}
-	user := &model.User{
-		GoogleID:  "local:" + email,
-		Email:     email,
-		Name:      email,
-		AvatarURL: "",
-	}
-	if err := s.userRepo.Upsert(user); err != nil {
-		return nil, "", fmt.Errorf("upsert user: %w", err)
-	}
-	token, err := s.IssueJWT(user)
-	if err != nil {
-		return nil, "", err
-	}
-	return user, token, nil
-}
 
 func (s *AuthService) ParseJWT(tokenStr string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &JWTClaims{}, func(t *jwt.Token) (any, error) {

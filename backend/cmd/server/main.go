@@ -57,7 +57,7 @@ func main() {
 	authMW := middleware.Auth(authSvc)
 
 	handlers := handler.Handlers{
-		Auth:      handler.NewAuthHandler(authSvc, cfg.FrontendURL, cfg.LocalAuthEmail, cfg.LocalAuthPassword),
+		Auth:      handler.NewAuthHandler(authSvc, cfg.FrontendURL),
 		Bank:      handler.NewBankHandler(bankSvc),
 		Category:  handler.NewCategoryHandler(categorySvc),
 		Question:  handler.NewQuestionHandler(questionSvc, ingestSvc),

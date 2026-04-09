@@ -20,8 +20,6 @@ type Config struct {
 	JWTSecret          string
 	FrontendURL        string
 
-	LocalAuthEmail    string
-	LocalAuthPassword string
 }
 
 func Load() *Config {
@@ -40,8 +38,6 @@ func Load() *Config {
 		JWTSecret:          getEnv("JWT_SECRET", "change-me-in-production"),
 		FrontendURL:        getEnv("FRONTEND_URL", "http://localhost:5173"),
 
-		LocalAuthEmail:    getEnv("LOCAL_AUTH_EMAIL", ""),
-		LocalAuthPassword: getEnv("LOCAL_AUTH_PASSWORD", ""),
 	}
 }
 
