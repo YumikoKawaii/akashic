@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCreateBank } from '../../hooks/useBanks'
 import { useLayout } from '../../context/LayoutContext'
+import { useAuth } from '../../contexts/AuthContext'
 
 export default function TopBar() {
   const navigate   = useNavigate()
   const createBank = useCreateBank()
   const { sidebarOpen, toggleSidebar } = useLayout()
+  const { user, logout } = useAuth()
   const [creating, setCreating] = useState(false)
   const [name, setName]         = useState('')
 
@@ -54,6 +56,20 @@ export default function TopBar() {
             <span className="hidden sm:inline">＋ New Bank</span>
             <span className="sm:hidden">＋</span>
           </button>
+        )}
+
+        {user && (
+          <div className="flex items-center gap-2" style={{ marginLeft: 8, paddingLeft: 12, borderLeft: '1px solid var(--border-dim)' }}>
+            {user.avatar_url && (
+              <img src={user.avatar_url} alt={user.name} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid var(--border-dim)' }} />
+            )}
+            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.1em', color: 'var(--ink-dim)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user.name}
+            </span>
+            <button className="btn btn-ghost" style={{ padding: '4px 8px', fontSize: '0.6rem' }} onClick={logout}>
+              Sign Out
+            </button>
+          </div>
         )}
       </div>
     </header>

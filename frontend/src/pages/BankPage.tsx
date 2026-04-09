@@ -1,13 +1,14 @@
 import { useRef, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { useBank } from '../hooks/useBanks'
+import { useBank, useMembers, useAddMember, useRemoveMember } from '../hooks/useBanks'
 import { useQuestions } from '../hooks/useQuestions'
 import { useTests } from '../hooks/useTests'
 import { useCategories } from '../hooks/useCategories'
 import { usePassages, useDeletePassage } from '../hooks/usePassages'
 import { useGenerateTest } from '../hooks/useTests'
 import { useStartAttempt } from '../hooks/useAttempts'
+import { useAuth } from '../contexts/AuthContext'
 import { QuestionFilter } from '../types'
 import { questionsApi } from '../api/questions'
 import QuestionCard from '../components/questions/QuestionCard'
@@ -25,13 +26,21 @@ export default function BankPage() {
   const queryClient           = useQueryClient()
   const [searchParams]        = useSearchParams()
 
+  const { user }                   = useAuth()
   const { data: bank }             = useBank(bankId)
   const { data: categories = [] }  = useCategories(bankId)
   const { data: tests = [] }       = useTests(bankId)
   const { data: passages = [] }    = usePassages(bankId)
+  const { data: members = [] }     = useMembers(bankId)
   const deletePassage              = useDeletePassage(bankId)
   const generateTest               = useGenerateTest(bankId)
   const startAttempt               = useStartAttempt()
+  const addMember                  = useAddMember(bankId)
+  const removeMember               = useRemoveMember(bankId)
+
+  const myRole = bank?.my_role ?? 'viewer'
+  const canEdit = myRole === 'owner' || myRole === 'editor'
+  const isOwner = myRole === 'owner'
 
   const [tab,           setTab]           = useState<Tab>((searchParams.get('tab') as Tab) ?? 'questions')
   const [filter,        setFilter]        = useState<QuestionFilter>({})
@@ -41,6 +50,12 @@ export default function BankPage() {
   const [importMessage, setImportMessage] = useState<string | null>(null)
 
   const [pConfirmDel, setPConfirmDel] = useState<string | null>(null)
+
+  // Share panel state
+  const [shareOpen,    setShareOpen]    = useState(false)
+  const [shareEmail,   setShareEmail]   = useState('')
+  const [shareRole,    setShareRole]    = useState<'editor' | 'viewer'>('viewer')
+  const [shareError,   setShareError]   = useState<string | null>(null)
 
   // Passage test generate form state
   const [pgName,   setPgName]   = useState('')
@@ -102,32 +117,107 @@ export default function BankPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">{bank.name} — <span>Question Bank</span></h1>
-          <p className="page-meta">{total} questions · {categories.length} categories</p>
+          <p className="page-meta">
+            {total} questions · {categories.length} categories
+            <span style={{
+              marginLeft: 10,
+              fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.12em',
+              padding: '2px 7px', border: '1px solid var(--border-dim)',
+              color: myRole === 'owner' ? 'var(--gold)' : myRole === 'editor' ? 'var(--ink-dim)' : 'var(--ink-dim)',
+              textTransform: 'uppercase',
+            }}>
+              {myRole}
+            </span>
+          </p>
         </div>
         <div className="page-header-actions">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json,.yaml,.yml,.csv"
-            style={{ display: 'none' }}
-            onChange={handleImport}
-          />
-          <button className="btn btn-ghost" disabled={importing} onClick={() => fileInputRef.current?.click()}>
-            <span className="hidden sm:inline">{importing ? 'Importing…' : '⬆ Import'}</span>
-            <span className="sm:hidden">⬆</span>
-          </button>
+          {canEdit && (
+            <>
+              <input ref={fileInputRef} type="file" accept=".json,.yaml,.yml,.csv" style={{ display: 'none' }} onChange={handleImport} />
+              <button className="btn btn-ghost" disabled={importing} onClick={() => fileInputRef.current?.click()}>
+                <span className="hidden sm:inline">{importing ? 'Importing…' : '⬆ Import'}</span>
+                <span className="sm:hidden">⬆</span>
+              </button>
+            </>
+          )}
+          {isOwner && (
+            <button className="btn btn-ghost" onClick={() => setShareOpen(v => !v)}>
+              ⇄ Share
+            </button>
+          )}
           {(['questions', 'passages', 'tests'] as Tab[]).map(t => (
-            <button
-              key={t}
-              className={`btn ${tab === t ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setTab(t)}
-              style={{ textTransform: 'capitalize' }}
-            >
+            <button key={t} className={`btn ${tab === t ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setTab(t)} style={{ textTransform: 'capitalize' }}>
               {t}
             </button>
           ))}
         </div>
       </div>
+
+      {/* Share panel */}
+      {shareOpen && isOwner && (
+        <OrnatePanel>
+          <div className="section-title" style={{ marginBottom: 14 }}>Share Bank</div>
+          <div className="flex gap-3 items-end flex-wrap" style={{ marginBottom: 16 }}>
+            <FormField label="Email">
+              <Input
+                value={shareEmail}
+                onChange={e => { setShareEmail(e.target.value); setShareError(null) }}
+                placeholder="user@example.com"
+                style={{ width: 220 }}
+              />
+            </FormField>
+            <FormField label="Role">
+              <div className="flex gap-1" style={{ border: '1px solid var(--border-dim)', padding: 3, borderRadius: 4 }}>
+                {(['viewer', 'editor'] as const).map(r => (
+                  <button key={r} onClick={() => setShareRole(r)} style={{
+                    fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.1em',
+                    padding: '4px 10px', border: 'none', cursor: 'pointer', borderRadius: 2,
+                    background: shareRole === r ? 'var(--gold-dim)' : 'transparent',
+                    color: shareRole === r ? 'var(--bg)' : 'var(--ink-dim)',
+                    textTransform: 'uppercase',
+                  }}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </FormField>
+            <button
+              className="btn btn-primary"
+              disabled={!shareEmail.trim() || addMember.isPending}
+              onClick={async () => {
+                try {
+                  await addMember.mutateAsync({ email: shareEmail.trim(), role: shareRole })
+                  setShareEmail('')
+                  setShareError(null)
+                } catch {
+                  setShareError('User not found — they must sign in once first.')
+                }
+              }}
+            >
+              {addMember.isPending ? '…' : '＋ Add'}
+            </button>
+          </div>
+          {shareError && <div style={{ fontSize: '0.8rem', color: '#b03030', marginBottom: 10 }}>{shareError}</div>}
+          {members.length > 0 && (
+            <div className="flex flex-col gap-2">
+              {members.map(m => (
+                <div key={m.user_id} className="flex items-center justify-between gap-3" style={{ fontSize: '0.85rem', padding: '6px 0', borderBottom: '1px solid var(--border-dim)' }}>
+                  <div>
+                    <span style={{ color: 'var(--ink)' }}>{m.user?.name}</span>
+                    <span style={{ color: 'var(--ink-dim)', marginLeft: 8, fontSize: '0.75rem' }}>{m.user?.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.1em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>{m.role}</span>
+                    {m.user_id !== user?.id && (
+                      <button className="btn-danger" style={{ fontSize: '0.6rem', padding: '2px 6px' }} onClick={() => removeMember.mutate(m.user_id)}>✕</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </OrnatePanel>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -163,7 +253,7 @@ export default function BankPage() {
       {tab === 'questions' && (
         <>
           {/* Generate form */}
-          <GenerateTestForm bank={bank} categories={categories} />
+          {canEdit && <GenerateTestForm bank={bank} categories={categories} />}
 
           {/* Filters */}
           <div className="flex gap-2 flex-wrap items-center">
@@ -184,7 +274,7 @@ export default function BankPage() {
           {/* Questions */}
           <div className="flex items-center justify-between">
             <div className="section-title" style={{ marginBottom: 0 }}>Questions</div>
-            <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}/questions/new`)}>＋ Add Question</button>
+            {canEdit && <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}/questions/new`)}>＋ Add Question</button>}
           </div>
           <div className="flex flex-col gap-3">
             {questions.length === 0 ? (
@@ -249,7 +339,7 @@ export default function BankPage() {
           <OrnateDivider />
 
           {/* Generate passage test */}
-          <OrnatePanel>
+          {canEdit && <OrnatePanel>
             <div className="section-title" style={{ marginBottom: 14 }}>Generate Passage Test</div>
             <div className="flex flex-wrap gap-4 items-end">
               <FormField label="Test Name">
@@ -287,14 +377,14 @@ export default function BankPage() {
                 {generateTest.isPending || startAttempt.isPending ? '…' : '⚔ Generate'}
               </button>
             </div>
-          </OrnatePanel>
+          </OrnatePanel>}
 
           <OrnateDivider />
 
           {/* Passage list */}
           <div className="flex items-center justify-between">
             <div className="section-title" style={{ marginBottom: 0 }}>Passages ({passages.length})</div>
-            <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}/passages/new`)}>＋ Add Passage</button>
+            {canEdit && <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}/passages/new`)}>＋ Add Passage</button>}
           </div>
           {passages.length === 0 ? (
             <div style={{ color: 'var(--ink-dim)', fontSize: '0.88rem', padding: '24px 0', textAlign: 'center' }}>
@@ -311,18 +401,20 @@ export default function BankPage() {
                         {p.category?.name} · {p.difficulty} · {p.questions?.length ?? 0} questions
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      {pConfirmDel === p.id ? (
-                        <>
-                          <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px', color: '#b03030', borderColor: 'rgba(176,48,48,0.4)' }}
-                            onClick={() => { deletePassage.mutate(p.id); setPConfirmDel(null) }}>Yes</button>
-                          <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px' }}
-                            onClick={() => setPConfirmDel(null)}>Cancel</button>
-                        </>
-                      ) : (
-                        <button className="btn-danger" onClick={() => setPConfirmDel(p.id)}>✕</button>
-                      )}
-                    </div>
+                    {canEdit && (
+                      <div className="flex gap-2">
+                        {pConfirmDel === p.id ? (
+                          <>
+                            <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px', color: '#b03030', borderColor: 'rgba(176,48,48,0.4)' }}
+                              onClick={() => { deletePassage.mutate(p.id); setPConfirmDel(null) }}>Yes</button>
+                            <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px' }}
+                              onClick={() => setPConfirmDel(null)}>Cancel</button>
+                          </>
+                        ) : (
+                          <button className="btn-danger" onClick={() => setPConfirmDel(p.id)}>✕</button>
+                        )}
+                      </div>
+                    )}
                   </div>
                   {p.body && (
                     <p style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', lineHeight: 1.6, whiteSpace: 'pre-wrap',

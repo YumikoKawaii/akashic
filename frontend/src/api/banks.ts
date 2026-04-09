@@ -1,5 +1,5 @@
 import client from './client'
-import { Bank, TestConfig } from '../types'
+import { Bank, BankMember, TestConfig } from '../types'
 
 export const banksApi = {
   list: ()                             => client.get<Bank[]>('/banks').then(r => r.data),
@@ -11,4 +11,11 @@ export const banksApi = {
   updateDefaultConfig: (id: string, config: TestConfig) =>
     client.put<Bank>(`/banks/${id}/default-config`, config).then(r => r.data),
   delete: (id: string) => client.delete(`/banks/${id}`),
+
+  listMembers: (id: string) =>
+    client.get<BankMember[]>(`/banks/${id}/members`).then(r => r.data),
+  addMember: (id: string, data: { email: string; role: string }) =>
+    client.post<BankMember>(`/banks/${id}/members`, data).then(r => r.data),
+  removeMember: (id: string, userId: string) =>
+    client.delete(`/banks/${id}/members/${userId}`),
 }

@@ -1,3 +1,20 @@
+export interface User {
+  id: string
+  email: string
+  name: string
+  avatar_url: string
+}
+
+export type BankRole = 'owner' | 'editor' | 'viewer'
+
+export interface BankMember {
+  bank_id: string
+  user_id: string
+  user?: User
+  role: BankRole
+  created_at: string
+}
+
 export interface TestConfig {
   easy_count: number
   medium_count: number
@@ -12,7 +29,9 @@ export interface Bank {
   id: string
   name: string
   description: string
+  owner_id?: string
   default_config: TestConfig
+  my_role: BankRole
   created_at: string
   updated_at: string
 }

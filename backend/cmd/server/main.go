@@ -14,6 +14,7 @@ import (
 
 	"github.com/yumikokawaii/akashic/internal/config"
 	"github.com/yumikokawaii/akashic/internal/handler"
+	"github.com/yumikokawaii/akashic/internal/middleware"
 	"github.com/yumikokawaii/akashic/internal/repository"
 	"github.com/yumikokawaii/akashic/internal/service"
 	"github.com/yumikokawaii/akashic/internal/uow"
@@ -22,12 +23,10 @@ import (
 func main() {
 	cfg := config.Load()
 
-	// Run migrations
 	if err := runMigrations(cfg); err != nil {
 		log.Fatalf("migration failed: %v", err)
 	}
 
-	// Connect GORM
 	db, err := gorm.Open(postgres.Open(cfg.DSN()), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
@@ -35,7 +34,6 @@ func main() {
 		log.Fatalf("failed to connect database: %v", err)
 	}
 
-	// Wire dependencies
 	unitOfWork := uow.New(db)
 
 	bankRepo     := repository.NewBankRepo(db)
@@ -44,8 +42,11 @@ func main() {
 	passageRepo  := repository.NewPassageRepo(db)
 	testRepo     := repository.NewTestRepo(db)
 	attemptRepo  := repository.NewAttemptRepo(db)
+	userRepo     := repository.NewUserRepo(db)
+	memberRepo   := repository.NewMemberRepo(db)
 
-	bankSvc     := service.NewBankService(bankRepo)
+	authSvc    := service.NewAuthService(userRepo, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleCallbackURL, cfg.JWTSecret)
+	bankSvc    := service.NewBankService(bankRepo, memberRepo, userRepo)
 	categorySvc := service.NewCategoryService(categoryRepo, bankRepo)
 	questionSvc := service.NewQuestionService(questionRepo, bankRepo, categoryRepo)
 	passageSvc  := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
@@ -53,13 +54,17 @@ func main() {
 	attemptSvc  := service.NewAttemptService(attemptRepo, testRepo)
 	ingestSvc   := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo, passageRepo)
 
+	authMW := middleware.Auth(authSvc)
+
 	handlers := handler.Handlers{
+		Auth:      handler.NewAuthHandler(authSvc, cfg.FrontendURL),
 		Bank:      handler.NewBankHandler(bankSvc),
 		Category:  handler.NewCategoryHandler(categorySvc),
 		Question:  handler.NewQuestionHandler(questionSvc, ingestSvc),
 		Passage:   handler.NewPassageHandler(passageSvc),
 		Test:      handler.NewTestHandler(testSvc),
 		Attempt:   handler.NewAttemptHandler(attemptSvc),
+		AuthMW:    authMW,
 		StaticDir: cfg.StaticDir,
 	}
 

@@ -2,6 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { banksApi } from '../api/banks'
 import { TestConfig } from '../types'
 
+export const memberKeys = {
+  list: (bankId: string) => ['banks', bankId, 'members'] as const,
+}
+
 export const bankKeys = {
   all:    ()         => ['banks'] as const,
   detail: (id: string) => ['banks', id] as const,
@@ -49,5 +53,29 @@ export function useDeleteBank() {
   return useMutation({
     mutationFn: banksApi.delete,
     onSuccess: () => qc.invalidateQueries({ queryKey: bankKeys.all() }),
+  })
+}
+
+export function useMembers(bankId: string) {
+  return useQuery({
+    queryKey: memberKeys.list(bankId),
+    queryFn: () => banksApi.listMembers(bankId),
+    enabled: !!bankId,
+  })
+}
+
+export function useAddMember(bankId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { email: string; role: string }) => banksApi.addMember(bankId, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: memberKeys.list(bankId) }),
+  })
+}
+
+export function useRemoveMember(bankId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (userId: string) => banksApi.removeMember(bankId, userId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: memberKeys.list(bankId) }),
   })
 }

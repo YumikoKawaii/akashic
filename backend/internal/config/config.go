@@ -13,6 +13,12 @@ type Config struct {
 	DBName     string
 	ServerPort string
 	StaticDir  string
+
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleCallbackURL  string
+	JWTSecret          string
+	FrontendURL        string
 }
 
 func Load() *Config {
@@ -24,6 +30,12 @@ func Load() *Config {
 		DBName:     getEnv("DB_NAME", "akashic"),
 		ServerPort: getEnv("SERVER_PORT", "8080"),
 		StaticDir:  getEnv("STATIC_DIR", "./static"),
+
+		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
+		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
+		GoogleCallbackURL:  getEnv("GOOGLE_CALLBACK_URL", "http://localhost:8080/api/v1/auth/google/callback"),
+		JWTSecret:          getEnv("JWT_SECRET", "change-me-in-production"),
+		FrontendURL:        getEnv("FRONTEND_URL", "http://localhost:5173"),
 	}
 }
 

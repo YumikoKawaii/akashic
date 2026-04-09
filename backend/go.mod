@@ -1,8 +1,6 @@
 module github.com/yumikokawaii/akashic
 
-go 1.23
-
-toolchain go1.24.0
+go 1.25.0
 
 require (
 	github.com/gin-gonic/gin v1.9.1
@@ -14,6 +12,7 @@ require (
 )
 
 require (
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
@@ -22,6 +21,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -45,6 +45,7 @@ require (
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.20.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

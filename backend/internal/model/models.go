@@ -27,14 +27,44 @@ func (t TestConfig) QuestionCount() int {
 	return t.EasyCount + t.MediumCount + t.HardCount
 }
 
+// User is an authenticated person.
+type User struct {
+	ID        string    `gorm:"type:uuid;primaryKey"      json:"id"`
+	GoogleID  string    `gorm:"uniqueIndex;not null"      json:"-"`
+	Email     string    `gorm:"uniqueIndex;not null"      json:"email"`
+	Name      string    `gorm:"not null"                  json:"name"`
+	AvatarURL string    `gorm:"not null;default:''"       json:"avatar_url"`
+	CreatedAt time.Time `                                  json:"created_at"`
+	UpdatedAt time.Time `                                  json:"updated_at"`
+}
+
+func (u *User) BeforeCreate(_ *gorm.DB) error {
+	if u.ID == "" {
+		u.ID = uuid.New().String()
+	}
+	return nil
+}
+
+// BankMember records a user's access to a bank.
+// Role: owner | editor | viewer
+type BankMember struct {
+	BankID    string    `gorm:"type:uuid;primaryKey"  json:"bank_id"`
+	UserID    string    `gorm:"type:uuid;primaryKey"  json:"user_id"`
+	User      *User     `gorm:"foreignKey:UserID"     json:"user,omitempty"`
+	Role      string    `gorm:"not null"              json:"role"`
+	CreatedAt time.Time `                             json:"created_at"`
+}
+
 // Bank is a top-level question bank (e.g. "English", "Japanese").
 type Bank struct {
-	ID            string     `gorm:"type:uuid;primaryKey"          json:"id"`
-	Name          string     `gorm:"uniqueIndex;not null"           json:"name"`
-	Description   string     `gorm:"not null;default:''"            json:"description"`
-	DefaultConfig TestConfig `gorm:"serializer:json"                json:"default_config"`
-	CreatedAt     time.Time  `                                      json:"created_at"`
-	UpdatedAt     time.Time  `                                      json:"updated_at"`
+	ID            string       `gorm:"type:uuid;primaryKey"          json:"id"`
+	Name          string       `gorm:"uniqueIndex;not null"           json:"name"`
+	Description   string       `gorm:"not null;default:''"            json:"description"`
+	OwnerID       *string      `gorm:"type:uuid"                      json:"owner_id,omitempty"`
+	DefaultConfig TestConfig   `gorm:"serializer:json"                json:"default_config"`
+	Members       []BankMember `gorm:"foreignKey:BankID"              json:"members,omitempty"`
+	CreatedAt     time.Time    `                                      json:"created_at"`
+	UpdatedAt     time.Time    `                                      json:"updated_at"`
 }
 
 func (b *Bank) BeforeCreate(_ *gorm.DB) error {
@@ -42,6 +72,12 @@ func (b *Bank) BeforeCreate(_ *gorm.DB) error {
 		b.ID = uuid.New().String()
 	}
 	return nil
+}
+
+// BankWithRole is a Bank enriched with the current user's role.
+type BankWithRole struct {
+	Bank
+	MyRole string `json:"my_role"`
 }
 
 // Category groups questions within a bank.

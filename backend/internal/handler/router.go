@@ -8,12 +8,14 @@ import (
 )
 
 type Handlers struct {
+	Auth      *AuthHandler
 	Bank      *BankHandler
 	Category  *CategoryHandler
 	Question  *QuestionHandler
 	Passage   *PassageHandler
 	Test      *TestHandler
 	Attempt   *AttemptHandler
+	AuthMW    gin.HandlerFunc
 	StaticDir string
 }
 
@@ -21,8 +23,15 @@ func NewRouter(h Handlers) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
 
-	// ── API routes ────────────────────────────────────────────
-	v1 := r.Group("/api/v1")
+	// ── Auth routes (no middleware) ────────────────────────────────────────────
+	auth := r.Group("/api/v1/auth")
+	auth.GET("/google", h.Auth.Login)
+	auth.GET("/google/callback", h.Auth.Callback)
+	auth.GET("/me", h.AuthMW, h.Auth.Me)
+	auth.POST("/logout", h.AuthMW, h.Auth.Logout)
+
+	// ── Protected API routes ───────────────────────────────────────────────────
+	v1 := r.Group("/api/v1", h.AuthMW)
 
 	banks := v1.Group("/banks")
 	banks.GET("", h.Bank.List)
@@ -34,6 +43,10 @@ func NewRouter(h Handlers) *gin.Engine {
 		bank.PUT("", h.Bank.Update)
 		bank.PUT("/default-config", h.Bank.UpdateDefaultConfig)
 		bank.DELETE("", h.Bank.Delete)
+
+		bank.GET("/members", h.Bank.ListMembers)
+		bank.POST("/members", h.Bank.AddMember)
+		bank.DELETE("/members/:userId", h.Bank.RemoveMember)
 
 		bank.GET("/categories", h.Category.List)
 		bank.POST("/categories", h.Category.Create)
@@ -68,12 +81,11 @@ func NewRouter(h Handlers) *gin.Engine {
 		attempts.PUT("/:id/submit", h.Attempt.Submit)
 	}
 
-	// ── Static frontend ───────────────────────────────────────
+	// ── Static frontend ────────────────────────────────────────────────────────
 	if h.StaticDir != "" {
 		r.Static("/assets", h.StaticDir+"/assets")
 		r.StaticFile("/favicon.ico", h.StaticDir+"/favicon.ico")
 
-		// SPA fallback: serve index.html for all non-API routes
 		r.NoRoute(func(c *gin.Context) {
 			if strings.HasPrefix(c.Request.URL.Path, "/api") {
 				c.JSON(http.StatusNotFound, gin.H{"error": "endpoint not found"})
@@ -82,6 +94,12 @@ func NewRouter(h Handlers) *gin.Engine {
 			c.File(h.StaticDir + "/index.html")
 		})
 	}
+
+	// CORS helper for dev (Vite proxy handles this in prod)
+	r.Use(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Credentials", "true")
+		c.Next()
+	})
 
 	return r
 }
