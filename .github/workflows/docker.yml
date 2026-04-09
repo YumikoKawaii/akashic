@@ -18,7 +18,9 @@ jobs:
         run: docker build -t yumikokawaii/akashic:${{ github.ref_name }} .
 
       - name: Save image to tar
-        run: docker save yumikokawaii/akashic:${{ github.ref_name }} -o akashic.tar
+        run: |
+          docker save yumikokawaii/akashic:${{ github.ref_name }} -o akashic.tar
+          chmod 644 akashic.tar
 
       - name: Copy image to EC2
         uses: appleboy/scp-action@v0.1.7
