@@ -45,7 +45,7 @@ func Load() *Config {
 
 func (c *Config) DSN() string {
 	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=require",
 		c.DBHost, c.DBPort, c.DBUser, c.DBPassword, c.DBName,
 	)
 	if c.DBSchema != "" {
@@ -56,7 +56,7 @@ func (c *Config) DSN() string {
 
 func (c *Config) MigrateURL() string {
 	url := fmt.Sprintf(
-		"postgresql://%s:%s@%s:%s/%s?sslmode=disable",
+		"postgresql://%s:%s@%s:%s/%s?sslmode=require",
 		c.DBUser, c.DBPassword, c.DBHost, c.DBPort, c.DBName,
 	)
 	if c.DBSchema != "" {
