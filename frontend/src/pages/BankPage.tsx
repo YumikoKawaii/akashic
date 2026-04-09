@@ -40,6 +40,7 @@ export default function BankPage() {
 
   const myRole = bank?.my_role ?? 'viewer'
   const canEdit = myRole === 'owner' || myRole === 'editor'
+  const canGenerate = !!bank
   const isOwner = myRole === 'owner'
 
   const [tab,           setTab]           = useState<Tab>((searchParams.get('tab') as Tab) ?? 'questions')
@@ -253,7 +254,7 @@ export default function BankPage() {
       {tab === 'questions' && (
         <>
           {/* Generate form */}
-          {canEdit && <GenerateTestForm bank={bank} categories={categories} />}
+          {canGenerate && <GenerateTestForm bank={bank!} categories={categories} />}
 
           {/* Filters */}
           <div className="flex gap-2 flex-wrap items-center">
@@ -339,7 +340,7 @@ export default function BankPage() {
           <OrnateDivider />
 
           {/* Generate passage test */}
-          {canEdit && <OrnatePanel>
+          {canGenerate && <OrnatePanel>
             <div className="section-title" style={{ marginBottom: 14 }}>Generate Passage Test</div>
             <div className="flex flex-wrap gap-4 items-end">
               <FormField label="Test Name">
