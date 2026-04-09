@@ -11,6 +11,7 @@ type Config struct {
 	DBUser     string
 	DBPassword string
 	DBName     string
+	DBSchema   string
 	ServerPort string
 	StaticDir  string
 
@@ -28,7 +29,8 @@ func Load() *Config {
 		DBPort:     getEnv("DB_PORT", "5432"),
 		DBUser:     getEnv("DB_USER", "akashic"),
 		DBPassword: getEnv("DB_PASSWORD", "akashic"),
-		DBName:     getEnv("DB_NAME", "akashic"),
+		DBName:     getEnv("DB_NAME", "postgres"),
+		DBSchema:   getEnv("DB_SCHEMA", "akashic"),
 		ServerPort: getEnv("SERVER_PORT", "8080"),
 		StaticDir:  getEnv("STATIC_DIR", "./static"),
 
@@ -42,17 +44,25 @@ func Load() *Config {
 }
 
 func (c *Config) DSN() string {
-	return fmt.Sprintf(
+	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		c.DBHost, c.DBPort, c.DBUser, c.DBPassword, c.DBName,
 	)
+	if c.DBSchema != "" {
+		dsn += " search_path=" + c.DBSchema
+	}
+	return dsn
 }
 
 func (c *Config) MigrateURL() string {
-	return fmt.Sprintf(
+	url := fmt.Sprintf(
 		"postgresql://%s:%s@%s:%s/%s?sslmode=disable",
 		c.DBUser, c.DBPassword, c.DBHost, c.DBPort, c.DBName,
 	)
+	if c.DBSchema != "" {
+		url += "&search_path=" + c.DBSchema
+	}
+	return url
 }
 
 func getEnv(key, defaultVal string) string {
