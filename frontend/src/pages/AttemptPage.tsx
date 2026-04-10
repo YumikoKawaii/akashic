@@ -261,14 +261,6 @@ export default function AttemptPage() {
               </div>
             ))}
 
-            <button
-              className="btn btn-primary pulse"
-              onClick={handleSubmit}
-              disabled={submit.isPending}
-              style={{ padding: '12px 48px', marginBottom: 32 }}
-            >
-              {submit.isPending ? '…' : '⚔ Submit All'}
-            </button>
           </div>
         </div>
       </>
