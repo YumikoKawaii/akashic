@@ -560,6 +560,7 @@ input[type=number].form-input { -moz-appearance: textfield; }
 /* ─── Attempt / Test taking ───────────────────────────────────── */
 .attempt-layout {
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--bg);
@@ -593,7 +594,8 @@ input[type=number].form-input { -moz-appearance: textfield; }
 .attempt-body {
   flex: 1;
   overflow-y: auto;
-  padding: 48px;
+  -webkit-overflow-scrolling: touch;
+  padding: 48px 48px calc(48px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -779,7 +781,7 @@ input[type=number].form-input { -moz-appearance: textfield; }
   .ornate-panel { padding: 16px; }
 
   .attempt-header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
-  .attempt-body   { padding: 24px 16px; gap: 20px; }
+  .attempt-body   { padding: 24px 16px calc(24px + env(safe-area-inset-bottom, 0px)); gap: 20px; }
 
   .answer-options { grid-template-columns: 1fr; }
 
@@ -791,5 +793,5 @@ input[type=number].form-input { -moz-appearance: textfield; }
 @media (max-width: 480px) {
   .main-content { padding: 16px 12px; }
   .topbar-logo  { font-size: 1.05rem; }
-  .attempt-body { padding: 16px 12px; }
+  .attempt-body { padding: 16px 12px calc(16px + env(safe-area-inset-bottom, 0px)); }
 }
