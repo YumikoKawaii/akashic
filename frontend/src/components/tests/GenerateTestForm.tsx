@@ -122,7 +122,8 @@ export default function GenerateTestForm({ bank, categories }: Props) {
 
         {mode === 'difficulty' ? (
           <FormField label={`Questions · Total ${diffTotal}`}>
-            <div className="flex gap-2 items-center">
+            <div style={{ overflowX: 'auto', paddingBottom: 2 }}>
+            <div className="flex gap-2 items-center" style={{ minWidth: 'max-content' }}>
               <input
                 type="number" min={1} max={100}
                 value={diffTotal}
@@ -149,6 +150,7 @@ export default function GenerateTestForm({ bank, categories }: Props) {
                   </div>
                 )
               )}
+            </div>
             </div>
           </FormField>
         ) : (

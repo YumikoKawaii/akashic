@@ -170,6 +170,7 @@ body {
 
 /* ─── Main content ────────────────────────────────────────────── */
 .main-content {
+  overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   min-height: 0;
@@ -766,6 +767,8 @@ input[type=number].form-input { -moz-appearance: textfield; }
   .topbar-divider  { display: none; }
 
   .main-content { padding: 20px 16px; gap: 18px; }
+
+  .page-header-actions { flex-wrap: wrap; }
 
   .page-header {
     flex-direction: column;
