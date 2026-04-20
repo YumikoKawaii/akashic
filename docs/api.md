@@ -119,7 +119,7 @@ GET /banks/:bankId/questions
 |---|---|
 | `category_id` | Filter by category UUID |
 | `difficulty` | `easy`, `medium`, or `hard` |
-| `type` | `mcq`, `true_false`, or `open` |
+| `type` | `mcq`, `true_false`, `open`, `tf_ng`, or `sentence_completion` |
 | `tags` | Repeatable. `?tags=grammar&tags=verbs` |
 
 ### Get Question
@@ -143,7 +143,7 @@ POST /banks/:bankId/questions
   "tags": ["japan", "geography"]
 }
 ```
-**Types:** `mcq` | `true_false` | `open`
+**Types:** `mcq` | `true_false` | `open` | `tf_ng` | `sentence_completion`
 **Difficulties:** `easy` | `medium` | `hard`
 
 **Response 201**
@@ -195,7 +195,7 @@ Content-Type: multipart/form-data
     "created": 0,
     "failed": 2,
     "errors": [
-      { "row": 3, "text": "Some question text", "message": "invalid type \"quiz\": must be mcq, true_false, or open" },
+      { "row": 3, "text": "Some question text", "message": "invalid type \"quiz\": must be mcq, true_false, open, tf_ng, or sentence_completion" },
       { "row": 7, "text": "", "message": "text is required" }
     ]
   }
@@ -358,6 +358,6 @@ PUT /attempts/:id/submit
 }
 ```
 
-Scoring applies to `mcq` and `true_false` questions. `open` questions always count as correct (self-graded).
+Scoring applies to `mcq`, `true_false`, `tf_ng`, and `sentence_completion` questions. `sentence_completion` matching is case-insensitive and whitespace-trimmed. `open` questions are excluded from scoring (self-graded).
 
 Submitting an already-completed attempt returns **409 Conflict**.
