@@ -372,7 +372,7 @@ func csvRecordToRow(record []string, idx map[string]int) (IngestRow, error) {
 
 // ── Validation ─────────────────────────────────────────────────────────────
 
-var validTypes        = map[string]bool{"mcq": true, "true_false": true, "open": true, "tf_ng": true}
+var validTypes        = map[string]bool{"mcq": true, "true_false": true, "open": true, "tf_ng": true, "sentence_completion": true}
 var validDifficulties = map[string]bool{"easy": true, "medium": true, "hard": true}
 
 func validateRow(row IngestRow) error {
@@ -380,7 +380,7 @@ func validateRow(row IngestRow) error {
 		return fmt.Errorf("text is required")
 	}
 	if !validTypes[row.Type] {
-		return fmt.Errorf("invalid type %q: must be mcq, true_false, open, or tf_ng", row.Type)
+		return fmt.Errorf("invalid type %q: must be mcq, true_false, open, tf_ng, or sentence_completion", row.Type)
 	}
 	if !validDifficulties[row.Difficulty] {
 		return fmt.Errorf("invalid difficulty %q: must be easy, medium, or hard", row.Difficulty)

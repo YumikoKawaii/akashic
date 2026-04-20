@@ -103,6 +103,54 @@ function AnswerOptions({ q, selected, onSelect, revealed }: {
     </div>
   )
 
+  if (q.type === 'sentence_completion') {
+    const parts = q.text.split('___')
+    const isCorrect = locked && selected.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()
+    const inputColor = locked ? (isCorrect ? 'rgba(42,138,58,0.7)' : 'rgba(176,48,48,0.7)') : 'var(--gold-dim)'
+    return (
+      <div style={{ width: '100%' }}>
+        <p style={{ fontSize: '1.1rem', lineHeight: 2, color: 'var(--ink)', display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '0 4px' }}>
+          {parts.map((part, i) => (
+            <span key={i} style={{ display: 'contents' }}>
+              <span>{part}</span>
+              {i < parts.length - 1 && (
+                <input
+                  type="text"
+                  value={selected}
+                  onChange={e => !locked && onSelect(e.target.value)}
+                  readOnly={locked}
+                  autoFocus={i === 0}
+                  style={{
+                    display: 'inline-block',
+                    minWidth: 120,
+                    width: `${Math.max(selected.length, q.correct_answer.length, 10) * 0.68}ch`,
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: `2px solid ${inputColor}`,
+                    outline: 'none',
+                    fontSize: '1.1rem',
+                    color: locked ? inputColor : 'var(--ink)',
+                    padding: '0 4px',
+                    textAlign: 'center',
+                    fontFamily: 'inherit',
+                    transition: 'border-color 0.2s, color 0.2s',
+                  }}
+                  placeholder="…"
+                />
+              )}
+            </span>
+          ))}
+        </p>
+        {locked && !isCorrect && (
+          <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
+            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>CORRECT ANSWER</div>
+            <div style={{ color: '#2a8a3a' }}>{q.correct_answer}</div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   // open
   return (
     <div style={{ width: '100%' }}>
@@ -274,7 +322,11 @@ export default function AttemptPage() {
   const q         = tq?.question
   const isLast    = currentIdx === total - 1
   const isOpen    = q?.type === 'open'
-  const isCorrect = revealed && !isOpen && selected === q?.correct_answer
+  const isCorrect = revealed && !isOpen && (
+    q?.type === 'sentence_completion'
+      ? selected.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()
+      : selected === q?.correct_answer
+  )
 
   const handleReveal = () => {
     if (!q || !selected) return
@@ -282,7 +334,10 @@ export default function AttemptPage() {
     setRevealed(true)
     if (!isOpen) {
       setScorable(s => s + 1)
-      if (selected === q.correct_answer) setScore(s => s + 1)
+      const correct = q.type === 'sentence_completion'
+        ? selected.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()
+        : selected === q.correct_answer
+      if (correct) setScore(s => s + 1)
     }
   }
 

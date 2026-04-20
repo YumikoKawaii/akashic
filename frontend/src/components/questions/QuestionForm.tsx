@@ -14,10 +14,11 @@ interface Props {
 }
 
 const TYPE_OPTIONS   = [
-  { value: 'mcq',        label: 'MCQ' },
-  { value: 'true_false', label: 'True / False' },
-  { value: 'open',       label: 'Open' },
-  { value: 'tf_ng',      label: 'T / F / Not Given' },
+  { value: 'mcq',                 label: 'MCQ' },
+  { value: 'true_false',          label: 'True / False' },
+  { value: 'open',                label: 'Open' },
+  { value: 'tf_ng',               label: 'T / F / Not Given' },
+  { value: 'sentence_completion', label: 'Fill in Blank' },
 ]
 const DIFF_OPTIONS   = [
   { value: 'easy',   label: 'Easy' },
@@ -59,7 +60,7 @@ export default function QuestionForm({ bankId, categories, passages = [], initia
       text,
       type,
       difficulty,
-      options:        type !== 'open' ? options.filter(Boolean) : [],
+      options:        (type !== 'open' && type !== 'sentence_completion') ? options.filter(Boolean) : [],
       correct_answer: type !== 'open' ? correctAnswer : '',
       tags:           tags.split(',').map(t => t.trim()).filter(Boolean),
       ...(passageId ? { passage_id: passageId } : {}),
@@ -164,6 +165,19 @@ export default function QuestionForm({ bankId, categories, passages = [], initia
               ]}
               placeholder="— Select —"
             />
+          </FormField>
+        )}
+
+        {type === 'sentence_completion' && (
+          <FormField label="Correct Answer (the word or phrase that fills the blank)">
+            <Input
+              value={correctAnswer}
+              onChange={e => setCorrectAnswer(e.target.value)}
+              placeholder="e.g. industrial revolution"
+            />
+            <p style={{ fontSize: '0.75rem', color: 'var(--ink-dim)', marginTop: 6 }}>
+              Use <code style={{ fontFamily: 'monospace', background: 'rgba(154,112,24,0.08)', padding: '1px 5px' }}>___</code> in the question text above to mark where the blank appears.
+            </p>
           </FormField>
         )}
 

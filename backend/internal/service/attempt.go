@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/yumikokawaii/akashic/internal/model"
@@ -80,8 +81,16 @@ func (s *AttemptService) grade(attempt *model.TestAttempt) (score, total int) {
 			continue
 		}
 		total++
-		if answer, ok := attempt.Answers[q.ID]; ok && answer == q.CorrectAnswer {
-			score++
+		if answer, ok := attempt.Answers[q.ID]; ok {
+			got := strings.TrimSpace(answer)
+			want := strings.TrimSpace(q.CorrectAnswer)
+			if q.Type == "sentence_completion" {
+				if strings.EqualFold(got, want) {
+					score++
+				}
+			} else if got == want {
+				score++
+			}
 		}
 	}
 	return score, total

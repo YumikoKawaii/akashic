@@ -102,7 +102,10 @@ export default function ResultsPage() {
                     if (!q) return null
                     const userAns = attempt.answers?.[q.id]
                     const isOpen  = q.type === 'open'
-                    const correct = isOpen ? null : userAns === q.correct_answer
+                    const correct = isOpen ? null
+                      : q.type === 'sentence_completion'
+                        ? (userAns ?? '').trim().toLowerCase() === q.correct_answer.trim().toLowerCase()
+                        : userAns === q.correct_answer
                     const options = q.options ?? []
 
                     return (
@@ -167,6 +170,37 @@ export default function ResultsPage() {
                                 {' · '}Correct: <strong style={{ color: '#2a8a3a' }}>{q.correct_answer}</strong>
                               </div>
                             )}
+
+                            {q.type === 'sentence_completion' && (() => {
+                              const parts = q.text.split('___')
+                              return (
+                                <div style={{ fontSize: '0.95rem', lineHeight: 1.9, color: 'var(--ink)' }}>
+                                  {parts.map((part, i) => (
+                                    <span key={i}>
+                                      {part}
+                                      {i < parts.length - 1 && (
+                                        <span style={{
+                                          display: 'inline-block',
+                                          padding: '0 8px',
+                                          borderBottom: `2px solid ${correct ? 'rgba(42,138,58,0.7)' : 'rgba(176,48,48,0.7)'}`,
+                                          color: correct ? '#2a8a3a' : '#b03030',
+                                          fontWeight: 600,
+                                          minWidth: 60,
+                                          textAlign: 'center',
+                                        }}>
+                                          {userAns || '—'}
+                                        </span>
+                                      )}
+                                    </span>
+                                  ))}
+                                  {!correct && (
+                                    <div style={{ marginTop: 6, fontSize: '0.82rem', color: 'var(--ink-dim)' }}>
+                                      Correct: <strong style={{ color: '#2a8a3a' }}>{q.correct_answer}</strong>
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })()}
 
                             {isOpen && (
                               <div style={{ background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', padding: '10px 14px', fontSize: '0.9rem', color: 'var(--ink)' }}>
