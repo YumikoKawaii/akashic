@@ -391,6 +391,14 @@ func validateRow(row IngestRow) error {
 	if row.Type == "mcq" && len(row.Options) < 2 {
 		return fmt.Errorf("mcq questions require at least 2 options")
 	}
+	if row.Type == "sentence_completion" {
+		if !strings.Contains(row.Text, "___") {
+			return fmt.Errorf("sentence_completion question text must contain ___ to mark the blank")
+		}
+		if strings.TrimSpace(row.CorrectAnswer) == "" {
+			return fmt.Errorf("sentence_completion question requires a correct_answer")
+		}
+	}
 	return nil
 }
 

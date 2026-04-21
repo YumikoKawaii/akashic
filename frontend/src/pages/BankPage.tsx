@@ -66,25 +66,39 @@ export default function BankPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = Array.from(e.target.files ?? [])
+    if (!files.length) return
     e.target.value = ''
     setImporting(true)
     setImportMessage(null)
-    try {
-      const result = await questionsApi.ingest(bankId, file)
-      setImportMessage(`Imported ${result.created} question${result.created !== 1 ? 's' : ''} successfully.`)
-      queryClient.invalidateQueries({ queryKey: ['questions', bankId] })
-    } catch (err: any) {
-      const data = err?.response?.data?.data
-      if (data?.errors?.length) {
-        setImportMessage(`Import failed: ${data.errors.map((e: any) => `row ${e.row}: ${e.message}`).join('; ')}`)
-      } else {
-        setImportMessage('Import failed. Please check the file format.')
+
+    let totalCreated = 0
+    const fileErrors: string[] = []
+
+    for (const file of files) {
+      try {
+        const result = await questionsApi.ingest(bankId, file)
+        totalCreated += result.created
+      } catch (err: any) {
+        const data = err?.response?.data?.data
+        const detail = data?.errors?.length
+          ? data.errors.map((e: any) => `row ${e.row}: ${e.message}`).join('; ')
+          : 'invalid format'
+        fileErrors.push(`${file.name}: ${detail}`)
       }
-    } finally {
-      setImporting(false)
     }
+
+    queryClient.invalidateQueries({ queryKey: ['questions', bankId] })
+
+    if (fileErrors.length === 0) {
+      setImportMessage(`Imported ${totalCreated} question${totalCreated !== 1 ? 's' : ''} from ${files.length} file${files.length !== 1 ? 's' : ''}.`)
+    } else if (totalCreated > 0) {
+      setImportMessage(`Imported ${totalCreated} question${totalCreated !== 1 ? 's' : ''}. Errors: ${fileErrors.join(' | ')}`)
+    } else {
+      setImportMessage(`Import failed — ${fileErrors.join(' | ')}`)
+    }
+
+    setImporting(false)
   }
 
   const { data: paged } = useQuestions(bankId, filter, page)
@@ -134,7 +148,7 @@ export default function BankPage() {
         <div className="page-header-actions">
           {canEdit && (
             <>
-              <input ref={fileInputRef} type="file" accept=".json,.yaml,.yml,.csv" style={{ display: 'none' }} onChange={handleImport} />
+              <input ref={fileInputRef} type="file" accept=".json,.yaml,.yml,.csv" multiple style={{ display: 'none' }} onChange={handleImport} />
               <button className="btn btn-ghost" disabled={importing} onClick={() => fileInputRef.current?.click()}>
                 <span className="hidden sm:inline">{importing ? 'Importing…' : '⬆ Import'}</span>
                 <span className="sm:hidden">⬆</span>
