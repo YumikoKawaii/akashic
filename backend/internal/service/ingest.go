@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -108,6 +109,9 @@ func (s *IngestService) Ingest(bankID string, r io.Reader, ext string) (*IngestR
 		if item.question != nil {
 			err = validateRow(*item.question)
 		} else {
+			if item.passage.Difficulty == "" {
+				item.passage.Difficulty = "medium"
+			}
 			err = validatePassage(*item.passage)
 		}
 		if err != nil {
@@ -235,8 +239,17 @@ func parseItems(r io.Reader, ext string) ([]parsed, []IngestError) {
 }
 
 func parseJSONItems(r io.Reader) ([]parsed, []IngestError) {
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, []IngestError{{Row: 0, Message: "cannot read file: " + err.Error()}}
+	}
+	// Accept a single root object as a one-element array.
+	if trimmed := bytes.TrimSpace(data); len(trimmed) > 0 && trimmed[0] == '{' {
+		data = append([]byte{'['}, append(data, ']')...)
+	}
+
 	var raw []json.RawMessage
-	if err := json.NewDecoder(r).Decode(&raw); err != nil {
+	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, []IngestError{{Row: 0, Message: "invalid JSON: " + err.Error()}}
 	}
 
@@ -244,12 +257,15 @@ func parseJSONItems(r io.Reader) ([]parsed, []IngestError) {
 	for i, msg := range raw {
 		rowNum := i + 1
 		var probe struct {
-			Type string `json:"type"`
+			Type      string            `json:"type"`
+			Body      string            `json:"body"`
+			Questions []json.RawMessage `json:"questions"`
 		}
 		if err := json.Unmarshal(msg, &probe); err != nil {
 			return nil, []IngestError{{Row: rowNum, Message: "cannot read type field: " + err.Error()}}
 		}
-		if probe.Type == "passage" {
+		isPassage := probe.Type == "passage" || (probe.Body != "" && len(probe.Questions) > 0)
+		if isPassage {
 			var p IngestPassageRow
 			if err := json.Unmarshal(msg, &p); err != nil {
 				return nil, []IngestError{{Row: rowNum, Message: "invalid passage: " + err.Error()}}
