@@ -45,6 +45,39 @@
     "tags": ["counters", "grammar"]
   },
   {
+    "text": "Forests act as carbon ___, absorbing CO₂ from the atmosphere.",
+    "type": "word_bank_completion",
+    "difficulty": "medium",
+    "category_name": "Reading",
+    "options": ["sinks", "sources", "filters", "pumps", "regulators"],
+    "correct_answer": "sinks",
+    "tags": ["environment", "climate"]
+  },
+  {
+    "text": "Argued that economic growth inevitably leads to greater inequality.",
+    "type": "matching",
+    "difficulty": "hard",
+    "category_name": "Reading",
+    "options": ["A. Piketty", "B. Keynes", "C. Friedman", "D. Sen", "E. Stiglitz"],
+    "correct_answer": "A. Piketty",
+    "tags": ["economics"]
+  },
+  {
+    "text": "Which THREE of the following are mentioned as benefits of urban green spaces?",
+    "type": "multi_select",
+    "difficulty": "medium",
+    "category_name": "Reading",
+    "options": [
+      "A. Reduced air pollution",
+      "B. Higher property taxes",
+      "C. Improved mental health",
+      "D. Decreased biodiversity",
+      "E. Lower urban temperatures"
+    ],
+    "correct_answer": "A. Reduced air pollution|C. Improved mental health|E. Lower urban temperatures",
+    "tags": ["environment", "urban"]
+  },
+  {
     "type": "passage",
     "title": "The Role of Forests in Climate Regulation",
     "body": "Forests cover approximately 31% of the Earth's land surface and play a critical role in regulating the global climate. Through photosynthesis, trees absorb carbon dioxide and release oxygen, acting as carbon sinks that slow the accumulation of greenhouse gases in the atmosphere.\n\nDeforestation, however, reverses this process. When forests are cleared, the stored carbon is released back into the atmosphere, contributing significantly to global warming. The Amazon rainforest alone is estimated to store over 150 billion tons of carbon.\n\nBeyond carbon storage, forests regulate local climates by influencing rainfall patterns and moderating temperatures. The water cycle is also deeply connected to forest health — trees release water vapour through transpiration, which contributes to cloud formation and precipitation.",
@@ -83,6 +116,13 @@
         ],
         "correct_answer": "They release water vapour through transpiration, contributing to cloud formation",
         "tags": ["water cycle", "transpiration"]
+      },
+      {
+        "text": "Trees release water vapour through ___, which contributes to cloud formation.",
+        "type": "word_bank_completion",
+        "options": ["transpiration", "evaporation", "condensation", "precipitation", "respiration"],
+        "correct_answer": "transpiration",
+        "tags": ["water cycle"]
       }
     ]
   }

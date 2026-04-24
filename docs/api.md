@@ -119,7 +119,7 @@ GET /banks/:bankId/questions
 |---|---|
 | `category_id` | Filter by category UUID |
 | `difficulty` | `easy`, `medium`, or `hard` |
-| `type` | `mcq`, `true_false`, `open`, `tf_ng`, or `sentence_completion` |
+| `type` | `mcq`, `true_false`, `open`, `tf_ng`, `sentence_completion`, `word_bank_completion`, `matching`, or `multi_select` |
 | `tags` | Repeatable. `?tags=grammar&tags=verbs` |
 
 ### Get Question
@@ -143,7 +143,7 @@ POST /banks/:bankId/questions
   "tags": ["japan", "geography"]
 }
 ```
-**Types:** `mcq` | `true_false` | `open` | `tf_ng` | `sentence_completion`
+**Types:** `mcq` | `true_false` | `open` | `tf_ng` | `sentence_completion` | `word_bank_completion` | `matching` | `multi_select`
 **Difficulties:** `easy` | `medium` | `hard`
 
 **Response 201**
@@ -195,7 +195,7 @@ Content-Type: multipart/form-data
     "created": 0,
     "failed": 2,
     "errors": [
-      { "row": 3, "text": "Some question text", "message": "invalid type \"quiz\": must be mcq, true_false, open, tf_ng, or sentence_completion" },
+      { "row": 3, "text": "Some question text", "message": "invalid type \"quiz\": must be mcq, true_false, open, tf_ng, sentence_completion, word_bank_completion, matching, or multi_select" },
       { "row": 7, "text": "", "message": "text is required" }
     ]
   }
@@ -205,7 +205,8 @@ Content-Type: multipart/form-data
 ### File Formats
 
 #### JSON
-Array of question objects. `options` and `tags` are JSON arrays.
+Array of question objects (or a single root object). `options` and `tags` are JSON arrays. A passage object uses `"type": "passage"` and wraps sub-questions in a `questions` array.
+
 ```json
 [
   {
@@ -216,12 +217,57 @@ Array of question objects. `options` and `tags` are JSON arrays.
     "options": ["Tokyo", "Osaka", "Kyoto", "Hiroshima"],
     "correct_answer": "Tokyo",
     "tags": ["japan", "cities"]
+  },
+  {
+    "text": "Forests act as carbon ___, slowing greenhouse gas build-up.",
+    "type": "word_bank_completion",
+    "difficulty": "medium",
+    "category_name": "Reading",
+    "options": ["sinks", "sources", "filters", "pumps"],
+    "correct_answer": "sinks"
+  },
+  {
+    "text": "Argued that economic growth inevitably leads to greater inequality.",
+    "type": "matching",
+    "difficulty": "hard",
+    "category_name": "Reading",
+    "options": ["A. Piketty", "B. Keynes", "C. Friedman", "D. Sen"],
+    "correct_answer": "A. Piketty"
+  },
+  {
+    "text": "Which THREE are benefits of urban green spaces?",
+    "type": "multi_select",
+    "difficulty": "medium",
+    "category_name": "Reading",
+    "options": ["A. Reduced air pollution", "B. Higher taxes", "C. Improved mental health", "D. Lower urban temperatures"],
+    "correct_answer": "A. Reduced air pollution|C. Improved mental health|D. Lower urban temperatures"
+  },
+  {
+    "type": "passage",
+    "title": "The Role of Forests",
+    "body": "Forests cover approximately 31% of Earth's land...",
+    "difficulty": "medium",
+    "category_name": "Reading",
+    "questions": [
+      {
+        "text": "Trees absorb carbon dioxide and release oxygen.",
+        "type": "tf_ng",
+        "correct_answer": "True"
+      },
+      {
+        "text": "Forests act as carbon ___, slowing greenhouse gas build-up.",
+        "type": "word_bank_completion",
+        "options": ["sinks", "sources", "filters", "pumps"],
+        "correct_answer": "sinks"
+      }
+    ]
   }
 ]
 ```
 
 #### YAML
-Array of question objects. `options` and `tags` are YAML sequences.
+Array of question objects. `options` and `tags` are YAML sequences. Passages use `type: passage` with a nested `questions` list.
+
 ```yaml
 - text: "What is the capital of Japan?"
   type: mcq
@@ -236,19 +282,55 @@ Array of question objects. `options` and `tags` are YAML sequences.
   tags:
     - japan
     - cities
+
+- text: "Forests act as carbon ___, slowing greenhouse gas build-up."
+  type: word_bank_completion
+  difficulty: medium
+  category_name: Reading
+  options:
+    - sinks
+    - sources
+    - filters
+    - pumps
+  correct_answer: sinks
+
+- text: "Argued that economic growth inevitably leads to greater inequality."
+  type: matching
+  difficulty: hard
+  category_name: Reading
+  options:
+    - "A. Piketty"
+    - "B. Keynes"
+    - "C. Friedman"
+    - "D. Sen"
+  correct_answer: "A. Piketty"
+
+- text: "Which THREE are benefits of urban green spaces?"
+  type: multi_select
+  difficulty: medium
+  category_name: Reading
+  options:
+    - "A. Reduced air pollution"
+    - "B. Higher taxes"
+    - "C. Improved mental health"
+    - "D. Lower urban temperatures"
+  correct_answer: "A. Reduced air pollution|C. Improved mental health|D. Lower urban temperatures"
 ```
 
 #### CSV
 Headers: `text, type, difficulty, category_name, options, correct_answer, tags`
 
-`options` and `tags` are pipe-separated (`|`) within a single cell.
+`options` and `tags` are pipe-separated (`|`) within a single cell. `correct_answer` for `multi_select` is also pipe-separated. **CSV does not support passages** — use JSON or YAML for passage-grouped questions.
 
 ```csv
 text,type,difficulty,category_name,options,correct_answer,tags
 "What is the capital of Japan?",mcq,easy,Geography,Tokyo|Osaka|Kyoto|Hiroshima,Tokyo,japan|cities
+"Forests act as carbon ___.",word_bank_completion,medium,Reading,sinks|sources|filters|pumps,sinks,environment
+"Argued that growth leads to inequality.",matching,hard,Reading,"A. Piketty|B. Keynes|C. Friedman","A. Piketty",economics
+"Which TWO are benefits of forests?",multi_select,medium,Reading,"A. Carbon storage|B. Oxygen production|C. Soil erosion","A. Carbon storage|B. Oxygen production",environment
 ```
 
-**Sample files** are available in the `samples/` directory.
+**Sample files** are available in the `samples/` directory. See `docs/question_format.md` for full per-type field rules and the IELTS format map.
 
 ---
 
@@ -358,6 +440,13 @@ PUT /attempts/:id/submit
 }
 ```
 
-Scoring applies to `mcq`, `true_false`, `tf_ng`, and `sentence_completion` questions. `sentence_completion` matching is case-insensitive and whitespace-trimmed. `open` questions are excluded from scoring (self-graded).
+Scoring applies to all types except `open`. Rules by type:
+
+| Type | Rule |
+|---|---|
+| `mcq`, `true_false`, `tf_ng`, `matching` | Exact string match |
+| `sentence_completion`, `word_bank_completion` | Case-insensitive, whitespace-trimmed |
+| `multi_select` | Pipe-separated set match — order does not matter, all-or-nothing |
+| `open` | Not scored (self-graded) |
 
 Submitting an already-completed attempt returns **409 Conflict**.

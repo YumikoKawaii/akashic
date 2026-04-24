@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"sort"
 	"strings"
 	"time"
 
@@ -81,17 +82,47 @@ func (s *AttemptService) grade(attempt *model.TestAttempt) (score, total int) {
 			continue
 		}
 		total++
-		if answer, ok := attempt.Answers[q.ID]; ok {
-			got := strings.TrimSpace(answer)
-			want := strings.TrimSpace(q.CorrectAnswer)
-			if q.Type == "sentence_completion" {
-				if strings.EqualFold(got, want) {
-					score++
-				}
-			} else if got == want {
+		answer, ok := attempt.Answers[q.ID]
+		if !ok {
+			continue
+		}
+		got := strings.TrimSpace(answer)
+		want := strings.TrimSpace(q.CorrectAnswer)
+		switch q.Type {
+		case "sentence_completion", "word_bank_completion":
+			if strings.EqualFold(got, want) {
+				score++
+			}
+		case "multi_select":
+			if multiSelectMatch(got, want) {
+				score++
+			}
+		default:
+			if got == want {
 				score++
 			}
 		}
 	}
 	return score, total
+}
+
+func multiSelectMatch(got, want string) bool {
+	split := func(s string) []string {
+		parts := strings.Split(s, "|")
+		for i := range parts {
+			parts[i] = strings.TrimSpace(parts[i])
+		}
+		sort.Strings(parts)
+		return parts
+	}
+	g, w := split(got), split(want)
+	if len(g) != len(w) {
+		return false
+	}
+	for i := range g {
+		if g[i] != w[i] {
+			return false
+		}
+	}
+	return true
 }

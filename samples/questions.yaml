@@ -61,3 +61,45 @@
   tags:
     - vocabulary
     - synonyms
+
+- text: "The ___ of a word refers to its emotional association beyond its literal meaning."
+  type: word_bank_completion
+  difficulty: medium
+  category_name: Vocabulary
+  options:
+    - connotation
+    - denotation
+    - etymology
+    - syntax
+    - morphology
+  correct_answer: connotation
+  tags:
+    - vocabulary
+
+- text: "Match each literary device to the correct example."
+  type: matching
+  difficulty: medium
+  category_name: Literature
+  options:
+    - "A. Metaphor"
+    - "B. Simile"
+    - "C. Personification"
+    - "D. Alliteration"
+  correct_answer: "B. Simile"
+  tags:
+    - literary-devices
+
+- text: "Which TWO of the following are features of academic writing style?"
+  type: multi_select
+  difficulty: medium
+  category_name: Writing
+  options:
+    - "A. Formal vocabulary"
+    - "B. Frequent use of contractions"
+    - "C. Objective tone"
+    - "D. Personal anecdotes"
+    - "E. Colloquial language"
+  correct_answer: "A. Formal vocabulary|C. Objective tone"
+  tags:
+    - writing
+    - academic
