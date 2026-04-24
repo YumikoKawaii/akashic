@@ -38,7 +38,7 @@ func (s *QuestionService) GetByID(bankID, id string) (*model.Question, error) {
 type CreateQuestionInput struct {
 	CategoryID    string   `json:"category_id"    binding:"required"`
 	Text          string   `json:"text"           binding:"required"`
-	Type          string   `json:"type"           binding:"required,oneof=mcq true_false open sentence_completion"`
+	Type          string   `json:"type"           binding:"required,oneof=mcq true_false open tf_ng sentence_completion word_bank_completion matching multi_select"`
 	Difficulty    string   `json:"difficulty"     binding:"required,oneof=easy medium hard"`
 	Options       []string `json:"options"`
 	CorrectAnswer string   `json:"correct_answer"`
@@ -68,7 +68,7 @@ func (s *QuestionService) Create(bankID string, input CreateQuestionInput) (*mod
 type UpdateQuestionInput struct {
 	CategoryID    string   `json:"category_id"`
 	Text          string   `json:"text"`
-	Type          string   `json:"type"       binding:"omitempty,oneof=mcq true_false open sentence_completion"`
+	Type          string   `json:"type"       binding:"omitempty,oneof=mcq true_false open tf_ng sentence_completion word_bank_completion matching multi_select"`
 	Difficulty    string   `json:"difficulty" binding:"omitempty,oneof=easy medium hard"`
 	Options       []string `json:"options"`
 	CorrectAnswer string   `json:"correct_answer"`

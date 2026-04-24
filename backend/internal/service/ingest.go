@@ -388,7 +388,11 @@ func csvRecordToRow(record []string, idx map[string]int) (IngestRow, error) {
 
 // ── Validation ─────────────────────────────────────────────────────────────
 
-var validTypes        = map[string]bool{"mcq": true, "true_false": true, "open": true, "tf_ng": true, "sentence_completion": true}
+var validTypes = map[string]bool{
+	"mcq": true, "true_false": true, "open": true, "tf_ng": true,
+	"sentence_completion": true, "word_bank_completion": true,
+	"matching": true, "multi_select": true,
+}
 var validDifficulties = map[string]bool{"easy": true, "medium": true, "hard": true}
 
 func validateRow(row IngestRow) error {
@@ -413,6 +417,33 @@ func validateRow(row IngestRow) error {
 		}
 		if strings.TrimSpace(row.CorrectAnswer) == "" {
 			return fmt.Errorf("sentence_completion question requires a correct_answer")
+		}
+	}
+	if row.Type == "word_bank_completion" {
+		if !strings.Contains(row.Text, "___") {
+			return fmt.Errorf("word_bank_completion question text must contain ___ to mark the blank")
+		}
+		if len(row.Options) == 0 {
+			return fmt.Errorf("word_bank_completion question requires options (the word bank)")
+		}
+		if strings.TrimSpace(row.CorrectAnswer) == "" {
+			return fmt.Errorf("word_bank_completion question requires a correct_answer")
+		}
+	}
+	if row.Type == "matching" {
+		if len(row.Options) == 0 {
+			return fmt.Errorf("matching question requires options (the items to match to)")
+		}
+		if strings.TrimSpace(row.CorrectAnswer) == "" {
+			return fmt.Errorf("matching question requires a correct_answer")
+		}
+	}
+	if row.Type == "multi_select" {
+		if len(row.Options) < 2 {
+			return fmt.Errorf("multi_select question requires at least 2 options")
+		}
+		if strings.TrimSpace(row.CorrectAnswer) == "" {
+			return fmt.Errorf("multi_select question requires a correct_answer (pipe-separated, e.g. A|C)")
 		}
 	}
 	return nil
@@ -440,6 +471,20 @@ func validatePassage(p IngestPassageRow) error {
 		}
 		if sq.Type == "mcq" && len(sq.Options) < 2 {
 			return fmt.Errorf("question %d: mcq requires at least 2 options", i+1)
+		}
+		if sq.Type == "word_bank_completion" {
+			if !strings.Contains(sq.Text, "___") {
+				return fmt.Errorf("question %d: word_bank_completion text must contain ___", i+1)
+			}
+			if len(sq.Options) == 0 {
+				return fmt.Errorf("question %d: word_bank_completion requires options (the word bank)", i+1)
+			}
+		}
+		if sq.Type == "matching" && len(sq.Options) == 0 {
+			return fmt.Errorf("question %d: matching requires options (the items to match to)", i+1)
+		}
+		if sq.Type == "multi_select" && len(sq.Options) < 2 {
+			return fmt.Errorf("question %d: multi_select requires at least 2 options", i+1)
 		}
 	}
 	return nil

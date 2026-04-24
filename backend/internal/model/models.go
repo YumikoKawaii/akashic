@@ -120,7 +120,7 @@ func (p *Passage) BeforeCreate(_ *gorm.DB) error {
 }
 
 // Question belongs to one bank and one category.
-// Type: mcq | true_false | open | tf_ng
+// Type: mcq | true_false | open | tf_ng | sentence_completion | word_bank_completion | matching | multi_select
 // Difficulty: easy | medium | hard
 type Question struct {
 	ID            string         `gorm:"type:uuid;primaryKey"     json:"id"`
