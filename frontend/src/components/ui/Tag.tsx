@@ -2,11 +2,14 @@ import { QuestionDifficulty, QuestionType } from '../../types'
 
 export function TypeTag({ type }: { type: QuestionType }) {
   const label: Record<QuestionType, string> = {
-    mcq:                 'MCQ',
-    true_false:          'True / False',
-    open:                'Open',
-    tf_ng:               'T / F / NG',
-    sentence_completion: 'Fill in Blank',
+    mcq:                  'MCQ',
+    true_false:           'True / False',
+    open:                 'Open',
+    tf_ng:                'T / F / NG',
+    sentence_completion:  'Fill in Blank',
+    word_bank_completion: 'Word Bank',
+    matching:             'Matching',
+    multi_select:         'Multi Select',
   }
   return <span className="tag tag-type">{label[type]}</span>
 }

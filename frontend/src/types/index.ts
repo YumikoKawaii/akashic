@@ -45,7 +45,7 @@ export interface Category {
   updated_at: string
 }
 
-export type QuestionType       = 'mcq' | 'true_false' | 'open' | 'tf_ng' | 'sentence_completion'
+export type QuestionType       = 'mcq' | 'true_false' | 'open' | 'tf_ng' | 'sentence_completion' | 'word_bank_completion' | 'matching' | 'multi_select'
 export type QuestionDifficulty = 'easy' | 'medium' | 'hard'
 
 export interface Passage {

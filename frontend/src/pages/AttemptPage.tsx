@@ -6,7 +6,20 @@ import OrnatePanel from '../components/ui/OrnatePanel'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
 import Starfield from '../components/ui/Starfield'
 
-const OPTION_KEYS = ['A', 'B', 'C', 'D', 'E', 'F']
+const OPTION_KEYS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+
+function checkAnswer(q: NonNullable<TestQuestion['question']>, answer: string): boolean {
+  const got  = answer.trim()
+  const want = q.correct_answer.trim()
+  if (q.type === 'sentence_completion' || q.type === 'word_bank_completion') {
+    return got.toLowerCase() === want.toLowerCase()
+  }
+  if (q.type === 'multi_select') {
+    const sort = (s: string) => s.split('|').map(x => x.trim()).filter(Boolean).sort().join('|')
+    return sort(got) === sort(want)
+  }
+  return got === want
+}
 
 // ── Shared answer options renderer ────────────────────────────────────────────
 
@@ -102,6 +115,118 @@ function AnswerOptions({ q, selected, onSelect, revealed }: {
       })}
     </div>
   )
+
+  if (q.type === 'matching') return (
+    <div className="answer-options">
+      {(q.options ?? []).map((opt, i) => {
+        const isCorrectOpt = locked && opt === q.correct_answer
+        const isWrongSel   = locked && opt === selected && opt !== q.correct_answer
+        return (
+          <button
+            key={i}
+            className={`answer-option ${!locked && selected === opt ? 'selected' : ''}`}
+            onClick={() => !locked && onSelect(opt === selected ? '' : opt)}
+            style={{
+              cursor: locked ? 'default' : 'pointer',
+              borderColor: isCorrectOpt ? 'rgba(42,138,58,0.6)' : isWrongSel ? 'rgba(176,48,48,0.6)' : undefined,
+              background:  isCorrectOpt ? 'rgba(42,138,58,0.08)' : isWrongSel ? 'rgba(176,48,48,0.06)' : undefined,
+            }}
+          >
+            <span className="answer-key">{OPTION_KEYS[i]}</span>
+            <span className="answer-text">{opt}</span>
+            {isCorrectOpt && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.8rem' }}>✓</span>}
+          </button>
+        )
+      })}
+    </div>
+  )
+
+  if (q.type === 'multi_select') {
+    const selectedSet = new Set(selected.split('|').map(s => s.trim()).filter(Boolean))
+    const correctSet  = new Set(q.correct_answer.split('|').map(s => s.trim()).filter(Boolean))
+    const toggleOpt   = (opt: string) => {
+      if (locked) return
+      const next = new Set(selectedSet)
+      if (next.has(opt)) next.delete(opt)
+      else next.add(opt)
+      onSelect([...next].join('|'))
+    }
+    return (
+      <div className="answer-options">
+        {shuffledOptions.map((opt, i) => {
+          const isSel        = selectedSet.has(opt)
+          const isCorrectSel = locked && isSel && correctSet.has(opt)
+          const isWrongSel   = locked && isSel && !correctSet.has(opt)
+          const isMissed     = locked && !isSel && correctSet.has(opt)
+          return (
+            <button
+              key={i}
+              className={`answer-option ${!locked && isSel ? 'selected' : ''}`}
+              onClick={() => toggleOpt(opt)}
+              style={{
+                cursor: locked ? 'default' : 'pointer',
+                borderColor: isCorrectSel ? 'rgba(42,138,58,0.6)' : isWrongSel ? 'rgba(176,48,48,0.6)' : isMissed ? 'rgba(42,138,58,0.35)' : undefined,
+                background:  isCorrectSel ? 'rgba(42,138,58,0.08)' : isWrongSel ? 'rgba(176,48,48,0.06)' : isMissed ? 'rgba(42,138,58,0.04)' : undefined,
+              }}
+            >
+              <span className="answer-key" style={{ borderRadius: 2 }}>
+                {!locked && isSel ? '✓' : OPTION_KEYS[i]}
+              </span>
+              <span className="answer-text">{opt}</span>
+              {isCorrectSel && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.8rem' }}>✓</span>}
+              {isMissed && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.75rem', opacity: 0.8 }}>missed</span>}
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
+
+  if (q.type === 'word_bank_completion') {
+    const parts     = q.text.split('___')
+    const isCorrect = locked && checkAnswer(q, selected)
+    const selectColor = locked ? (isCorrect ? 'rgba(42,138,58,0.7)' : 'rgba(176,48,48,0.7)') : 'var(--gold-dim)'
+    return (
+      <div style={{ width: '100%' }}>
+        <p style={{ fontSize: '1.1rem', lineHeight: 2, color: 'var(--ink)', display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '0 6px' }}>
+          {parts.map((part, i) => (
+            <span key={i} style={{ display: 'contents' }}>
+              <span>{part}</span>
+              {i < parts.length - 1 && (
+                <select
+                  value={selected}
+                  onChange={e => !locked && onSelect(e.target.value)}
+                  disabled={locked}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: `2px solid ${selectColor}`,
+                    outline: 'none',
+                    fontSize: '1.05rem',
+                    color: locked ? selectColor : 'var(--ink)',
+                    padding: '0 4px',
+                    fontFamily: 'inherit',
+                    cursor: locked ? 'default' : 'pointer',
+                  }}
+                >
+                  <option value="">— choose —</option>
+                  {(q.options ?? []).map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              )}
+            </span>
+          ))}
+        </p>
+        {locked && !isCorrect && (
+          <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
+            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>CORRECT ANSWER</div>
+            <div style={{ color: '#2a8a3a' }}>{q.correct_answer}</div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   if (q.type === 'sentence_completion') {
     const parts = q.text.split('___')
@@ -322,11 +447,7 @@ export default function AttemptPage() {
   const q         = tq?.question
   const isLast    = currentIdx === total - 1
   const isOpen    = q?.type === 'open'
-  const isCorrect = revealed && !isOpen && (
-    q?.type === 'sentence_completion'
-      ? selected.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()
-      : selected === q?.correct_answer
-  )
+  const isCorrect = revealed && !isOpen && !!q && checkAnswer(q, selected)
 
   const handleReveal = () => {
     if (!q || !selected) return
@@ -334,10 +455,7 @@ export default function AttemptPage() {
     setRevealed(true)
     if (!isOpen) {
       setScorable(s => s + 1)
-      const correct = q.type === 'sentence_completion'
-        ? selected.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()
-        : selected === q.correct_answer
-      if (correct) setScore(s => s + 1)
+      if (checkAnswer(q, selected)) setScore(s => s + 1)
     }
   }
 
