@@ -135,8 +135,8 @@ Use `___` in `text`. `options` is the shared word bank. Grading is case-insensit
   "type": "matching",
   "difficulty": "hard",
   "category_name": "Reading",
-  "options": ["A. Piketty", "B. Keynes", "C. Friedman", "D. Sen", "E. Stiglitz"],
-  "correct_answer": "A. Piketty",
+  "options": ["Piketty", "Keynes", "Friedman", "Sen", "Stiglitz"],
+  "correct_answer": "Piketty",
   "tags": ["economics"]
 }
 ```
@@ -150,13 +150,13 @@ Use `___` in `text`. `options` is the shared word bank. Grading is case-insensit
   "difficulty": "medium",
   "category_name": "Reading",
   "options": [
-    "A. Reduced air pollution",
-    "B. Higher property taxes",
-    "C. Improved mental health",
-    "D. Decreased biodiversity",
-    "E. Lower urban temperatures"
+    "Reduced air pollution",
+    "Higher property taxes",
+    "Improved mental health",
+    "Decreased biodiversity",
+    "Lower urban temperatures"
   ],
-  "correct_answer": "A. Reduced air pollution|C. Improved mental health|E. Lower urban temperatures",
+  "correct_answer": "Reduced air pollution|Improved mental health|Lower urban temperatures",
   "tags": ["environment", "urban"]
 }
 ```
@@ -189,8 +189,8 @@ A passage groups related questions under a shared reading text. The passage itse
     {
       "text": "Match each process to the correct description.",
       "type": "matching",
-      "options": ["A. Transpiration", "B. Photosynthesis", "C. Deforestation"],
-      "correct_answer": "B. Photosynthesis"
+      "options": ["Transpiration", "Photosynthesis", "Deforestation"],
+      "correct_answer": "Photosynthesis"
     }
   ]
 }
@@ -205,6 +205,6 @@ CSV supports standalone questions only (no passages). `options`, `tags`, and `co
 ```csv
 text,type,difficulty,category_name,options,correct_answer,tags
 "Forests act as carbon ___, slowing greenhouse gas build-up.",word_bank_completion,medium,Reading,sinks|sources|filters|pumps,sinks,environment
-"Argued that economic growth leads to inequality.",matching,hard,Reading,"A. Piketty|B. Keynes|C. Friedman","A. Piketty",economics
-"Which TWO are benefits of forests?",multi_select,medium,Reading,"A. Carbon storage|B. Oxygen production|C. Soil erosion|D. Flooding","A. Carbon storage|B. Oxygen production",environment
+"Argued that economic growth leads to inequality.",matching,hard,Reading,Piketty|Keynes|Friedman,Piketty,economics
+"Which TWO are benefits of forests?",multi_select,medium,Reading,"Carbon storage|Oxygen production|Soil erosion|Flooding","Carbon storage|Oxygen production",environment
 ```

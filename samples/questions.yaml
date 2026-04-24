@@ -81,11 +81,11 @@
   difficulty: medium
   category_name: Literature
   options:
-    - "A. Metaphor"
-    - "B. Simile"
-    - "C. Personification"
-    - "D. Alliteration"
-  correct_answer: "B. Simile"
+    - Metaphor
+    - Simile
+    - Personification
+    - Alliteration
+  correct_answer: Simile
   tags:
     - literary-devices
 
@@ -94,12 +94,12 @@
   difficulty: medium
   category_name: Writing
   options:
-    - "A. Formal vocabulary"
-    - "B. Frequent use of contractions"
-    - "C. Objective tone"
-    - "D. Personal anecdotes"
-    - "E. Colloquial language"
-  correct_answer: "A. Formal vocabulary|C. Objective tone"
+    - Formal vocabulary
+    - Frequent use of contractions
+    - Objective tone
+    - Personal anecdotes
+    - Colloquial language
+  correct_answer: "Formal vocabulary|Objective tone"
   tags:
     - writing
     - academic

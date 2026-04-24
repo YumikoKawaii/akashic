@@ -6,5 +6,5 @@ text,type,difficulty,category_name,options,correct_answer,tags
 "Which article is used with the word 'soleil' (sun)?",mcq,medium,Articles,"le|la|les|l'",le,articles|gender
 "The subjunctive mood is never used in French.",true_false,hard,Grammar,"True|False",False,subjunctive|grammar
 "The ___ of a word refers to its emotional association beyond its literal meaning.",word_bank_completion,medium,Vocabulary,connotation|denotation|etymology|syntax,connotation,vocabulary
-"Match: argued that economic growth leads to greater inequality.",matching,hard,Reading,"A. Piketty|B. Keynes|C. Friedman|D. Sen","A. Piketty",economics
-"Which TWO are features of academic writing style?",multi_select,medium,Writing,"A. Formal vocabulary|B. Contractions|C. Objective tone|D. Colloquial language","A. Formal vocabulary|C. Objective tone",writing|academic
+"Match: argued that economic growth leads to greater inequality.",matching,hard,Reading,Piketty|Keynes|Friedman|Sen,Piketty,economics
+"Which TWO are features of academic writing style?",multi_select,medium,Writing,"Formal vocabulary|Contractions|Objective tone|Colloquial language","Formal vocabulary|Objective tone",writing|academic

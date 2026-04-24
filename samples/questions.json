@@ -58,8 +58,8 @@
     "type": "matching",
     "difficulty": "hard",
     "category_name": "Reading",
-    "options": ["A. Piketty", "B. Keynes", "C. Friedman", "D. Sen", "E. Stiglitz"],
-    "correct_answer": "A. Piketty",
+    "options": ["Piketty", "Keynes", "Friedman", "Sen", "Stiglitz"],
+    "correct_answer": "Piketty",
     "tags": ["economics"]
   },
   {
@@ -68,13 +68,13 @@
     "difficulty": "medium",
     "category_name": "Reading",
     "options": [
-      "A. Reduced air pollution",
-      "B. Higher property taxes",
-      "C. Improved mental health",
-      "D. Decreased biodiversity",
-      "E. Lower urban temperatures"
+      "Reduced air pollution",
+      "Higher property taxes",
+      "Improved mental health",
+      "Decreased biodiversity",
+      "Lower urban temperatures"
     ],
-    "correct_answer": "A. Reduced air pollution|C. Improved mental health|E. Lower urban temperatures",
+    "correct_answer": "Reduced air pollution|Improved mental health|Lower urban temperatures",
     "tags": ["environment", "urban"]
   },
   {

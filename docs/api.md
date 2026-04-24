@@ -231,16 +231,16 @@ Array of question objects (or a single root object). `options` and `tags` are JS
     "type": "matching",
     "difficulty": "hard",
     "category_name": "Reading",
-    "options": ["A. Piketty", "B. Keynes", "C. Friedman", "D. Sen"],
-    "correct_answer": "A. Piketty"
+    "options": ["Piketty", "Keynes", "Friedman", "Sen"],
+    "correct_answer": "Piketty"
   },
   {
     "text": "Which THREE are benefits of urban green spaces?",
     "type": "multi_select",
     "difficulty": "medium",
     "category_name": "Reading",
-    "options": ["A. Reduced air pollution", "B. Higher taxes", "C. Improved mental health", "D. Lower urban temperatures"],
-    "correct_answer": "A. Reduced air pollution|C. Improved mental health|D. Lower urban temperatures"
+    "options": ["Reduced air pollution", "Higher taxes", "Improved mental health", "Lower urban temperatures"],
+    "correct_answer": "Reduced air pollution|Improved mental health|Lower urban temperatures"
   },
   {
     "type": "passage",
@@ -299,22 +299,22 @@ Array of question objects. `options` and `tags` are YAML sequences. Passages use
   difficulty: hard
   category_name: Reading
   options:
-    - "A. Piketty"
-    - "B. Keynes"
-    - "C. Friedman"
-    - "D. Sen"
-  correct_answer: "A. Piketty"
+    - Piketty
+    - Keynes
+    - Friedman
+    - Sen
+  correct_answer: Piketty
 
 - text: "Which THREE are benefits of urban green spaces?"
   type: multi_select
   difficulty: medium
   category_name: Reading
   options:
-    - "A. Reduced air pollution"
-    - "B. Higher taxes"
-    - "C. Improved mental health"
-    - "D. Lower urban temperatures"
-  correct_answer: "A. Reduced air pollution|C. Improved mental health|D. Lower urban temperatures"
+    - Reduced air pollution
+    - Higher taxes
+    - Improved mental health
+    - Lower urban temperatures
+  correct_answer: "Reduced air pollution|Improved mental health|Lower urban temperatures"
 ```
 
 #### CSV
@@ -326,8 +326,8 @@ Headers: `text, type, difficulty, category_name, options, correct_answer, tags`
 text,type,difficulty,category_name,options,correct_answer,tags
 "What is the capital of Japan?",mcq,easy,Geography,Tokyo|Osaka|Kyoto|Hiroshima,Tokyo,japan|cities
 "Forests act as carbon ___.",word_bank_completion,medium,Reading,sinks|sources|filters|pumps,sinks,environment
-"Argued that growth leads to inequality.",matching,hard,Reading,"A. Piketty|B. Keynes|C. Friedman","A. Piketty",economics
-"Which TWO are benefits of forests?",multi_select,medium,Reading,"A. Carbon storage|B. Oxygen production|C. Soil erosion","A. Carbon storage|B. Oxygen production",environment
+"Argued that growth leads to inequality.",matching,hard,Reading,Piketty|Keynes|Friedman,Piketty,economics
+"Which TWO are benefits of forests?",multi_select,medium,Reading,"Carbon storage|Oxygen production|Soil erosion","Carbon storage|Oxygen production",environment
 ```
 
 **Sample files** are available in the `samples/` directory. See `docs/question_format.md` for full per-type field rules and the IELTS format map.
