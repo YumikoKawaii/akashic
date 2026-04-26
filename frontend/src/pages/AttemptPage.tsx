@@ -183,41 +183,49 @@ function AnswerOptions({ q, selected, onSelect, revealed }: {
   }
 
   if (q.type === 'word_bank_completion') {
-    const parts     = q.text.split('___')
-    const isCorrect = locked && checkAnswer(q, selected)
-    const selectColor = locked ? (isCorrect ? 'rgba(42,138,58,0.7)' : 'rgba(176,48,48,0.7)') : 'var(--gold-dim)'
+    const parts      = q.text.split('___')
+    const isCorrect  = locked && checkAnswer(q, selected)
+    const blankClass = locked
+      ? (isCorrect ? 'word-bank-blank locked-correct' : 'word-bank-blank locked-wrong')
+      : (selected ? 'word-bank-blank' : 'word-bank-blank empty')
     return (
       <div style={{ width: '100%' }}>
-        <p style={{ fontSize: '1.1rem', lineHeight: 2, color: 'var(--ink)', display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '0 6px' }}>
+        {/* Word bank */}
+        <div className="word-bank">
+          <div className="word-bank-label">WORD BANK</div>
+          {(q.options ?? []).map(opt => (
+            <button
+              key={opt}
+              className="word-bank-pill"
+              disabled={locked || selected === opt}
+              onClick={() => onSelect(opt)}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+
+        {/* Sentence with inline blank */}
+        <p style={{ fontSize: '1.1rem', lineHeight: 2.2, color: 'var(--ink)' }}>
           {parts.map((part, i) => (
-            <span key={i} style={{ display: 'contents' }}>
-              <span>{part}</span>
+            <span key={i}>
+              {part}
               {i < parts.length - 1 && (
-                <select
-                  value={selected}
-                  onChange={e => !locked && onSelect(e.target.value)}
-                  disabled={locked}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    borderBottom: `2px solid ${selectColor}`,
-                    outline: 'none',
-                    fontSize: '1.05rem',
-                    color: locked ? selectColor : 'var(--ink)',
-                    padding: '0 4px',
-                    fontFamily: 'inherit',
-                    cursor: locked ? 'default' : 'pointer',
-                  }}
+                <span
+                  className={blankClass}
+                  onClick={() => !locked && selected && onSelect('')}
+                  title={!locked && selected ? 'Click to clear' : undefined}
                 >
-                  <option value="">— choose —</option>
-                  {(q.options ?? []).map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
+                  {selected || '…'}
+                  {!locked && selected && (
+                    <span style={{ fontSize: '0.7rem', color: 'var(--ink-dim)', lineHeight: 1 }}>✕</span>
+                  )}
+                </span>
               )}
             </span>
           ))}
         </p>
+
         {locked && !isCorrect && (
           <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>CORRECT ANSWER</div>
