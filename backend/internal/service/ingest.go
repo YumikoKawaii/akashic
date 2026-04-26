@@ -146,9 +146,9 @@ func (s *IngestService) Ingest(bankID string, r io.Reader, ext string) (*IngestR
 				Text:          item.question.Text,
 				Type:          item.question.Type,
 				Difficulty:    item.question.Difficulty,
-				Options:       item.question.Options,
+				Options:       nonNilStrings(item.question.Options),
 				CorrectAnswer: item.question.CorrectAnswer,
-				Tags:          item.question.Tags,
+				Tags:          nonNilStrings(item.question.Tags),
 			}
 			if err := tx.Questions.Create(q); err != nil {
 				return nil, fmt.Errorf("row %d: %w", item.rowNum, err)
@@ -178,9 +178,9 @@ func (s *IngestService) Ingest(bankID string, r io.Reader, ext string) (*IngestR
 					Text:          sq.Text,
 					Type:          sq.Type,
 					Difficulty:    p.Difficulty,
-					Options:       sq.Options,
+					Options:       nonNilStrings(sq.Options),
 					CorrectAnswer: sq.CorrectAnswer,
-					Tags:          sq.Tags,
+					Tags:          nonNilStrings(sq.Tags),
 				}
 				if err := tx.Questions.Create(q); err != nil {
 					return nil, fmt.Errorf("row %d sub-question: %w", item.rowNum, err)
@@ -221,6 +221,13 @@ func (s *IngestService) resolveCategory(
 	}
 	cache[name] = cat.ID
 	return cat.ID, nil
+}
+
+func nonNilStrings(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
 }
 
 // ── Parsers ────────────────────────────────────────────────────────────────
@@ -400,7 +407,7 @@ func validateRow(row IngestRow) error {
 		return fmt.Errorf("text is required")
 	}
 	if !validTypes[row.Type] {
-		return fmt.Errorf("invalid type %q: must be mcq, true_false, open, tf_ng, or sentence_completion", row.Type)
+		return fmt.Errorf("invalid type %q: must be mcq, true_false, open, tf_ng, sentence_completion, word_bank_completion, matching, or multi_select", row.Type)
 	}
 	if !validDifficulties[row.Difficulty] {
 		return fmt.Errorf("invalid difficulty %q: must be easy, medium, or hard", row.Difficulty)
