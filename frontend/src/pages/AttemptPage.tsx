@@ -23,11 +23,12 @@ function checkAnswer(q: NonNullable<TestQuestion['question']>, answer: string): 
 
 // ── Shared answer options renderer ────────────────────────────────────────────
 
-function AnswerOptions({ q, selected, onSelect, revealed }: {
+function AnswerOptions({ q, selected, onSelect, revealed, usedWords }: {
   q: NonNullable<TestQuestion['question']>
   selected: string
   onSelect: (val: string) => void
   revealed?: boolean
+  usedWords?: Set<string>
 }) {
   const locked = !!revealed
 
@@ -197,7 +198,7 @@ function AnswerOptions({ q, selected, onSelect, revealed }: {
             <button
               key={opt}
               className="word-bank-pill"
-              disabled={locked || selected === opt}
+              disabled={locked || selected === opt || (usedWords?.has(opt) ?? false)}
               onClick={() => onSelect(opt)}
             >
               {opt}
@@ -415,6 +416,14 @@ export default function AttemptPage() {
                     if (!q) return null
                     const sel = passageAnswers[q.id] ?? ''
                     const globalIdx = questions.findIndex(x => x.question_id === tq.question_id)
+                    const usedWords = q.type === 'word_bank_completion'
+                      ? new Set(
+                          group.items
+                            .filter(other => other.question?.type === 'word_bank_completion' && other.question_id !== tq.question_id)
+                            .map(other => passageAnswers[other.question!.id])
+                            .filter((v): v is string => Boolean(v))
+                        )
+                      : undefined
                     return (
                       <div key={q.id}>
                         <OrnatePanel style={{ marginBottom: 12 } as React.CSSProperties}>
@@ -434,6 +443,7 @@ export default function AttemptPage() {
                           q={q}
                           selected={sel}
                           onSelect={val => setPassageAnswers(prev => ({ ...prev, [q.id]: val }))}
+                          usedWords={usedWords}
                         />
                       </div>
                     )
