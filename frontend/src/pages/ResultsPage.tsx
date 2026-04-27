@@ -102,9 +102,12 @@ export default function ResultsPage() {
                     if (!q) return null
                     const userAns = attempt.answers?.[q.id]
                     const isOpen  = q.type === 'open'
+                    const sortPipe = (s: string) => s.split('|').map(x => x.trim()).filter(Boolean).sort().join('|')
                     const correct = isOpen ? null
                       : q.type === 'sentence_completion'
                         ? (userAns ?? '').trim().toLowerCase() === q.correct_answer.trim().toLowerCase()
+                      : q.type === 'multi_select'
+                        ? sortPipe(userAns ?? '') === sortPipe(q.correct_answer)
                         : userAns === q.correct_answer
                     const options = q.options ?? []
 
@@ -198,6 +201,87 @@ export default function ResultsPage() {
                                       Correct: <strong style={{ color: '#2a8a3a' }}>{q.correct_answer}</strong>
                                     </div>
                                   )}
+                                </div>
+                              )
+                            })()}
+
+                            {q.type === 'word_bank_completion' && (() => {
+                              const parts = q.text.split('___')
+                              return (
+                                <div style={{ fontSize: '0.95rem', lineHeight: 1.9, color: 'var(--ink)' }}>
+                                  {parts.map((part, i) => (
+                                    <span key={i}>
+                                      {part}
+                                      {i < parts.length - 1 && (
+                                        <span style={{
+                                          display: 'inline-block',
+                                          padding: '2px 10px',
+                                          border: `1px solid ${correct ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)'}`,
+                                          borderRadius: 4,
+                                          background: correct ? 'rgba(42,138,58,0.06)' : 'rgba(176,48,48,0.06)',
+                                          color: correct ? '#2a8a3a' : '#b03030',
+                                          fontWeight: 600,
+                                          minWidth: 60,
+                                          textAlign: 'center',
+                                          margin: '0 4px',
+                                        }}>
+                                          {userAns || '—'}
+                                        </span>
+                                      )}
+                                    </span>
+                                  ))}
+                                  {!correct && (
+                                    <div style={{ marginTop: 6, fontSize: '0.82rem', color: 'var(--ink-dim)' }}>
+                                      Correct: <strong style={{ color: '#2a8a3a' }}>{q.correct_answer}</strong>
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })()}
+
+                            {q.type === 'matching' && (
+                              <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>
+                                Your answer: <strong style={{ color: correct ? '#2a8a3a' : '#b03030' }}>{userAns ?? '—'}</strong>
+                                {' · '}Correct: <strong style={{ color: '#2a8a3a' }}>{q.correct_answer}</strong>
+                              </div>
+                            )}
+
+                            {q.type === 'multi_select' && (() => {
+                              const selectedSet = new Set((userAns ?? '').split('|').map(s => s.trim()).filter(Boolean))
+                              const correctSet  = new Set(q.correct_answer.split('|').map(s => s.trim()).filter(Boolean))
+                              return (
+                                <div className="flex flex-col gap-2">
+                                  {options.map((opt, i) => {
+                                    const isSel     = selectedSet.has(opt)
+                                    const isCorrect = correctSet.has(opt)
+                                    const highlight = isSel && isCorrect ? 'correct'
+                                      : isSel && !isCorrect ? 'wrong'
+                                      : !isSel && isCorrect ? 'missed'
+                                      : 'neutral'
+                                    return (
+                                      <div key={i} style={{
+                                        padding: '8px 12px', border: '1px solid',
+                                        borderColor: highlight === 'correct' ? 'rgba(42,138,58,0.5)'
+                                          : highlight === 'wrong'    ? 'rgba(176,48,48,0.5)'
+                                          : highlight === 'missed'   ? 'rgba(42,138,58,0.3)'
+                                          : 'var(--border-dim)',
+                                        background: highlight === 'correct' ? 'rgba(42,138,58,0.06)'
+                                          : highlight === 'wrong'    ? 'rgba(176,48,48,0.06)'
+                                          : highlight === 'missed'   ? 'rgba(42,138,58,0.03)'
+                                          : 'transparent',
+                                        fontSize: '0.88rem', color: 'var(--ink)',
+                                        display: 'flex', gap: 10, alignItems: 'center',
+                                      }}>
+                                        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.68rem', color: 'var(--gold-dim)', minWidth: 16 }}>
+                                          {['A','B','C','D','E','F'][i]}
+                                        </span>
+                                        {opt}
+                                        {highlight === 'correct' && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.8rem' }}>✓</span>}
+                                        {highlight === 'wrong'   && <span style={{ marginLeft: 'auto', color: '#b03030', fontSize: '0.8rem' }}>✕</span>}
+                                        {highlight === 'missed'  && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.75rem', opacity: 0.8 }}>missed</span>}
+                                      </div>
+                                    )
+                                  })}
                                 </div>
                               )
                             })()}
