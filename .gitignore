@@ -9,6 +9,9 @@ backend/bin/
 # Env
 .env
 
+# Samples (local test data only)
+samples/test1_reading.json
+
 # IDE
 .idea/
 .vscode/
