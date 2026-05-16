@@ -24,6 +24,8 @@ func NewRouter(h Handlers) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
 
+	RegisterDocs(r)
+
 	// ── Auth routes (no middleware) ────────────────────────────────────────────
 	auth := r.Group("/api/v1/auth")
 	auth.GET("/google", h.Auth.Login)
