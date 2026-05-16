@@ -26,6 +26,9 @@ type IngestStandaloneRow struct {
 	Options      []model.MCQOption `json:"options"       yaml:"options"`
 	Answers      []string          `json:"answers"       yaml:"answers"`
 	Tags         []string          `json:"tags"          yaml:"tags"`
+	// alias detection — populated when the sender uses wrong field names
+	Text          string `json:"text"           yaml:"text"`
+	CorrectAnswer string `json:"correct_answer" yaml:"correct_answer"`
 }
 
 // IngestGroupQuestion is a question within a group.
@@ -403,27 +406,57 @@ var validQuestionTypes = map[string]bool{
 var validDifficultyLevels = map[string]bool{"easy": true, "medium": true, "hard": true}
 
 func validateStandalone(row IngestStandaloneRow) error {
+	// type checks first — gives context for all other errors
+	switch row.Type {
+	case "":
+		return fmt.Errorf("field 'type' is required")
+	case "passage":
+		return fmt.Errorf("top-level 'type: passage' wrapper is not supported — flatten each question as its own row with fields: type, difficulty, category_name, content, answer (or options+answers for mcq)")
+	case "matching":
+		return fmt.Errorf("type 'matching' is not valid — use 'matching_headings', 'matching_information', or 'matching_features'")
+	case "multi_select":
+		return fmt.Errorf("type 'multi_select' is not valid — use 'mcq' with 'answers' as an array of correct option keys, e.g. [\"B\", \"F\"]")
+	default:
+		if !validQuestionTypes[row.Type] {
+			return fmt.Errorf("unknown type %q — valid types: mcq, tf_ng, yn_ng, matching_headings, matching_information, matching_features, sentence_completion, form_completion, short_answer", row.Type)
+		}
+	}
+
 	if strings.TrimSpace(row.Content) == "" {
-		return fmt.Errorf("content is required")
+		if strings.TrimSpace(row.Text) != "" {
+			return fmt.Errorf("field 'text' is not recognized — use 'content' for the question stem")
+		}
+		return fmt.Errorf("field 'content' is required")
 	}
-	if !validQuestionTypes[row.Type] {
-		return fmt.Errorf("invalid type %q", row.Type)
-	}
+
 	if !validDifficultyLevels[row.Difficulty] {
-		return fmt.Errorf("invalid difficulty %q", row.Difficulty)
+		if row.Difficulty == "" {
+			return fmt.Errorf("field 'difficulty' is required — valid values: easy, medium, hard")
+		}
+		return fmt.Errorf("invalid difficulty %q — valid values: easy, medium, hard", row.Difficulty)
 	}
+
 	if strings.TrimSpace(row.CategoryName) == "" {
-		return fmt.Errorf("category_name is required")
+		return fmt.Errorf("field 'category_name' is required")
 	}
+
 	if row.Type == "mcq" {
 		if len(row.Options) < 2 {
-			return fmt.Errorf("mcq requires at least 2 options")
+			return fmt.Errorf("mcq requires at least 2 options as objects: [{\"key\":\"A\",\"text\":\"...\"}]")
 		}
 		if len(row.Answers) == 0 {
-			return fmt.Errorf("mcq requires at least one answer")
+			if row.CorrectAnswer != "" {
+				return fmt.Errorf("field 'correct_answer' is not recognized — use 'answers' as an array of correct option keys, e.g. [\"B\"]")
+			}
+			return fmt.Errorf("mcq requires field 'answers' — an array of correct option keys, e.g. [\"B\"]")
 		}
-	} else if strings.TrimSpace(row.Answer) == "" {
-		return fmt.Errorf("answer is required for type %q", row.Type)
+	} else {
+		if strings.TrimSpace(row.Answer) == "" {
+			if row.CorrectAnswer != "" {
+				return fmt.Errorf("field 'correct_answer' is not recognized — use 'answer' for the correct answer string")
+			}
+			return fmt.Errorf("field 'answer' is required for type %q", row.Type)
+		}
 	}
 	return nil
 }
