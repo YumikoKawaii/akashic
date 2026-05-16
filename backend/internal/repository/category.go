@@ -8,60 +8,50 @@ import (
 )
 
 type CategoryRepository interface {
-	FindByBank(bankID string) ([]model.Category, error)
-	FindByID(id string) (*model.Category, error)
-	FindByBankAndID(bankID, id string) (*model.Category, error)
-	Create(category *model.Category) error
-	Save(category *model.Category) error
-	Delete(bankID, id string) error
+	FindByBank(bankID int) ([]model.Category, error)
+	FindByID(id int) (*model.Category, error)
+	FindByBankAndName(bankID int, name string) (*model.Category, error)
+	Create(c *model.Category) error
+	Save(c *model.Category) error
+	SoftDelete(id int) error
+	Restore(id int) error
 }
 
-type categoryRepo struct {
-	db *gorm.DB
+type categoryRepo struct{ db *gorm.DB }
+
+func NewCategoryRepo(db *gorm.DB) CategoryRepository { return &categoryRepo{db} }
+
+func (r *categoryRepo) FindByBank(bankID int) ([]model.Category, error) {
+	var cs []model.Category
+	err := r.db.Where("bank_id = ?", bankID).Order("name ASC").Find(&cs).Error
+	return cs, err
 }
 
-func NewCategoryRepo(db *gorm.DB) CategoryRepository {
-	return &categoryRepo{db: db}
-}
-
-func (r *categoryRepo) FindByBank(bankID string) ([]model.Category, error) {
-	var categories []model.Category
-	return categories, r.db.Where("bank_id = ?", bankID).Order("name ASC").Find(&categories).Error
-}
-
-func (r *categoryRepo) FindByID(id string) (*model.Category, error) {
-	var category model.Category
-	err := r.db.First(&category, "id = ?", id).Error
+func (r *categoryRepo) FindByID(id int) (*model.Category, error) {
+	var c model.Category
+	err := r.db.First(&c, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
 	}
-	return &category, err
+	return &c, err
 }
 
-func (r *categoryRepo) FindByBankAndID(bankID, id string) (*model.Category, error) {
-	var category model.Category
-	err := r.db.First(&category, "bank_id = ? AND id = ?", bankID, id).Error
+func (r *categoryRepo) FindByBankAndName(bankID int, name string) (*model.Category, error) {
+	var c model.Category
+	err := r.db.Where("bank_id = ? AND LOWER(name) = LOWER(?)", bankID, name).First(&c).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
 	}
-	return &category, err
+	return &c, err
 }
 
-func (r *categoryRepo) Create(category *model.Category) error {
-	return r.db.Create(category).Error
+func (r *categoryRepo) Create(c *model.Category) error { return r.db.Create(c).Error }
+func (r *categoryRepo) Save(c *model.Category) error   { return r.db.Save(c).Error }
+
+func (r *categoryRepo) SoftDelete(id int) error {
+	return r.db.Delete(&model.Category{}, id).Error
 }
 
-func (r *categoryRepo) Save(category *model.Category) error {
-	return r.db.Save(category).Error
-}
-
-func (r *categoryRepo) Delete(bankID, id string) error {
-	result := r.db.Delete(&model.Category{}, "bank_id = ? AND id = ?", bankID, id)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return ErrNotFound
-	}
-	return nil
+func (r *categoryRepo) Restore(id int) error {
+	return r.db.Unscoped().Model(&model.Category{}).Where("id = ?", id).Update("deleted_at", nil).Error
 }

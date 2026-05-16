@@ -9,37 +9,46 @@ import (
 	"github.com/yumikokawaii/akashic/internal/service"
 )
 
-type PassageHandler struct {
-	svc *service.PassageService
+type QuestionGroupHandler struct {
+	svc *service.QuestionGroupService
 }
 
-func NewPassageHandler(svc *service.PassageService) *PassageHandler {
-	return &PassageHandler{svc: svc}
+func NewQuestionGroupHandler(svc *service.QuestionGroupService) *QuestionGroupHandler {
+	return &QuestionGroupHandler{svc: svc}
 }
 
-func (h *PassageHandler) List(c *gin.Context) {
+func (h *QuestionGroupHandler) List(c *gin.Context) {
 	bankID, ok2 := parseID(c, "bankId")
 	if !ok2 {
 		return
 	}
-	f := repository.PassageFilter{}
-	if v := c.Query("category_id"); v != "" {
+	f := repository.GroupFilter{}
+	for _, v := range c.QueryArray("category_id") {
 		if id, err := strconv.Atoi(v); err == nil {
-			f.CategoryID = &id
+			f.CategoryIDs = append(f.CategoryIDs, id)
 		}
+	}
+	if v := c.Query("passage_id"); v != "" {
+		if id, err := strconv.Atoi(v); err == nil {
+			f.PassageID = &id
+		}
+	}
+	if v := c.Query("type"); v != "" {
+		f.Type = v
 	}
 	if v := c.Query("difficulty"); v != "" {
 		f.Difficulty = v
 	}
-	passages, err := h.svc.List(bankID, f)
+
+	groups, err := h.svc.List(bankID, f)
 	if err != nil {
 		handleError(c, err)
 		return
 	}
-	ok(c, passages)
+	ok(c, groups)
 }
 
-func (h *PassageHandler) Get(c *gin.Context) {
+func (h *QuestionGroupHandler) Get(c *gin.Context) {
 	bankID, ok2 := parseID(c, "bankId")
 	if !ok2 {
 		return
@@ -48,33 +57,33 @@ func (h *PassageHandler) Get(c *gin.Context) {
 	if !ok2 {
 		return
 	}
-	passage, err := h.svc.GetByID(bankID, id)
+	group, err := h.svc.GetByID(bankID, id)
 	if err != nil {
 		handleError(c, err)
 		return
 	}
-	ok(c, passage)
+	ok(c, group)
 }
 
-func (h *PassageHandler) Create(c *gin.Context) {
+func (h *QuestionGroupHandler) Create(c *gin.Context) {
 	bankID, ok2 := parseID(c, "bankId")
 	if !ok2 {
 		return
 	}
-	var input service.CreatePassageInput
+	var input service.CreateGroupInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	passage, err := h.svc.Create(bankID, input)
+	group, err := h.svc.Create(bankID, input)
 	if err != nil {
 		handleError(c, err)
 		return
 	}
-	created(c, passage)
+	created(c, group)
 }
 
-func (h *PassageHandler) Update(c *gin.Context) {
+func (h *QuestionGroupHandler) Update(c *gin.Context) {
 	bankID, ok2 := parseID(c, "bankId")
 	if !ok2 {
 		return
@@ -83,20 +92,20 @@ func (h *PassageHandler) Update(c *gin.Context) {
 	if !ok2 {
 		return
 	}
-	var input service.UpdatePassageInput
+	var input service.UpdateGroupInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	passage, err := h.svc.Update(bankID, id, input)
+	group, err := h.svc.Update(bankID, id, input)
 	if err != nil {
 		handleError(c, err)
 		return
 	}
-	ok(c, passage)
+	ok(c, group)
 }
 
-func (h *PassageHandler) Delete(c *gin.Context) {
+func (h *QuestionGroupHandler) Delete(c *gin.Context) {
 	bankID, ok2 := parseID(c, "bankId")
 	if !ok2 {
 		return
@@ -112,7 +121,7 @@ func (h *PassageHandler) Delete(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (h *PassageHandler) Restore(c *gin.Context) {
+func (h *QuestionGroupHandler) Restore(c *gin.Context) {
 	bankID, ok2 := parseID(c, "bankId")
 	if !ok2 {
 		return
@@ -121,10 +130,10 @@ func (h *PassageHandler) Restore(c *gin.Context) {
 	if !ok2 {
 		return
 	}
-	passage, err := h.svc.Restore(bankID, id)
+	group, err := h.svc.Restore(bankID, id)
 	if err != nil {
 		handleError(c, err)
 		return
 	}
-	ok(c, passage)
+	ok(c, group)
 }

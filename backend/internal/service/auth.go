@@ -16,7 +16,7 @@ import (
 )
 
 type JWTClaims struct {
-	UserID    string `json:"user_id"`
+	UserID    int    `json:"user_id"`
 	Email     string `json:"email"`
 	Name      string `json:"name"`
 	AvatarURL string `json:"avatar_url"`
@@ -45,11 +45,11 @@ func (s *AuthService) LoginURL(state string) string {
 }
 
 type googleUserInfo struct {
-	Sub       string `json:"sub"`
-	Email     string `json:"email"`
-	Name      string `json:"name"`
-	Picture   string `json:"picture"`
-	Verified  bool   `json:"email_verified"`
+	Sub      string `json:"sub"`
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Picture  string `json:"picture"`
+	Verified bool   `json:"email_verified"`
 }
 
 func (s *AuthService) HandleCallback(code string) (*model.User, string, error) {
@@ -105,7 +105,6 @@ func (s *AuthService) IssueJWT(user *model.User) (string, error) {
 	}
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(s.jwtSecret))
 }
-
 
 func (s *AuthService) ParseJWT(tokenStr string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &JWTClaims{}, func(t *jwt.Token) (any, error) {

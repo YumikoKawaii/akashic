@@ -3,191 +3,199 @@ package model
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
-// TestConfig is a value type stored as JSONB.
-// It lives in banks.default_config and is snapshotted into tests.config at generation time.
+// ── Value types ────────────────────────────────────────────────────────────────
+
 type TestConfig struct {
 	EasyCount   int      `json:"easy_count"`
 	MediumCount int      `json:"medium_count"`
 	HardCount   int      `json:"hard_count"`
-	TotalCount  int      `json:"total_count,omitempty"`
-	CategoryIDs []string `json:"category_ids,omitempty"`
+	CategoryIDs []int    `json:"category_ids,omitempty"`
 	Types       []string `json:"types,omitempty"`
 	Tags        []string `json:"tags,omitempty"`
 }
 
 func (t TestConfig) QuestionCount() int {
-	if t.TotalCount > 0 {
-		return t.TotalCount
-	}
 	return t.EasyCount + t.MediumCount + t.HardCount
 }
 
-// User is an authenticated person.
+// GroupContext holds type-specific shared data for a QuestionGroup.
+// Fields are populated based on group type; unused fields are omitted from JSON.
+type GroupContext struct {
+	// matching_headings
+	Sections []SectionItem `json:"sections,omitempty"`
+	Headings []OptionItem  `json:"headings,omitempty"`
+	// matching_information
+	Paragraphs []OptionItem `json:"paragraphs,omitempty"`
+	// matching_features
+	Options []OptionItem `json:"options,omitempty"`
+	// sentence_completion · form_completion · short_answer
+	WordLimit int      `json:"word_limit,omitempty"`
+	WordBank  []string `json:"word_bank,omitempty"`
+	// form_completion only
+	FormType string `json:"form_type,omitempty"`
+	Title    string `json:"title,omitempty"`
+	Template string `json:"template,omitempty"`
+}
+
+type SectionItem struct {
+	Key   string `json:"key"`
+	Label string `json:"label"`
+}
+
+type OptionItem struct {
+	Key  string `json:"key"`
+	Text string `json:"text"`
+}
+
+type MCQOption struct {
+	Key  string `json:"key"`
+	Text string `json:"text"`
+}
+
+// ── Entity models ──────────────────────────────────────────────────────────────
+
 type User struct {
-	ID        string    `gorm:"type:uuid;primaryKey"      json:"id"`
-	GoogleID  string    `gorm:"uniqueIndex;not null"      json:"-"`
-	Email     string    `gorm:"uniqueIndex;not null"      json:"email"`
-	Name      string    `gorm:"not null"                  json:"name"`
-	AvatarURL string    `gorm:"not null;default:''"       json:"avatar_url"`
-	CreatedAt time.Time `                                  json:"created_at"`
-	UpdatedAt time.Time `                                  json:"updated_at"`
+	ID        int            `gorm:"primaryKey;autoIncrement" json:"id"`
+	GoogleID  string         `gorm:"uniqueIndex;not null"     json:"-"`
+	Email     string         `gorm:"uniqueIndex;not null"     json:"email"`
+	Name      string         `gorm:"not null"                 json:"name"`
+	AvatarURL string         `gorm:"not null;default:''"      json:"avatar_url"`
+	CreatedAt time.Time      `                                json:"created_at"`
+	UpdatedAt time.Time      `                                json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index"                    json:"-"`
 }
 
-func (u *User) BeforeCreate(_ *gorm.DB) error {
-	if u.ID == "" {
-		u.ID = uuid.New().String()
-	}
-	return nil
-}
-
-// BankMember records a user's access to a bank.
-// Role: owner | editor | viewer
-type BankMember struct {
-	BankID    string    `gorm:"type:uuid;primaryKey"  json:"bank_id"`
-	UserID    string    `gorm:"type:uuid;primaryKey"  json:"user_id"`
-	User      *User     `gorm:"foreignKey:UserID"     json:"user,omitempty"`
-	Role      string    `gorm:"not null"              json:"role"`
-	CreatedAt time.Time `                             json:"created_at"`
-}
-
-// Bank is a top-level question bank (e.g. "English", "Japanese").
 type Bank struct {
-	ID            string       `gorm:"type:uuid;primaryKey"          json:"id"`
-	Name          string       `gorm:"uniqueIndex;not null"           json:"name"`
-	Description   string       `gorm:"not null;default:''"            json:"description"`
-	OwnerID       *string      `gorm:"type:uuid"                      json:"owner_id,omitempty"`
-	DefaultConfig TestConfig   `gorm:"serializer:json"                json:"default_config"`
-	Members       []BankMember `gorm:"foreignKey:BankID"              json:"members,omitempty"`
-	CreatedAt     time.Time    `                                      json:"created_at"`
-	UpdatedAt     time.Time    `                                      json:"updated_at"`
+	ID            int            `gorm:"primaryKey;autoIncrement"  json:"id"`
+	Name          string         `gorm:"not null"                  json:"name"`
+	Description   string         `gorm:"not null;default:''"       json:"description"`
+	OwnerID       *int           `                                 json:"owner_id,omitempty"`
+	DefaultConfig TestConfig     `gorm:"serializer:json"           json:"default_config"`
+	Members       []BankMember   `gorm:"foreignKey:BankID"         json:"members,omitempty"`
+	CreatedAt     time.Time      `                                 json:"created_at"`
+	UpdatedAt     time.Time      `                                 json:"updated_at"`
+	DeletedAt     gorm.DeletedAt `gorm:"index"                     json:"-"`
 }
 
-func (b *Bank) BeforeCreate(_ *gorm.DB) error {
-	if b.ID == "" {
-		b.ID = uuid.New().String()
-	}
-	return nil
+type BankMember struct {
+	ID        int            `gorm:"primaryKey;autoIncrement" json:"id"`
+	BankID    int            `gorm:"not null;index"           json:"bank_id"`
+	UserID    int            `gorm:"not null;index"           json:"user_id"`
+	User      *User          `gorm:"foreignKey:UserID"        json:"user,omitempty"`
+	Role      string         `gorm:"not null"                 json:"role"`
+	CreatedAt time.Time      `                                json:"created_at"`
+	UpdatedAt time.Time      `                                json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index"                    json:"-"`
 }
 
-// BankWithRole is a Bank enriched with the current user's role.
 type BankWithRole struct {
 	Bank
 	MyRole string `json:"my_role"`
 }
 
-// Category groups questions within a bank.
 type Category struct {
-	ID          string    `gorm:"type:uuid;primaryKey"                               json:"id"`
-	BankID      string    `gorm:"type:uuid;not null;index"                           json:"bank_id"`
-	Name        string    `gorm:"not null;uniqueIndex:idx_categories_bank_name"      json:"name"`
-	Description string    `gorm:"not null;default:''"                                json:"description"`
-	CreatedAt   time.Time `                                                          json:"created_at"`
-	UpdatedAt   time.Time `                                                          json:"updated_at"`
+	ID          int            `gorm:"primaryKey;autoIncrement" json:"id"`
+	BankID      int            `gorm:"not null;index"           json:"bank_id"`
+	Name        string         `gorm:"not null"                 json:"name"`
+	Description string         `gorm:"not null;default:''"      json:"description"`
+	CreatedAt   time.Time      `                                json:"created_at"`
+	UpdatedAt   time.Time      `                                json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `gorm:"index"                    json:"-"`
 }
 
-func (c *Category) BeforeCreate(_ *gorm.DB) error {
-	if c.ID == "" {
-		c.ID = uuid.New().String()
-	}
-	return nil
-}
-
-// Passage is a reading text that groups related questions.
-// It is treated as an atomic unit during test generation.
 type Passage struct {
-	ID         string     `gorm:"type:uuid;primaryKey"     json:"id"`
-	BankID     string     `gorm:"type:uuid;not null;index" json:"bank_id"`
-	CategoryID string     `gorm:"type:uuid;not null;index" json:"category_id"`
-	Category   *Category  `gorm:"foreignKey:CategoryID"    json:"category,omitempty"`
-	Title      string     `gorm:"not null"                 json:"title"`
-	Body       string     `gorm:"not null;default:''"      json:"body"`
-	Difficulty string     `gorm:"not null"                 json:"difficulty"`
-	Questions  []Question `gorm:"foreignKey:PassageID"     json:"questions,omitempty"`
-	CreatedAt  time.Time  `                                json:"created_at"`
-	UpdatedAt  time.Time  `                                json:"updated_at"`
+	ID         int             `gorm:"primaryKey;autoIncrement" json:"id"`
+	BankID     int             `gorm:"not null;index"           json:"bank_id"`
+	CategoryID int             `gorm:"not null;index"           json:"category_id"`
+	Category   *Category       `gorm:"foreignKey:CategoryID"    json:"category,omitempty"`
+	Title      string          `gorm:"not null"                 json:"title"`
+	Body       string          `gorm:"not null;default:''"      json:"body"`
+	Difficulty string          `gorm:"not null"                 json:"difficulty"`
+	Groups     []QuestionGroup `gorm:"foreignKey:PassageID"     json:"groups,omitempty"`
+	CreatedAt  time.Time       `                                json:"created_at"`
+	UpdatedAt  time.Time       `                                json:"updated_at"`
+	DeletedAt  gorm.DeletedAt  `gorm:"index"                    json:"-"`
 }
 
-func (p *Passage) BeforeCreate(_ *gorm.DB) error {
-	if p.ID == "" {
-		p.ID = uuid.New().String()
-	}
-	return nil
+type QuestionGroup struct {
+	ID         int            `gorm:"primaryKey;autoIncrement" json:"id"`
+	BankID     int            `gorm:"not null;index"           json:"bank_id"`
+	CategoryID int            `gorm:"not null;index"           json:"category_id"`
+	PassageID  *int           `gorm:"index"                    json:"passage_id,omitempty"`
+	Type       string         `gorm:"not null"                 json:"type"`
+	Difficulty string         `gorm:"not null"                 json:"difficulty"`
+	Context    GroupContext   `gorm:"serializer:json"          json:"context"`
+	Questions  []Question     `gorm:"foreignKey:GroupID"       json:"questions,omitempty"`
+	CreatedAt  time.Time      `                                json:"created_at"`
+	UpdatedAt  time.Time      `                                json:"updated_at"`
+	DeletedAt  gorm.DeletedAt `gorm:"index"                    json:"-"`
 }
 
-// Question belongs to one bank and one category.
-// Type: mcq | true_false | open | tf_ng | sentence_completion | word_bank_completion | matching | multi_select
-// Difficulty: easy | medium | hard
 type Question struct {
-	ID            string         `gorm:"type:uuid;primaryKey"     json:"id"`
-	BankID        string         `gorm:"type:uuid;not null;index" json:"bank_id"`
-	CategoryID    string         `gorm:"type:uuid;not null;index" json:"category_id"`
-	Category      *Category      `gorm:"foreignKey:CategoryID"    json:"category,omitempty"`
-	PassageID     *string        `gorm:"type:uuid;index"          json:"passage_id,omitempty"`
-	Passage       *Passage       `gorm:"foreignKey:PassageID"     json:"passage,omitempty"`
-	Text          string         `gorm:"not null"                 json:"text"`
-	Type          string         `gorm:"not null"                 json:"type"`
-	Difficulty    string         `gorm:"not null"                 json:"difficulty"`
-	Options       pq.StringArray `gorm:"type:text[]"              json:"options"`
-	CorrectAnswer string         `gorm:"not null;default:''"      json:"correct_answer"`
-	Tags          pq.StringArray `gorm:"type:text[]"              json:"tags"`
-	CreatedAt     time.Time      `                                json:"created_at"`
-	UpdatedAt     time.Time      `                                json:"updated_at"`
+	ID         int              `gorm:"primaryKey;autoIncrement" json:"id"`
+	BankID     int              `gorm:"not null;index"           json:"bank_id"`
+	CategoryID int              `gorm:"not null;index"           json:"category_id"`
+	GroupID    *int             `gorm:"index"                    json:"group_id,omitempty"`
+	Type       string           `gorm:"not null"                 json:"type"`
+	Difficulty string           `gorm:"not null"                 json:"difficulty"`
+	Tags       pq.StringArray   `gorm:"type:text[]"              json:"tags"`
+	Position   *int16           `                                json:"position,omitempty"`
+	Item       *QQuestionItem   `gorm:"foreignKey:QuestionID"    json:"item,omitempty"`
+	Choice     *QMultipleChoice `gorm:"foreignKey:QuestionID"    json:"choice,omitempty"`
+	CreatedAt  time.Time        `                                json:"created_at"`
+	UpdatedAt  time.Time        `                                json:"updated_at"`
+	DeletedAt  gorm.DeletedAt   `gorm:"index"                    json:"-"`
 }
 
-func (q *Question) BeforeCreate(_ *gorm.DB) error {
-	if q.ID == "" {
-		q.ID = uuid.New().String()
-	}
-	return nil
+// QQuestionItem covers all non-MCQ types. No audit columns — lifecycle owned by Question.
+type QQuestionItem struct {
+	QuestionID int    `gorm:"primaryKey"  json:"question_id"`
+	Content    string `gorm:"not null"    json:"content"`
+	Answer     string `gorm:"not null"    json:"answer"`
 }
 
-// Test belongs to one bank. Config is a snapshot of the TestConfig used at generation time.
+// QMultipleChoice covers mcq only. No audit columns — lifecycle owned by Question.
+type QMultipleChoice struct {
+	QuestionID int          `gorm:"primaryKey"        json:"question_id"`
+	Content    string       `gorm:"not null"          json:"content"`
+	Options    []MCQOption  `gorm:"serializer:json"   json:"options"`
+	Answers    pq.StringArray `gorm:"type:text[]"     json:"answers"`
+}
+
 type Test struct {
-	ID            string         `gorm:"type:uuid;primaryKey"     json:"id"`
-	BankID        string         `gorm:"type:uuid;not null;index" json:"bank_id"`
+	ID            int            `gorm:"primaryKey;autoIncrement" json:"id"`
+	BankID        int            `gorm:"not null;index"           json:"bank_id"`
 	Name          string         `gorm:"not null"                 json:"name"`
 	Description   string         `gorm:"not null;default:''"      json:"description"`
 	Config        TestConfig     `gorm:"serializer:json"          json:"config"`
 	TestQuestions []TestQuestion `gorm:"foreignKey:TestID"        json:"questions,omitempty"`
 	CreatedAt     time.Time      `                                json:"created_at"`
 	UpdatedAt     time.Time      `                                json:"updated_at"`
+	DeletedAt     gorm.DeletedAt `gorm:"index"                    json:"-"`
 }
 
-func (t *Test) BeforeCreate(_ *gorm.DB) error {
-	if t.ID == "" {
-		t.ID = uuid.New().String()
-	}
-	return nil
-}
-
-// TestQuestion is the join table between Test and Question with an explicit position.
+// TestQuestion is the ordered join between Test and Question. No audit columns.
 type TestQuestion struct {
-	TestID     string    `gorm:"type:uuid;primaryKey"  json:"test_id"`
-	QuestionID string    `gorm:"type:uuid;primaryKey"  json:"question_id"`
+	TestID     int       `gorm:"primaryKey"            json:"test_id"`
+	QuestionID int       `gorm:"primaryKey"            json:"question_id"`
 	Question   *Question `gorm:"foreignKey:QuestionID" json:"question,omitempty"`
 	Position   int       `                             json:"position"`
 }
 
-// TestAttempt represents one run-through of a test.
 type TestAttempt struct {
-	ID          string            `gorm:"type:uuid;primaryKey"     json:"id"`
-	TestID      string            `gorm:"type:uuid;not null;index" json:"test_id"`
+	ID          int               `gorm:"primaryKey;autoIncrement" json:"id"`
+	TestID      int               `gorm:"not null;index"           json:"test_id"`
 	Test        *Test             `gorm:"foreignKey:TestID"        json:"test,omitempty"`
 	Answers     map[string]string `gorm:"serializer:json"          json:"answers"`
 	Score       *int              `                                json:"score"`
 	Total       *int              `                                json:"total"`
 	StartedAt   time.Time         `                                json:"started_at"`
 	CompletedAt *time.Time        `                                json:"completed_at"`
-}
-
-func (a *TestAttempt) BeforeCreate(_ *gorm.DB) error {
-	if a.ID == "" {
-		a.ID = uuid.New().String()
-	}
-	return nil
+	CreatedAt   time.Time         `                                json:"created_at"`
+	UpdatedAt   time.Time         `                                json:"updated_at"`
+	DeletedAt   gorm.DeletedAt    `gorm:"index"                    json:"-"`
 }

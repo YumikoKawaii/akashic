@@ -15,14 +15,16 @@ func NewAttemptHandler(svc *service.AttemptService) *AttemptHandler {
 	return &AttemptHandler{svc: svc}
 }
 
-// Start requires bankId in the path to validate the test belongs to that bank.
 func (h *AttemptHandler) Start(c *gin.Context) {
-	var input service.StartAttemptInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
 		return
 	}
-	attempt, err := h.svc.Start(c.Param("bankId"), input)
+	testID, ok2 := parseID(c, "testId")
+	if !ok2 {
+		return
+	}
+	attempt, err := h.svc.Start(bankID, testID)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -31,7 +33,15 @@ func (h *AttemptHandler) Start(c *gin.Context) {
 }
 
 func (h *AttemptHandler) ListByTest(c *gin.Context) {
-	attempts, err := h.svc.ListByTest(c.Param("bankId"), c.Param("id"))
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	testID, ok2 := parseID(c, "testId")
+	if !ok2 {
+		return
+	}
+	attempts, err := h.svc.ListByTest(bankID, testID)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -40,7 +50,11 @@ func (h *AttemptHandler) ListByTest(c *gin.Context) {
 }
 
 func (h *AttemptHandler) Get(c *gin.Context) {
-	attempt, err := h.svc.GetByID(c.Param("id"))
+	id, ok2 := parseID(c, "id")
+	if !ok2 {
+		return
+	}
+	attempt, err := h.svc.GetByID(id)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -49,12 +63,16 @@ func (h *AttemptHandler) Get(c *gin.Context) {
 }
 
 func (h *AttemptHandler) Submit(c *gin.Context) {
+	id, ok2 := parseID(c, "id")
+	if !ok2 {
+		return
+	}
 	var input service.SubmitAttemptInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	attempt, err := h.svc.Submit(c.Param("id"), input)
+	attempt, err := h.svc.Submit(id, input)
 	if err != nil {
 		handleError(c, err)
 		return

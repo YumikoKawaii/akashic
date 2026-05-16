@@ -36,8 +36,8 @@ func Auth(authSvc *service.AuthService) gin.HandlerFunc {
 	}
 }
 
-func UserID(c *gin.Context) string {
+func UserID(c *gin.Context) int {
 	id, _ := c.Get(CtxUserID)
-	s, _ := id.(string)
-	return s
+	v, _ := id.(int)
+	return v
 }

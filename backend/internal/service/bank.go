@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	ErrForbidden   = errors.New("forbidden")
-	ErrBadRequest  = errors.New("bad request")
+	ErrForbidden  = errors.New("forbidden")
+	ErrBadRequest = errors.New("bad request")
 )
 
 func roleLevel(role string) int {
@@ -35,32 +35,32 @@ func NewBankService(repo repository.BankRepository, memberRepo repository.Member
 	return &BankService{repo: repo, memberRepo: memberRepo, userRepo: userRepo}
 }
 
-func (s *BankService) List(userID string) ([]model.BankWithRole, error) {
+func (s *BankService) List(userID int) ([]model.BankWithRole, error) {
 	return s.repo.FindAllForUser(userID)
 }
 
-func (s *BankService) GetByID(bankID, userID string) (*model.BankWithRole, error) {
-	return s.repo.FindByIDForUser(bankID, userID)
+func (s *BankService) GetByID(bankID, userID int) (*model.BankWithRole, error) {
+	bank, err := s.repo.FindByID(bankID)
+	if err != nil {
+		return nil, err
+	}
+	role, err := s.memberRepo.GetRole(bankID, userID)
+	if err != nil {
+		return nil, err
+	}
+	if role == "" {
+		return nil, ErrForbidden
+	}
+	return &model.BankWithRole{Bank: *bank, MyRole: role}, nil
 }
 
-// requireRole checks that userID has at least minRole on the bank.
-// Legacy banks (owner_id IS NULL) grant editor access to everyone.
-func (s *BankService) requireRole(bankID, userID, minRole string) error {
-	bank, err := s.repo.FindByID(bankID)
+func (s *BankService) requireRole(bankID, userID int, minRole string) error {
+	role, err := s.memberRepo.GetRole(bankID, userID)
 	if err != nil {
 		return err
 	}
-	var role string
-	if bank.OwnerID == nil {
-		role = "editor" // legacy bank: open to all authenticated users
-	} else {
-		role, err = s.memberRepo.GetRole(bankID, userID)
-		if err != nil {
-			return err
-		}
-		if role == "" {
-			return ErrForbidden
-		}
+	if role == "" {
+		return ErrForbidden
 	}
 	if roleLevel(role) < roleLevel(minRole) {
 		return ErrForbidden
@@ -69,12 +69,12 @@ func (s *BankService) requireRole(bankID, userID, minRole string) error {
 }
 
 type CreateBankInput struct {
-	Name          string           `json:"name"           binding:"required"`
+	Name          string           `json:"name" binding:"required"`
 	Description   string           `json:"description"`
 	DefaultConfig model.TestConfig `json:"default_config"`
 }
 
-func (s *BankService) Create(input CreateBankInput, userID string) (*model.BankWithRole, error) {
+func (s *BankService) Create(input CreateBankInput, userID int) (*model.BankWithRole, error) {
 	bank := &model.Bank{
 		Name:          input.Name,
 		Description:   input.Description,
@@ -84,8 +84,7 @@ func (s *BankService) Create(input CreateBankInput, userID string) (*model.BankW
 	if err := s.repo.Create(bank); err != nil {
 		return nil, err
 	}
-	// Make creator owner
-	if err := s.memberRepo.Add(&model.BankMember{
+	if err := s.memberRepo.Create(&model.BankMember{
 		BankID: bank.ID,
 		UserID: userID,
 		Role:   "owner",
@@ -100,7 +99,7 @@ type UpdateBankInput struct {
 	Description string `json:"description"`
 }
 
-func (s *BankService) Update(bankID, userID string, input UpdateBankInput) (*model.BankWithRole, error) {
+func (s *BankService) Update(bankID, userID int, input UpdateBankInput) (*model.BankWithRole, error) {
 	if err := s.requireRole(bankID, userID, "editor"); err != nil {
 		return nil, err
 	}
@@ -115,10 +114,10 @@ func (s *BankService) Update(bankID, userID string, input UpdateBankInput) (*mod
 	if err := s.repo.Save(bank); err != nil {
 		return nil, err
 	}
-	return s.repo.FindByIDForUser(bankID, userID)
+	return s.GetByID(bankID, userID)
 }
 
-func (s *BankService) UpdateDefaultConfig(bankID, userID string, config model.TestConfig) (*model.BankWithRole, error) {
+func (s *BankService) UpdateDefaultConfig(bankID, userID int, config model.TestConfig) (*model.BankWithRole, error) {
 	if err := s.requireRole(bankID, userID, "editor"); err != nil {
 		return nil, err
 	}
@@ -130,23 +129,33 @@ func (s *BankService) UpdateDefaultConfig(bankID, userID string, config model.Te
 	if err := s.repo.Save(bank); err != nil {
 		return nil, err
 	}
-	return s.repo.FindByIDForUser(bankID, userID)
+	return s.GetByID(bankID, userID)
 }
 
-func (s *BankService) DeleteBank(bankID, userID string) error {
+func (s *BankService) Delete(bankID, userID int) error {
 	if err := s.requireRole(bankID, userID, "owner"); err != nil {
 		return err
 	}
-	return s.repo.Delete(bankID)
+	return s.repo.SoftDelete(bankID)
 }
 
-// ── Sharing ────────────────────────────────────────────────────────────────────
+func (s *BankService) Restore(bankID, userID int) (*model.BankWithRole, error) {
+	if err := s.requireRole(bankID, userID, "owner"); err != nil {
+		return nil, err
+	}
+	if err := s.repo.Restore(bankID); err != nil {
+		return nil, err
+	}
+	return s.GetByID(bankID, userID)
+}
 
-func (s *BankService) ListMembers(bankID, userID string) ([]model.BankMember, error) {
+// ── Members ────────────────────────────────────────────────────────────────────
+
+func (s *BankService) ListMembers(bankID, userID int) ([]model.BankMember, error) {
 	if err := s.requireRole(bankID, userID, "viewer"); err != nil {
 		return nil, err
 	}
-	return s.memberRepo.List(bankID)
+	return s.memberRepo.FindByBank(bankID)
 }
 
 type ShareInput struct {
@@ -154,7 +163,7 @@ type ShareInput struct {
 	Role  string `json:"role"  binding:"required"`
 }
 
-func (s *BankService) AddMember(bankID, userID string, input ShareInput) (*model.BankMember, error) {
+func (s *BankService) AddMember(bankID, userID int, input ShareInput) (*model.BankMember, error) {
 	if err := s.requireRole(bankID, userID, "owner"); err != nil {
 		return nil, err
 	}
@@ -164,48 +173,46 @@ func (s *BankService) AddMember(bankID, userID string, input ShareInput) (*model
 	target, err := s.userRepo.FindByEmail(input.Email)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return nil, ErrBadRequest // user hasn't logged in yet
+			return nil, ErrBadRequest
 		}
 		return nil, err
 	}
-	// Check if already a member
-	existing, err := s.memberRepo.GetRole(bankID, target.ID)
-	if err != nil {
+	existing, err := s.memberRepo.FindByBankAndUser(bankID, target.ID)
+	if err != nil && !errors.Is(err, repository.ErrNotFound) {
 		return nil, err
 	}
-	if existing != "" {
-		// Update role instead
-		if err := s.memberRepo.UpdateRole(bankID, target.ID, input.Role); err != nil {
+	if existing != nil {
+		existing.Role = input.Role
+		if err := s.memberRepo.Save(existing); err != nil {
 			return nil, err
 		}
-	} else {
-		if err := s.memberRepo.Add(&model.BankMember{
-			BankID: bankID,
-			UserID: target.ID,
-			Role:   input.Role,
-		}); err != nil {
-			return nil, err
-		}
+		return existing, nil
 	}
-	members, err := s.memberRepo.List(bankID)
-	if err != nil {
-		return nil, err
-	}
-	for i := range members {
-		if members[i].UserID == target.ID {
-			return &members[i], nil
-		}
-	}
-	return nil, nil
+	m := &model.BankMember{BankID: bankID, UserID: target.ID, Role: input.Role}
+	return m, s.memberRepo.Create(m)
 }
 
-func (s *BankService) RemoveMember(bankID, requesterID, targetUserID string) error {
+func (s *BankService) RemoveMember(bankID, requesterID, targetUserID int) error {
 	if err := s.requireRole(bankID, requesterID, "owner"); err != nil {
 		return err
 	}
-	// Can't remove yourself if you're the owner
 	if requesterID == targetUserID {
 		return ErrForbidden
 	}
-	return s.memberRepo.Remove(bankID, targetUserID)
+	return s.memberRepo.SoftDelete(bankID, targetUserID)
+}
+
+func (s *BankService) UpdateMemberRole(bankID, requesterID, targetUserID int, role string) (*model.BankMember, error) {
+	if err := s.requireRole(bankID, requesterID, "owner"); err != nil {
+		return nil, err
+	}
+	if role != "editor" && role != "viewer" {
+		return nil, ErrBadRequest
+	}
+	m, err := s.memberRepo.FindByBankAndUser(bankID, targetUserID)
+	if err != nil {
+		return nil, err
+	}
+	m.Role = role
+	return m, s.memberRepo.Save(m)
 }

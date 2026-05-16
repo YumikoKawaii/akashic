@@ -36,36 +36,39 @@ func main() {
 
 	unitOfWork := uow.New(db)
 
-	bankRepo     := repository.NewBankRepo(db)
-	categoryRepo := repository.NewCategoryRepo(db)
-	questionRepo := repository.NewQuestionRepo(db)
-	passageRepo  := repository.NewPassageRepo(db)
-	testRepo     := repository.NewTestRepo(db)
-	attemptRepo  := repository.NewAttemptRepo(db)
-	userRepo     := repository.NewUserRepo(db)
-	memberRepo   := repository.NewMemberRepo(db)
+	bankRepo          := repository.NewBankRepo(db)
+	categoryRepo      := repository.NewCategoryRepo(db)
+	questionRepo      := repository.NewQuestionRepo(db)
+	questionGroupRepo := repository.NewQuestionGroupRepo(db)
+	passageRepo       := repository.NewPassageRepo(db)
+	testRepo          := repository.NewTestRepo(db)
+	attemptRepo       := repository.NewAttemptRepo(db)
+	userRepo          := repository.NewUserRepo(db)
+	memberRepo        := repository.NewMemberRepo(db)
 
-	authSvc    := service.NewAuthService(userRepo, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleCallbackURL, cfg.JWTSecret)
-	bankSvc    := service.NewBankService(bankRepo, memberRepo, userRepo)
-	categorySvc := service.NewCategoryService(categoryRepo, bankRepo)
-	questionSvc := service.NewQuestionService(questionRepo, bankRepo, categoryRepo)
-	passageSvc  := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
-	testSvc     := service.NewTestService(unitOfWork, testRepo, questionRepo, passageRepo, bankRepo)
-	attemptSvc  := service.NewAttemptService(attemptRepo, testRepo)
-	ingestSvc   := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo, passageRepo)
+	authSvc         := service.NewAuthService(userRepo, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleCallbackURL, cfg.JWTSecret)
+	bankSvc         := service.NewBankService(bankRepo, memberRepo, userRepo)
+	categorySvc     := service.NewCategoryService(categoryRepo, bankRepo)
+	passageSvc      := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
+	questionGroupSvc := service.NewQuestionGroupService(unitOfWork, questionGroupRepo, bankRepo, categoryRepo)
+	questionSvc     := service.NewQuestionService(unitOfWork, questionRepo, bankRepo, categoryRepo)
+	testSvc         := service.NewTestService(unitOfWork, testRepo, questionRepo, questionGroupRepo, bankRepo)
+	attemptSvc      := service.NewAttemptService(attemptRepo, testRepo)
+	ingestSvc       := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo)
 
 	authMW := middleware.Auth(authSvc)
 
 	handlers := handler.Handlers{
-		Auth:      handler.NewAuthHandler(authSvc, cfg.FrontendURL),
-		Bank:      handler.NewBankHandler(bankSvc),
-		Category:  handler.NewCategoryHandler(categorySvc),
-		Question:  handler.NewQuestionHandler(questionSvc, ingestSvc),
-		Passage:   handler.NewPassageHandler(passageSvc),
-		Test:      handler.NewTestHandler(testSvc),
-		Attempt:   handler.NewAttemptHandler(attemptSvc),
-		AuthMW:    authMW,
-		StaticDir: cfg.StaticDir,
+		Auth:          handler.NewAuthHandler(authSvc, cfg.FrontendURL),
+		Bank:          handler.NewBankHandler(bankSvc),
+		Category:      handler.NewCategoryHandler(categorySvc),
+		Passage:       handler.NewPassageHandler(passageSvc),
+		QuestionGroup: handler.NewQuestionGroupHandler(questionGroupSvc),
+		Question:      handler.NewQuestionHandler(questionSvc, ingestSvc),
+		Test:          handler.NewTestHandler(testSvc, bankSvc),
+		Attempt:       handler.NewAttemptHandler(attemptSvc),
+		AuthMW:        authMW,
+		StaticDir:     cfg.StaticDir,
 	}
 
 	router := handler.NewRouter(handlers)

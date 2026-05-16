@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yumikokawaii/akashic/internal/repository"
@@ -30,4 +31,14 @@ func handleError(c *gin.Context, err error) {
 	default:
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
+}
+
+// parseID parses an integer path parameter. Returns 0,false and writes a 400 on failure.
+func parseID(c *gin.Context, param string) (int, bool) {
+	id, err := strconv.Atoi(c.Param(param))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid " + param})
+		return 0, false
+	}
+	return id, true
 }

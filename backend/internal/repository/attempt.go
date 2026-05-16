@@ -8,50 +8,39 @@ import (
 )
 
 type AttemptRepository interface {
-	FindByID(id string) (*model.TestAttempt, error)
-	FindByTest(testID string) ([]model.TestAttempt, error)
-	Create(attempt *model.TestAttempt) error
-	Save(attempt *model.TestAttempt) error
+	FindByID(id int) (*model.TestAttempt, error)
+	FindByTest(testID int) ([]model.TestAttempt, error)
+	Create(a *model.TestAttempt) error
+	Save(a *model.TestAttempt) error
+	SoftDelete(id int) error
 }
 
-type attemptRepo struct {
-	db *gorm.DB
-}
+type attemptRepo struct{ db *gorm.DB }
 
-func NewAttemptRepo(db *gorm.DB) AttemptRepository {
-	return &attemptRepo{db: db}
-}
+func NewAttemptRepo(db *gorm.DB) AttemptRepository { return &attemptRepo{db} }
 
-func (r *attemptRepo) FindByID(id string) (*model.TestAttempt, error) {
-	var attempt model.TestAttempt
+func (r *attemptRepo) FindByID(id int) (*model.TestAttempt, error) {
+	var a model.TestAttempt
 	err := r.db.
-		Preload("Test").
-		Preload("Test.TestQuestions", func(db *gorm.DB) *gorm.DB {
-			return db.Order("test_questions.position ASC")
-		}).
-		Preload("Test.TestQuestions.Question").
-		Preload("Test.TestQuestions.Question.Passage").
-		First(&attempt, "id = ?", id).Error
+		Preload("Test.TestQuestions", func(db *gorm.DB) *gorm.DB { return db.Order("position ASC") }).
+		Preload("Test.TestQuestions.Question.Item").
+		Preload("Test.TestQuestions.Question.Choice").
+		First(&a, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
 	}
-	return &attempt, err
+	return &a, err
 }
 
-func (r *attemptRepo) FindByTest(testID string) ([]model.TestAttempt, error) {
-	var attempts []model.TestAttempt
-	err := r.db.
-		Select("id, test_id, score, total, started_at, completed_at").
-		Where("test_id = ?", testID).
-		Order("started_at DESC").
-		Find(&attempts).Error
-	return attempts, err
+func (r *attemptRepo) FindByTest(testID int) ([]model.TestAttempt, error) {
+	var as []model.TestAttempt
+	err := r.db.Where("test_id = ?", testID).Order("started_at DESC").Find(&as).Error
+	return as, err
 }
 
-func (r *attemptRepo) Create(attempt *model.TestAttempt) error {
-	return r.db.Create(attempt).Error
-}
+func (r *attemptRepo) Create(a *model.TestAttempt) error { return r.db.Create(a).Error }
+func (r *attemptRepo) Save(a *model.TestAttempt) error   { return r.db.Save(a).Error }
 
-func (r *attemptRepo) Save(attempt *model.TestAttempt) error {
-	return r.db.Save(attempt).Error
+func (r *attemptRepo) SoftDelete(id int) error {
+	return r.db.Delete(&model.TestAttempt{}, id).Error
 }

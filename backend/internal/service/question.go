@@ -1,112 +1,189 @@
 package service
 
 import (
+	"github.com/lib/pq"
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
+	"github.com/yumikokawaii/akashic/internal/uow"
 )
 
 type QuestionService struct {
+	uow          *uow.UnitOfWork
 	repo         repository.QuestionRepository
 	bankRepo     repository.BankRepository
 	categoryRepo repository.CategoryRepository
 }
 
 func NewQuestionService(
+	u *uow.UnitOfWork,
 	repo repository.QuestionRepository,
 	bankRepo repository.BankRepository,
 	categoryRepo repository.CategoryRepository,
 ) *QuestionService {
-	return &QuestionService{repo: repo, bankRepo: bankRepo, categoryRepo: categoryRepo}
+	return &QuestionService{uow: u, repo: repo, bankRepo: bankRepo, categoryRepo: categoryRepo}
 }
 
-func (s *QuestionService) ListByBank(bankID string, filter repository.QuestionFilter) ([]model.Question, int64, error) {
+func (s *QuestionService) List(bankID int, f repository.QuestionFilter) ([]model.Question, error) {
 	if _, err := s.bankRepo.FindByID(bankID); err != nil {
-		return nil, 0, err
+		return nil, err
 	}
-	total, err := s.repo.CountByBank(bankID, filter)
-	if err != nil {
-		return nil, 0, err
-	}
-	questions, err := s.repo.FindByBank(bankID, filter)
-	return questions, total, err
+	return s.repo.FindByBank(bankID, f)
 }
 
-func (s *QuestionService) GetByID(bankID, id string) (*model.Question, error) {
-	return s.repo.FindByBankAndID(bankID, id)
+func (s *QuestionService) GetByID(bankID, id int) (*model.Question, error) {
+	q, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if q.BankID != bankID {
+		return nil, ErrForbidden
+	}
+	return q, nil
 }
 
 type CreateQuestionInput struct {
-	CategoryID    string   `json:"category_id"    binding:"required"`
-	Text          string   `json:"text"           binding:"required"`
-	Type          string   `json:"type"           binding:"required,oneof=mcq true_false open tf_ng sentence_completion word_bank_completion matching multi_select"`
-	Difficulty    string   `json:"difficulty"     binding:"required,oneof=easy medium hard"`
-	Options       []string `json:"options"`
-	CorrectAnswer string   `json:"correct_answer"`
-	Tags          []string `json:"tags"`
+	CategoryID int               `json:"category_id" binding:"required"`
+	Type       string            `json:"type"        binding:"required"`
+	Difficulty string            `json:"difficulty"  binding:"required"`
+	Tags       []string          `json:"tags"`
+	Content    string            `json:"content"     binding:"required"`
+	Answer     string            `json:"answer"`
+	Options    []model.MCQOption `json:"options"`
+	Answers    []string          `json:"answers"`
 }
 
-func (s *QuestionService) Create(bankID string, input CreateQuestionInput) (*model.Question, error) {
+func (s *QuestionService) Create(bankID int, input CreateQuestionInput) (*model.Question, error) {
 	if _, err := s.bankRepo.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	if _, err := s.categoryRepo.FindByBankAndID(bankID, input.CategoryID); err != nil {
-		return nil, err
-	}
-	question := &model.Question{
-		BankID:        bankID,
-		CategoryID:    input.CategoryID,
-		Text:          input.Text,
-		Type:          input.Type,
-		Difficulty:    input.Difficulty,
-		Options:       input.Options,
-		CorrectAnswer: input.CorrectAnswer,
-		Tags:          input.Tags,
-	}
-	return question, s.repo.Create(question)
-}
-
-type UpdateQuestionInput struct {
-	CategoryID    string   `json:"category_id"`
-	Text          string   `json:"text"`
-	Type          string   `json:"type"       binding:"omitempty,oneof=mcq true_false open tf_ng sentence_completion word_bank_completion matching multi_select"`
-	Difficulty    string   `json:"difficulty" binding:"omitempty,oneof=easy medium hard"`
-	Options       []string `json:"options"`
-	CorrectAnswer string   `json:"correct_answer"`
-	Tags          []string `json:"tags"`
-}
-
-func (s *QuestionService) Update(bankID, id string, input UpdateQuestionInput) (*model.Question, error) {
-	question, err := s.repo.FindByBankAndID(bankID, id)
+	cat, err := s.categoryRepo.FindByID(input.CategoryID)
 	if err != nil {
 		return nil, err
 	}
-	if input.CategoryID != "" {
-		if _, err := s.categoryRepo.FindByBankAndID(bankID, input.CategoryID); err != nil {
+	if cat.BankID != bankID {
+		return nil, ErrForbidden
+	}
+
+	q := &model.Question{
+		BankID:     bankID,
+		CategoryID: input.CategoryID,
+		Type:       input.Type,
+		Difficulty: input.Difficulty,
+		Tags:       pq.StringArray(input.Tags),
+	}
+
+	tx := s.uow.Begin()
+	defer tx.Rollback()
+
+	if err := tx.Questions.Create(q); err != nil {
+		return nil, err
+	}
+
+	if input.Type == "mcq" {
+		if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
+			QuestionID: q.ID,
+			Content:    input.Content,
+			Options:    input.Options,
+			Answers:    pq.StringArray(input.Answers),
+		}); err != nil {
 			return nil, err
 		}
-		question.CategoryID = input.CategoryID
+	} else {
+		if err := tx.Questions.CreateItem(&model.QQuestionItem{
+			QuestionID: q.ID,
+			Content:    input.Content,
+			Answer:     input.Answer,
+		}); err != nil {
+			return nil, err
+		}
 	}
-	if input.Text != "" {
-		question.Text = input.Text
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
 	}
-	if input.Type != "" {
-		question.Type = input.Type
-	}
-	if input.Difficulty != "" {
-		question.Difficulty = input.Difficulty
-	}
-	if input.Options != nil {
-		question.Options = input.Options
-	}
-	if input.CorrectAnswer != "" {
-		question.CorrectAnswer = input.CorrectAnswer
-	}
-	if input.Tags != nil {
-		question.Tags = input.Tags
-	}
-	return question, s.repo.Save(question)
+	return s.repo.FindByID(q.ID)
 }
 
-func (s *QuestionService) Delete(bankID, id string) error {
-	return s.repo.Delete(bankID, id)
+type UpdateQuestionInput struct {
+	CategoryID *int              `json:"category_id"`
+	Difficulty string            `json:"difficulty"`
+	Tags       []string          `json:"tags"`
+	Content    string            `json:"content"`
+	Answer     string            `json:"answer"`
+	Options    []model.MCQOption `json:"options"`
+	Answers    []string          `json:"answers"`
+}
+
+func (s *QuestionService) Update(bankID, id int, input UpdateQuestionInput) (*model.Question, error) {
+	q, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if q.BankID != bankID {
+		return nil, ErrForbidden
+	}
+	if input.CategoryID != nil {
+		cat, err := s.categoryRepo.FindByID(*input.CategoryID)
+		if err != nil {
+			return nil, err
+		}
+		if cat.BankID != bankID {
+			return nil, ErrForbidden
+		}
+		q.CategoryID = *input.CategoryID
+	}
+	if input.Difficulty != "" {
+		q.Difficulty = input.Difficulty
+	}
+	if input.Tags != nil {
+		q.Tags = pq.StringArray(input.Tags)
+	}
+	if err := s.repo.Save(q); err != nil {
+		return nil, err
+	}
+
+	if q.Choice != nil && input.Content != "" {
+		q.Choice.Content = input.Content
+		if input.Options != nil {
+			q.Choice.Options = input.Options
+		}
+		if input.Answers != nil {
+			q.Choice.Answers = pq.StringArray(input.Answers)
+		}
+		if err := s.repo.SaveChoice(q.Choice); err != nil {
+			return nil, err
+		}
+	} else if q.Item != nil && input.Content != "" {
+		q.Item.Content = input.Content
+		if input.Answer != "" {
+			q.Item.Answer = input.Answer
+		}
+		if err := s.repo.SaveItem(q.Item); err != nil {
+			return nil, err
+		}
+	}
+
+	return s.repo.FindByID(q.ID)
+}
+
+func (s *QuestionService) Delete(bankID, id int) error {
+	q, err := s.repo.FindByID(id)
+	if err != nil {
+		return err
+	}
+	if q.BankID != bankID {
+		return ErrForbidden
+	}
+	return s.repo.SoftDelete(id)
+}
+
+func (s *QuestionService) Restore(bankID, id int) (*model.Question, error) {
+	q, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if q.BankID != bankID {
+		return nil, ErrForbidden
+	}
+	return q, s.repo.Restore(id)
 }

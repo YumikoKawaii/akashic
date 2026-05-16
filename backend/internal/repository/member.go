@@ -8,24 +8,36 @@ import (
 )
 
 type MemberRepository interface {
-	GetRole(bankID, userID string) (string, error) // "" if not a member
-	List(bankID string) ([]model.BankMember, error)
-	Add(m *model.BankMember) error
-	UpdateRole(bankID, userID, role string) error
-	Remove(bankID, userID string) error
+	FindByBank(bankID int) ([]model.BankMember, error)
+	FindByBankAndUser(bankID, userID int) (*model.BankMember, error)
+	GetRole(bankID, userID int) (string, error)
+	Create(m *model.BankMember) error
+	Save(m *model.BankMember) error
+	SoftDelete(bankID, userID int) error
 }
 
-type memberRepo struct {
-	db *gorm.DB
+type memberRepo struct{ db *gorm.DB }
+
+func NewMemberRepo(db *gorm.DB) MemberRepository { return &memberRepo{db} }
+
+func (r *memberRepo) FindByBank(bankID int) ([]model.BankMember, error) {
+	var ms []model.BankMember
+	err := r.db.Preload("User").Where("bank_id = ?", bankID).Order("created_at ASC").Find(&ms).Error
+	return ms, err
 }
 
-func NewMemberRepo(db *gorm.DB) MemberRepository {
-	return &memberRepo{db: db}
-}
-
-func (r *memberRepo) GetRole(bankID, userID string) (string, error) {
+func (r *memberRepo) FindByBankAndUser(bankID, userID int) (*model.BankMember, error) {
 	var m model.BankMember
-	err := r.db.First(&m, "bank_id = ? AND user_id = ?", bankID, userID).Error
+	err := r.db.Where("bank_id = ? AND user_id = ?", bankID, userID).First(&m).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, ErrNotFound
+	}
+	return &m, err
+}
+
+func (r *memberRepo) GetRole(bankID, userID int) (string, error) {
+	var m model.BankMember
+	err := r.db.Where("bank_id = ? AND user_id = ?", bankID, userID).First(&m).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return "", nil
 	}
@@ -35,36 +47,9 @@ func (r *memberRepo) GetRole(bankID, userID string) (string, error) {
 	return m.Role, nil
 }
 
-func (r *memberRepo) List(bankID string) ([]model.BankMember, error) {
-	var members []model.BankMember
-	err := r.db.Preload("User").Where("bank_id = ?", bankID).Order("created_at ASC").Find(&members).Error
-	return members, err
-}
+func (r *memberRepo) Create(m *model.BankMember) error { return r.db.Create(m).Error }
+func (r *memberRepo) Save(m *model.BankMember) error   { return r.db.Save(m).Error }
 
-func (r *memberRepo) Add(m *model.BankMember) error {
-	return r.db.Create(m).Error
-}
-
-func (r *memberRepo) UpdateRole(bankID, userID, role string) error {
-	result := r.db.Model(&model.BankMember{}).
-		Where("bank_id = ? AND user_id = ?", bankID, userID).
-		Update("role", role)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return ErrNotFound
-	}
-	return nil
-}
-
-func (r *memberRepo) Remove(bankID, userID string) error {
-	result := r.db.Delete(&model.BankMember{}, "bank_id = ? AND user_id = ?", bankID, userID)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return ErrNotFound
-	}
-	return nil
+func (r *memberRepo) SoftDelete(bankID, userID int) error {
+	return r.db.Where("bank_id = ? AND user_id = ?", bankID, userID).Delete(&model.BankMember{}).Error
 }

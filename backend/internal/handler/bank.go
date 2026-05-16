@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yumikokawaii/akashic/internal/middleware"
@@ -27,7 +28,11 @@ func (h *BankHandler) List(c *gin.Context) {
 }
 
 func (h *BankHandler) Get(c *gin.Context) {
-	bank, err := h.svc.GetByID(c.Param("bankId"), middleware.UserID(c))
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	bank, err := h.svc.GetByID(bankID, middleware.UserID(c))
 	if err != nil {
 		handleError(c, err)
 		return
@@ -50,12 +55,16 @@ func (h *BankHandler) Create(c *gin.Context) {
 }
 
 func (h *BankHandler) Update(c *gin.Context) {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
 	var input service.UpdateBankInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	bank, err := h.svc.Update(c.Param("bankId"), middleware.UserID(c), input)
+	bank, err := h.svc.Update(bankID, middleware.UserID(c), input)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -64,12 +73,16 @@ func (h *BankHandler) Update(c *gin.Context) {
 }
 
 func (h *BankHandler) UpdateDefaultConfig(c *gin.Context) {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
 	var config model.TestConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	bank, err := h.svc.UpdateDefaultConfig(c.Param("bankId"), middleware.UserID(c), config)
+	bank, err := h.svc.UpdateDefaultConfig(bankID, middleware.UserID(c), config)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -78,17 +91,38 @@ func (h *BankHandler) UpdateDefaultConfig(c *gin.Context) {
 }
 
 func (h *BankHandler) Delete(c *gin.Context) {
-	if err := h.svc.DeleteBank(c.Param("bankId"), middleware.UserID(c)); err != nil {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	if err := h.svc.Delete(bankID, middleware.UserID(c)); err != nil {
 		handleError(c, err)
 		return
 	}
 	c.Status(http.StatusNoContent)
 }
 
-// ── Share endpoints ────────────────────────────────────────────────────────────
+func (h *BankHandler) Restore(c *gin.Context) {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	bank, err := h.svc.Restore(bankID, middleware.UserID(c))
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	ok(c, bank)
+}
+
+// ── Members ────────────────────────────────────────────────────────────────────
 
 func (h *BankHandler) ListMembers(c *gin.Context) {
-	members, err := h.svc.ListMembers(c.Param("bankId"), middleware.UserID(c))
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	members, err := h.svc.ListMembers(bankID, middleware.UserID(c))
 	if err != nil {
 		handleError(c, err)
 		return
@@ -97,12 +131,16 @@ func (h *BankHandler) ListMembers(c *gin.Context) {
 }
 
 func (h *BankHandler) AddMember(c *gin.Context) {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
 	var input service.ShareInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	member, err := h.svc.AddMember(c.Param("bankId"), middleware.UserID(c), input)
+	member, err := h.svc.AddMember(bankID, middleware.UserID(c), input)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -111,9 +149,43 @@ func (h *BankHandler) AddMember(c *gin.Context) {
 }
 
 func (h *BankHandler) RemoveMember(c *gin.Context) {
-	if err := h.svc.RemoveMember(c.Param("bankId"), middleware.UserID(c), c.Param("userId")); err != nil {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	targetID, err2 := strconv.Atoi(c.Param("userId"))
+	if err2 != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid userId"})
+		return
+	}
+	if err := h.svc.RemoveMember(bankID, middleware.UserID(c), targetID); err != nil {
 		handleError(c, err)
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+func (h *BankHandler) UpdateMemberRole(c *gin.Context) {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	targetID, err2 := strconv.Atoi(c.Param("userId"))
+	if err2 != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid userId"})
+		return
+	}
+	var body struct {
+		Role string `json:"role" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	member, err := h.svc.UpdateMemberRole(bankID, middleware.UserID(c), targetID, body.Role)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	ok(c, member)
 }

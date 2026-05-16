@@ -8,63 +8,61 @@ import (
 )
 
 type TestRepository interface {
-	FindByBank(bankID string) ([]model.Test, error)
-	FindByBankAndID(bankID, id string) (*model.Test, error)
-	Create(test *model.Test) error
-	CreateWithQuestions(test *model.Test, questions []model.TestQuestion) error
-	Delete(bankID, id string) error
+	FindByBank(bankID int) ([]model.Test, error)
+	FindByID(id int) (*model.Test, error)
+	FindByBankAndID(bankID, id int) (*model.Test, error)
+	Create(t *model.Test) error
+	SoftDelete(id int) error
+	Restore(id int) error
+	CreateTestQuestion(tq *model.TestQuestion) error
 }
 
-type testRepo struct {
-	db *gorm.DB
+type testRepo struct{ db *gorm.DB }
+
+func NewTestRepo(db *gorm.DB) TestRepository { return &testRepo{db} }
+
+func (r *testRepo) FindByBank(bankID int) ([]model.Test, error) {
+	var ts []model.Test
+	err := r.db.Where("bank_id = ?", bankID).Order("created_at DESC").Find(&ts).Error
+	return ts, err
 }
 
-func NewTestRepo(db *gorm.DB) TestRepository {
-	return &testRepo{db: db}
-}
-
-func (r *testRepo) FindByBank(bankID string) ([]model.Test, error) {
-	var tests []model.Test
-	return tests, r.db.Where("bank_id = ?", bankID).Order("created_at DESC").Find(&tests).Error
-}
-
-func (r *testRepo) FindByBankAndID(bankID, id string) (*model.Test, error) {
-	var test model.Test
+func (r *testRepo) FindByID(id int) (*model.Test, error) {
+	var t model.Test
 	err := r.db.
-		Preload("TestQuestions", func(db *gorm.DB) *gorm.DB {
-			return db.Order("test_questions.position ASC")
-		}).
-		Preload("TestQuestions.Question").
-		Preload("TestQuestions.Question.Category").
-		Preload("TestQuestions.Question.Passage").
-		First(&test, "bank_id = ? AND id = ?", bankID, id).Error
+		Preload("TestQuestions", func(db *gorm.DB) *gorm.DB { return db.Order("position ASC") }).
+		Preload("TestQuestions.Question.Item").
+		Preload("TestQuestions.Question.Choice").
+		First(&t, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
 	}
-	return &test, err
+	return &t, err
 }
 
-func (r *testRepo) Create(test *model.Test) error {
-	return r.db.Create(test).Error
+func (r *testRepo) FindByBankAndID(bankID, id int) (*model.Test, error) {
+	var t model.Test
+	err := r.db.
+		Preload("TestQuestions", func(db *gorm.DB) *gorm.DB { return db.Order("position ASC") }).
+		Preload("TestQuestions.Question.Item").
+		Preload("TestQuestions.Question.Choice").
+		Where("bank_id = ?", bankID).First(&t, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, ErrNotFound
+	}
+	return &t, err
 }
 
-func (r *testRepo) CreateWithQuestions(test *model.Test, questions []model.TestQuestion) error {
-	if err := r.db.Create(test).Error; err != nil {
-		return err
-	}
-	if len(questions) == 0 {
-		return nil
-	}
-	return r.db.Create(&questions).Error
+func (r *testRepo) Create(t *model.Test) error { return r.db.Create(t).Error }
+
+func (r *testRepo) SoftDelete(id int) error {
+	return r.db.Delete(&model.Test{}, id).Error
 }
 
-func (r *testRepo) Delete(bankID, id string) error {
-	result := r.db.Delete(&model.Test{}, "bank_id = ? AND id = ?", bankID, id)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return ErrNotFound
-	}
-	return nil
+func (r *testRepo) Restore(id int) error {
+	return r.db.Unscoped().Model(&model.Test{}).Where("id = ?", id).Update("deleted_at", nil).Error
+}
+
+func (r *testRepo) CreateTestQuestion(tq *model.TestQuestion) error {
+	return r.db.Create(tq).Error
 }

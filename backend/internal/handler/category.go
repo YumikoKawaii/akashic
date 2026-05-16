@@ -16,7 +16,11 @@ func NewCategoryHandler(svc *service.CategoryService) *CategoryHandler {
 }
 
 func (h *CategoryHandler) List(c *gin.Context) {
-	categories, err := h.svc.ListByBank(c.Param("bankId"))
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	categories, err := h.svc.List(bankID)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -25,12 +29,16 @@ func (h *CategoryHandler) List(c *gin.Context) {
 }
 
 func (h *CategoryHandler) Create(c *gin.Context) {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
 	var input service.CreateCategoryInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	category, err := h.svc.Create(c.Param("bankId"), input)
+	category, err := h.svc.Create(bankID, input)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -39,12 +47,20 @@ func (h *CategoryHandler) Create(c *gin.Context) {
 }
 
 func (h *CategoryHandler) Update(c *gin.Context) {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	id, ok2 := parseID(c, "id")
+	if !ok2 {
+		return
+	}
 	var input service.UpdateCategoryInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	category, err := h.svc.Update(c.Param("bankId"), c.Param("id"), input)
+	category, err := h.svc.Update(bankID, id, input)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -53,9 +69,34 @@ func (h *CategoryHandler) Update(c *gin.Context) {
 }
 
 func (h *CategoryHandler) Delete(c *gin.Context) {
-	if err := h.svc.Delete(c.Param("bankId"), c.Param("id")); err != nil {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	id, ok2 := parseID(c, "id")
+	if !ok2 {
+		return
+	}
+	if err := h.svc.Delete(bankID, id); err != nil {
 		handleError(c, err)
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+func (h *CategoryHandler) Restore(c *gin.Context) {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	id, ok2 := parseID(c, "id")
+	if !ok2 {
+		return
+	}
+	category, err := h.svc.Restore(bankID, id)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	ok(c, category)
 }

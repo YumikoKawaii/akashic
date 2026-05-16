@@ -19,30 +19,41 @@ func NewPassageService(
 	return &PassageService{repo: repo, bankRepo: bankRepo, categoryRepo: categoryRepo}
 }
 
-func (s *PassageService) ListByBank(bankID string) ([]model.Passage, error) {
+func (s *PassageService) List(bankID int, f repository.PassageFilter) ([]model.Passage, error) {
 	if _, err := s.bankRepo.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	return s.repo.FindByBank(bankID)
+	return s.repo.FindByBank(bankID, f)
 }
 
-func (s *PassageService) GetByID(bankID, id string) (*model.Passage, error) {
-	return s.repo.FindByBankAndID(bankID, id)
+func (s *PassageService) GetByID(bankID, id int) (*model.Passage, error) {
+	p, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if p.BankID != bankID {
+		return nil, ErrForbidden
+	}
+	return p, nil
 }
 
 type CreatePassageInput struct {
-	CategoryID string `json:"category_id" binding:"required"`
+	CategoryID int    `json:"category_id" binding:"required"`
 	Title      string `json:"title"       binding:"required"`
 	Body       string `json:"body"`
-	Difficulty string `json:"difficulty"  binding:"required,oneof=easy medium hard"`
+	Difficulty string `json:"difficulty"  binding:"required"`
 }
 
-func (s *PassageService) Create(bankID string, input CreatePassageInput) (*model.Passage, error) {
+func (s *PassageService) Create(bankID int, input CreatePassageInput) (*model.Passage, error) {
 	if _, err := s.bankRepo.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	if _, err := s.categoryRepo.FindByBankAndID(bankID, input.CategoryID); err != nil {
+	cat, err := s.categoryRepo.FindByID(input.CategoryID)
+	if err != nil {
 		return nil, err
+	}
+	if cat.BankID != bankID {
+		return nil, ErrForbidden
 	}
 	passage := &model.Passage{
 		BankID:     bankID,
@@ -55,35 +66,60 @@ func (s *PassageService) Create(bankID string, input CreatePassageInput) (*model
 }
 
 type UpdatePassageInput struct {
-	CategoryID string `json:"category_id"`
+	CategoryID *int   `json:"category_id"`
 	Title      string `json:"title"`
 	Body       string `json:"body"`
-	Difficulty string `json:"difficulty" binding:"omitempty,oneof=easy medium hard"`
+	Difficulty string `json:"difficulty"`
 }
 
-func (s *PassageService) Update(bankID, id string, input UpdatePassageInput) (*model.Passage, error) {
-	passage, err := s.repo.FindByBankAndID(bankID, id)
+func (s *PassageService) Update(bankID, id int, input UpdatePassageInput) (*model.Passage, error) {
+	p, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
-	if input.CategoryID != "" {
-		if _, err := s.categoryRepo.FindByBankAndID(bankID, input.CategoryID); err != nil {
+	if p.BankID != bankID {
+		return nil, ErrForbidden
+	}
+	if input.CategoryID != nil {
+		cat, err := s.categoryRepo.FindByID(*input.CategoryID)
+		if err != nil {
 			return nil, err
 		}
-		passage.CategoryID = input.CategoryID
+		if cat.BankID != bankID {
+			return nil, ErrForbidden
+		}
+		p.CategoryID = *input.CategoryID
 	}
 	if input.Title != "" {
-		passage.Title = input.Title
+		p.Title = input.Title
 	}
 	if input.Body != "" {
-		passage.Body = input.Body
+		p.Body = input.Body
 	}
 	if input.Difficulty != "" {
-		passage.Difficulty = input.Difficulty
+		p.Difficulty = input.Difficulty
 	}
-	return passage, s.repo.Save(passage)
+	return p, s.repo.Save(p)
 }
 
-func (s *PassageService) Delete(bankID, id string) error {
-	return s.repo.Delete(bankID, id)
+func (s *PassageService) Delete(bankID, id int) error {
+	p, err := s.repo.FindByID(id)
+	if err != nil {
+		return err
+	}
+	if p.BankID != bankID {
+		return ErrForbidden
+	}
+	return s.repo.SoftDelete(id)
+}
+
+func (s *PassageService) Restore(bankID, id int) (*model.Passage, error) {
+	p, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if p.BankID != bankID {
+		return nil, ErrForbidden
+	}
+	return p, s.repo.Restore(id)
 }

@@ -1,7 +1,12 @@
 DROP TABLE IF EXISTS test_attempts;
 DROP TABLE IF EXISTS test_questions;
 DROP TABLE IF EXISTS tests;
+DROP TABLE IF EXISTS q_multiple_choices;
+DROP TABLE IF EXISTS q_question_items;
 DROP TABLE IF EXISTS questions;
+DROP TABLE IF EXISTS question_groups;
+DROP TABLE IF EXISTS passages;
 DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS bank_members;
 DROP TABLE IF EXISTS banks;
-DROP EXTENSION IF EXISTS "uuid-ossp";
+DROP TABLE IF EXISTS users;

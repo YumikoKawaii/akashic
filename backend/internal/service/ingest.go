@@ -10,54 +10,61 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/lib/pq"
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
 	"github.com/yumikokawaii/akashic/internal/uow"
 )
 
-// IngestRow represents a standalone question in the import file.
-type IngestRow struct {
-	Text          string   `json:"text"           yaml:"text"`
-	Type          string   `json:"type"           yaml:"type"`
-	Difficulty    string   `json:"difficulty"     yaml:"difficulty"`
-	CategoryName  string   `json:"category_name"  yaml:"category_name"`
-	Options       []string `json:"options"        yaml:"options"`
-	CorrectAnswer string   `json:"correct_answer" yaml:"correct_answer"`
-	Tags          []string `json:"tags"           yaml:"tags"`
+// IngestStandaloneRow is a single standalone question in the import file.
+type IngestStandaloneRow struct {
+	Type         string            `json:"type"          yaml:"type"`
+	Difficulty   string            `json:"difficulty"    yaml:"difficulty"`
+	CategoryName string            `json:"category_name" yaml:"category_name"`
+	Content      string            `json:"content"       yaml:"content"`
+	Answer       string            `json:"answer"        yaml:"answer"`
+	Options      []model.MCQOption `json:"options"       yaml:"options"`
+	Answers      []string          `json:"answers"       yaml:"answers"`
+	Tags         []string          `json:"tags"          yaml:"tags"`
 }
 
-// IngestSubQuestion is a question nested inside a passage entry.
-// It inherits difficulty and category from the parent passage.
-type IngestSubQuestion struct {
-	Text          string   `json:"text"           yaml:"text"`
-	Type          string   `json:"type"           yaml:"type"`
-	Options       []string `json:"options"        yaml:"options"`
-	CorrectAnswer string   `json:"correct_answer" yaml:"correct_answer"`
-	Tags          []string `json:"tags"           yaml:"tags"`
+// IngestGroupQuestion is a question within a group.
+type IngestGroupQuestion struct {
+	Content string            `json:"content" yaml:"content"`
+	Answer  string            `json:"answer"  yaml:"answer"`
+	Options []model.MCQOption `json:"options" yaml:"options"`
+	Answers []string          `json:"answers" yaml:"answers"`
+	Tags    []string          `json:"tags"    yaml:"tags"`
 }
 
-// IngestPassageRow represents a passage with its sub-questions in the import file.
-type IngestPassageRow struct {
-	Type         string              `json:"type"          yaml:"type"`
-	Title        string              `json:"title"         yaml:"title"`
-	Body         string              `json:"body"          yaml:"body"`
-	Difficulty   string              `json:"difficulty"    yaml:"difficulty"`
-	CategoryName string              `json:"category_name" yaml:"category_name"`
-	Questions    []IngestSubQuestion `json:"questions"     yaml:"questions"`
+// IngestGroupRow is a question group with embedded questions.
+// Detected by the presence of "kind": "group" in JSON/YAML.
+type IngestGroupRow struct {
+	Type         string                `json:"type"          yaml:"type"`
+	Difficulty   string                `json:"difficulty"    yaml:"difficulty"`
+	CategoryName string                `json:"category_name" yaml:"category_name"`
+	Context      model.GroupContext    `json:"context"       yaml:"context"`
+	Questions    []IngestGroupQuestion `json:"questions"     yaml:"questions"`
 }
 
-// IngestResult is returned to the caller after an import.
+// IngestResult is returned after an import.
 type IngestResult struct {
 	Created int           `json:"created"`
 	Failed  int           `json:"failed"`
 	Errors  []IngestError `json:"errors,omitempty"`
 }
 
-// IngestError describes a single row that failed validation or insertion.
+// IngestError describes a single item that failed.
 type IngestError struct {
 	Row     int    `json:"row"`
-	Text    string `json:"text,omitempty"`
+	Label   string `json:"label,omitempty"`
 	Message string `json:"message"`
+}
+
+type ingestItem struct {
+	standalone *IngestStandaloneRow
+	group      *IngestGroupRow
+	rowNum     int
 }
 
 type IngestService struct {
@@ -65,7 +72,6 @@ type IngestService struct {
 	bankRepo     repository.BankRepository
 	categoryRepo repository.CategoryRepository
 	questionRepo repository.QuestionRepository
-	passageRepo  repository.PassageRepository
 }
 
 func NewIngestService(
@@ -73,55 +79,36 @@ func NewIngestService(
 	bankRepo repository.BankRepository,
 	categoryRepo repository.CategoryRepository,
 	questionRepo repository.QuestionRepository,
-	passageRepo repository.PassageRepository,
 ) *IngestService {
-	return &IngestService{
-		uow:          u,
-		bankRepo:     bankRepo,
-		categoryRepo: categoryRepo,
-		questionRepo: questionRepo,
-		passageRepo:  passageRepo,
-	}
+	return &IngestService{uow: u, bankRepo: bankRepo, categoryRepo: categoryRepo, questionRepo: questionRepo}
 }
 
-// parsed holds the two kinds of items we support.
-type parsed struct {
-	question *IngestRow
-	passage  *IngestPassageRow
-	rowNum   int
-}
-
-// Ingest parses a file and bulk-inserts questions (and passages) into the given bank.
-func (s *IngestService) Ingest(bankID string, r io.Reader, ext string) (*IngestResult, error) {
+func (s *IngestService) Ingest(bankID int, r io.Reader, ext string) (*IngestResult, error) {
 	if _, err := s.bankRepo.FindByID(bankID); err != nil {
 		return nil, err
 	}
 
-	items, parseErrors := parseItems(r, ext)
+	items, parseErrors := parseIngestItems(r, ext)
 	if len(parseErrors) > 0 {
 		return &IngestResult{Failed: len(parseErrors), Errors: parseErrors}, nil
 	}
 
-	// Validate all items up-front
 	var validationErrors []IngestError
 	for _, item := range items {
 		var err error
-		if item.question != nil {
-			err = validateRow(*item.question)
+		if item.standalone != nil {
+			err = validateStandalone(*item.standalone)
 		} else {
-			if item.passage.Difficulty == "" {
-				item.passage.Difficulty = "medium"
-			}
-			err = validatePassage(*item.passage)
+			err = validateGroup(*item.group)
 		}
 		if err != nil {
-			text := ""
-			if item.question != nil {
-				text = item.question.Text
+			label := ""
+			if item.standalone != nil {
+				label = item.standalone.Content
 			} else {
-				text = item.passage.Title
+				label = item.group.Type
 			}
-			validationErrors = append(validationErrors, IngestError{Row: item.rowNum, Text: text, Message: err.Error()})
+			validationErrors = append(validationErrors, IngestError{Row: item.rowNum, Label: label, Message: err.Error()})
 		}
 	}
 	if len(validationErrors) > 0 {
@@ -131,62 +118,96 @@ func (s *IngestService) Ingest(bankID string, r io.Reader, ext string) (*IngestR
 	tx := s.uow.Begin()
 	defer tx.Rollback()
 
-	categoryCache := map[string]string{}
+	catCache := map[string]int{}
 	created := 0
 
 	for _, item := range items {
-		if item.question != nil {
-			catID, err := s.resolveCategory(tx, bankID, item.question.CategoryName, categoryCache)
+		if item.standalone != nil {
+			row := item.standalone
+			catID, err := s.resolveCategory(tx, bankID, row.CategoryName, catCache)
 			if err != nil {
-				return nil, fmt.Errorf("row %d: category %q: %w", item.rowNum, item.question.CategoryName, err)
+				return nil, fmt.Errorf("row %d: category %q: %w", item.rowNum, row.CategoryName, err)
 			}
 			q := &model.Question{
-				BankID:        bankID,
-				CategoryID:    catID,
-				Text:          item.question.Text,
-				Type:          item.question.Type,
-				Difficulty:    item.question.Difficulty,
-				Options:       nonNilStrings(item.question.Options),
-				CorrectAnswer: item.question.CorrectAnswer,
-				Tags:          nonNilStrings(item.question.Tags),
+				BankID:     bankID,
+				CategoryID: catID,
+				Type:       row.Type,
+				Difficulty: row.Difficulty,
+				Tags:       pq.StringArray(nonNilSlice(row.Tags)),
 			}
 			if err := tx.Questions.Create(q); err != nil {
 				return nil, fmt.Errorf("row %d: %w", item.rowNum, err)
 			}
+			if row.Type == "mcq" {
+				if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
+					QuestionID: q.ID,
+					Content:    row.Content,
+					Options:    row.Options,
+					Answers:    pq.StringArray(nonNilSlice(row.Answers)),
+				}); err != nil {
+					return nil, fmt.Errorf("row %d: choice: %w", item.rowNum, err)
+				}
+			} else {
+				if err := tx.Questions.CreateItem(&model.QQuestionItem{
+					QuestionID: q.ID,
+					Content:    row.Content,
+					Answer:     row.Answer,
+				}); err != nil {
+					return nil, fmt.Errorf("row %d: item: %w", item.rowNum, err)
+				}
+			}
 			created++
 		} else {
-			p := item.passage
-			catID, err := s.resolveCategory(tx, bankID, p.CategoryName, categoryCache)
+			row := item.group
+			catID, err := s.resolveCategory(tx, bankID, row.CategoryName, catCache)
 			if err != nil {
-				return nil, fmt.Errorf("row %d: category %q: %w", item.rowNum, p.CategoryName, err)
+				return nil, fmt.Errorf("row %d: category %q: %w", item.rowNum, row.CategoryName, err)
 			}
-			passage := &model.Passage{
+			g := &model.QuestionGroup{
 				BankID:     bankID,
 				CategoryID: catID,
-				Title:      p.Title,
-				Body:       p.Body,
-				Difficulty: p.Difficulty,
+				Type:       row.Type,
+				Difficulty: row.Difficulty,
+				Context:    row.Context,
 			}
-			if err := tx.Passages.Create(passage); err != nil {
-				return nil, fmt.Errorf("row %d: create passage: %w", item.rowNum, err)
+			if err := tx.QuestionGroups.Create(g); err != nil {
+				return nil, fmt.Errorf("row %d: group: %w", item.rowNum, err)
 			}
-			for _, sq := range p.Questions {
+			isMCQ := row.Type == "mcq"
+			for i, gq := range row.Questions {
+				pos := int16(i + 1)
 				q := &model.Question{
-					BankID:        bankID,
-					CategoryID:    catID,
-					PassageID:     &passage.ID,
-					Text:          sq.Text,
-					Type:          sq.Type,
-					Difficulty:    p.Difficulty,
-					Options:       nonNilStrings(sq.Options),
-					CorrectAnswer: sq.CorrectAnswer,
-					Tags:          nonNilStrings(sq.Tags),
+					BankID:     bankID,
+					CategoryID: catID,
+					GroupID:    &g.ID,
+					Type:       row.Type,
+					Difficulty: row.Difficulty,
+					Tags:       pq.StringArray(nonNilSlice(gq.Tags)),
+					Position:   &pos,
 				}
 				if err := tx.Questions.Create(q); err != nil {
-					return nil, fmt.Errorf("row %d sub-question: %w", item.rowNum, err)
+					return nil, fmt.Errorf("row %d group q%d: %w", item.rowNum, i+1, err)
+				}
+				if isMCQ {
+					if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
+						QuestionID: q.ID,
+						Content:    gq.Content,
+						Options:    gq.Options,
+						Answers:    pq.StringArray(nonNilSlice(gq.Answers)),
+					}); err != nil {
+						return nil, fmt.Errorf("row %d group q%d choice: %w", item.rowNum, i+1, err)
+					}
+				} else {
+					if err := tx.Questions.CreateItem(&model.QQuestionItem{
+						QuestionID: q.ID,
+						Content:    gq.Content,
+						Answer:     gq.Answer,
+					}); err != nil {
+						return nil, fmt.Errorf("row %d group q%d item: %w", item.rowNum, i+1, err)
+					}
 				}
 			}
-			created++ // count the passage as one created unit
+			created++
 		}
 	}
 
@@ -196,34 +217,27 @@ func (s *IngestService) Ingest(bankID string, r io.Reader, ext string) (*IngestR
 	return &IngestResult{Created: created}, nil
 }
 
-// resolveCategory returns an existing category ID or creates it.
-func (s *IngestService) resolveCategory(
-	tx *uow.Transaction,
-	bankID, name string,
-	cache map[string]string,
-) (string, error) {
+func (s *IngestService) resolveCategory(tx *uow.Transaction, bankID int, name string, cache map[string]int) (int, error) {
 	if id, ok := cache[name]; ok {
 		return id, nil
 	}
-	categories, err := s.categoryRepo.FindByBank(bankID)
-	if err != nil {
-		return "", err
+	cat, err := s.categoryRepo.FindByBankAndName(bankID, name)
+	if err == nil {
+		cache[name] = cat.ID
+		return cat.ID, nil
 	}
-	for _, c := range categories {
-		if strings.EqualFold(c.Name, name) {
-			cache[name] = c.ID
-			return c.ID, nil
-		}
+	if err != repository.ErrNotFound {
+		return 0, err
 	}
-	cat := &model.Category{BankID: bankID, Name: name}
-	if err := tx.Categories.Create(cat); err != nil {
-		return "", err
+	newCat := &model.Category{BankID: bankID, Name: name}
+	if err := tx.Categories.Create(newCat); err != nil {
+		return 0, err
 	}
-	cache[name] = cat.ID
-	return cat.ID, nil
+	cache[name] = newCat.ID
+	return newCat.ID, nil
 }
 
-func nonNilStrings(s []string) []string {
+func nonNilSlice(s []string) []string {
 	if s == nil {
 		return []string{}
 	}
@@ -232,97 +246,88 @@ func nonNilStrings(s []string) []string {
 
 // ── Parsers ────────────────────────────────────────────────────────────────
 
-func parseItems(r io.Reader, ext string) ([]parsed, []IngestError) {
+func parseIngestItems(r io.Reader, ext string) ([]ingestItem, []IngestError) {
 	switch strings.ToLower(ext) {
 	case ".json":
-		return parseJSONItems(r)
+		return parseJSONIngest(r)
 	case ".yaml", ".yml":
-		return parseYAMLItems(r)
+		return parseYAMLIngest(r)
 	case ".csv":
-		return parseCSVItems(r)
+		return parseCSVIngest(r)
 	default:
 		return nil, []IngestError{{Row: 0, Message: "unsupported file format: " + ext}}
 	}
 }
 
-func parseJSONItems(r io.Reader) ([]parsed, []IngestError) {
+func parseJSONIngest(r io.Reader) ([]ingestItem, []IngestError) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, []IngestError{{Row: 0, Message: "cannot read file: " + err.Error()}}
 	}
-	// Accept a single root object as a one-element array.
 	if trimmed := bytes.TrimSpace(data); len(trimmed) > 0 && trimmed[0] == '{' {
 		data = append([]byte{'['}, append(data, ']')...)
 	}
-
 	var raw []json.RawMessage
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, []IngestError{{Row: 0, Message: "invalid JSON: " + err.Error()}}
 	}
 
-	var items []parsed
+	var items []ingestItem
 	for i, msg := range raw {
 		rowNum := i + 1
 		var probe struct {
-			Type      string            `json:"type"`
-			Body      string            `json:"body"`
-			Questions []json.RawMessage `json:"questions"`
+			Kind string `json:"kind"`
 		}
-		if err := json.Unmarshal(msg, &probe); err != nil {
-			return nil, []IngestError{{Row: rowNum, Message: "cannot read type field: " + err.Error()}}
-		}
-		isPassage := probe.Type == "passage" || (probe.Body != "" && len(probe.Questions) > 0)
-		if isPassage {
-			var p IngestPassageRow
-			if err := json.Unmarshal(msg, &p); err != nil {
-				return nil, []IngestError{{Row: rowNum, Message: "invalid passage: " + err.Error()}}
+		_ = json.Unmarshal(msg, &probe)
+		if probe.Kind == "group" {
+			var g IngestGroupRow
+			if err := json.Unmarshal(msg, &g); err != nil {
+				return nil, []IngestError{{Row: rowNum, Message: "invalid group: " + err.Error()}}
 			}
-			items = append(items, parsed{passage: &p, rowNum: rowNum})
+			items = append(items, ingestItem{group: &g, rowNum: rowNum})
 		} else {
-			var q IngestRow
+			var q IngestStandaloneRow
 			if err := json.Unmarshal(msg, &q); err != nil {
 				return nil, []IngestError{{Row: rowNum, Message: "invalid question: " + err.Error()}}
 			}
-			items = append(items, parsed{question: &q, rowNum: rowNum})
+			items = append(items, ingestItem{standalone: &q, rowNum: rowNum})
 		}
 	}
 	return items, nil
 }
 
-func parseYAMLItems(r io.Reader) ([]parsed, []IngestError) {
-	// Decode into a slice of raw maps to allow type-based routing.
+func parseYAMLIngest(r io.Reader) ([]ingestItem, []IngestError) {
 	var rawItems []map[string]interface{}
 	if err := yaml.NewDecoder(r).Decode(&rawItems); err != nil {
 		return nil, []IngestError{{Row: 0, Message: "invalid YAML: " + err.Error()}}
 	}
 
-	var items []parsed
+	var items []ingestItem
 	for i, raw := range rawItems {
 		rowNum := i + 1
-		// Re-encode to YAML bytes then decode into the target struct.
 		b, err := yaml.Marshal(raw)
 		if err != nil {
 			return nil, []IngestError{{Row: rowNum, Message: "cannot re-encode: " + err.Error()}}
 		}
-		typeVal, _ := raw["type"].(string)
-		if typeVal == "passage" {
-			var p IngestPassageRow
-			if err := yaml.Unmarshal(b, &p); err != nil {
-				return nil, []IngestError{{Row: rowNum, Message: "invalid passage: " + err.Error()}}
+		kind, _ := raw["kind"].(string)
+		if kind == "group" {
+			var g IngestGroupRow
+			if err := yaml.Unmarshal(b, &g); err != nil {
+				return nil, []IngestError{{Row: rowNum, Message: "invalid group: " + err.Error()}}
 			}
-			items = append(items, parsed{passage: &p, rowNum: rowNum})
+			items = append(items, ingestItem{group: &g, rowNum: rowNum})
 		} else {
-			var q IngestRow
+			var q IngestStandaloneRow
 			if err := yaml.Unmarshal(b, &q); err != nil {
 				return nil, []IngestError{{Row: rowNum, Message: "invalid question: " + err.Error()}}
 			}
-			items = append(items, parsed{question: &q, rowNum: rowNum})
+			items = append(items, ingestItem{standalone: &q, rowNum: rowNum})
 		}
 	}
 	return items, nil
 }
 
-func parseCSVItems(r io.Reader) ([]parsed, []IngestError) {
+func parseCSVIngest(r io.Reader) ([]ingestItem, []IngestError) {
 	reader := csv.NewReader(r)
 	reader.TrimLeadingSpace = true
 
@@ -330,9 +335,9 @@ func parseCSVItems(r io.Reader) ([]parsed, []IngestError) {
 	if err != nil {
 		return nil, []IngestError{{Row: 0, Message: "cannot read CSV headers: " + err.Error()}}
 	}
-	idx := headerIndex(headers)
+	idx := csvHeaderIndex(headers)
 
-	var items []parsed
+	var items []ingestItem
 	var errs []IngestError
 	rowNum := 1
 
@@ -346,17 +351,13 @@ func parseCSVItems(r io.Reader) ([]parsed, []IngestError) {
 			errs = append(errs, IngestError{Row: rowNum, Message: err.Error()})
 			continue
 		}
-		row, err := csvRecordToRow(record, idx)
-		if err != nil {
-			errs = append(errs, IngestError{Row: rowNum, Message: err.Error()})
-			continue
-		}
-		items = append(items, parsed{question: &row, rowNum: rowNum})
+		row := csvToStandalone(record, idx)
+		items = append(items, ingestItem{standalone: &row, rowNum: rowNum})
 	}
 	return items, errs
 }
 
-func headerIndex(headers []string) map[string]int {
+func csvHeaderIndex(headers []string) map[string]int {
 	m := map[string]int{}
 	for i, h := range headers {
 		m[strings.TrimSpace(strings.ToLower(h))] = i
@@ -364,7 +365,7 @@ func headerIndex(headers []string) map[string]int {
 	return m
 }
 
-func csvRecordToRow(record []string, idx map[string]int) (IngestRow, error) {
+func csvToStandalone(record []string, idx map[string]int) IngestStandaloneRow {
 	get := func(col string) string {
 		i, ok := idx[col]
 		if !ok || i >= len(record) {
@@ -382,116 +383,78 @@ func csvRecordToRow(record []string, idx map[string]int) (IngestRow, error) {
 		}
 		return parts
 	}
-	return IngestRow{
-		Text:          get("text"),
-		Type:          get("type"),
-		Difficulty:    get("difficulty"),
-		CategoryName:  get("category_name"),
-		Options:       splitPipe(get("options")),
-		CorrectAnswer: get("correct_answer"),
-		Tags:          splitPipe(get("tags")),
-	}, nil
+	return IngestStandaloneRow{
+		Type:         get("type"),
+		Difficulty:   get("difficulty"),
+		CategoryName: get("category_name"),
+		Content:      get("content"),
+		Answer:       get("answer"),
+		Tags:         splitPipe(get("tags")),
+	}
 }
 
 // ── Validation ─────────────────────────────────────────────────────────────
 
-var validTypes = map[string]bool{
-	"mcq": true, "true_false": true, "open": true, "tf_ng": true,
-	"sentence_completion": true, "word_bank_completion": true,
-	"matching": true, "multi_select": true,
+var validQuestionTypes = map[string]bool{
+	"tf_ng": true, "yn_ng": true, "mcq": true,
+	"matching_headings": true, "matching_information": true, "matching_features": true,
+	"sentence_completion": true, "form_completion": true, "short_answer": true,
 }
-var validDifficulties = map[string]bool{"easy": true, "medium": true, "hard": true}
+var validDifficultyLevels = map[string]bool{"easy": true, "medium": true, "hard": true}
 
-func validateRow(row IngestRow) error {
-	if strings.TrimSpace(row.Text) == "" {
-		return fmt.Errorf("text is required")
+func validateStandalone(row IngestStandaloneRow) error {
+	if strings.TrimSpace(row.Content) == "" {
+		return fmt.Errorf("content is required")
 	}
-	if !validTypes[row.Type] {
-		return fmt.Errorf("invalid type %q: must be mcq, true_false, open, tf_ng, sentence_completion, word_bank_completion, matching, or multi_select", row.Type)
+	if !validQuestionTypes[row.Type] {
+		return fmt.Errorf("invalid type %q", row.Type)
 	}
-	if !validDifficulties[row.Difficulty] {
-		return fmt.Errorf("invalid difficulty %q: must be easy, medium, or hard", row.Difficulty)
+	if !validDifficultyLevels[row.Difficulty] {
+		return fmt.Errorf("invalid difficulty %q", row.Difficulty)
 	}
 	if strings.TrimSpace(row.CategoryName) == "" {
 		return fmt.Errorf("category_name is required")
 	}
-	if row.Type == "mcq" && len(row.Options) < 2 {
-		return fmt.Errorf("mcq questions require at least 2 options")
-	}
-	if row.Type == "sentence_completion" {
-		if !strings.Contains(row.Text, "___") {
-			return fmt.Errorf("sentence_completion question text must contain ___ to mark the blank")
-		}
-		if strings.TrimSpace(row.CorrectAnswer) == "" {
-			return fmt.Errorf("sentence_completion question requires a correct_answer")
-		}
-	}
-	if row.Type == "word_bank_completion" {
-		if !strings.Contains(row.Text, "___") {
-			return fmt.Errorf("word_bank_completion question text must contain ___ to mark the blank")
-		}
-		if len(row.Options) == 0 {
-			return fmt.Errorf("word_bank_completion question requires options (the word bank)")
-		}
-		if strings.TrimSpace(row.CorrectAnswer) == "" {
-			return fmt.Errorf("word_bank_completion question requires a correct_answer")
-		}
-	}
-	if row.Type == "matching" {
-		if len(row.Options) == 0 {
-			return fmt.Errorf("matching question requires options (the items to match to)")
-		}
-		if strings.TrimSpace(row.CorrectAnswer) == "" {
-			return fmt.Errorf("matching question requires a correct_answer")
-		}
-	}
-	if row.Type == "multi_select" {
+	if row.Type == "mcq" {
 		if len(row.Options) < 2 {
-			return fmt.Errorf("multi_select question requires at least 2 options")
+			return fmt.Errorf("mcq requires at least 2 options")
 		}
-		if strings.TrimSpace(row.CorrectAnswer) == "" {
-			return fmt.Errorf("multi_select question requires a correct_answer (pipe-separated, e.g. A|C)")
+		if len(row.Answers) == 0 {
+			return fmt.Errorf("mcq requires at least one answer")
 		}
+	} else if strings.TrimSpace(row.Answer) == "" {
+		return fmt.Errorf("answer is required for type %q", row.Type)
 	}
 	return nil
 }
 
-func validatePassage(p IngestPassageRow) error {
-	if strings.TrimSpace(p.Title) == "" {
-		return fmt.Errorf("title is required")
+func validateGroup(row IngestGroupRow) error {
+	if !validQuestionTypes[row.Type] {
+		return fmt.Errorf("invalid type %q", row.Type)
 	}
-	if !validDifficulties[p.Difficulty] {
-		return fmt.Errorf("invalid difficulty %q: must be easy, medium, or hard", p.Difficulty)
+	if !validDifficultyLevels[row.Difficulty] {
+		return fmt.Errorf("invalid difficulty %q", row.Difficulty)
 	}
-	if strings.TrimSpace(p.CategoryName) == "" {
+	if strings.TrimSpace(row.CategoryName) == "" {
 		return fmt.Errorf("category_name is required")
 	}
-	if len(p.Questions) == 0 {
-		return fmt.Errorf("passage must have at least one question")
+	if len(row.Questions) == 0 {
+		return fmt.Errorf("group must have at least one question")
 	}
-	for i, sq := range p.Questions {
-		if strings.TrimSpace(sq.Text) == "" {
-			return fmt.Errorf("question %d: text is required", i+1)
+	isMCQ := row.Type == "mcq"
+	for i, q := range row.Questions {
+		if strings.TrimSpace(q.Content) == "" {
+			return fmt.Errorf("question %d: content is required", i+1)
 		}
-		if !validTypes[sq.Type] {
-			return fmt.Errorf("question %d: invalid type %q", i+1, sq.Type)
-		}
-		if sq.Type == "mcq" && len(sq.Options) < 2 {
-			return fmt.Errorf("question %d: mcq requires at least 2 options", i+1)
-		}
-		if sq.Type == "word_bank_completion" {
-			if !strings.Contains(sq.Text, "___") {
-				return fmt.Errorf("question %d: word_bank_completion text must contain ___", i+1)
+		if isMCQ {
+			if len(q.Options) < 2 {
+				return fmt.Errorf("question %d: mcq requires at least 2 options", i+1)
 			}
-			if len(sq.Options) == 0 {
-				return fmt.Errorf("question %d: word_bank_completion requires options (the word bank)", i+1)
+			if len(q.Answers) == 0 {
+				return fmt.Errorf("question %d: mcq requires at least one answer", i+1)
 			}
-		}
-		if sq.Type == "matching" && len(sq.Options) == 0 {
-			return fmt.Errorf("question %d: matching requires options (the items to match to)", i+1)
-		}
-		if sq.Type == "multi_select" && len(sq.Options) < 2 {
-			return fmt.Errorf("question %d: multi_select requires at least 2 options", i+1)
+		} else if strings.TrimSpace(q.Answer) == "" {
+			return fmt.Errorf("question %d: answer is required", i+1)
 		}
 	}
 	return nil

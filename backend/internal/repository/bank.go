@@ -8,110 +8,57 @@ import (
 )
 
 type BankRepository interface {
-	FindAll() ([]model.Bank, error)
-	FindAllForUser(userID string) ([]model.BankWithRole, error)
-	FindByID(id string) (*model.Bank, error)
-	FindByIDForUser(id, userID string) (*model.BankWithRole, error)
-	Create(bank *model.Bank) error
-	Save(bank *model.Bank) error
-	Delete(id string) error
+	FindAllForUser(userID int) ([]model.BankWithRole, error)
+	FindByID(id int) (*model.Bank, error)
+	Create(b *model.Bank) error
+	Save(b *model.Bank) error
+	SoftDelete(id int) error
+	Restore(id int) error
 }
 
-type bankRepo struct {
-	db *gorm.DB
-}
+type bankRepo struct{ db *gorm.DB }
 
-func NewBankRepo(db *gorm.DB) BankRepository {
-	return &bankRepo{db: db}
-}
+func NewBankRepo(db *gorm.DB) BankRepository { return &bankRepo{db} }
 
-func (r *bankRepo) FindAll() ([]model.Bank, error) {
-	var banks []model.Bank
-	return banks, r.db.Order("created_at DESC").Find(&banks).Error
-}
-
-// FindAllForUser returns banks where the user is a member or the bank has no owner (legacy).
-// Legacy banks (owner_id IS NULL) are returned with role 'editor'.
-func (r *bankRepo) FindAllForUser(userID string) ([]model.BankWithRole, error) {
+func (r *bankRepo) FindAllForUser(userID int) ([]model.BankWithRole, error) {
 	type row struct {
 		model.Bank
-		MyRole *string
+		MyRole string
 	}
 	var rows []row
 	err := r.db.Raw(`
 		SELECT b.*, bm.role AS my_role
 		FROM banks b
-		LEFT JOIN bank_members bm ON b.id = bm.bank_id AND bm.user_id = ?
-		WHERE bm.user_id = ? OR b.owner_id IS NULL
+		JOIN bank_members bm ON bm.bank_id = b.id AND bm.user_id = ? AND bm.deleted_at IS NULL
+		WHERE b.deleted_at IS NULL
 		ORDER BY b.created_at DESC
-	`, userID, userID).Scan(&rows).Error
+	`, userID).Scan(&rows).Error
 	if err != nil {
 		return nil, err
 	}
-	result := make([]model.BankWithRole, len(rows))
-	for i, row := range rows {
-		result[i] = model.BankWithRole{Bank: row.Bank}
-		if row.MyRole != nil {
-			result[i].MyRole = *row.MyRole
-		} else {
-			result[i].MyRole = "editor" // legacy bank
-		}
+	out := make([]model.BankWithRole, len(rows))
+	for i, r := range rows {
+		out[i] = model.BankWithRole{Bank: r.Bank, MyRole: r.MyRole}
 	}
-	return result, nil
+	return out, nil
 }
 
-func (r *bankRepo) FindByID(id string) (*model.Bank, error) {
-	var bank model.Bank
-	err := r.db.First(&bank, "id = ?", id).Error
+func (r *bankRepo) FindByID(id int) (*model.Bank, error) {
+	var b model.Bank
+	err := r.db.First(&b, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
 	}
-	return &bank, err
+	return &b, err
 }
 
-// FindByIDForUser returns a bank with the user's role, or ErrNotFound if no access.
-func (r *bankRepo) FindByIDForUser(id, userID string) (*model.BankWithRole, error) {
-	type row struct {
-		model.Bank
-		MyRole *string
-	}
-	var r2 row
-	err := r.db.Raw(`
-		SELECT b.*, bm.role AS my_role
-		FROM banks b
-		LEFT JOIN bank_members bm ON b.id = bm.bank_id AND bm.user_id = ?
-		WHERE b.id = ? AND (bm.user_id = ? OR b.owner_id IS NULL)
-	`, userID, id, userID).Scan(&r2).Error
-	if err != nil {
-		return nil, err
-	}
-	if r2.Bank.ID == "" {
-		return nil, ErrNotFound
-	}
-	result := &model.BankWithRole{Bank: r2.Bank}
-	if r2.MyRole != nil {
-		result.MyRole = *r2.MyRole
-	} else {
-		result.MyRole = "editor"
-	}
-	return result, nil
+func (r *bankRepo) Create(b *model.Bank) error { return r.db.Create(b).Error }
+func (r *bankRepo) Save(b *model.Bank) error   { return r.db.Save(b).Error }
+
+func (r *bankRepo) SoftDelete(id int) error {
+	return r.db.Delete(&model.Bank{}, id).Error
 }
 
-func (r *bankRepo) Create(bank *model.Bank) error {
-	return r.db.Create(bank).Error
-}
-
-func (r *bankRepo) Save(bank *model.Bank) error {
-	return r.db.Save(bank).Error
-}
-
-func (r *bankRepo) Delete(id string) error {
-	result := r.db.Delete(&model.Bank{}, "id = ?", id)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return ErrNotFound
-	}
-	return nil
+func (r *bankRepo) Restore(id int) error {
+	return r.db.Unscoped().Model(&model.Bank{}).Where("id = ?", id).Update("deleted_at", nil).Error
 }

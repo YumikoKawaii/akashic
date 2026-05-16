@@ -19,49 +19,48 @@ func NewQuestionHandler(svc *service.QuestionService, ingestSvc *service.IngestS
 	return &QuestionHandler{svc: svc, ingestSvc: ingestSvc}
 }
 
-const defaultPageSize = 5
-
 func (h *QuestionHandler) List(c *gin.Context) {
-	filter := repository.QuestionFilter{}
-	if ids := c.QueryArray("category_id"); len(ids) > 0 {
-		filter.CategoryIDs = ids
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	f := repository.QuestionFilter{}
+	for _, v := range c.QueryArray("category_id") {
+		if id, err := strconv.Atoi(v); err == nil {
+			f.CategoryIDs = append(f.CategoryIDs, id)
+		}
 	}
 	if v := c.Query("difficulty"); v != "" {
-		filter.Difficulty = &v
+		f.Difficulty = v
 	}
-	if types := c.QueryArray("type"); len(types) > 0 {
-		filter.Types = types
+	if v := c.Query("type"); v != "" {
+		f.Type = v
 	}
-	if tags := c.QueryArray("tags"); len(tags) > 0 {
-		filter.Tags = tags
+	if tags := c.QueryArray("tag"); len(tags) > 0 {
+		f.Tags = tags
+	}
+	if c.Query("standalone") == "true" {
+		f.StandaloneOnly = true
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", strconv.Itoa(defaultPageSize)))
-	if page < 1 {
-		page = 1
-	}
-	if limit < 1 || limit > 100 {
-		limit = defaultPageSize
-	}
-	filter.Limit  = limit
-	filter.Offset = (page - 1) * limit
-
-	questions, total, err := h.svc.ListByBank(c.Param("bankId"), filter)
+	questions, err := h.svc.List(bankID, f)
 	if err != nil {
 		handleError(c, err)
 		return
 	}
-	ok(c, gin.H{
-		"data":  questions,
-		"total": total,
-		"page":  page,
-		"limit": limit,
-	})
+	ok(c, questions)
 }
 
 func (h *QuestionHandler) Get(c *gin.Context) {
-	question, err := h.svc.GetByID(c.Param("bankId"), c.Param("id"))
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	id, ok2 := parseID(c, "id")
+	if !ok2 {
+		return
+	}
+	question, err := h.svc.GetByID(bankID, id)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -70,12 +69,16 @@ func (h *QuestionHandler) Get(c *gin.Context) {
 }
 
 func (h *QuestionHandler) Create(c *gin.Context) {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
 	var input service.CreateQuestionInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	question, err := h.svc.Create(c.Param("bankId"), input)
+	question, err := h.svc.Create(bankID, input)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -84,12 +87,20 @@ func (h *QuestionHandler) Create(c *gin.Context) {
 }
 
 func (h *QuestionHandler) Update(c *gin.Context) {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	id, ok2 := parseID(c, "id")
+	if !ok2 {
+		return
+	}
 	var input service.UpdateQuestionInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	question, err := h.svc.Update(c.Param("bankId"), c.Param("id"), input)
+	question, err := h.svc.Update(bankID, id, input)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -98,14 +109,43 @@ func (h *QuestionHandler) Update(c *gin.Context) {
 }
 
 func (h *QuestionHandler) Delete(c *gin.Context) {
-	if err := h.svc.Delete(c.Param("bankId"), c.Param("id")); err != nil {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	id, ok2 := parseID(c, "id")
+	if !ok2 {
+		return
+	}
+	if err := h.svc.Delete(bankID, id); err != nil {
 		handleError(c, err)
 		return
 	}
 	c.Status(http.StatusNoContent)
 }
 
+func (h *QuestionHandler) Restore(c *gin.Context) {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
+	id, ok2 := parseID(c, "id")
+	if !ok2 {
+		return
+	}
+	question, err := h.svc.Restore(bankID, id)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	ok(c, question)
+}
+
 func (h *QuestionHandler) Ingest(c *gin.Context) {
+	bankID, ok2 := parseID(c, "bankId")
+	if !ok2 {
+		return
+	}
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file is required"})
@@ -114,7 +154,7 @@ func (h *QuestionHandler) Ingest(c *gin.Context) {
 	defer file.Close()
 
 	ext := filepath.Ext(header.Filename)
-	result, err := h.ingestSvc.Ingest(c.Param("bankId"), file, ext)
+	result, err := h.ingestSvc.Ingest(bankID, file, ext)
 	if err != nil {
 		handleError(c, err)
 		return

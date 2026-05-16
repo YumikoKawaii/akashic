@@ -14,7 +14,7 @@ func NewCategoryService(repo repository.CategoryRepository, bankRepo repository.
 	return &CategoryService{repo: repo, bankRepo: bankRepo}
 }
 
-func (s *CategoryService) ListByBank(bankID string) ([]model.Category, error) {
+func (s *CategoryService) List(bankID int) ([]model.Category, error) {
 	if _, err := s.bankRepo.FindByID(bankID); err != nil {
 		return nil, err
 	}
@@ -22,20 +22,16 @@ func (s *CategoryService) ListByBank(bankID string) ([]model.Category, error) {
 }
 
 type CreateCategoryInput struct {
-	Name        string `json:"name"        binding:"required"`
+	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
 }
 
-func (s *CategoryService) Create(bankID string, input CreateCategoryInput) (*model.Category, error) {
+func (s *CategoryService) Create(bankID int, input CreateCategoryInput) (*model.Category, error) {
 	if _, err := s.bankRepo.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	category := &model.Category{
-		BankID:      bankID,
-		Name:        input.Name,
-		Description: input.Description,
-	}
-	return category, s.repo.Create(category)
+	c := &model.Category{BankID: bankID, Name: input.Name, Description: input.Description}
+	return c, s.repo.Create(c)
 }
 
 type UpdateCategoryInput struct {
@@ -43,18 +39,39 @@ type UpdateCategoryInput struct {
 	Description string `json:"description"`
 }
 
-func (s *CategoryService) Update(bankID, id string, input UpdateCategoryInput) (*model.Category, error) {
-	category, err := s.repo.FindByBankAndID(bankID, id)
+func (s *CategoryService) Update(bankID, id int, input UpdateCategoryInput) (*model.Category, error) {
+	c, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
-	if input.Name != "" {
-		category.Name = input.Name
+	if c.BankID != bankID {
+		return nil, ErrForbidden
 	}
-	category.Description = input.Description
-	return category, s.repo.Save(category)
+	if input.Name != "" {
+		c.Name = input.Name
+	}
+	c.Description = input.Description
+	return c, s.repo.Save(c)
 }
 
-func (s *CategoryService) Delete(bankID, id string) error {
-	return s.repo.Delete(bankID, id)
+func (s *CategoryService) Delete(bankID, id int) error {
+	c, err := s.repo.FindByID(id)
+	if err != nil {
+		return err
+	}
+	if c.BankID != bankID {
+		return ErrForbidden
+	}
+	return s.repo.SoftDelete(id)
+}
+
+func (s *CategoryService) Restore(bankID, id int) (*model.Category, error) {
+	c, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if c.BankID != bankID {
+		return nil, ErrForbidden
+	}
+	return c, s.repo.Restore(id)
 }
