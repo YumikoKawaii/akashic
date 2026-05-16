@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,9 +12,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
+
+var ErrEmailTaken    = errors.New("email already registered")
+var ErrInvalidCreds  = errors.New("invalid email or password")
+var ErrPasswordLogin = errors.New("account uses Google login")
 
 type JWTClaims struct {
 	UserID    int    `json:"user_id"`
@@ -75,8 +81,9 @@ func (s *AuthService) HandleCallback(code string) (*model.User, string, error) {
 		return nil, "", fmt.Errorf("decode userinfo: %w", err)
 	}
 
+	gid := info.Sub
 	user := &model.User{
-		GoogleID:  info.Sub,
+		GoogleID:  &gid,
 		Email:     info.Email,
 		Name:      info.Name,
 		AvatarURL: info.Picture,
@@ -91,6 +98,56 @@ func (s *AuthService) HandleCallback(code string) (*model.User, string, error) {
 	}
 	return user, jwtToken, nil
 }
+
+// ── Password auth ──────────────────────────────────────────────────────────────
+
+type RegisterInput struct {
+	Email    string `json:"email"    binding:"required,email"`
+	Password string `json:"password" binding:"required,min=6"`
+	Name     string `json:"name"     binding:"required"`
+}
+
+func (s *AuthService) Register(input RegisterInput) (*model.User, string, error) {
+	if _, err := s.userRepo.FindByEmail(input.Email); err == nil {
+		return nil, "", ErrEmailTaken
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, "", err
+	}
+	user := &model.User{
+		Email:        input.Email,
+		Name:         input.Name,
+		PasswordHash: string(hash),
+	}
+	if err := s.userRepo.Save(user); err != nil {
+		return nil, "", err
+	}
+	token, err := s.IssueJWT(user)
+	return user, token, err
+}
+
+type LoginInput struct {
+	Email    string `json:"email"    binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+func (s *AuthService) Login(input LoginInput) (*model.User, string, error) {
+	user, err := s.userRepo.FindByEmail(input.Email)
+	if err != nil {
+		return nil, "", ErrInvalidCreds
+	}
+	if user.PasswordHash == "" {
+		return nil, "", ErrPasswordLogin
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(input.Password)); err != nil {
+		return nil, "", ErrInvalidCreds
+	}
+	token, err := s.IssueJWT(user)
+	return user, token, err
+}
+
+// ── JWT ────────────────────────────────────────────────────────────────────────
 
 func (s *AuthService) IssueJWT(user *model.User) (string, error) {
 	claims := JWTClaims{

@@ -12,6 +12,7 @@ type UserRepository interface {
 	FindByID(id int) (*model.User, error)
 	FindByEmail(email string) (*model.User, error)
 	Upsert(u *model.User) error
+	Save(u *model.User) error
 }
 
 type userRepo struct{ db *gorm.DB }
@@ -25,6 +26,10 @@ func (r *userRepo) FindByGoogleID(googleID string) (*model.User, error) {
 		return nil, ErrNotFound
 	}
 	return &u, err
+}
+
+func (r *userRepo) Save(u *model.User) error {
+	return r.db.Save(u).Error
 }
 
 func (r *userRepo) FindByID(id int) (*model.User, error) {
@@ -47,7 +52,7 @@ func (r *userRepo) FindByEmail(email string) (*model.User, error) {
 
 func (r *userRepo) Upsert(u *model.User) error {
 	return r.db.
-		Where(model.User{GoogleID: u.GoogleID}).
+		Where("google_id = ?", u.GoogleID).
 		Assign(model.User{Email: u.Email, Name: u.Name, AvatarURL: u.AvatarURL}).
 		FirstOrCreate(u).Error
 }

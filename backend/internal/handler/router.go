@@ -26,7 +26,9 @@ func NewRouter(h Handlers) *gin.Engine {
 
 	// ── Auth routes (no middleware) ────────────────────────────────────────────
 	auth := r.Group("/api/v1/auth")
-	auth.GET("/google", h.Auth.Login)
+	auth.POST("/register", h.Auth.Register)
+	auth.POST("/login", h.Auth.Login)
+	auth.GET("/google", h.Auth.GoogleLogin)
 	auth.GET("/google/callback", h.Auth.Callback)
 	auth.GET("/me", h.AuthMW, h.Auth.Me)
 	auth.POST("/logout", h.AuthMW, h.Auth.Logout)

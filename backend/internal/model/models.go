@@ -59,14 +59,15 @@ type MCQOption struct {
 // ── Entity models ──────────────────────────────────────────────────────────────
 
 type User struct {
-	ID        int            `gorm:"primaryKey;autoIncrement" json:"id"`
-	GoogleID  string         `gorm:"uniqueIndex;not null"     json:"-"`
-	Email     string         `gorm:"uniqueIndex;not null"     json:"email"`
-	Name      string         `gorm:"not null"                 json:"name"`
-	AvatarURL string         `gorm:"not null;default:''"      json:"avatar_url"`
-	CreatedAt time.Time      `                                json:"created_at"`
-	UpdatedAt time.Time      `                                json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index"                    json:"-"`
+	ID           int            `gorm:"primaryKey;autoIncrement" json:"id"`
+	GoogleID     *string        `gorm:"uniqueIndex"              json:"-"`
+	Email        string         `gorm:"uniqueIndex;not null"     json:"email"`
+	Name         string         `gorm:"not null"                 json:"name"`
+	AvatarURL    string         `gorm:"not null;default:''"      json:"avatar_url"`
+	PasswordHash string         `gorm:"not null;default:''"      json:"-"`
+	CreatedAt    time.Time      `                                json:"created_at"`
+	UpdatedAt    time.Time      `                                json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"index"                    json:"-"`
 }
 
 type Bank struct {

@@ -20,7 +20,7 @@ func NewAuthHandler(svc *service.AuthService, frontendURL string) *AuthHandler {
 	return &AuthHandler{svc: svc, frontendURL: frontendURL}
 }
 
-func (h *AuthHandler) Login(c *gin.Context) {
+func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 	state := randomState()
 	c.SetCookie("oauth_state", state, 600, "/", "", false, true)
 	c.Redirect(http.StatusTemporaryRedirect, h.svc.LoginURL(state))
@@ -46,8 +46,7 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 		return
 	}
 
-	maxAge := int((7 * 24 * time.Hour).Seconds())
-	c.SetCookie("auth_token", jwtToken, maxAge, "/", "", false, true)
+	setAuthCookie(c, jwtToken)
 	c.Redirect(http.StatusTemporaryRedirect, h.frontendURL)
 }
 
@@ -63,6 +62,41 @@ func (h *AuthHandler) Me(c *gin.Context) {
 func (h *AuthHandler) Logout(c *gin.Context) {
 	c.SetCookie("auth_token", "", -1, "/", "", false, true)
 	c.Status(http.StatusNoContent)
+}
+
+func (h *AuthHandler) Register(c *gin.Context) {
+	var input service.RegisterInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	user, token, err := h.svc.Register(input)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	setAuthCookie(c, token)
+	created(c, user)
+}
+
+func (h *AuthHandler) Login(c *gin.Context) {
+	var input service.LoginInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	user, token, err := h.svc.Login(input)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	setAuthCookie(c, token)
+	ok(c, user)
+}
+
+func setAuthCookie(c *gin.Context, token string) {
+	maxAge := int((7 * 24 * time.Hour).Seconds())
+	c.SetCookie("auth_token", token, maxAge, "/", "", false, true)
 }
 
 func randomState() string {

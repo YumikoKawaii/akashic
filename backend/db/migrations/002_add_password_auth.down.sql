@@ -1,0 +1,2 @@
+ALTER TABLE users DROP COLUMN IF EXISTS password_hash;
+ALTER TABLE users ALTER COLUMN google_id SET NOT NULL;
