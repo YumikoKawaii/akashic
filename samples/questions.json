@@ -1,129 +1,91 @@
 [
   {
-    "text": "What is the capital of Japan?",
     "type": "mcq",
     "difficulty": "easy",
     "category_name": "Geography",
-    "options": ["Tokyo", "Osaka", "Kyoto", "Hiroshima"],
-    "correct_answer": "Tokyo",
+    "content": "What is the capital of Japan?",
+    "options": [
+      { "key": "A", "text": "Tokyo" },
+      { "key": "B", "text": "Osaka" },
+      { "key": "C", "text": "Kyoto" },
+      { "key": "D", "text": "Hiroshima" }
+    ],
+    "answers": ["A"],
     "tags": ["japan", "cities"]
   },
   {
-    "text": "Mount Fuji is the tallest mountain in the world.",
-    "type": "true_false",
+    "type": "tf_ng",
     "difficulty": "easy",
     "category_name": "Geography",
-    "options": ["True", "False"],
-    "correct_answer": "False",
+    "content": "Mount Fuji is the tallest mountain in the world.",
+    "answer": "false",
     "tags": ["japan", "mountains"]
   },
   {
-    "text": "Which particle marks the subject of a sentence in Japanese?",
     "type": "mcq",
     "difficulty": "medium",
     "category_name": "Grammar",
-    "options": ["は (wa)", "が (ga)", "を (wo)", "に (ni)"],
-    "correct_answer": "が (ga)",
+    "content": "Which particle marks the subject of a sentence in Japanese?",
+    "options": [
+      { "key": "A", "text": "は (wa)" },
+      { "key": "B", "text": "が (ga)" },
+      { "key": "C", "text": "を (wo)" },
+      { "key": "D", "text": "に (ni)" }
+    ],
+    "answers": ["B"],
     "tags": ["particles", "grammar"]
   },
   {
-    "text": "Translate to Japanese: 'I eat sushi every day.'",
-    "type": "open",
+    "type": "short_answer",
     "difficulty": "hard",
     "category_name": "Translation",
-    "options": [],
-    "correct_answer": "私は毎日寿司を食べます。",
+    "content": "Translate to Japanese: 'I eat sushi every day.'",
+    "answer": "私は毎日寿司を食べます。",
     "tags": ["translation", "food"]
   },
   {
-    "text": "Which of the following is a Japanese counter for flat objects?",
     "type": "mcq",
     "difficulty": "hard",
     "category_name": "Grammar",
-    "options": ["本 (hon)", "枚 (mai)", "匹 (hiki)", "台 (dai)"],
-    "correct_answer": "枚 (mai)",
+    "content": "Which of the following is a Japanese counter for flat objects?",
+    "options": [
+      { "key": "A", "text": "本 (hon)" },
+      { "key": "B", "text": "枚 (mai)" },
+      { "key": "C", "text": "匹 (hiki)" },
+      { "key": "D", "text": "台 (dai)" }
+    ],
+    "answers": ["B"],
     "tags": ["counters", "grammar"]
   },
   {
-    "text": "Forests act as carbon ___, absorbing CO₂ from the atmosphere.",
-    "type": "word_bank_completion",
+    "type": "sentence_completion",
     "difficulty": "medium",
     "category_name": "Reading",
-    "options": ["sinks", "sources", "filters", "pumps", "regulators"],
-    "correct_answer": "sinks",
+    "content": "Forests act as carbon ___, absorbing CO₂ from the atmosphere.",
+    "answer": "sinks",
     "tags": ["environment", "climate"]
   },
   {
-    "text": "Argued that economic growth inevitably leads to greater inequality.",
-    "type": "matching",
+    "type": "matching_features",
     "difficulty": "hard",
     "category_name": "Reading",
-    "options": ["Piketty", "Keynes", "Friedman", "Sen", "Stiglitz"],
-    "correct_answer": "Piketty",
+    "content": "Argued that economic growth inevitably leads to greater inequality.",
+    "answer": "Piketty",
     "tags": ["economics"]
   },
   {
-    "text": "Which THREE of the following are mentioned as benefits of urban green spaces?",
-    "type": "multi_select",
+    "type": "mcq",
     "difficulty": "medium",
     "category_name": "Reading",
+    "content": "Which THREE of the following are mentioned as benefits of urban green spaces?",
     "options": [
-      "Reduced air pollution",
-      "Higher property taxes",
-      "Improved mental health",
-      "Decreased biodiversity",
-      "Lower urban temperatures"
+      { "key": "A", "text": "Reduced air pollution" },
+      { "key": "B", "text": "Higher property taxes" },
+      { "key": "C", "text": "Improved mental health" },
+      { "key": "D", "text": "Decreased biodiversity" },
+      { "key": "E", "text": "Lower urban temperatures" }
     ],
-    "correct_answer": "Reduced air pollution|Improved mental health|Lower urban temperatures",
+    "answers": ["A", "C", "E"],
     "tags": ["environment", "urban"]
-  },
-  {
-    "type": "passage",
-    "title": "The Role of Forests in Climate Regulation",
-    "body": "Forests cover approximately 31% of the Earth's land surface and play a critical role in regulating the global climate. Through photosynthesis, trees absorb carbon dioxide and release oxygen, acting as carbon sinks that slow the accumulation of greenhouse gases in the atmosphere.\n\nDeforestation, however, reverses this process. When forests are cleared, the stored carbon is released back into the atmosphere, contributing significantly to global warming. The Amazon rainforest alone is estimated to store over 150 billion tons of carbon.\n\nBeyond carbon storage, forests regulate local climates by influencing rainfall patterns and moderating temperatures. The water cycle is also deeply connected to forest health — trees release water vapour through transpiration, which contributes to cloud formation and precipitation.",
-    "difficulty": "medium",
-    "category_name": "Reading",
-    "questions": [
-      {
-        "text": "Forests absorb oxygen and release carbon dioxide through photosynthesis.",
-        "type": "tf_ng",
-        "options": [],
-        "correct_answer": "False",
-        "tags": ["climate", "photosynthesis"]
-      },
-      {
-        "text": "The Amazon rainforest stores more than 150 billion tons of carbon.",
-        "type": "tf_ng",
-        "options": [],
-        "correct_answer": "True",
-        "tags": ["amazon", "carbon"]
-      },
-      {
-        "text": "Deforestation has no significant effect on atmospheric greenhouse gas levels.",
-        "type": "tf_ng",
-        "options": [],
-        "correct_answer": "False",
-        "tags": ["deforestation", "climate"]
-      },
-      {
-        "text": "Which of the following best describes the role of forests in the water cycle?",
-        "type": "mcq",
-        "options": [
-          "They absorb rainfall and prevent evaporation",
-          "They release water vapour through transpiration, contributing to cloud formation",
-          "They convert ocean water into freshwater",
-          "They have no measurable effect on precipitation"
-        ],
-        "correct_answer": "They release water vapour through transpiration, contributing to cloud formation",
-        "tags": ["water cycle", "transpiration"]
-      },
-      {
-        "text": "Trees release water vapour through ___, which contributes to cloud formation.",
-        "type": "word_bank_completion",
-        "options": ["transpiration", "evaporation", "condensation", "precipitation", "respiration"],
-        "correct_answer": "transpiration",
-        "tags": ["water cycle"]
-      }
-    ]
   }
 ]

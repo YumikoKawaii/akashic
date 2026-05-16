@@ -368,6 +368,8 @@ func csvHeaderIndex(headers []string) map[string]int {
 	return m
 }
 
+var csvOptionKeys = []string{"A", "B", "C", "D", "E", "F", "G", "H"}
+
 func csvToStandalone(record []string, idx map[string]int) IngestStandaloneRow {
 	get := func(col string) string {
 		i, ok := idx[col]
@@ -386,7 +388,8 @@ func csvToStandalone(record []string, idx map[string]int) IngestStandaloneRow {
 		}
 		return parts
 	}
-	return IngestStandaloneRow{
+
+	row := IngestStandaloneRow{
 		Type:         get("type"),
 		Difficulty:   get("difficulty"),
 		CategoryName: get("category_name"),
@@ -394,6 +397,22 @@ func csvToStandalone(record []string, idx map[string]int) IngestStandaloneRow {
 		Answer:       get("answer"),
 		Tags:         splitPipe(get("tags")),
 	}
+
+	// For MCQ: build MCQOption slice from pipe-separated texts; answers are keys (A, B, …)
+	if optStr := get("options"); optStr != "" {
+		texts := splitPipe(optStr)
+		for i, text := range texts {
+			if i >= len(csvOptionKeys) {
+				break
+			}
+			row.Options = append(row.Options, model.MCQOption{Key: csvOptionKeys[i], Text: text})
+		}
+	}
+	if ansStr := get("answers"); ansStr != "" {
+		row.Answers = splitPipe(ansStr)
+	}
+
+	return row
 }
 
 // ── Validation ─────────────────────────────────────────────────────────────

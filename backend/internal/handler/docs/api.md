@@ -122,6 +122,94 @@ Response on partial failure: `422 { "created": N, "failed": M, "errors": [{ "row
 
 ---
 
+## Bulk import format
+
+Every row is a **standalone question**. No passage wrappers.
+
+### Required fields (all formats)
+
+| Field | Type | Notes |
+|---|---|---|
+| `type` | string | See valid types below |
+| `difficulty` | string | `easy` \| `medium` \| `hard` |
+| `category_name` | string | Created automatically if it doesn't exist |
+| `content` | string | The question stem |
+| `answer` | string | Correct answer — **non-MCQ only** |
+| `options` | array | MCQ only — see format below |
+| `answers` | array | MCQ only — correct option keys, e.g. `["B"]` or `["A","C"]` |
+| `tags` | array / pipe-string | Optional |
+
+**Valid types:** `mcq`, `tf_ng`, `yn_ng`, `sentence_completion`, `form_completion`,
+`short_answer`, `matching_headings`, `matching_information`, `matching_features`
+
+**Common mistakes that will be rejected with a specific error:**
+- `"text"` — use `"content"`
+- `"correct_answer"` — use `"answer"` (non-MCQ) or `"answers"` (MCQ)
+- `"true_false"` — use `"tf_ng"`
+- `"open"` — use `"short_answer"`
+- `"matching"` — use `"matching_headings"`, `"matching_information"`, or `"matching_features"`
+- `"multi_select"` — use `"mcq"` with multiple keys in `"answers"`
+- `"word_bank_completion"` — use `"sentence_completion"`
+- Top-level `"type": "passage"` wrappers — flatten each question as its own row
+
+---
+
+### JSON / YAML
+
+**Non-MCQ row:**
+```json
+{
+  "type": "tf_ng",
+  "difficulty": "medium",
+  "category_name": "IELTS Reading",
+  "content": "The author believes climate change is reversible.",
+  "answer": "false",
+  "tags": ["reading"]
+}
+```
+
+`tf_ng` / `yn_ng` answers: `"true"` | `"false"` | `"not given"` (case-insensitive).
+
+**MCQ row:**
+```json
+{
+  "type": "mcq",
+  "difficulty": "easy",
+  "category_name": "Geography",
+  "content": "What is the capital of France?",
+  "options": [
+    { "key": "A", "text": "Berlin" },
+    { "key": "B", "text": "Paris" },
+    { "key": "C", "text": "Rome" },
+    { "key": "D", "text": "Madrid" }
+  ],
+  "answers": ["B"],
+  "tags": ["europe"]
+}
+```
+
+For **multi-answer MCQ** (e.g. "choose TWO"), list all correct keys: `"answers": ["A", "C"]`.
+
+---
+
+### CSV
+
+Headers: `type, difficulty, category_name, content, answer, options, answers, tags`
+
+- `options` — pipe-separated option texts; keys are auto-assigned A, B, C, D…
+- `answers` — pipe-separated correct keys (e.g. `A` or `A|C`)
+- `tags` — pipe-separated tag list
+- `answer` — used for non-MCQ; leave blank for MCQ
+
+```csv
+type,difficulty,category_name,content,answer,options,answers,tags
+tf_ng,easy,Reading,"Forests absorb CO₂ through photosynthesis.",true,,,climate
+mcq,medium,Geography,"What is the capital of France?",,Berlin|Paris|Rome|Madrid,B,europe
+mcq,hard,Reading,"Which TWO are benefits of urban green spaces?",,Cleaner air|Higher taxes|Better health|Less biodiversity,A|C,urban
+```
+
+---
+
 ## Tests
 
 ### Generate

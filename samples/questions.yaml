@@ -1,105 +1,93 @@
-- text: "What is the past tense of 'go'?"
-  type: mcq
+- type: mcq
   difficulty: easy
   category_name: Verb Tenses
+  content: "What is the past tense of 'go'?"
   options:
-    - goed
-    - gone
-    - went
-    - go
-  correct_answer: went
-  tags:
-    - verbs
-    - past-tense
+    - key: A
+      text: goed
+    - key: B
+      text: gone
+    - key: C
+      text: went
+    - key: D
+      text: go
+  answers: [C]
+  tags: [verbs, past-tense]
 
-- text: "'She don't know' is grammatically correct."
-  type: true_false
+- type: tf_ng
   difficulty: easy
   category_name: Grammar
-  options:
-    - "True"
-    - "False"
-  correct_answer: "False"
-  tags:
-    - grammar
-    - common-mistakes
+  content: "'She don't know' is grammatically correct."
+  answer: "false"
+  tags: [grammar, common-mistakes]
 
-- text: "Which sentence uses the present perfect correctly?"
-  type: mcq
+- type: mcq
   difficulty: medium
   category_name: Verb Tenses
+  content: "Which sentence uses the present perfect correctly?"
   options:
-    - I have seen that movie yesterday.
-    - I have seen that movie three times.
-    - I have saw that movie.
-    - I seen that movie.
-  correct_answer: I have seen that movie three times.
-  tags:
-    - present-perfect
-    - verbs
+    - key: A
+      text: I have seen that movie yesterday.
+    - key: B
+      text: I have seen that movie three times.
+    - key: C
+      text: I have saw that movie.
+    - key: D
+      text: I seen that movie.
+  answers: [B]
+  tags: [present-perfect, verbs]
 
-- text: "Write a sentence using the word 'ephemeral' correctly."
-  type: open
+- type: short_answer
   difficulty: hard
   category_name: Vocabulary
-  options: []
-  correct_answer: ""
-  tags:
-    - vocabulary
-    - writing
+  content: "Write a sentence using the word 'ephemeral' correctly."
+  answer: ""
+  tags: [vocabulary, writing]
 
-- text: "Which word is a synonym for 'ubiquitous'?"
-  type: mcq
+- type: mcq
   difficulty: hard
   category_name: Vocabulary
+  content: "Which word is a synonym for 'ubiquitous'?"
   options:
-    - rare
-    - omnipresent
-    - fleeting
-    - obscure
-  correct_answer: omnipresent
-  tags:
-    - vocabulary
-    - synonyms
+    - key: A
+      text: rare
+    - key: B
+      text: omnipresent
+    - key: C
+      text: fleeting
+    - key: D
+      text: obscure
+  answers: [B]
+  tags: [vocabulary, synonyms]
 
-- text: "The ___ of a word refers to its emotional association beyond its literal meaning."
-  type: word_bank_completion
+- type: sentence_completion
   difficulty: medium
   category_name: Vocabulary
-  options:
-    - connotation
-    - denotation
-    - etymology
-    - syntax
-    - morphology
-  correct_answer: connotation
-  tags:
-    - vocabulary
+  content: "The ___ of a word refers to its emotional association beyond its literal meaning."
+  answer: connotation
+  tags: [vocabulary]
 
-- text: "Match each literary device to the correct example."
-  type: matching
+- type: matching_features
   difficulty: medium
   category_name: Literature
-  options:
-    - Metaphor
-    - Simile
-    - Personification
-    - Alliteration
-  correct_answer: Simile
-  tags:
-    - literary-devices
+  content: "He said 'life is a journey' — this is an example of a ___."
+  answer: Metaphor
+  tags: [literary-devices]
 
-- text: "Which TWO of the following are features of academic writing style?"
-  type: multi_select
+- type: mcq
   difficulty: medium
   category_name: Writing
+  content: "Which TWO of the following are features of academic writing style?"
   options:
-    - Formal vocabulary
-    - Frequent use of contractions
-    - Objective tone
-    - Personal anecdotes
-    - Colloquial language
-  correct_answer: "Formal vocabulary|Objective tone"
-  tags:
-    - writing
-    - academic
+    - key: A
+      text: Formal vocabulary
+    - key: B
+      text: Frequent use of contractions
+    - key: C
+      text: Objective tone
+    - key: D
+      text: Personal anecdotes
+    - key: E
+      text: Colloquial language
+  answers: [A, C]
+  tags: [writing, academic]

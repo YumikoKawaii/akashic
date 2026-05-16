@@ -1,10 +1,9 @@
-text,type,difficulty,category_name,options,correct_answer,tags
-"What does 'merci' mean in English?",mcq,easy,Vocabulary,"Thank you|Please|Excuse me|Sorry",Thank you,french|basics
-"French is an official language of Canada.",true_false,easy,Culture,"True|False",True,canada|francophonie
-"Which verb form completes: 'Hier, je ___ au cinéma.' (Yesterday I went to the cinema)",mcq,medium,Verb Conjugation,"allais|suis allé|vais|aille","suis allé",past-tense|verbs
-"Conjugate 'avoir' in the present tense for all six persons.",open,hard,Verb Conjugation,,j'ai / tu as / il a / nous avons / vous avez / ils ont,conjugation|avoir
-"Which article is used with the word 'soleil' (sun)?",mcq,medium,Articles,"le|la|les|l'",le,articles|gender
-"The subjunctive mood is never used in French.",true_false,hard,Grammar,"True|False",False,subjunctive|grammar
-"The ___ of a word refers to its emotional association beyond its literal meaning.",word_bank_completion,medium,Vocabulary,connotation|denotation|etymology|syntax,connotation,vocabulary
-"Match: argued that economic growth leads to greater inequality.",matching,hard,Reading,Piketty|Keynes|Friedman|Sen,Piketty,economics
-"Which TWO are features of academic writing style?",multi_select,medium,Writing,"Formal vocabulary|Contractions|Objective tone|Colloquial language","Formal vocabulary|Objective tone",writing|academic
+type,difficulty,category_name,content,answer,options,answers,tags
+mcq,easy,Vocabulary,"What does 'merci' mean in English?",,Thank you|Please|Excuse me|Sorry,A,french|basics
+tf_ng,easy,Culture,"French is an official language of Canada.",true,,,canada|francophonie
+mcq,medium,Verb Conjugation,"Which verb form completes: 'Hier, je ___ au cinéma.' (Yesterday I went to the cinema)",,allais|suis allé|vais|aille,B,past-tense|verbs
+short_answer,hard,Verb Conjugation,"Conjugate 'avoir' in the present tense for all six persons.","j'ai / tu as / il a / nous avons / vous avez / ils ont",,, conjugation|avoir
+mcq,medium,Articles,"Which article is used with the word 'soleil' (sun)?",,le|la|les|l',A,articles|gender
+tf_ng,hard,Grammar,"The subjunctive mood is never used in French.",false,,,subjunctive|grammar
+sentence_completion,medium,Vocabulary,"The ___ of a word refers to its emotional association beyond its literal meaning.",connotation,,,vocabulary
+matching_features,hard,Reading,"Argued that economic growth leads to greater inequality.",Piketty,,,economics

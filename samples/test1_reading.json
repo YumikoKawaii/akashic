@@ -1,0 +1,271 @@
+[
+  {
+    "type": "matching_headings",
+    "difficulty": "easy",
+    "category_name": "IELTS Reading",
+    "content": "Paragraph B",
+    "answer": "Undeveloped for centuries",
+    "tags": ["cambridge-3", "test-1", "passage-1"]
+  },
+  {
+    "type": "matching_headings",
+    "difficulty": "easy",
+    "category_name": "IELTS Reading",
+    "content": "Paragraph C",
+    "answer": "How the reaction principle works",
+    "tags": ["cambridge-3", "test-1", "passage-1"]
+  },
+  {
+    "type": "matching_headings",
+    "difficulty": "easy",
+    "category_name": "IELTS Reading",
+    "content": "Paragraph D",
+    "answer": "The first rockets",
+    "tags": ["cambridge-3", "test-1", "passage-1"]
+  },
+  {
+    "type": "matching_headings",
+    "difficulty": "easy",
+    "category_name": "IELTS Reading",
+    "content": "Paragraph E",
+    "answer": "Rockets for military use",
+    "tags": ["cambridge-3", "test-1", "passage-1"]
+  },
+  {
+    "type": "mcq",
+    "difficulty": "easy",
+    "category_name": "IELTS Reading",
+    "content": "The greatest outcome of the discovery of the reaction principle was that",
+    "options": [
+      { "key": "A", "text": "rockets could be propelled into the air." },
+      { "key": "B", "text": "space travel became a reality." },
+      { "key": "C", "text": "a major problem had been solved." },
+      { "key": "D", "text": "bigger rockets were able to be built." }
+    ],
+    "answers": ["B"],
+    "tags": ["cambridge-3", "test-1", "passage-1"]
+  },
+  {
+    "type": "mcq",
+    "difficulty": "easy",
+    "category_name": "IELTS Reading",
+    "content": "According to the text, the greatest progress in rocket technology was made",
+    "options": [
+      { "key": "A", "text": "from the tenth to the thirteenth centuries." },
+      { "key": "B", "text": "from the seventeenth to the nineteenth centuries." },
+      { "key": "C", "text": "from the early nineteenth to the late nineteenth century." },
+      { "key": "D", "text": "from the late nineteenth century to the present day." }
+    ],
+    "answers": ["D"],
+    "tags": ["cambridge-3", "test-1", "passage-1"]
+  },
+  {
+    "type": "matching_features",
+    "difficulty": "easy",
+    "category_name": "IELTS Reading",
+    "content": "Invented black powder",
+    "answer": "the Chinese",
+    "tags": ["cambridge-3", "test-1", "passage-1"]
+  },
+  {
+    "type": "matching_features",
+    "difficulty": "easy",
+    "category_name": "IELTS Reading",
+    "content": "Used rocket-propelled arrows for fighting",
+    "answer": "the Chinese",
+    "tags": ["cambridge-3", "test-1", "passage-1"]
+  },
+  {
+    "type": "matching_features",
+    "difficulty": "easy",
+    "category_name": "IELTS Reading",
+    "content": "First used rockets as war weapons",
+    "answer": "the Indians",
+    "tags": ["cambridge-3", "test-1", "passage-1"]
+  },
+  {
+    "type": "matching_features",
+    "difficulty": "easy",
+    "category_name": "IELTS Reading",
+    "content": "Developed the rocket launcher",
+    "answer": "the Americans",
+    "tags": ["cambridge-3", "test-1", "passage-1"]
+  },
+  {
+    "type": "tf_ng",
+    "difficulty": "medium",
+    "category_name": "IELTS Reading",
+    "content": "Thirty per cent of deaths in the United States are caused by smoking-related diseases.",
+    "answer": "false",
+    "tags": ["cambridge-3", "test-1", "passage-2"]
+  },
+  {
+    "type": "tf_ng",
+    "difficulty": "medium",
+    "category_name": "IELTS Reading",
+    "content": "If one partner in a marriage smokes, the other is likely to take up smoking.",
+    "answer": "not given",
+    "tags": ["cambridge-3", "test-1", "passage-2"]
+  },
+  {
+    "type": "tf_ng",
+    "difficulty": "medium",
+    "category_name": "IELTS Reading",
+    "content": "Teenagers whose parents smoke are at risk of getting lung cancer at some time during their lives.",
+    "answer": "true",
+    "tags": ["cambridge-3", "test-1", "passage-2"]
+  },
+  {
+    "type": "tf_ng",
+    "difficulty": "medium",
+    "category_name": "IELTS Reading",
+    "content": "Opponents of smoking financed the UCSF study.",
+    "answer": "not given",
+    "tags": ["cambridge-3", "test-1", "passage-2"]
+  },
+  {
+    "type": "mcq",
+    "difficulty": "medium",
+    "category_name": "IELTS Reading",
+    "content": "According to information in the text, leukaemia and pneumonia",
+    "options": [
+      { "key": "A", "text": "are responsible for 84,000 deaths each year." },
+      { "key": "B", "text": "are strongly linked to cigarette smoking." },
+      { "key": "C", "text": "are strongly linked to lung cancer." },
+      { "key": "D", "text": "result in 30 per cent of deaths per year." }
+    ],
+    "answers": ["B"],
+    "tags": ["cambridge-3", "test-1", "passage-2"]
+  },
+  {
+    "type": "mcq",
+    "difficulty": "medium",
+    "category_name": "IELTS Reading",
+    "content": "According to information in the text, intake of carbon monoxide",
+    "options": [
+      { "key": "A", "text": "inhibits the flow of oxygen to the heart." },
+      { "key": "B", "text": "increases absorption of other smoke particles." },
+      { "key": "C", "text": "inhibits red blood cell formation." },
+      { "key": "D", "text": "promotes nicotine absorption." }
+    ],
+    "answers": ["A"],
+    "tags": ["cambridge-3", "test-1", "passage-2"]
+  },
+  {
+    "type": "mcq",
+    "difficulty": "medium",
+    "category_name": "IELTS Reading",
+    "content": "According to information in the text, intake of nicotine encourages",
+    "options": [
+      { "key": "A", "text": "blood circulation through the body." },
+      { "key": "B", "text": "activity of other toxins in the blood." },
+      { "key": "C", "text": "formation of blood clots." },
+      { "key": "D", "text": "an increase of platelets in the blood." }
+    ],
+    "answers": ["C"],
+    "tags": ["cambridge-3", "test-1", "passage-2"]
+  },
+  {
+    "type": "matching_headings",
+    "difficulty": "hard",
+    "category_name": "IELTS Reading",
+    "content": "Paragraph C",
+    "answer": "Explaining the inductive method",
+    "tags": ["cambridge-3", "test-1", "passage-3"]
+  },
+  {
+    "type": "matching_headings",
+    "difficulty": "hard",
+    "category_name": "IELTS Reading",
+    "content": "Paragraph D",
+    "answer": "The role of hypotheses in scientific research",
+    "tags": ["cambridge-3", "test-1", "passage-3"]
+  },
+  {
+    "type": "matching_headings",
+    "difficulty": "hard",
+    "category_name": "IELTS Reading",
+    "content": "Paragraph E",
+    "answer": "The testing of hypotheses",
+    "tags": ["cambridge-3", "test-1", "passage-3"]
+  },
+  {
+    "type": "matching_headings",
+    "difficulty": "hard",
+    "category_name": "IELTS Reading",
+    "content": "Paragraph F",
+    "answer": "Anticipating results before data is collected",
+    "tags": ["cambridge-3", "test-1", "passage-3"]
+  },
+  {
+    "type": "matching_headings",
+    "difficulty": "hard",
+    "category_name": "IELTS Reading",
+    "content": "Paragraph G",
+    "answer": "How research is done and how it is reported",
+    "tags": ["cambridge-3", "test-1", "passage-3"]
+  },
+  {
+    "type": "tf_ng",
+    "difficulty": "hard",
+    "category_name": "IELTS Reading",
+    "content": "Popper says that the scientific method is hypothetico-deductive.",
+    "answer": "true",
+    "tags": ["cambridge-3", "test-1", "passage-3"]
+  },
+  {
+    "type": "tf_ng",
+    "difficulty": "hard",
+    "category_name": "IELTS Reading",
+    "content": "If a prediction based on a hypothesis is fulfilled, then the hypothesis is confirmed as true.",
+    "answer": "false",
+    "tags": ["cambridge-3", "test-1", "passage-3"]
+  },
+  {
+    "type": "tf_ng",
+    "difficulty": "hard",
+    "category_name": "IELTS Reading",
+    "content": "Many people carry out research in a mistaken way.",
+    "answer": "not given",
+    "tags": ["cambridge-3", "test-1", "passage-3"]
+  },
+  {
+    "type": "tf_ng",
+    "difficulty": "hard",
+    "category_name": "IELTS Reading",
+    "content": "The 'scientific method' is more a way of describing research than a way of doing it.",
+    "answer": "true",
+    "tags": ["cambridge-3", "test-1", "passage-3"]
+  },
+  {
+    "type": "mcq",
+    "difficulty": "hard",
+    "category_name": "IELTS Reading",
+    "content": "In which TWO paragraphs in Reading Passage 3 does the writer give advice directly to the reader?",
+    "options": [
+      { "key": "A", "text": "A" },
+      { "key": "B", "text": "B" },
+      { "key": "C", "text": "C" },
+      { "key": "D", "text": "D" },
+      { "key": "E", "text": "E" },
+      { "key": "F", "text": "F" },
+      { "key": "G", "text": "G" }
+    ],
+    "answers": ["B", "F"],
+    "tags": ["cambridge-3", "test-1", "passage-3"]
+  },
+  {
+    "type": "mcq",
+    "difficulty": "hard",
+    "category_name": "IELTS Reading",
+    "content": "Which of the following statements best describes the writer's main purpose in Reading Passage 3?",
+    "options": [
+      { "key": "A", "text": "to advise Ph.D students not to cheat while carrying out research" },
+      { "key": "B", "text": "to encourage Ph.D students to work by guesswork and inspiration" },
+      { "key": "C", "text": "to explain to Ph.D students the logic which the scientific research paper follows" },
+      { "key": "D", "text": "to help Ph.D students by explaining different conceptions of the research process" }
+    ],
+    "answers": ["D"],
+    "tags": ["cambridge-3", "test-1", "passage-3"]
+  }
+]
