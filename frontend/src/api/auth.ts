@@ -1,12 +1,13 @@
-import axios from 'axios'
+import client from './client'
 import { User } from '../types'
-
-const api = axios.create({ baseURL: '/api/v1', withCredentials: true })
 
 export const authApi = {
   me: (): Promise<User> =>
-    api.get('/auth/me').then(r => r.data),
-
-logout: (): Promise<void> =>
-    api.post('/auth/logout').then(() => undefined),
+    client.get<User>('/auth/me').then(r => r.data),
+  logout: (): Promise<void> =>
+    client.post('/auth/logout').then(() => undefined),
+  register: (email: string, password: string, name: string): Promise<User> =>
+    client.post<User>('/auth/register', { email, password, name }).then(r => r.data),
+  login: (email: string, password: string): Promise<User> =>
+    client.post<User>('/auth/login', { email, password }).then(r => r.data),
 }

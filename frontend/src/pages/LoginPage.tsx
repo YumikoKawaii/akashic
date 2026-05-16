@@ -1,6 +1,37 @@
+import { useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 import Starfield from '../components/ui/Starfield'
+import { FormField, Input } from '../components/ui/FormField'
+
+type Mode = 'login' | 'register'
 
 export default function LoginPage() {
+  const { login, register } = useAuth()
+
+  const [mode,     setMode]     = useState<Mode>('login')
+  const [email,    setEmail]    = useState('')
+  const [password, setPassword] = useState('')
+  const [name,     setName]     = useState('')
+  const [error,    setError]    = useState<string | null>(null)
+  const [pending,  setPending]  = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setPending(true)
+    try {
+      if (mode === 'login') {
+        await login(email, password)
+      } else {
+        await register(email, password, name)
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.error ?? 'Something went wrong.')
+    } finally {
+      setPending(false)
+    }
+  }
+
   return (
     <>
       <Starfield />
@@ -17,27 +48,101 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <a
-          href="/api/v1/auth/google"
-          style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: '12px 28px',
-            border: '1px solid var(--border-dim)',
-            background: 'var(--surface)',
-            color: 'var(--ink)',
-            fontFamily: 'Cinzel, serif',
-            fontSize: '0.75rem',
-            letterSpacing: '0.15em',
-            textDecoration: 'none',
-            cursor: 'pointer',
-            transition: 'border-color 0.2s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--gold-dim)')}
-          onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-dim)')}
-        >
-          <GoogleIcon />
-          SIGN IN WITH GOOGLE
-        </a>
+        <div style={{ width: 320, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* mode toggle */}
+          <div style={{ display: 'flex', border: '1px solid var(--border-dim)', borderRadius: 4 }}>
+            {(['login', 'register'] as Mode[]).map(m => (
+              <button
+                key={m}
+                onClick={() => { setMode(m); setError(null) }}
+                style={{
+                  flex: 1, padding: '8px 0',
+                  fontFamily: 'Cinzel, serif', fontSize: '0.65rem', letterSpacing: '0.15em',
+                  textTransform: 'uppercase', border: 'none', cursor: 'pointer', borderRadius: 3,
+                  background: mode === m ? 'var(--gold-dim)' : 'transparent',
+                  color: mode === m ? 'var(--bg)' : 'var(--ink-dim)',
+                  transition: 'background 0.15s',
+                }}
+              >
+                {m === 'login' ? 'Sign In' : 'Register'}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {mode === 'register' && (
+              <FormField label="Name">
+                <Input
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Your name"
+                  required
+                />
+              </FormField>
+            )}
+            <FormField label="Email">
+              <Input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+              />
+            </FormField>
+            <FormField label="Password">
+              <Input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder={mode === 'register' ? 'Min. 6 characters' : ''}
+                required
+              />
+            </FormField>
+
+            {error && (
+              <div style={{ fontSize: '0.8rem', color: '#b03030', padding: '8px 10px', border: '1px solid rgba(176,48,48,0.3)', borderRadius: 3 }}>
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={pending}
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              {pending ? '…' : mode === 'login' ? 'Sign In' : 'Create Account'}
+            </button>
+          </form>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ flex: 1, height: 1, background: 'var(--border-dim)' }} />
+            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.1em', color: 'var(--ink-dim)' }}>OR</span>
+            <div style={{ flex: 1, height: 1, background: 'var(--border-dim)' }} />
+          </div>
+
+          <a
+            href="/api/v1/auth/google"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+              padding: '12px 28px',
+              border: '1px solid var(--border-dim)',
+              background: 'var(--surface)',
+              color: 'var(--ink)',
+              fontFamily: 'Cinzel, serif',
+              fontSize: '0.75rem',
+              letterSpacing: '0.15em',
+              textDecoration: 'none',
+              cursor: 'pointer',
+              transition: 'border-color 0.2s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--gold-dim)')}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-dim)')}
+          >
+            <GoogleIcon />
+            SIGN IN WITH GOOGLE
+          </a>
+        </div>
       </div>
     </>
   )
