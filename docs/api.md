@@ -1,452 +1,204 @@
-# Akashic API Documentation
+# Akashic API
 
-Base URL: `http://localhost:8080/api/v1`
+Base URL: `http://localhost:8080/api/v1`  
+Auth: all endpoints require an `auth_token` cookie (JWT). Set via Google OAuth or `POST /auth/login`.
 
-All responses are JSON. Successful responses wrap data in a `data` field. Errors return `{ "error": "message" }`.
+All responses are JSON. Success wraps data in `{ "data": ... }`. Errors return `{ "error": "message" }`.
+
+---
+
+## Auth
+
+```
+POST /auth/register    { email, password (min 6), name }  → 201 + sets cookie
+POST /auth/login       { email, password }                 → 200 + sets cookie
+GET  /auth/google                                          → redirects to Google
+GET  /auth/me                                              → 200 current user
+POST /auth/logout                                          → 204
+```
 
 ---
 
 ## Banks
 
-A **bank** is a top-level container for questions (e.g. "Japanese", "English Grammar").
+```
+GET    /banks                   → list banks accessible to the current user
+POST   /banks                   → create bank
+GET    /banks/:bankId           → get bank
+PUT    /banks/:bankId           → update name / description
+DELETE /banks/:bankId           → soft-delete
+PUT    /banks/:bankId/restore   → restore
+PUT    /banks/:bankId/default-config → replace default TestConfig
+```
 
-### List Banks
-```
-GET /banks
-```
-**Response 200**
+**Create/update body:**
 ```json
-{
-  "data": [
-    {
-      "id": "uuid",
-      "name": "Japanese",
-      "description": "JLPT study questions",
-      "default_config": { "easy": 3, "medium": 4, "hard": 3 },
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
-    }
-  ]
-}
+{ "name": "English IELTS", "description": "..." }
 ```
 
-### Get Bank
-```
-GET /banks/:id
-```
-
-### Create Bank
-```
-POST /banks
-```
-**Body**
+**Default config body:**
 ```json
-{
-  "name": "Japanese",
-  "description": "JLPT study questions"
-}
-```
-**Response 201**
-
-### Update Bank
-```
-PUT /banks/:id
-```
-**Body** — same fields as Create (all optional).
-
-### Update Default Test Config
-```
-PUT /banks/:id/default-config
-```
-**Body**
-```json
-{ "easy": 3, "medium": 4, "hard": 3 }
+{ "easy_count": 10, "medium_count": 10, "hard_count": 5, "category_ids": [1,2], "types": ["mcq","tf_ng"] }
 ```
 
-### Delete Bank
+---
+
+## Members
+
 ```
-DELETE /banks/:id
+GET    /banks/:bankId/members                    → list members
+POST   /banks/:bankId/members                    → add member by email
+DELETE /banks/:bankId/members/:userId            → remove member
+PUT    /banks/:bankId/members/:userId/role        → change role
 ```
-**Response 204**
+
+**Add member body:** `{ "email": "...", "role": "editor" | "viewer" }`  
+**Change role body:** `{ "role": "editor" | "viewer" }`
 
 ---
 
 ## Categories
 
-Categories belong to a bank and group questions within it.
-
-### List Categories
 ```
-GET /banks/:bankId/categories
+GET    /banks/:bankId/categories
+POST   /banks/:bankId/categories        { "name": "...", "description": "..." }
+PUT    /banks/:bankId/categories/:id
+DELETE /banks/:bankId/categories/:id    → 204
+PUT    /banks/:bankId/categories/:id/restore
 ```
-
-### Create Category
-```
-POST /banks/:bankId/categories
-```
-**Body**
-```json
-{ "name": "Grammar" }
-```
-**Response 201**
-
-### Update Category
-```
-PUT /banks/:bankId/categories/:id
-```
-**Body**
-```json
-{ "name": "Advanced Grammar" }
-```
-
-### Delete Category
-```
-DELETE /banks/:bankId/categories/:id
-```
-**Response 204**
 
 ---
 
 ## Questions
 
-### List Questions
+### List
 ```
 GET /banks/:bankId/questions
 ```
-**Query params** (all optional)
+Query params (all optional, `category_id` and `tag` are repeatable):
 
-| Param | Description |
+| Param | Values |
 |---|---|
-| `category_id` | Filter by category UUID |
-| `difficulty` | `easy`, `medium`, or `hard` |
-| `type` | `mcq`, `true_false`, `open`, `tf_ng`, `sentence_completion`, `word_bank_completion`, `matching`, or `multi_select` |
-| `tags` | Repeatable. `?tags=grammar&tags=verbs` |
+| `category_id` | integer |
+| `difficulty` | `easy` / `medium` / `hard` |
+| `type` | see types below |
+| `tag` | string |
+| `standalone` | `true` — exclude group questions |
 
-### Get Question
-```
-GET /banks/:bankId/questions/:id
-```
-
-### Create Question
+### Create
 ```
 POST /banks/:bankId/questions
 ```
-**Body**
+**Non-MCQ:**
 ```json
 {
-  "text": "What is the capital of Japan?",
-  "type": "mcq",
-  "difficulty": "easy",
-  "category_id": "uuid",
-  "options": ["Tokyo", "Osaka", "Kyoto", "Hiroshima"],
-  "correct_answer": "Tokyo",
-  "tags": ["japan", "geography"]
+  "category_id": 3,
+  "type": "tf_ng",
+  "difficulty": "medium",
+  "content": "The author implies technology always improves life.",
+  "answer": "not given",
+  "tags": ["inference"]
 }
 ```
-**Types:** `mcq` | `true_false` | `open` | `tf_ng` | `sentence_completion` | `word_bank_completion` | `matching` | `multi_select`
-**Difficulties:** `easy` | `medium` | `hard`
-
-**Response 201**
-
-### Update Question
+**MCQ:**
+```json
+{
+  "category_id": 3,
+  "type": "mcq",
+  "difficulty": "easy",
+  "content": "What is the capital of France?",
+  "options": [
+    { "key": "A", "text": "Berlin" },
+    { "key": "B", "text": "Paris" },
+    { "key": "C", "text": "Rome" },
+    { "key": "D", "text": "Madrid" }
+  ],
+  "answers": ["B"]
+}
 ```
-PUT /banks/:bankId/questions/:id
+
+**Valid types:** `mcq`, `tf_ng`, `yn_ng`, `sentence_completion`, `form_completion`,
+`short_answer`, `matching_headings`, `matching_information`, `matching_features`
+
 ```
-**Body** — same fields as Create (all optional).
-
-### Delete Question
+GET    /banks/:bankId/questions/:id
+PUT    /banks/:bankId/questions/:id     → same fields as create, all optional
+DELETE /banks/:bankId/questions/:id     → 204
+PUT    /banks/:bankId/questions/:id/restore
 ```
-DELETE /banks/:bankId/questions/:id
-```
-**Response 204**
 
----
-
-## Bulk Ingest Questions
-
-Import questions in bulk from a file. The file is uploaded as `multipart/form-data`.
-
+### Bulk import
 ```
 POST /banks/:bankId/questions/ingest
 Content-Type: multipart/form-data
+field: file  (.json / .yaml / .csv)
 ```
 
-**Form field:** `file` — the question file (`.json`, `.yaml`, `.yml`, or `.csv`)
+Response on success: `200 { "data": { "created": N, "failed": 0 } }`  
+Response on error: `422 { "created": 0, "failed": N, "errors": [{ "row": 2, "message": "..." }] }`
 
-**Behavior:**
-- All rows are validated before any DB writes. If any row fails validation, the entire request is rejected with the list of errors.
-- Categories referenced by `category_name` are created automatically if they don't exist.
-- The entire import is atomic (single transaction).
-
-**Response 200** — all rows imported
-```json
-{
-  "data": {
-    "created": 5,
-    "failed": 0
-  }
-}
-```
-
-**Response 422** — validation errors
-```json
-{
-  "data": {
-    "created": 0,
-    "failed": 2,
-    "errors": [
-      { "row": 3, "text": "Some question text", "message": "invalid type \"quiz\": must be mcq, true_false, open, tf_ng, sentence_completion, word_bank_completion, matching, or multi_select" },
-      { "row": 7, "text": "", "message": "text is required" }
-    ]
-  }
-}
-```
-
-### File Formats
-
-#### JSON
-Array of question objects (or a single root object). `options` and `tags` are JSON arrays. A passage object uses `"type": "passage"` and wraps sub-questions in a `questions` array.
-
-```json
-[
-  {
-    "text": "What is the capital of Japan?",
-    "type": "mcq",
-    "difficulty": "easy",
-    "category_name": "Geography",
-    "options": ["Tokyo", "Osaka", "Kyoto", "Hiroshima"],
-    "correct_answer": "Tokyo",
-    "tags": ["japan", "cities"]
-  },
-  {
-    "text": "Forests act as carbon ___, slowing greenhouse gas build-up.",
-    "type": "word_bank_completion",
-    "difficulty": "medium",
-    "category_name": "Reading",
-    "options": ["sinks", "sources", "filters", "pumps"],
-    "correct_answer": "sinks"
-  },
-  {
-    "text": "Argued that economic growth inevitably leads to greater inequality.",
-    "type": "matching",
-    "difficulty": "hard",
-    "category_name": "Reading",
-    "options": ["Piketty", "Keynes", "Friedman", "Sen"],
-    "correct_answer": "Piketty"
-  },
-  {
-    "text": "Which THREE are benefits of urban green spaces?",
-    "type": "multi_select",
-    "difficulty": "medium",
-    "category_name": "Reading",
-    "options": ["Reduced air pollution", "Higher taxes", "Improved mental health", "Lower urban temperatures"],
-    "correct_answer": "Reduced air pollution|Improved mental health|Lower urban temperatures"
-  },
-  {
-    "type": "passage",
-    "title": "The Role of Forests",
-    "body": "Forests cover approximately 31% of Earth's land...",
-    "difficulty": "medium",
-    "category_name": "Reading",
-    "questions": [
-      {
-        "text": "Trees absorb carbon dioxide and release oxygen.",
-        "type": "tf_ng",
-        "correct_answer": "True"
-      },
-      {
-        "text": "Forests act as carbon ___, slowing greenhouse gas build-up.",
-        "type": "word_bank_completion",
-        "options": ["sinks", "sources", "filters", "pumps"],
-        "correct_answer": "sinks"
-      }
-    ]
-  }
-]
-```
-
-#### YAML
-Array of question objects. `options` and `tags` are YAML sequences. Passages use `type: passage` with a nested `questions` list.
-
-```yaml
-- text: "What is the capital of Japan?"
-  type: mcq
-  difficulty: easy
-  category_name: Geography
-  options:
-    - Tokyo
-    - Osaka
-    - Kyoto
-    - Hiroshima
-  correct_answer: Tokyo
-  tags:
-    - japan
-    - cities
-
-- text: "Forests act as carbon ___, slowing greenhouse gas build-up."
-  type: word_bank_completion
-  difficulty: medium
-  category_name: Reading
-  options:
-    - sinks
-    - sources
-    - filters
-    - pumps
-  correct_answer: sinks
-
-- text: "Argued that economic growth inevitably leads to greater inequality."
-  type: matching
-  difficulty: hard
-  category_name: Reading
-  options:
-    - Piketty
-    - Keynes
-    - Friedman
-    - Sen
-  correct_answer: Piketty
-
-- text: "Which THREE are benefits of urban green spaces?"
-  type: multi_select
-  difficulty: medium
-  category_name: Reading
-  options:
-    - Reduced air pollution
-    - Higher taxes
-    - Improved mental health
-    - Lower urban temperatures
-  correct_answer: "Reduced air pollution|Improved mental health|Lower urban temperatures"
-```
-
-#### CSV
-Headers: `text, type, difficulty, category_name, options, correct_answer, tags`
-
-`options` and `tags` are pipe-separated (`|`) within a single cell. `correct_answer` for `multi_select` is also pipe-separated. **CSV does not support passages** — use JSON or YAML for passage-grouped questions.
-
-```csv
-text,type,difficulty,category_name,options,correct_answer,tags
-"What is the capital of Japan?",mcq,easy,Geography,Tokyo|Osaka|Kyoto|Hiroshima,Tokyo,japan|cities
-"Forests act as carbon ___.",word_bank_completion,medium,Reading,sinks|sources|filters|pumps,sinks,environment
-"Argued that growth leads to inequality.",matching,hard,Reading,Piketty|Keynes|Friedman,Piketty,economics
-"Which TWO are benefits of forests?",multi_select,medium,Reading,"Carbon storage|Oxygen production|Soil erosion","Carbon storage|Oxygen production",environment
-```
-
-**Sample files** are available in the `samples/` directory. See `docs/question_format.md` for full per-type field rules and the IELTS format map.
+See `docs/question_format.md` for the full import schema and examples.
 
 ---
 
 ## Tests
 
-A **test** is a generated snapshot of questions drawn from a bank.
-
-### List Tests
-```
-GET /banks/:bankId/tests
-```
-
-### Generate Test
+### Generate
 ```
 POST /banks/:bankId/tests/generate
 ```
-**Body** — all fields optional; omitted fields fall back to the bank's `default_config`
 ```json
 {
-  "title": "JLPT N5 Practice",
-  "config": { "easy": 3, "medium": 4, "hard": 3 }
-}
-```
-
-**Response 201**
-```json
-{
-  "data": {
-    "id": "uuid",
-    "bank_id": "uuid",
-    "title": "JLPT N5 Practice",
-    "config": { "easy": 3, "medium": 4, "hard": 3 },
-    "questions": [ ... ],
-    "created_at": "2024-01-01T00:00:00Z"
+  "name": "Practice Test 1",
+  "config": {
+    "easy_count": 10,
+    "medium_count": 10,
+    "hard_count": 5,
+    "category_ids": [1, 2],
+    "types": ["mcq", "tf_ng"]
   }
 }
 ```
+`config` is optional — omits falls back to the bank's `default_config`.
 
-### Get Test
 ```
-GET /banks/:bankId/tests/:id
+GET    /banks/:bankId/tests
+GET    /banks/:bankId/tests/:id     → includes ordered questions
+DELETE /banks/:bankId/tests/:id     → 204
+PUT    /banks/:bankId/tests/:id/restore
 ```
-
-### Delete Test
-```
-DELETE /banks/:bankId/tests/:id
-```
-**Response 204**
 
 ---
 
 ## Attempts
 
-An **attempt** is a test-taking run for a specific test.
-
-### Start Attempt
 ```
-POST /banks/:bankId/attempts
-```
-**Body**
-```json
-{ "test_id": "uuid" }
-```
-**Response 201**
-```json
-{
-  "data": {
-    "id": "uuid",
-    "test_id": "uuid",
-    "status": "in_progress",
-    "started_at": "2024-01-01T00:00:00Z",
-    "answers": {}
-  }
-}
+POST /banks/:bankId/tests/:id/attempts   → start (no body) → 201
+GET  /banks/:bankId/tests/:id/attempts   → list attempts for a test
+GET  /attempts/:id                        → get attempt (includes test + questions)
+PUT  /attempts/:id/submit                → submit answers → 200 with score
 ```
 
-### Get Attempt
-```
-GET /attempts/:id
-```
-Includes the test and its questions for rendering the attempt UI.
-
-### Submit Attempt
-```
-PUT /attempts/:id/submit
-```
-**Body**
+### Submit body
 ```json
 {
   "answers": {
-    "question-uuid-1": "Tokyo",
-    "question-uuid-2": "True"
+    "42": "false",
+    "43": "B",
+    "44": "not given"
   }
 }
 ```
-**Response 200**
-```json
-{
-  "data": {
-    "id": "uuid",
-    "status": "completed",
-    "score": 8,
-    "total": 10,
-    "answers": { ... },
-    "completed_at": "2024-01-01T00:01:30Z"
-  }
-}
-```
+Keys are `question_id` as a string.
 
-Scoring applies to all types except `open`. Rules by type:
+**Grading rules:**
 
 | Type | Rule |
 |---|---|
-| `mcq`, `true_false`, `tf_ng`, `matching` | Exact string match |
-| `sentence_completion`, `word_bank_completion` | Case-insensitive, whitespace-trimmed |
-| `multi_select` | Pipe-separated set match — order does not matter, all-or-nothing |
-| `open` | Not scored (self-graded) |
+| `mcq` | Pipe-separated keys (`"A"` or `"A|C"`), sorted set match |
+| `tf_ng` / `yn_ng` | Case-insensitive (`"True"`, `"NOT GIVEN"` all accepted) |
+| `sentence_completion` / `form_completion` / `short_answer` | Case-insensitive exact match |
+| `matching_headings` / `matching_information` / `matching_features` | Exact string match |
 
+`short_answer` is not auto-scored in the UI (score shown as null).  
 Submitting an already-completed attempt returns **409 Conflict**.
