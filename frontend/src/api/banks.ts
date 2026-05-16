@@ -16,6 +16,6 @@ export const banksApi = {
     client.get<BankMember[]>(`/banks/${id}/members`).then(r => r.data),
   addMember: (id: string, data: { email: string; role: string }) =>
     client.post<BankMember>(`/banks/${id}/members`, data).then(r => r.data),
-  removeMember: (id: string, userId: string) =>
+  removeMember: (id: string, userId: number | string) =>
     client.delete(`/banks/${id}/members/${userId}`),
 }

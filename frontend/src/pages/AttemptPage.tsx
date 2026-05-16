@@ -1,40 +1,51 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAttempt, useSubmitAttempt } from '../hooks/useAttempts'
-import { Passage, TestQuestion } from '../types'
+import { Question } from '../types'
 import OrnatePanel from '../components/ui/OrnatePanel'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
 import Starfield from '../components/ui/Starfield'
 
-const OPTION_KEYS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+// ── Answer checking (mirrors backend grader) ──────────────────────────────────
 
-function checkAnswer(q: NonNullable<TestQuestion['question']>, answer: string): boolean {
+function checkAnswer(q: Question, answer: string): boolean {
   const got  = answer.trim()
-  const want = q.correct_answer.trim()
-  if (q.type === 'sentence_completion' || q.type === 'word_bank_completion') {
-    return got.toLowerCase() === want.toLowerCase()
+  if (q.choice) {
+    const want = [...q.choice.answers].sort()
+    const got2 = got.split('|').map(s => s.trim()).filter(Boolean).sort()
+    return got2.length === want.length && got2.every((v, i) => v === want[i])
   }
-  if (q.type === 'multi_select') {
-    const sort = (s: string) => s.split('|').map(x => x.trim()).filter(Boolean).sort().join('|')
-    return sort(got) === sort(want)
+  if (!q.item) return false
+  const want = q.item.answer.trim()
+  switch (q.type) {
+    case 'sentence_completion':
+    case 'form_completion':
+    case 'short_answer':
+    case 'tf_ng':
+    case 'yn_ng':
+      return got.toLowerCase() === want.toLowerCase()
+    default:
+      return got === want
   }
-  return got === want
 }
 
-// ── Shared answer options renderer ────────────────────────────────────────────
+function questionContent(q: Question): string {
+  return q.item?.content ?? q.choice?.content ?? ''
+}
 
-function AnswerOptions({ q, selected, onSelect, revealed, usedWords }: {
-  q: NonNullable<TestQuestion['question']>
+// ── Answer options renderer ────────────────────────────────────────────────────
+
+function AnswerOptions({ q, selected, onSelect, revealed }: {
+  q: Question
   selected: string
   onSelect: (val: string) => void
   revealed?: boolean
-  usedWords?: Set<string>
 }) {
   const locked = !!revealed
 
-  // Shuffle MCQ options once per question (stable across re-renders).
-  const shuffledOptions = useMemo(() => {
-    const opts = [...(q.options ?? [])]
+  const shuffledMCQ = useMemo(() => {
+    if (!q.choice) return []
+    const opts = [...q.choice.options]
     for (let i = opts.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [opts[i], opts[j]] = [opts[j], opts[i]]
@@ -43,38 +54,58 @@ function AnswerOptions({ q, selected, onSelect, revealed, usedWords }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q.id])
 
-  if (q.type === 'mcq') return (
-    <div className="answer-options">
-      {shuffledOptions.map((opt, i) => {
-        const isCorrectOpt = locked && opt === q.correct_answer
-        const isWrongSel   = locked && opt === selected && opt !== q.correct_answer
-        return (
-          <button
-            key={i}
-            className={`answer-option ${!locked && selected === opt ? 'selected' : ''}`}
-            onClick={() => !locked && onSelect(opt === selected ? '' : opt)}
-            style={{
-              cursor: locked ? 'default' : 'pointer',
-              borderColor: isCorrectOpt ? 'rgba(42,138,58,0.6)' : isWrongSel ? 'rgba(176,48,48,0.6)' : undefined,
-              background:  isCorrectOpt ? 'rgba(42,138,58,0.08)' : isWrongSel ? 'rgba(176,48,48,0.06)' : undefined,
-            }}
-          >
-            <span className="answer-key">{OPTION_KEYS[i]}</span>
-            <span className="answer-text">{opt}</span>
-            {isCorrectOpt && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.8rem' }}>✓</span>}
-          </button>
-        )
-      })}
-    </div>
-  )
+  if (q.type === 'mcq' && q.choice) {
+    const correctKeys = new Set(q.choice.answers)
+    const selectedKeys = new Set(selected.split('|').map(s => s.trim()).filter(Boolean))
+    const isSingleAnswer = q.choice.answers.length === 1
 
-  if (q.type === 'true_false') {
-    const opts = q.options?.length ? q.options : ['True', 'False']
+    const toggleKey = (key: string) => {
+      if (locked) return
+      if (isSingleAnswer) {
+        onSelect(selectedKeys.has(key) ? '' : key)
+      } else {
+        const next = new Set(selectedKeys)
+        if (next.has(key)) next.delete(key)
+        else next.add(key)
+        onSelect([...next].join('|'))
+      }
+    }
+
     return (
-      <div className="answer-options" style={{ gridTemplateColumns: '1fr 1fr' }}>
+      <div className="answer-options">
+        {shuffledMCQ.map(opt => {
+          const isSel        = selectedKeys.has(opt.key)
+          const isCorrectOpt = locked && correctKeys.has(opt.key)
+          const isWrongSel   = locked && isSel && !correctKeys.has(opt.key)
+          return (
+            <button
+              key={opt.key}
+              className={`answer-option ${!locked && isSel ? 'selected' : ''}`}
+              onClick={() => toggleKey(opt.key)}
+              style={{
+                cursor: locked ? 'default' : 'pointer',
+                borderColor: isCorrectOpt ? 'rgba(42,138,58,0.6)' : isWrongSel ? 'rgba(176,48,48,0.6)' : undefined,
+                background:  isCorrectOpt ? 'rgba(42,138,58,0.08)' : isWrongSel ? 'rgba(176,48,48,0.06)' : undefined,
+              }}
+            >
+              <span className="answer-key">{opt.key}</span>
+              <span className="answer-text">{opt.text}</span>
+              {isCorrectOpt && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.8rem' }}>✓</span>}
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
+
+  if (q.type === 'tf_ng') {
+    const opts = ['True', 'False', 'Not Given'] as const
+    const correct = q.item?.answer ?? ''
+    return (
+      <div className="answer-options" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
         {opts.map(val => {
-          const isCorrectOpt = locked && val === q.correct_answer
-          const isWrongSel   = locked && val === selected && val !== q.correct_answer
+          const isCorrectOpt = locked && val.toLowerCase() === correct.toLowerCase()
+          const isWrongSel   = locked && val === selected && !isCorrectOpt
           return (
             <button key={val}
               className={`answer-option ${!locked && selected === val ? 'selected' : ''}`}
@@ -94,88 +125,26 @@ function AnswerOptions({ q, selected, onSelect, revealed, usedWords }: {
     )
   }
 
-  if (q.type === 'tf_ng') return (
-    <div className="answer-options" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-      {(['True', 'False', 'Not Given'] as const).map(val => {
-        const isCorrectOpt = locked && val === q.correct_answer
-        const isWrongSel   = locked && val === selected && val !== q.correct_answer
-        return (
-          <button key={val}
-            className={`answer-option ${!locked && selected === val ? 'selected' : ''}`}
-            onClick={() => !locked && onSelect(val === selected ? '' : val)}
-            style={{
-              justifyContent: 'center', cursor: locked ? 'default' : 'pointer',
-              borderColor: isCorrectOpt ? 'rgba(42,138,58,0.6)' : isWrongSel ? 'rgba(176,48,48,0.6)' : undefined,
-              background:  isCorrectOpt ? 'rgba(42,138,58,0.08)' : isWrongSel ? 'rgba(176,48,48,0.06)' : undefined,
-            }}
-          >
-            <span className="answer-text" style={{ textAlign: 'center' }}>{val}</span>
-            {isCorrectOpt && <span style={{ marginLeft: 8, color: '#2a8a3a' }}>✓</span>}
-          </button>
-        )
-      })}
-    </div>
-  )
-
-  if (q.type === 'matching') return (
-    <div className="answer-options">
-      {(q.options ?? []).map((opt, i) => {
-        const isCorrectOpt = locked && opt === q.correct_answer
-        const isWrongSel   = locked && opt === selected && opt !== q.correct_answer
-        return (
-          <button
-            key={i}
-            className={`answer-option ${!locked && selected === opt ? 'selected' : ''}`}
-            onClick={() => !locked && onSelect(opt === selected ? '' : opt)}
-            style={{
-              cursor: locked ? 'default' : 'pointer',
-              borderColor: isCorrectOpt ? 'rgba(42,138,58,0.6)' : isWrongSel ? 'rgba(176,48,48,0.6)' : undefined,
-              background:  isCorrectOpt ? 'rgba(42,138,58,0.08)' : isWrongSel ? 'rgba(176,48,48,0.06)' : undefined,
-            }}
-          >
-            <span className="answer-key">{OPTION_KEYS[i]}</span>
-            <span className="answer-text">{opt}</span>
-            {isCorrectOpt && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.8rem' }}>✓</span>}
-          </button>
-        )
-      })}
-    </div>
-  )
-
-  if (q.type === 'multi_select') {
-    const selectedSet = new Set(selected.split('|').map(s => s.trim()).filter(Boolean))
-    const correctSet  = new Set(q.correct_answer.split('|').map(s => s.trim()).filter(Boolean))
-    const toggleOpt   = (opt: string) => {
-      if (locked) return
-      const next = new Set(selectedSet)
-      if (next.has(opt)) next.delete(opt)
-      else next.add(opt)
-      onSelect([...next].join('|'))
-    }
+  if (q.type === 'yn_ng') {
+    const opts = ['Yes', 'No', 'Not Given'] as const
+    const correct = q.item?.answer ?? ''
     return (
-      <div className="answer-options">
-        {shuffledOptions.map((opt, i) => {
-          const isSel        = selectedSet.has(opt)
-          const isCorrectSel = locked && isSel && correctSet.has(opt)
-          const isWrongSel   = locked && isSel && !correctSet.has(opt)
-          const isMissed     = locked && !isSel && correctSet.has(opt)
+      <div className="answer-options" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+        {opts.map(val => {
+          const isCorrectOpt = locked && val.toLowerCase() === correct.toLowerCase()
+          const isWrongSel   = locked && val === selected && !isCorrectOpt
           return (
-            <button
-              key={i}
-              className={`answer-option ${!locked && isSel ? 'selected' : ''}`}
-              onClick={() => toggleOpt(opt)}
+            <button key={val}
+              className={`answer-option ${!locked && selected === val ? 'selected' : ''}`}
+              onClick={() => !locked && onSelect(val === selected ? '' : val)}
               style={{
-                cursor: locked ? 'default' : 'pointer',
-                borderColor: isCorrectSel ? 'rgba(42,138,58,0.6)' : isWrongSel ? 'rgba(176,48,48,0.6)' : isMissed ? 'rgba(42,138,58,0.35)' : undefined,
-                background:  isCorrectSel ? 'rgba(42,138,58,0.08)' : isWrongSel ? 'rgba(176,48,48,0.06)' : isMissed ? 'rgba(42,138,58,0.04)' : undefined,
+                justifyContent: 'center', cursor: locked ? 'default' : 'pointer',
+                borderColor: isCorrectOpt ? 'rgba(42,138,58,0.6)' : isWrongSel ? 'rgba(176,48,48,0.6)' : undefined,
+                background:  isCorrectOpt ? 'rgba(42,138,58,0.08)' : isWrongSel ? 'rgba(176,48,48,0.06)' : undefined,
               }}
             >
-              <span className="answer-key" style={{ borderRadius: 2 }}>
-                {!locked && isSel ? '✓' : OPTION_KEYS[i]}
-              </span>
-              <span className="answer-text">{opt}</span>
-              {isCorrectSel && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.8rem' }}>✓</span>}
-              {isMissed && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.75rem', opacity: 0.8 }}>missed</span>}
+              <span className="answer-text" style={{ textAlign: 'center' }}>{val}</span>
+              {isCorrectOpt && <span style={{ marginLeft: 8, color: '#2a8a3a' }}>✓</span>}
             </button>
           )
         })}
@@ -183,63 +152,10 @@ function AnswerOptions({ q, selected, onSelect, revealed, usedWords }: {
     )
   }
 
-  if (q.type === 'word_bank_completion') {
-    const parts      = q.text.split('___')
-    const isCorrect  = locked && checkAnswer(q, selected)
-    const blankClass = locked
-      ? (isCorrect ? 'word-bank-blank locked-correct' : 'word-bank-blank locked-wrong')
-      : (selected ? 'word-bank-blank' : 'word-bank-blank empty')
-    return (
-      <div style={{ width: '100%' }}>
-        {/* Word bank */}
-        <div className="word-bank">
-          <div className="word-bank-label">WORD BANK</div>
-          {(q.options ?? []).map(opt => (
-            <button
-              key={opt}
-              className="word-bank-pill"
-              disabled={locked || selected === opt || (usedWords?.has(opt) ?? false)}
-              onClick={() => onSelect(opt)}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-
-        {/* Sentence with inline blank */}
-        <p style={{ fontSize: '1.1rem', lineHeight: 2.2, color: 'var(--ink)' }}>
-          {parts.map((part, i) => (
-            <span key={i}>
-              {part}
-              {i < parts.length - 1 && (
-                <span
-                  className={blankClass}
-                  onClick={() => !locked && selected && onSelect('')}
-                  title={!locked && selected ? 'Click to clear' : undefined}
-                >
-                  {selected || '…'}
-                  {!locked && selected && (
-                    <span style={{ fontSize: '0.7rem', color: 'var(--ink-dim)', lineHeight: 1 }}>✕</span>
-                  )}
-                </span>
-              )}
-            </span>
-          ))}
-        </p>
-
-        {locked && !isCorrect && (
-          <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
-            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>CORRECT ANSWER</div>
-            <div style={{ color: '#2a8a3a' }}>{q.correct_answer}</div>
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  if (q.type === 'sentence_completion') {
-    const parts = q.text.split('___')
-    const isCorrect = locked && selected.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()
+  if (q.type === 'sentence_completion' || q.type === 'form_completion') {
+    const parts = questionContent(q).split('___')
+    const correct = q.item?.answer ?? ''
+    const isCorrect = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
     const inputColor = locked ? (isCorrect ? 'rgba(42,138,58,0.7)' : 'rgba(176,48,48,0.7)') : 'var(--gold-dim)'
     return (
       <div style={{ width: '100%' }}>
@@ -257,7 +173,7 @@ function AnswerOptions({ q, selected, onSelect, revealed, usedWords }: {
                   style={{
                     display: 'inline-block',
                     minWidth: 120,
-                    width: `${Math.max(selected.length, q.correct_answer.length, 10) * 0.68}ch`,
+                    width: `${Math.max(selected.length, correct.length, 10) * 0.68}ch`,
                     background: 'transparent',
                     border: 'none',
                     borderBottom: `2px solid ${inputColor}`,
@@ -278,47 +194,38 @@ function AnswerOptions({ q, selected, onSelect, revealed, usedWords }: {
         {locked && !isCorrect && (
           <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>CORRECT ANSWER</div>
-            <div style={{ color: '#2a8a3a' }}>{q.correct_answer}</div>
+            <div style={{ color: '#2a8a3a' }}>{correct}</div>
           </div>
         )}
       </div>
     )
   }
 
-  // open
+  // short_answer and matching types — text input
+  const correct = q.item?.answer ?? ''
+  const isCorrect = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
+  const borderColor = locked
+    ? (isCorrect ? 'rgba(42,138,58,0.6)' : 'rgba(176,48,48,0.6)')
+    : 'var(--border-dim)'
   return (
     <div style={{ width: '100%' }}>
-      <textarea
+      <input
+        type="text"
         className="form-input"
-        rows={6}
-        style={{ fontSize: '1.1rem' }}
-        placeholder="Write your answer…"
         value={selected}
         onChange={e => !locked && onSelect(e.target.value)}
         readOnly={locked}
+        placeholder="Your answer…"
+        style={{ borderColor, color: locked ? (isCorrect ? '#2a8a3a' : '#b03030') : undefined }}
       />
-      {locked && (
+      {locked && !isCorrect && (
         <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
-          <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>REFERENCE ANSWER</div>
-          <div style={{ color: 'var(--ink)' }}>{q.correct_answer}</div>
+          <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>CORRECT ANSWER</div>
+          <div style={{ color: '#2a8a3a' }}>{correct}</div>
         </div>
       )}
     </div>
   )
-}
-
-// ── Group helpers ─────────────────────────────────────────────────────────────
-
-function groupByPassage(questions: TestQuestion[]) {
-  const groups: { passage: Passage; items: TestQuestion[] }[] = []
-  for (const tq of questions) {
-    const p = tq.question?.passage
-    if (!p) continue
-    const last = groups[groups.length - 1]
-    if (last?.passage.id === p.id) last.items.push(tq)
-    else groups.push({ passage: p, items: [tq] })
-  }
-  return groups
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -329,16 +236,12 @@ export default function AttemptPage() {
   const { data: attempt } = useAttempt(id)
   const submit            = useSubmitAttempt()
 
-  // Step-through state
   const [currentIdx, setCurrentIdx] = useState(0)
-  const [selected,   setSelected]   = useState<string>('')
+  const [selected,   setSelected]   = useState('')
   const [revealed,   setRevealed]   = useState(false)
   const [answers,    setAnswers]     = useState<Record<string, string>>({})
   const [score,      setScore]       = useState(0)
   const [scorable,   setScorable]    = useState(0)
-
-  // Passage mode state
-  const [passageAnswers, setPassageAnswers] = useState<Record<string, string>>({})
 
   if (!attempt?.test) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
@@ -347,131 +250,24 @@ export default function AttemptPage() {
     </div>
   )
 
-  const questions: TestQuestion[] = attempt.test.questions ?? []
-  const isPassageMode = questions.length > 0 && questions.every(tq => !!tq.question?.passage_id)
-
-  // ── Passage mode ────────────────────────────────────────────────────────────
-
-  if (isPassageMode) {
-    const groups    = groupByPassage(questions)
-    const total     = questions.length
-    const answered  = Object.keys(passageAnswers).length
-    const progress  = total > 0 ? (answered / total) * 100 : 0
-
-    const handleSubmit = async () => {
-      await submit.mutateAsync({ id, answers: passageAnswers })
-      navigate(`/attempts/${id}/results`)
-    }
-
-    return (
-      <>
-        <Starfield />
-        <div className="attempt-layout">
-          <div className="attempt-progress-bar">
-            <div className="attempt-progress-fill" style={{ width: `${progress}%`, transition: 'width 0.3s ease' }} />
-          </div>
-
-          <div className="attempt-header">
-            <div>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>
-                {attempt.test.name}
-              </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--ink-dim)', marginTop: 2 }}>
-                {answered} / {total} answered
-              </div>
-            </div>
-            <button
-              className="btn btn-primary pulse"
-              onClick={handleSubmit}
-              disabled={submit.isPending}
-              style={{ padding: '8px 24px' }}
-            >
-              {submit.isPending ? '…' : '⚔ Submit All'}
-            </button>
-          </div>
-
-          <div className="attempt-body">
-            {groups.map((group, gi) => (
-              <div key={group.passage.id} style={{ width: '100%', maxWidth: 860 }}>
-                {/* Passage text */}
-                <div style={{
-                  marginBottom: 24,
-                  padding: '24px 28px',
-                  background: 'rgba(154,112,24,0.04)',
-                  border: '1px solid var(--border-dim)',
-                  borderLeft: '3px solid var(--gold-dim)',
-                }}>
-                  <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', marginBottom: 14, textTransform: 'uppercase' }}>
-                    Passage {gi + 1} · {group.passage.title}
-                  </div>
-                  <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: 'var(--ink)', whiteSpace: 'pre-wrap' }}>
-                    {group.passage.body}
-                  </p>
-                </div>
-
-                {/* Questions */}
-                <div className="flex flex-col gap-6" style={{ marginBottom: 48 }}>
-                  {group.items.map((tq) => {
-                    const q = tq.question
-                    if (!q) return null
-                    const sel = passageAnswers[q.id] ?? ''
-                    const globalIdx = questions.findIndex(x => x.question_id === tq.question_id)
-                    const usedWords = q.type === 'word_bank_completion'
-                      ? new Set(
-                          group.items
-                            .filter(other => other.question?.type === 'word_bank_completion' && other.question_id !== tq.question_id)
-                            .map(other => passageAnswers[other.question!.id])
-                            .filter((v): v is string => Boolean(v))
-                        )
-                      : undefined
-                    return (
-                      <div key={q.id}>
-                        <OrnatePanel style={{ marginBottom: 12 } as React.CSSProperties}>
-                          <div className="flex items-start gap-4">
-                            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'var(--gold-dim)', paddingTop: 2, minWidth: 32 }}>
-                              {String(globalIdx + 1).padStart(2, '0')}
-                            </span>
-                            <div style={{ flex: 1 }}>
-                              <p className="question-text">{q.text}</p>
-                              <div className="flex gap-2 mt-3">
-                                <TypeTag type={q.type} />
-                              </div>
-                            </div>
-                          </div>
-                        </OrnatePanel>
-                        <AnswerOptions
-                          q={q}
-                          selected={sel}
-                          onSelect={val => setPassageAnswers(prev => ({ ...prev, [q.id]: val }))}
-                          usedWords={usedWords}
-                        />
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-
-          </div>
-        </div>
-      </>
-    )
-  }
-
-  // ── Step-through mode ───────────────────────────────────────────────────────
-
+  const questions = attempt.test.questions ?? []
   const total     = questions.length
   const tq        = questions[currentIdx]
   const q         = tq?.question
   const isLast    = currentIdx === total - 1
-  const isOpen    = q?.type === 'open'
-  const isCorrect = revealed && !isOpen && !!q && checkAnswer(q, selected)
+
+  if (!q) return null
+
+  const content    = questionContent(q)
+  const isScoreable = q.type !== 'short_answer'
+  const isCorrect  = revealed && isScoreable && checkAnswer(q, selected)
+  const progress   = ((currentIdx + (revealed ? 1 : 0)) / total) * 100
 
   const handleReveal = () => {
-    if (!q || !selected) return
-    setAnswers(prev => ({ ...prev, [q.id]: selected }))
+    if (!selected) return
+    setAnswers(prev => ({ ...prev, [String(q.id)]: selected }))
     setRevealed(true)
-    if (!isOpen) {
+    if (isScoreable) {
       setScorable(s => s + 1)
       if (checkAnswer(q, selected)) setScore(s => s + 1)
     }
@@ -487,10 +283,6 @@ export default function AttemptPage() {
     setSelected('')
     setRevealed(false)
   }
-
-  if (!q) return null
-
-  const progress = ((currentIdx + (revealed ? 1 : 0)) / total) * 100
 
   return (
     <>
@@ -509,15 +301,17 @@ export default function AttemptPage() {
               Question {currentIdx + 1} / {total}
             </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.4rem', color: 'var(--gold)', lineHeight: 1 }}>
-              {score}
-              <span style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', marginLeft: 2 }}>/ {scorable}</span>
+          {scorable > 0 && (
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.4rem', color: 'var(--gold)', lineHeight: 1 }}>
+                {score}
+                <span style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', marginLeft: 2 }}>/ {scorable}</span>
+              </div>
+              <div style={{ fontSize: '0.68rem', color: 'var(--ink-dim)', letterSpacing: '0.12em', fontFamily: 'Cinzel, serif' }}>
+                SCORE
+              </div>
             </div>
-            <div style={{ fontSize: '0.68rem', color: 'var(--ink-dim)', letterSpacing: '0.12em', fontFamily: 'Cinzel, serif' }}>
-              SCORE
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="attempt-body">
@@ -528,11 +322,11 @@ export default function AttemptPage() {
                   {String(currentIdx + 1).padStart(2, '0')}
                 </span>
                 <div style={{ flex: 1 }}>
-                  <p className="question-text">{q.text}</p>
+                  <p className="question-text">{content}</p>
                   <div className="flex gap-2 mt-3 flex-wrap">
                     <TypeTag type={q.type} />
                     <DifficultyTag difficulty={q.difficulty} />
-                    {revealed && !isOpen && (
+                    {revealed && isScoreable && (
                       <span style={{
                         fontFamily: 'Cinzel, serif', fontSize: '0.56rem', letterSpacing: '0.1em',
                         padding: '2px 8px', border: '1px solid',

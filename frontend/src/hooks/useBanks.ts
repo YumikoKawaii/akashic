@@ -75,7 +75,7 @@ export function useAddMember(bankId: string) {
 export function useRemoveMember(bankId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (userId: string) => banksApi.removeMember(bankId, userId),
+    mutationFn: (userId: number | string) => banksApi.removeMember(bankId, userId),
     onSuccess: () => qc.invalidateQueries({ queryKey: memberKeys.list(bankId) }),
   })
 }

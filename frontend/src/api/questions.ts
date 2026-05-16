@@ -1,5 +1,26 @@
 import client from './client'
-import { Question, QuestionFilter, Paginated } from '../types'
+import { Question, QuestionFilter, MCQOption } from '../types'
+
+export interface CreateQuestionPayload {
+  category_id: number
+  type: string
+  difficulty: string
+  tags: string[]
+  content: string
+  answer?: string
+  options?: MCQOption[]
+  answers?: string[]
+}
+
+export interface UpdateQuestionPayload {
+  category_id?: number
+  difficulty?: string
+  tags?: string[]
+  content?: string
+  answer?: string
+  options?: MCQOption[]
+  answers?: string[]
+}
 
 export interface IngestResult {
   created: number
@@ -8,21 +29,19 @@ export interface IngestResult {
 }
 
 export const questionsApi = {
-  list: (bankId: string, filter: QuestionFilter = {}, page = 1, limit = 5) => {
+  list: (bankId: string, filter: QuestionFilter = {}) => {
     const params = new URLSearchParams()
-    filter.category_ids?.forEach(id => params.append('category_id', id))
-    if (filter.difficulty)   params.set('difficulty',  filter.difficulty)
-    filter.types?.forEach(t => params.append('type', t))
-    filter.tags?.forEach(t => params.append('tags', t))
-    params.set('page',  String(page))
-    params.set('limit', String(limit))
-    return client.get<Paginated<Question>>(`/banks/${bankId}/questions`, { params }).then(r => r.data)
+    filter.category_ids?.forEach(id => params.append('category_id', String(id)))
+    if (filter.difficulty) params.set('difficulty', filter.difficulty)
+    if (filter.type)       params.set('type', filter.type)
+    filter.tags?.forEach(t => params.append('tag', t))
+    return client.get<Question[]>(`/banks/${bankId}/questions`, { params }).then(r => r.data)
   },
   get: (bankId: string, id: string) =>
     client.get<Question>(`/banks/${bankId}/questions/${id}`).then(r => r.data),
-  create: (bankId: string, data: Omit<Question, 'id' | 'bank_id' | 'category' | 'created_at' | 'updated_at'>) =>
+  create: (bankId: string, data: CreateQuestionPayload) =>
     client.post<Question>(`/banks/${bankId}/questions`, data).then(r => r.data),
-  update: (bankId: string, id: string, data: Partial<Question>) =>
+  update: (bankId: string, id: string, data: UpdateQuestionPayload) =>
     client.put<Question>(`/banks/${bankId}/questions/${id}`, data).then(r => r.data),
   delete: (bankId: string, id: string) =>
     client.delete(`/banks/${bankId}/questions/${id}`),

@@ -1,5 +1,5 @@
 export interface User {
-  id: string
+  id: number
   email: string
   name: string
   avatar_url: string
@@ -8,28 +8,29 @@ export interface User {
 export type BankRole = 'owner' | 'editor' | 'viewer'
 
 export interface BankMember {
-  bank_id: string
-  user_id: string
+  id: number
+  bank_id: number
+  user_id: number
   user?: User
   role: BankRole
   created_at: string
+  updated_at: string
 }
 
 export interface TestConfig {
   easy_count: number
   medium_count: number
   hard_count: number
-  total_count?: number
-  category_ids?: string[]
+  category_ids?: number[]
   types?: string[]
   tags?: string[]
 }
 
 export interface Bank {
-  id: string
+  id: number
   name: string
   description: string
-  owner_id?: string
+  owner_id?: number
   default_config: TestConfig
   my_role: BankRole
   created_at: string
@@ -37,57 +38,83 @@ export interface Bank {
 }
 
 export interface Category {
-  id: string
-  bank_id: string
+  id: number
+  bank_id: number
   name: string
   description: string
   created_at: string
   updated_at: string
 }
 
-export type QuestionType       = 'mcq' | 'true_false' | 'open' | 'tf_ng' | 'sentence_completion' | 'word_bank_completion' | 'matching' | 'multi_select'
+export type QuestionType =
+  | 'mcq'
+  | 'tf_ng'
+  | 'yn_ng'
+  | 'matching_headings'
+  | 'matching_information'
+  | 'matching_features'
+  | 'sentence_completion'
+  | 'form_completion'
+  | 'short_answer'
+
 export type QuestionDifficulty = 'easy' | 'medium' | 'hard'
 
+export interface MCQOption {
+  key: string
+  text: string
+}
+
+export interface QQuestionItem {
+  question_id: number
+  content: string
+  answer: string
+}
+
+export interface QMultipleChoice {
+  question_id: number
+  content: string
+  options: MCQOption[]
+  answers: string[]
+}
+
 export interface Passage {
-  id: string
-  bank_id: string
-  category_id: string
+  id: number
+  bank_id: number
+  category_id: number
   category?: Category
   title: string
   body: string
   difficulty: QuestionDifficulty
-  questions?: Question[]
   created_at: string
   updated_at: string
 }
 
 export interface Question {
-  id: string
-  bank_id: string
-  category_id: string
+  id: number
+  bank_id: number
+  category_id: number
   category?: Category
-  passage_id?: string
-  passage?: Passage
-  text: string
+  group_id?: number
   type: QuestionType
   difficulty: QuestionDifficulty
-  options: string[]
-  correct_answer: string
   tags: string[]
+  position?: number
+  item?: QQuestionItem
+  choice?: QMultipleChoice
   created_at: string
   updated_at: string
 }
 
 export interface TestQuestion {
-  test_id: string
-  question_id: string
+  test_id: number
+  question_id: number
   question?: Question
   position: number
 }
 
 export interface Test {
-  id: string
-  bank_id: string
+  id: number
+  bank_id: number
   name: string
   description: string
   config: TestConfig
@@ -97,8 +124,8 @@ export interface Test {
 }
 
 export interface TestAttempt {
-  id: string
-  test_id: string
+  id: number
+  test_id: number
   test?: Test
   answers: Record<string, string>
   score?: number
@@ -108,15 +135,8 @@ export interface TestAttempt {
 }
 
 export interface QuestionFilter {
-  category_ids?: string[]
+  category_ids?: number[]
   difficulty?: string
-  types?: string[]
+  type?: string
   tags?: string[]
-}
-
-export interface Paginated<T> {
-  data: T[]
-  total: number
-  page: number
-  limit: number
 }

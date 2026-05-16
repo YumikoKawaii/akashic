@@ -2,8 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { attemptsApi } from '../api/attempts'
 
 export const attemptKeys = {
-  detail:  (id: string)                      => ['attempts', id] as const,
-  byTest:  (bankId: string, testId: string)  => ['attempts', 'test', bankId, testId] as const,
+  detail:  (id: string)                            => ['attempts', id] as const,
+  byTest:  (bankId: string, testId: number | string) => ['attempts', 'test', bankId, String(testId)] as const,
 }
 
 export function useAttempt(id: string) {
@@ -14,7 +14,7 @@ export function useAttempt(id: string) {
   })
 }
 
-export function useTestAttempts(bankId: string, testId: string) {
+export function useTestAttempts(bankId: string, testId: number | string) {
   return useQuery({
     queryKey: attemptKeys.byTest(bankId, testId),
     queryFn:  () => attemptsApi.listByTest(bankId, testId),
@@ -24,7 +24,7 @@ export function useTestAttempts(bankId: string, testId: string) {
 
 export function useStartAttempt() {
   return useMutation({
-    mutationFn: ({ bankId, testId }: { bankId: string; testId: string }) =>
+    mutationFn: ({ bankId, testId }: { bankId: string; testId: number | string }) =>
       attemptsApi.start(bankId, testId),
   })
 }

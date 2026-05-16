@@ -14,7 +14,7 @@ export default function Sidebar() {
   const [creating, setCreating] = useState(false)
   const [newName,  setNewName]  = useState('')
 
-  const goTo = (id: string) => {
+  const goTo = (id: number) => {
     navigate(`/banks/${id}`)
     closeSidebar()
   }
@@ -29,11 +29,11 @@ export default function Sidebar() {
     goTo(bank.id)
   }
 
-  const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: number, name: string) => {
     e.stopPropagation()
     if (!confirm(`Delete "${name}"? This will remove all questions and tests inside it.`)) return
-    await deleteBank.mutateAsync(id)
-    if (bankId === id) navigate('/banks')
+    await deleteBank.mutateAsync(String(id))
+    if (bankId === String(id)) navigate('/banks')
   }
 
   return (
@@ -82,7 +82,7 @@ export default function Sidebar() {
       {banks.map(b => (
         <div
           key={b.id}
-          className={`sidebar-item ${b.id === bankId ? 'active' : ''}`}
+          className={`sidebar-item ${String(b.id) === bankId ? 'active' : ''}`}
           onClick={() => goTo(b.id)}
           style={{ display: 'flex', alignItems: 'center', gap: 8 }}
         >

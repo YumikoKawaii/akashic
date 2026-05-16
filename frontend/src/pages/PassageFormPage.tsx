@@ -5,6 +5,7 @@ import { useCreatePassage, useUpdatePassage, usePassage } from '../hooks/usePass
 import { FormField, Input, Textarea } from '../components/ui/FormField'
 import Select from '../components/ui/Select'
 import OrnatePanel from '../components/ui/OrnatePanel'
+import { QuestionDifficulty } from '../types'
 
 const DIFF_OPTIONS = [
   { value: 'easy',   label: 'Easy' },
@@ -29,8 +30,8 @@ export default function PassageFormPage() {
 
   const [title,      setTitle]      = useState(existing?.title ?? '')
   const [body,       setBody]       = useState(existing?.body ?? '')
-  const [difficulty, setDifficulty] = useState(existing?.difficulty ?? 'medium')
-  const [categoryId, setCategoryId] = useState(existing?.category_id ?? (categories[0]?.id ?? ''))
+  const [difficulty, setDifficulty] = useState<QuestionDifficulty>(existing?.difficulty ?? 'medium')
+  const [categoryId, setCategoryId] = useState<number>(existing?.category_id ?? (categories[0]?.id ?? 0))
 
   const isPending = create.isPending || update.isPending
 
@@ -64,14 +65,14 @@ export default function PassageFormPage() {
             </FormField>
             <FormField label="Category">
               <Select
-                value={categoryId}
-                onChange={setCategoryId}
-                options={categories.map(c => ({ value: c.id, label: c.name }))}
+                value={String(categoryId)}
+                onChange={v => setCategoryId(Number(v))}
+                options={categories.map(c => ({ value: String(c.id), label: c.name }))}
                 placeholder="Select category"
               />
             </FormField>
             <FormField label="Difficulty">
-              <Select value={difficulty} onChange={v => setDifficulty(v as 'easy' | 'medium' | 'hard')} options={DIFF_OPTIONS} />
+              <Select value={difficulty} onChange={v => setDifficulty(v as QuestionDifficulty)} options={DIFF_OPTIONS} />
             </FormField>
           </div>
 

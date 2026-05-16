@@ -13,6 +13,8 @@ export default function QuestionCard({ question, index, bankId }: Props) {
   const navigate = useNavigate()
   const del      = useDeleteQuestion(bankId)
 
+  const content = question.item?.content ?? question.choice?.content ?? ''
+
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (confirm('Delete this question?')) del.mutate(question.id)
@@ -31,7 +33,7 @@ export default function QuestionCard({ question, index, bankId }: Props) {
 
         <div style={{ flex: 1 }}>
           <p style={{ fontSize: '0.95rem', lineHeight: 1.55, color: 'var(--ink)' }}>
-            {question.text}
+            {content}
           </p>
           <div className="flex flex-wrap gap-2 mt-2 items-center">
             <TypeTag type={question.type} />
@@ -41,10 +43,7 @@ export default function QuestionCard({ question, index, bankId }: Props) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-          style={{ '--tw-opacity': 0 } as React.CSSProperties}
-          onClick={e => e.stopPropagation()}
-        >
+        <div className="flex flex-col gap-1" onClick={e => e.stopPropagation()}>
           <button
             className="btn-icon"
             onClick={() => navigate(`/banks/${bankId}/questions/${question.id}/edit`)}

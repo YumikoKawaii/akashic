@@ -21,9 +21,7 @@ export default function TestCard({ test, bankId }: Props) {
   }
 
   const cfg   = test.config
-  const total = cfg.total_count && cfg.total_count > 0
-    ? cfg.total_count
-    : (cfg.easy_count ?? 0) + (cfg.medium_count ?? 0) + (cfg.hard_count ?? 0)
+  const total = (cfg.easy_count ?? 0) + (cfg.medium_count ?? 0) + (cfg.hard_count ?? 0)
 
   const completed = attempts.filter(a => a.completed_at)
 

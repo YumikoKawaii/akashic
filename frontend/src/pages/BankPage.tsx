@@ -6,8 +6,6 @@ import { useQuestions } from '../hooks/useQuestions'
 import { useTests } from '../hooks/useTests'
 import { useCategories } from '../hooks/useCategories'
 import { usePassages, useDeletePassage } from '../hooks/usePassages'
-import { useGenerateTest } from '../hooks/useTests'
-import { useStartAttempt } from '../hooks/useAttempts'
 import { useAuth } from '../contexts/AuthContext'
 import { QuestionFilter } from '../types'
 import { questionsApi } from '../api/questions'
@@ -19,6 +17,18 @@ import OrnatePanel from '../components/ui/OrnatePanel'
 import { FormField, Input } from '../components/ui/FormField'
 
 type Tab = 'questions' | 'tests' | 'passages'
+
+const QUESTION_TYPES = [
+  { value: 'mcq',                  label: 'MCQ' },
+  { value: 'tf_ng',                label: 'T/F/NG' },
+  { value: 'yn_ng',                label: 'Y/N/NG' },
+  { value: 'sentence_completion',  label: 'Sentence' },
+  { value: 'form_completion',      label: 'Form' },
+  { value: 'short_answer',         label: 'Short Answer' },
+  { value: 'matching_headings',    label: 'Match Headings' },
+  { value: 'matching_information', label: 'Match Info' },
+  { value: 'matching_features',    label: 'Match Features' },
+]
 
 export default function BankPage() {
   const { bankId = '' }       = useParams<{ bankId: string }>()
@@ -33,36 +43,24 @@ export default function BankPage() {
   const { data: passages = [] }    = usePassages(bankId)
   const { data: members = [] }     = useMembers(bankId)
   const deletePassage              = useDeletePassage(bankId)
-  const generateTest               = useGenerateTest(bankId)
-  const startAttempt               = useStartAttempt()
   const addMember                  = useAddMember(bankId)
   const removeMember               = useRemoveMember(bankId)
 
-  const myRole = bank?.my_role ?? 'viewer'
-  const canEdit = myRole === 'owner' || myRole === 'editor'
-  const canGenerate = !!bank
-  const isOwner = myRole === 'owner'
+  const myRole    = bank?.my_role ?? 'viewer'
+  const canEdit   = myRole === 'owner' || myRole === 'editor'
+  const isOwner   = myRole === 'owner'
 
   const [tab,           setTab]           = useState<Tab>((searchParams.get('tab') as Tab) ?? 'questions')
   const [filter,        setFilter]        = useState<QuestionFilter>({})
-  const [page,          setPage]          = useState(1)
-  const [pageInput,     setPageInput]     = useState('1')
   const [importing,     setImporting]     = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
+  const [pConfirmDel,   setPConfirmDel]   = useState<number | null>(null)
 
-  const [pConfirmDel, setPConfirmDel] = useState<string | null>(null)
+  const [shareOpen,  setShareOpen]  = useState(false)
+  const [shareEmail, setShareEmail] = useState('')
+  const [shareRole,  setShareRole]  = useState<'editor' | 'viewer'>('viewer')
+  const [shareError, setShareError] = useState<string | null>(null)
 
-  // Share panel state
-  const [shareOpen,    setShareOpen]    = useState(false)
-  const [shareEmail,   setShareEmail]   = useState('')
-  const [shareRole,    setShareRole]    = useState<'editor' | 'viewer'>('viewer')
-  const [shareError,   setShareError]   = useState<string | null>(null)
-
-  // Passage test generate form state
-  const [pgName,   setPgName]   = useState('')
-  const [pgEasy,   setPgEasy]   = useState(0)
-  const [pgMedium, setPgMedium] = useState(1)
-  const [pgHard,   setPgHard]   = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,10 +99,7 @@ export default function BankPage() {
     setImporting(false)
   }
 
-  const { data: paged } = useQuestions(bankId, filter, page)
-  const questions = paged?.data ?? []
-  const total     = paged?.total ?? 0
-  const totalPages = paged ? Math.ceil(paged.total / paged.limit) : 1
+  const { data: questions = [] } = useQuestions(bankId, filter)
 
   if (!bank) return (
     <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.8rem', letterSpacing: '0.2em' }}>
@@ -112,33 +107,26 @@ export default function BankPage() {
     </div>
   )
 
-
-  const toggleFilter = (key: 'difficulty', val: string) => {
-    setPage(1); setPageInput('1')
-    setFilter(f => ({ ...f, [key]: f[key] === val ? undefined : val }))
+  const toggleTypeFilter = (val: string) => {
+    setFilter(f => ({ ...f, type: f.type === val ? undefined : val }))
   }
 
-  const toggleTypeFilter = (val: string) => {
-    setPage(1); setPageInput('1')
-    setFilter(f => {
-      const current = f.types ?? []
-      return { ...f, types: current.includes(val) ? current.filter(t => t !== val) : [...current, val] }
-    })
+  const toggleDiffFilter = (val: string) => {
+    setFilter(f => ({ ...f, difficulty: f.difficulty === val ? undefined : val }))
   }
 
   return (
     <>
-      {/* Page header */}
       <div className="page-header">
         <div>
           <h1 className="page-title">{bank.name} — <span>Question Bank</span></h1>
           <p className="page-meta">
-            {total} questions · {categories.length} categories
+            {questions.length} questions · {categories.length} categories
             <span style={{
               marginLeft: 10,
               fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.12em',
               padding: '2px 7px', border: '1px solid var(--border-dim)',
-              color: myRole === 'owner' ? 'var(--gold)' : myRole === 'editor' ? 'var(--ink-dim)' : 'var(--ink-dim)',
+              color: myRole === 'owner' ? 'var(--gold)' : 'var(--ink-dim)',
               textTransform: 'uppercase',
             }}>
               {myRole}
@@ -168,7 +156,6 @@ export default function BankPage() {
         </div>
       </div>
 
-      {/* Share panel */}
       {shareOpen && isOwner && (
         <OrnatePanel>
           <div className="section-title" style={{ marginBottom: 14 }}>Share Bank</div>
@@ -234,12 +221,11 @@ export default function BankPage() {
         </OrnatePanel>
       )}
 
-      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { value: total,                    label: 'Total',      color: 'var(--gold)' },
-          { value: categories.length,        label: 'Categories', color: 'var(--ink-dim)' },
-          { value: tests.length,             label: 'Tests',      color: 'var(--ink-dim)' },
+          { value: questions.length, label: 'Total',      color: 'var(--gold)' },
+          { value: categories.length, label: 'Categories', color: 'var(--ink-dim)' },
+          { value: tests.length,     label: 'Tests',      color: 'var(--ink-dim)' },
         ].map(s => (
           <div key={s.label} className="stat-card">
             <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
@@ -251,13 +237,11 @@ export default function BankPage() {
       {importMessage && (
         <div
           style={{
-            padding: '10px 16px',
-            borderRadius: 4,
+            padding: '10px 16px', borderRadius: 4,
             border: `1px solid ${importMessage.startsWith('Import failed') ? '#b03030' : '#2a8a3a'}`,
             background: importMessage.startsWith('Import failed') ? 'rgba(176,48,48,0.08)' : 'rgba(42,138,58,0.08)',
             color: importMessage.startsWith('Import failed') ? '#b03030' : '#2a8a3a',
-            fontSize: '0.85rem',
-            cursor: 'pointer',
+            fontSize: '0.85rem', cursor: 'pointer',
           }}
           onClick={() => setImportMessage(null)}
         >
@@ -267,26 +251,23 @@ export default function BankPage() {
 
       {tab === 'questions' && (
         <>
-          {/* Generate form */}
-          {canGenerate && <GenerateTestForm bank={bank!} categories={categories} />}
+          {bank && <GenerateTestForm bank={bank} categories={categories} />}
 
-          {/* Filters */}
           <div className="flex gap-2 flex-wrap items-center">
             <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>Filter</span>
-            {(['mcq', 'true_false', 'open'] as const).map(t => (
-              <button key={t} className={`filter-chip ${filter.types?.includes(t) ? 'active' : ''}`} onClick={() => toggleTypeFilter(t)}>
-                {t === 'mcq' ? 'MCQ' : t === 'true_false' ? 'True / False' : 'Open'}
+            {QUESTION_TYPES.map(t => (
+              <button key={t.value} className={`filter-chip ${filter.type === t.value ? 'active' : ''}`} onClick={() => toggleTypeFilter(t.value)}>
+                {t.label}
               </button>
             ))}
             <div style={{ width: 1, height: 18, background: 'var(--border-dim)' }} />
             {(['easy', 'medium', 'hard'] as const).map(d => (
-              <button key={d} className={`filter-chip ${filter.difficulty === d ? 'active' : ''}`} onClick={() => toggleFilter('difficulty', d)}>
+              <button key={d} className={`filter-chip ${filter.difficulty === d ? 'active' : ''}`} onClick={() => toggleDiffFilter(d)}>
                 {d}
               </button>
             ))}
           </div>
 
-          {/* Questions */}
           <div className="flex items-center justify-between">
             <div className="section-title" style={{ marginBottom: 0 }}>Questions</div>
             {canEdit && <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}/questions/new`)}>＋ Add Question</button>}
@@ -304,47 +285,6 @@ export default function BankPage() {
                 <QuestionCard key={q.id} question={q} index={i} bankId={bankId} />
               ))
             )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2" style={{ marginTop: 8 }}>
-                <button
-                  className="btn btn-ghost"
-                  onClick={() => { setPage(p => { setPageInput(String(p - 1)); return p - 1 }) }}
-                  disabled={page <= 1}
-                  style={{ padding: '6px 14px', fontSize: '0.8rem' }}
-                >
-                  ← Prev
-                </button>
-                <input
-                  type="number"
-                  min={1}
-                  max={totalPages}
-                  value={pageInput}
-                  onChange={e => setPageInput(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      const v = Math.max(1, Math.min(totalPages, parseInt(pageInput, 10)))
-                      if (!isNaN(v)) { setPage(v); setPageInput(String(v)) }
-                    }
-                  }}
-                  onBlur={() => setPageInput(String(page))}
-                  className="form-input"
-                  style={{ width: 56, textAlign: 'center', padding: '5px 4px' }}
-                />
-                <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'var(--ink-dim)', letterSpacing: '0.1em' }}>
-                  / {totalPages}
-                </span>
-                <button
-                  className="btn btn-ghost"
-                  onClick={() => { setPage(p => { setPageInput(String(p + 1)); return p + 1 }) }}
-                  disabled={page >= totalPages}
-                  style={{ padding: '6px 14px', fontSize: '0.8rem' }}
-                >
-                  Next →
-                </button>
-              </div>
-            )}
           </div>
         </>
       )}
@@ -352,51 +292,6 @@ export default function BankPage() {
       {tab === 'passages' && (
         <>
           <OrnateDivider />
-
-          {/* Generate passage test */}
-          {canGenerate && <OrnatePanel>
-            <div className="section-title" style={{ marginBottom: 14 }}>Generate Passage Test</div>
-            <div className="flex flex-wrap gap-4 items-end">
-              <FormField label="Test Name">
-                <Input value={pgName} onChange={e => setPgName(e.target.value)} placeholder={`${bank?.name} — ${new Date().toLocaleString()}`} />
-              </FormField>
-              {(['easy', 'medium', 'hard'] as const).map(d => (
-                <FormField key={d} label={d.charAt(0).toUpperCase() + d.slice(1)}>
-                  <input
-                    type="number" min={0} max={20}
-                    value={d === 'easy' ? pgEasy : d === 'medium' ? pgMedium : pgHard}
-                    onChange={e => {
-                      const v = Math.max(0, Number(e.target.value))
-                      if (d === 'easy') setPgEasy(v)
-                      else if (d === 'medium') setPgMedium(v)
-                      else setPgHard(v)
-                    }}
-                    className="form-input"
-                    style={{ width: 56, textAlign: 'center', padding: '7px 4px' }}
-                  />
-                </FormField>
-              ))}
-              <button
-                className="btn btn-primary"
-                disabled={pgEasy + pgMedium + pgHard === 0 || generateTest.isPending || startAttempt.isPending}
-                style={{ height: 38, padding: '0 20px', whiteSpace: 'nowrap' }}
-                onClick={async () => {
-                  const test = await generateTest.mutateAsync({
-                    name: pgName.trim() || `${bank?.name} — ${new Date().toLocaleString()}`,
-                    config: { easy_count: pgEasy, medium_count: pgMedium, hard_count: pgHard, types: ['passage'] },
-                  })
-                  const attempt = await startAttempt.mutateAsync({ bankId, testId: test.id })
-                  navigate(`/attempts/${attempt.id}`)
-                }}
-              >
-                {generateTest.isPending || startAttempt.isPending ? '…' : '⚔ Generate'}
-              </button>
-            </div>
-          </OrnatePanel>}
-
-          <OrnateDivider />
-
-          {/* Passage list */}
           <div className="flex items-center justify-between">
             <div className="section-title" style={{ marginBottom: 0 }}>Passages ({passages.length})</div>
             {canEdit && <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}/passages/new`)}>＋ Add Passage</button>}
@@ -413,7 +308,7 @@ export default function BankPage() {
                     <div>
                       <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'var(--ink)' }}>{p.title}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--ink-dim)', marginTop: 2 }}>
-                        {p.category?.name} · {p.difficulty} · {p.questions?.length ?? 0} questions
+                        {p.category?.name} · {p.difficulty}
                       </div>
                     </div>
                     {canEdit && (
@@ -421,7 +316,7 @@ export default function BankPage() {
                         {pConfirmDel === p.id ? (
                           <>
                             <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px', color: '#b03030', borderColor: 'rgba(176,48,48,0.4)' }}
-                              onClick={() => { deletePassage.mutate(p.id); setPConfirmDel(null) }}>Yes</button>
+                              onClick={() => { deletePassage.mutate(String(p.id)); setPConfirmDel(null) }}>Yes</button>
                             <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px' }}
                               onClick={() => setPConfirmDel(null)}>Cancel</button>
                           </>

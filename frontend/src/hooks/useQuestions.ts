@@ -1,18 +1,17 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
-import { questionsApi } from '../api/questions'
-import { Question, QuestionFilter } from '../types'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { questionsApi, CreateQuestionPayload, UpdateQuestionPayload } from '../api/questions'
+import { QuestionFilter } from '../types'
 
 export const questionKeys = {
   all:    (bankId: string, filter?: QuestionFilter) => ['questions', bankId, filter] as const,
   detail: (bankId: string, id: string)              => ['questions', bankId, id] as const,
 }
 
-export function useQuestions(bankId: string, filter: QuestionFilter = {}, page = 1) {
+export function useQuestions(bankId: string, filter: QuestionFilter = {}) {
   return useQuery({
-    queryKey:        [...questionKeys.all(bankId, filter), page],
-    queryFn:         () => questionsApi.list(bankId, filter, page),
-    enabled:         !!bankId,
-    placeholderData: keepPreviousData,
+    queryKey: questionKeys.all(bankId, filter),
+    queryFn:  () => questionsApi.list(bankId, filter),
+    enabled:  !!bankId,
   })
 }
 
@@ -27,8 +26,7 @@ export function useQuestion(bankId: string, id: string) {
 export function useCreateQuestion(bankId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Omit<Question, 'id' | 'bank_id' | 'category' | 'created_at' | 'updated_at'>) =>
-      questionsApi.create(bankId, data),
+    mutationFn: (data: CreateQuestionPayload) => questionsApi.create(bankId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['questions', bankId] }),
   })
 }
@@ -36,7 +34,7 @@ export function useCreateQuestion(bankId: string) {
 export function useUpdateQuestion(bankId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Question> }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdateQuestionPayload }) =>
       questionsApi.update(bankId, id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['questions', bankId] }),
   })
@@ -45,7 +43,7 @@ export function useUpdateQuestion(bankId: string) {
 export function useDeleteQuestion(bankId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => questionsApi.delete(bankId, id),
+    mutationFn: (id: number | string) => questionsApi.delete(bankId, String(id)),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['questions', bankId] }),
   })
 }

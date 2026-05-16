@@ -35,7 +35,7 @@ export function useGenerateTest(bankId: string) {
 export function useDeleteTest(bankId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => testsApi.delete(bankId, id),
+    mutationFn: (id: number | string) => testsApi.delete(bankId, String(id)),
     onSuccess: () => qc.invalidateQueries({ queryKey: testKeys.all(bankId) }),
   })
 }
