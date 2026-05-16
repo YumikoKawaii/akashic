@@ -12,6 +12,7 @@ type Config struct {
 	DBPassword string
 	DBName     string
 	DBSchema   string
+	DBSSLMode  string
 	ServerPort string
 	StaticDir  string
 
@@ -31,6 +32,7 @@ func Load() *Config {
 		DBPassword: getEnv("DB_PASSWORD", "akashic"),
 		DBName:     getEnv("DB_NAME", "postgres"),
 		DBSchema:   getEnv("DB_SCHEMA", "akashic"),
+		DBSSLMode:  getEnv("DB_SSLMODE", "disable"),
 		ServerPort: getEnv("SERVER_PORT", "8080"),
 		StaticDir:  getEnv("STATIC_DIR", "./static"),
 
@@ -45,8 +47,8 @@ func Load() *Config {
 
 func (c *Config) DSN() string {
 	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=require",
-		c.DBHost, c.DBPort, c.DBUser, c.DBPassword, c.DBName,
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		c.DBHost, c.DBPort, c.DBUser, c.DBPassword, c.DBName, c.DBSSLMode,
 	)
 	if c.DBSchema != "" {
 		dsn += " search_path=" + c.DBSchema
@@ -56,8 +58,8 @@ func (c *Config) DSN() string {
 
 func (c *Config) MigrateURL() string {
 	url := fmt.Sprintf(
-		"postgresql://%s:%s@%s:%s/%s?sslmode=require",
-		c.DBUser, c.DBPassword, c.DBHost, c.DBPort, c.DBName,
+		"postgresql://%s:%s@%s:%s/%s?sslmode=%s",
+		c.DBUser, c.DBPassword, c.DBHost, c.DBPort, c.DBName, c.DBSSLMode,
 	)
 	if c.DBSchema != "" {
 		url += "&search_path=" + c.DBSchema

@@ -85,8 +85,8 @@ func NewRouter(h Handlers) *gin.Engine {
 		bank.DELETE("/tests/:id", h.Test.Delete)
 		bank.PUT("/tests/:id/restore", h.Test.Restore)
 
-		bank.GET("/tests/:testId/attempts", h.Attempt.ListByTest)
-		bank.POST("/tests/:testId/attempts", h.Attempt.Start)
+		bank.GET("/tests/:id/attempts", h.Attempt.ListByTest)
+		bank.POST("/tests/:id/attempts", h.Attempt.Start)
 	}
 
 	attempts := v1.Group("/attempts")

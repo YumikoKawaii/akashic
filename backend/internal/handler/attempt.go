@@ -20,7 +20,7 @@ func (h *AttemptHandler) Start(c *gin.Context) {
 	if !ok2 {
 		return
 	}
-	testID, ok2 := parseID(c, "testId")
+	testID, ok2 := parseID(c, "id")
 	if !ok2 {
 		return
 	}
@@ -37,7 +37,7 @@ func (h *AttemptHandler) ListByTest(c *gin.Context) {
 	if !ok2 {
 		return
 	}
-	testID, ok2 := parseID(c, "testId")
+	testID, ok2 := parseID(c, "id")
 	if !ok2 {
 		return
 	}
