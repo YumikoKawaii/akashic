@@ -15,9 +15,12 @@ function spin(dur: string, dir: 'cw' | 'ccw' = 'cw'): React.CSSProperties {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function MagicCircle({ style, className }: {
+type Variant = 'full' | 'outer' | 'inner'
+
+export default function MagicCircle({ style, className, variant = 'full' }: {
   style?: React.CSSProperties
   className?: string
+  variant?: Variant
 }) {
   const ro = 90   // outer ring
   const rd = 78   // dashed ring
@@ -62,9 +65,8 @@ export default function MagicCircle({ style, className }: {
       fill="currentColor" fillOpacity="0.45" stroke="none" />
   ))
 
-  // hexagram: two overlapping equilateral triangles
-  const hexUp   = [[-90, rh], [30, rh], [150, rh]].map(([d, r]) => `${px(r,d).toFixed(2)},${py(r,d).toFixed(2)}`).join(' ')
-  const hexDown  = [[90, rh], [210, rh], [330, rh]].map(([d, r]) => `${px(r,d).toFixed(2)},${py(r,d).toFixed(2)}`).join(' ')
+  const hexUp  = [[-90, rh], [30, rh], [150, rh]].map(([d, r]) => `${px(r,d).toFixed(2)},${py(r,d).toFixed(2)}`).join(' ')
+  const hexDown = [[90, rh], [210, rh], [330, rh]].map(([d, r]) => `${px(r,d).toFixed(2)},${py(r,d).toFixed(2)}`).join(' ')
 
   return (
     <svg
@@ -79,38 +81,38 @@ export default function MagicCircle({ style, className }: {
     >
       <g transform="translate(100,100)" strokeOpacity="0.75">
 
-        {/* Outer ring + ticks + cardinal diamonds — slow CW */}
-        <g style={spin('90s')}>
-          <circle r={ro} strokeWidth="0.8" />
-          {ticks}
-          {diamonds}
-        </g>
+        {/* ── outer variant: big rings ── */}
+        {variant !== 'inner' && <>
+          <g style={spin('90s')}>
+            <circle r={ro} strokeWidth="0.8" />
+            {ticks}
+            {diamonds}
+          </g>
+          <circle r={rd} strokeWidth="0.5" strokeDasharray="3 7" style={spin('70s', 'ccw')} />
+          <g style={spin('50s')}>
+            <polygon points={`${sq},${sq} ${-sq},${sq} ${-sq},${-sq} ${sq},${-sq}`} strokeWidth="0.7" />
+            <polygon points={`${rg},0 0,${rg} ${-rg},0 0,${-rg}`} strokeWidth="0.7" />
+          </g>
+        </>}
 
-        {/* Dashed ring — CCW */}
-        <circle r={rd} strokeWidth="0.5" strokeDasharray="3 7" style={spin('70s', 'ccw')} />
+        {/* ── full variant: middle layer ── */}
+        {variant === 'full' && <>
+          <circle r={rm} strokeWidth="0.8" strokeOpacity="0.5" />
+          {midDots}
+        </>}
 
-        {/* Octagram (two squares) — medium CW */}
-        <g style={spin('50s')}>
-          <polygon points={`${sq},${sq} ${-sq},${sq} ${-sq},${-sq} ${sq},${-sq}`} strokeWidth="0.7" />
-          <polygon points={`${rg},0 0,${rg} ${-rg},0 0,${-rg}`} strokeWidth="0.7" />
-        </g>
-
-        {/* Middle ring + 8 dots — static */}
-        <circle r={rm} strokeWidth="0.8" strokeOpacity="0.5" />
-        {midDots}
-
-        {/* Hexagram — medium CCW */}
-        <g style={spin('38s', 'ccw')}>
-          <polygon points={hexUp}   strokeWidth="0.7" />
-          <polygon points={hexDown} strokeWidth="0.7" />
-        </g>
-
-        {/* Inner ring */}
-        <circle r={ri} strokeWidth="0.7" strokeOpacity="0.5" />
-
-        {/* Center */}
-        <circle r={9} strokeWidth="0.5" strokeOpacity="0.4" />
-        <circle r={4} fill="currentColor" fillOpacity="0.3" stroke="none" />
+        {/* ── inner variant: tight geometry ── */}
+        {variant !== 'outer' && <>
+          <circle r={rm} strokeWidth="0.8" strokeOpacity={variant === 'inner' ? 0.75 : 0.5} />
+          {variant === 'inner' && midDots}
+          <g style={spin('38s', 'ccw')}>
+            <polygon points={hexUp}   strokeWidth="0.7" />
+            <polygon points={hexDown} strokeWidth="0.7" />
+          </g>
+          <circle r={ri} strokeWidth="0.7" strokeOpacity="0.5" />
+          <circle r={9}  strokeWidth="0.5" strokeOpacity="0.4" />
+          <circle r={4}  fill="currentColor" fillOpacity="0.3" stroke="none" />
+        </>}
 
       </g>
     </svg>
