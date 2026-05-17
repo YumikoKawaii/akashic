@@ -182,3 +182,10 @@ export interface QuestionPage {
   page:      number
   page_size: number
 }
+
+export interface PassagePage {
+  data:      Passage[]
+  total:     number
+  page:      number
+  page_size: number
+}

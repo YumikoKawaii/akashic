@@ -1,9 +1,11 @@
 import client from './client'
-import { Passage } from '../types'
+import { Passage, PassagePage } from '../types'
 
 export const passagesApi = {
   list: (bankId: string) =>
-    client.get<Passage[]>(`/banks/${bankId}/passages`).then(r => r.data),
+    client.get<Passage[]>(`/banks/${bankId}/passages`, { params: { all: 'true' } }).then(r => r.data),
+  listPaged: (bankId: string, page = 1, pageSize = 10) =>
+    client.get<PassagePage>(`/banks/${bankId}/passages`, { params: { page, page_size: pageSize } }).then(r => r.data),
   get: (bankId: string, id: string) =>
     client.get<Passage>(`/banks/${bankId}/passages/${id}`).then(r => r.data),
   create: (bankId: string, data: { category_id: number; title: string; difficulty: string }) =>

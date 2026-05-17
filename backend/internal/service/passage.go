@@ -26,6 +26,24 @@ func (s *PassageService) List(bankID int, f repository.PassageFilter) ([]model.P
 	return s.repo.FindByBank(bankID, f)
 }
 
+type PassagePage struct {
+	Data     []model.Passage `json:"data"`
+	Total    int64           `json:"total"`
+	Page     int             `json:"page"`
+	PageSize int             `json:"page_size"`
+}
+
+func (s *PassageService) ListPaged(bankID int, f repository.PassageFilter, page, pageSize int) (*PassagePage, error) {
+	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+		return nil, err
+	}
+	ps, total, err := s.repo.FindByBankPaged(bankID, f, page, pageSize)
+	if err != nil {
+		return nil, err
+	}
+	return &PassagePage{Data: ps, Total: total, Page: page, PageSize: pageSize}, nil
+}
+
 func (s *PassageService) GetByID(bankID, id int) (*model.Passage, error) {
 	p, err := s.repo.FindByID(id)
 	if err != nil {

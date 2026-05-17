@@ -5,7 +5,7 @@ import { useBank, useMembers, useAddMember, useRemoveMember } from '../hooks/use
 import { useQuestions } from '../hooks/useQuestions'
 import { useTests } from '../hooks/useTests'
 import { useCategories } from '../hooks/useCategories'
-import { usePassages, useDeletePassage } from '../hooks/usePassages'
+import { usePassages, usePassagesPaged, useDeletePassage } from '../hooks/usePassages'
 import { useAuth } from '../contexts/AuthContext'
 import { QuestionFilter } from '../types'
 import { questionsApi } from '../api/questions'
@@ -59,7 +59,7 @@ export default function BankPage() {
   const { data: bank }             = useBank(bankId)
   const { data: categories = [] }  = useCategories(bankId)
   const { data: tests = [] }       = useTests(bankId)
-  const { data: passages = [] }    = usePassages(bankId)
+  const { data: passages = [] }    = usePassages(bankId)   // full list for GenerateTab
   const { data: members = [] }     = useMembers(bankId)
   const deletePassage              = useDeletePassage(bankId)
   const addMember                  = useAddMember(bankId)
@@ -72,6 +72,12 @@ export default function BankPage() {
   const [tab,           setTab]           = useState<Tab>((searchParams.get('tab') as Tab) ?? 'questions')
   const [filter,        setFilter]        = useState<QuestionFilter>({})
   const [page,          setPage]          = useState(1)
+  const [passagePage,   setPassagePage]   = useState(1)
+
+  const { data: passagePageData }  = usePassagesPaged(bankId, passagePage)
+  const pagedPassages      = passagePageData?.data      ?? []
+  const totalPassages      = passagePageData?.total     ?? passages.length
+  const totalPassagePages  = Math.max(1, Math.ceil(totalPassages / (passagePageData?.page_size ?? 10)))
   const [importing,     setImporting]     = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [pConfirmDel,   setPConfirmDel]   = useState<number | null>(null)
@@ -380,19 +386,23 @@ export default function BankPage() {
         <>
           <OrnateDivider />
           <div className="flex items-center justify-between">
-            <div className="section-title" style={{ marginBottom: 0 }}>Passages ({passages.length})</div>
+            <div className="section-title" style={{ marginBottom: 0 }}>
+              Passages ({totalPassages}
+              {totalPassagePages > 1 && <span style={{ fontWeight: 400, fontSize: '0.7rem', color: 'var(--ink-dim)', letterSpacing: '0.05em' }}> — page {passagePage}/{totalPassagePages}</span>}
+              )
+            </div>
             {canEdit && (
               <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}/passages/new`)}>＋ Add Passage</button>
             )}
           </div>
 
-          {passages.length === 0 ? (
+          {pagedPassages.length === 0 ? (
             <div style={{ color: 'var(--ink-dim)', fontSize: '0.88rem', padding: '24px 0', textAlign: 'center' }}>
               No passages yet. Import a JSON/YAML file or add one manually.
             </div>
           ) : (
             <div className="flex flex-col gap-3" style={{ maxWidth: 760 }}>
-              {passages.map(p => {
+              {pagedPassages.map(p => {
                 const dc = DIFF_COLORS[p.difficulty] ?? DIFF_COLORS.medium
                 return (
                   <div key={p.id} style={{ position: 'relative', overflow: 'hidden', border: '1px solid var(--border-dim)', padding: '16px 20px', background: 'var(--bg-card)' }}>
@@ -461,6 +471,46 @@ export default function BankPage() {
                   </div>
                 )
               })}
+            </div>
+          )}
+
+          {totalPassagePages > 1 && (
+            <div className="flex items-center justify-center gap-3" style={{ paddingTop: 8, maxWidth: 760 }}>
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: '0.7rem', padding: '5px 14px' }}
+                onClick={() => setPassagePage(p => p - 1)}
+                disabled={passagePage === 1}
+              >
+                ← Prev
+              </button>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {Array.from({ length: totalPassagePages }, (_, i) => i + 1).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setPassagePage(p)}
+                    style={{
+                      width: 28, height: 28,
+                      fontFamily: 'Cinzel, serif', fontSize: '0.6rem',
+                      border: '1px solid',
+                      borderColor: p === passagePage ? 'var(--gold)' : 'var(--border-dim)',
+                      background: p === passagePage ? 'var(--gold)' : 'transparent',
+                      color: p === passagePage ? 'var(--bg)' : 'var(--ink-dim)',
+                      cursor: 'pointer', borderRadius: 2,
+                    }}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: '0.7rem', padding: '5px 14px' }}
+                onClick={() => setPassagePage(p => p + 1)}
+                disabled={passagePage >= totalPassagePages}
+              >
+                Next →
+              </button>
             </div>
           )}
         </>

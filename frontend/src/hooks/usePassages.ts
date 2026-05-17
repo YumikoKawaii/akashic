@@ -1,8 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { passagesApi } from '../api/passages'
 
+export const PASSAGE_PAGE_SIZE = 10
+
 export const passageKeys = {
   all:    (bankId: string) => ['passages', bankId] as const,
+  paged:  (bankId: string, page: number) => ['passages', bankId, 'paged', page] as const,
   detail: (bankId: string, id: string) => ['passages', bankId, id] as const,
 }
 
@@ -11,6 +14,15 @@ export function usePassages(bankId: string) {
     queryKey: passageKeys.all(bankId),
     queryFn:  () => passagesApi.list(bankId),
     enabled:  !!bankId,
+  })
+}
+
+export function usePassagesPaged(bankId: string, page = 1) {
+  return useQuery({
+    queryKey: passageKeys.paged(bankId, page),
+    queryFn:  () => passagesApi.listPaged(bankId, page, PASSAGE_PAGE_SIZE),
+    enabled:  !!bankId,
+    placeholderData: (prev) => prev,
   })
 }
 
