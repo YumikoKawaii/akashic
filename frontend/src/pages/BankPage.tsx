@@ -16,6 +16,7 @@ import OrnateDivider from '../components/ui/OrnateDivider'
 import OrnatePanel from '../components/ui/OrnatePanel'
 import { FormField, Input } from '../components/ui/FormField'
 import { Spinner } from '../components/ui/MagicCircle'
+import MagicCircle from '../components/ui/MagicCircle'
 
 type Tab = 'questions' | 'passages' | 'generate' | 'tests'
 
@@ -332,8 +333,16 @@ export default function BankPage() {
               {passages.map(p => {
                 const dc = DIFF_COLORS[p.difficulty] ?? DIFF_COLORS.medium
                 return (
-                  <div key={p.id} style={{ border: '1px solid var(--border-dim)', padding: '16px 20px', background: 'var(--bg-card)' }}>
-                    <div className="flex items-start justify-between gap-4" style={{ marginBottom: 8 }}>
+                  <div key={p.id} style={{ position: 'relative', overflow: 'hidden', border: '1px solid var(--border-dim)', padding: '16px 20px', background: 'var(--bg-card)' }}>
+                    {/* Top-left — difficulty color */}
+                    <div style={{ position: 'absolute', top: -44, left: -44, width: 110, height: 110, color: dc.dot, opacity: 0.55, pointerEvents: 'none', zIndex: 0 }}>
+                      <MagicCircle variant="full" speed={5} />
+                    </div>
+                    {/* Bottom-right — purple */}
+                    <div style={{ position: 'absolute', bottom: -44, right: -44, width: 110, height: 110, color: '#6b4c8a', opacity: 0.45, pointerEvents: 'none', zIndex: 0 }}>
+                      <MagicCircle variant="full" speed={5} />
+                    </div>
+                    <div className="flex items-start justify-between gap-4" style={{ marginBottom: 8, position: 'relative', zIndex: 1 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="flex items-center gap-2 flex-wrap" style={{ marginBottom: 3 }}>
                           <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'var(--ink)' }}>{p.title}</span>
@@ -370,13 +379,13 @@ export default function BankPage() {
                     </div>
 
                     {p.paragraphs && p.paragraphs.length > 0 && (
-                      <p style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', lineHeight: 1.6, maxHeight: 100, overflow: 'hidden', maskImage: 'linear-gradient(to bottom, black 60%, transparent)', marginBottom: 8 }}>
+                      <p style={{ position: 'relative', zIndex: 1, fontSize: '0.85rem', color: 'var(--ink-dim)', lineHeight: 1.6, maxHeight: 100, overflow: 'hidden', maskImage: 'linear-gradient(to bottom, black 60%, transparent)', marginBottom: 8 }}>
                         {p.paragraphs[0].text}
                       </p>
                     )}
 
                     {p.groups && p.groups.length > 0 && (
-                      <div className="flex flex-wrap gap-1" style={{ marginTop: 4 }}>
+                      <div className="flex flex-wrap gap-1" style={{ marginTop: 4, position: 'relative', zIndex: 1 }}>
                         {p.groups.map(g => {
                           const gc = DIFF_COLORS[g.difficulty] ?? DIFF_COLORS.medium
                           return (
