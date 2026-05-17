@@ -278,7 +278,7 @@ export default function BankPage() {
 
       {tab === 'questions' && (
         <>
-          {bank && <GenerateTestForm bank={bank} categories={categories} />}
+          {bank && <GenerateTestForm bank={bank} categories={categories} passages={passages} />}
 
           <div className="flex gap-2 flex-wrap items-center">
             <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>Filter</span>

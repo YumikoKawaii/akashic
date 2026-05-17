@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bank, Category } from '../../types'
+import { Bank, Category, Passage } from '../../types'
 import OrnatePanel from '../ui/OrnatePanel'
 import { FormField, Input } from '../ui/FormField'
 import MultiSelect from '../ui/MultiSelect'
 import { useGenerateTest } from '../../hooks/useTests'
 import { useStartAttempt } from '../../hooks/useAttempts'
 
-interface Props { bank: Bank; categories: Category[] }
+interface Props { bank: Bank; categories: Category[]; passages: Passage[] }
 
 const DIFF_COLORS = { easy: '#3a9a4a', medium: 'var(--gold)', hard: '#b03030' }
 const DIFF_LABELS = { easy: 'Easy', medium: 'Med', hard: 'Hard' }
@@ -31,7 +31,7 @@ function autoSplit(total: number): [number, number, number] {
   return [easy, Math.max(0, medium), hard]
 }
 
-export default function GenerateTestForm({ bank, categories }: Props) {
+export default function GenerateTestForm({ bank, categories, passages }: Props) {
   const navigate    = useNavigate()
   const generate    = useGenerateTest(String(bank.id))
   const start       = useStartAttempt()
@@ -39,6 +39,7 @@ export default function GenerateTestForm({ bank, categories }: Props) {
 
   const [name,        setName]        = useState('')
   const [categoryIds, setCategoryIds] = useState<string[]>([])
+  const [passageIds,  setPassageIds]  = useState<string[]>([])
   const [types,       setTypes]       = useState<string[]>([])
   const [mode,        setMode]        = useState<'difficulty' | 'count'>('difficulty')
   const [easy,        setEasy]        = useState(def.easy_count   ?? 3)
@@ -54,13 +55,15 @@ export default function GenerateTestForm({ bank, categories }: Props) {
 
   const handleGenerate = async () => {
     const catIds = categoryIds.map(Number).filter(Boolean)
+    const psgIds = passageIds.map(Number).filter(Boolean)
     const config = mode === 'count'
       ? (() => {
           const [e, m, h] = autoSplit(totalCount)
           return {
             easy_count: e, medium_count: m, hard_count: h,
             ...(catIds.length  ? { category_ids: catIds } : {}),
-            ...(types.length   ? { types }               : {}),
+            ...(psgIds.length  ? { passage_ids: psgIds }  : {}),
+            ...(types.length   ? { types }                : {}),
           }
         })()
       : {
@@ -68,7 +71,8 @@ export default function GenerateTestForm({ bank, categories }: Props) {
           medium_count: medium,
           hard_count:   hard,
           ...(catIds.length  ? { category_ids: catIds } : {}),
-          ...(types.length   ? { types }               : {}),
+          ...(psgIds.length  ? { passage_ids: psgIds }  : {}),
+          ...(types.length   ? { types }                : {}),
         }
     const test = await generate.mutateAsync({
       name: name.trim() || `${bank.name} — ${new Date().toLocaleString()}`,
@@ -84,7 +88,7 @@ export default function GenerateTestForm({ bank, categories }: Props) {
     <OrnatePanel>
       <div className="section-title" style={{ marginBottom: 18 }}>Quick Generate</div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ marginBottom: 14 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ marginBottom: 10 }}>
         <FormField label="Test Name">
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="Morning Practice" />
         </FormField>
@@ -105,6 +109,18 @@ export default function GenerateTestForm({ bank, categories }: Props) {
           />
         </FormField>
       </div>
+      {passages.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          <FormField label="Passages">
+            <MultiSelect
+              value={passageIds}
+              onChange={setPassageIds}
+              placeholder="All Passages"
+              options={passages.map(p => ({ value: String(p.id), label: p.title }))}
+            />
+          </FormField>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-4 items-end">
         <div className="flex gap-1" style={{ border: '1px solid var(--border-dim)', padding: 3, borderRadius: 4 }}>
