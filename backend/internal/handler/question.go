@@ -43,12 +43,24 @@ func (h *QuestionHandler) List(c *gin.Context) {
 		f.StandaloneOnly = true
 	}
 
-	questions, err := h.svc.List(bankID, f)
+	page, pageSize := 1, 20
+	if v := c.Query("page"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			page = n
+		}
+	}
+	if v := c.Query("page_size"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 100 {
+			pageSize = n
+		}
+	}
+
+	result, err := h.svc.ListPaged(bankID, f, page, pageSize)
 	if err != nil {
 		handleError(c, err)
 		return
 	}
-	ok(c, questions)
+	ok(c, result)
 }
 
 func (h *QuestionHandler) Get(c *gin.Context) {

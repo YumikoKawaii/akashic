@@ -175,3 +175,10 @@ export interface QuestionFilter {
   type?: string
   tags?: string[]
 }
+
+export interface QuestionPage {
+  data:      Question[]
+  total:     number
+  page:      number
+  page_size: number
+}

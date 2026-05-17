@@ -71,6 +71,7 @@ export default function BankPage() {
 
   const [tab,           setTab]           = useState<Tab>((searchParams.get('tab') as Tab) ?? 'questions')
   const [filter,        setFilter]        = useState<QuestionFilter>({})
+  const [page,          setPage]          = useState(1)
   const [importing,     setImporting]     = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [pConfirmDel,   setPConfirmDel]   = useState<number | null>(null)
@@ -119,7 +120,10 @@ export default function BankPage() {
     setImporting(false)
   }
 
-  const { data: questions = [] } = useQuestions(bankId, filter)
+  const { data: questionPage } = useQuestions(bankId, filter, page)
+  const questions   = questionPage?.data      ?? []
+  const totalQ      = questionPage?.total     ?? 0
+  const totalPages  = Math.max(1, Math.ceil(totalQ / (questionPage?.page_size ?? 20)))
 
   if (!bank) return (
     <div className="flex items-center justify-center h-full">
@@ -127,11 +131,15 @@ export default function BankPage() {
     </div>
   )
 
-  const toggleTypeFilter = (val: string) =>
+  const toggleTypeFilter = (val: string) => {
+    setPage(1)
     setFilter(f => ({ ...f, type: f.type === val ? undefined : val }))
+  }
 
-  const toggleDiffFilter = (val: string) =>
+  const toggleDiffFilter = (val: string) => {
+    setPage(1)
     setFilter(f => ({ ...f, difficulty: f.difficulty === val ? undefined : val }))
+  }
 
   return (
     <>
@@ -246,7 +254,7 @@ export default function BankPage() {
       {/* ── Stats ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {([
-          { value: questions.length,  label: 'Questions',  color: 'var(--gold)',     circle: { variant: 'orbit' as const, color: 'var(--gold)',    opacity: 0.90 } },
+          { value: totalQ,             label: 'Questions',  color: 'var(--gold)',     circle: { variant: 'orbit' as const, color: 'var(--gold)',    opacity: 0.90 } },
           { value: passages.length,   label: 'Passages',   color: 'var(--ink-dim)',  circle: { variant: 'halo'  as const, color: '#2a8a3a',         opacity: 0.85 } },
           { value: categories.length, label: 'Categories', color: 'var(--ink-dim)',  circle: { variant: 'sigil' as const, color: 'var(--gold-dim)', opacity: 0.85 } },
           { value: tests.length,      label: 'Tests',      color: 'var(--ink-dim)',  circle: { variant: 'spark' as const, color: '#6b4c8a',          opacity: 0.82 } },
@@ -299,7 +307,11 @@ export default function BankPage() {
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="section-title" style={{ marginBottom: 0 }}>Questions ({questions.length})</div>
+            <div className="section-title" style={{ marginBottom: 0 }}>
+              Questions ({totalQ}
+              {totalPages > 1 && <span style={{ fontWeight: 400, fontSize: '0.7rem', color: 'var(--ink-dim)', letterSpacing: '0.05em' }}> — page {page}/{totalPages}</span>}
+              )
+            </div>
             {canEdit && (
               <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}/questions/new`)}>＋ Add Question</button>
             )}
@@ -314,9 +326,52 @@ export default function BankPage() {
                 </span>
               </div>
             ) : (
-              questions.map((q, i) => <QuestionCard key={q.id} question={q} index={i} bankId={bankId} />)
+              questions.map((q, i) => (
+                <QuestionCard key={q.id} question={q} index={(page - 1) * 20 + i} bankId={bankId} />
+              ))
             )}
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3" style={{ paddingTop: 8 }}>
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: '0.7rem', padding: '5px 14px' }}
+                onClick={() => setPage(p => p - 1)}
+                disabled={page === 1}
+              >
+                ← Prev
+              </button>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    style={{
+                      width: 28, height: 28,
+                      fontFamily: 'Cinzel, serif', fontSize: '0.6rem',
+                      border: '1px solid',
+                      borderColor: p === page ? 'var(--gold)' : 'var(--border-dim)',
+                      background: p === page ? 'var(--gold)' : 'transparent',
+                      color: p === page ? 'var(--bg)' : 'var(--ink-dim)',
+                      cursor: 'pointer', borderRadius: 2,
+                    }}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: '0.7rem', padding: '5px 14px' }}
+                onClick={() => setPage(p => p + 1)}
+                disabled={page >= totalPages}
+              >
+                Next →
+              </button>
+            </div>
+          )}
+
         </>
       )}
 

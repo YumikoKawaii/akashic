@@ -1,5 +1,5 @@
 import client from './client'
-import { Question, QuestionFilter, MCQOption } from '../types'
+import { Question, QuestionFilter, QuestionPage, MCQOption } from '../types'
 
 export interface CreateQuestionPayload {
   category_id: number
@@ -29,13 +29,15 @@ export interface IngestResult {
 }
 
 export const questionsApi = {
-  list: (bankId: string, filter: QuestionFilter = {}) => {
+  list: (bankId: string, filter: QuestionFilter = {}, page = 1, pageSize = 20) => {
     const params = new URLSearchParams()
     filter.category_ids?.forEach(id => params.append('category_id', String(id)))
     if (filter.difficulty) params.set('difficulty', filter.difficulty)
     if (filter.type)       params.set('type', filter.type)
     filter.tags?.forEach(t => params.append('tag', t))
-    return client.get<Question[]>(`/banks/${bankId}/questions`, { params }).then(r => r.data)
+    params.set('page', String(page))
+    params.set('page_size', String(pageSize))
+    return client.get<QuestionPage>(`/banks/${bankId}/questions`, { params }).then(r => r.data)
   },
   get: (bankId: string, id: string) =>
     client.get<Question>(`/banks/${bankId}/questions/${id}`).then(r => r.data),

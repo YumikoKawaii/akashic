@@ -30,6 +30,24 @@ func (s *QuestionService) List(bankID int, f repository.QuestionFilter) ([]model
 	return s.repo.FindByBank(bankID, f)
 }
 
+type QuestionPage struct {
+	Data     []model.Question `json:"data"`
+	Total    int64            `json:"total"`
+	Page     int              `json:"page"`
+	PageSize int              `json:"page_size"`
+}
+
+func (s *QuestionService) ListPaged(bankID int, f repository.QuestionFilter, page, pageSize int) (*QuestionPage, error) {
+	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+		return nil, err
+	}
+	qs, total, err := s.repo.FindByBankPaged(bankID, f, page, pageSize)
+	if err != nil {
+		return nil, err
+	}
+	return &QuestionPage{Data: qs, Total: total, Page: page, PageSize: pageSize}, nil
+}
+
 func (s *QuestionService) GetByID(bankID, id int) (*model.Question, error) {
 	q, err := s.repo.FindByID(id)
 	if err != nil {

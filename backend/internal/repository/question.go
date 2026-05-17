@@ -20,6 +20,7 @@ type QuestionFilter struct {
 
 type QuestionRepository interface {
 	FindByBank(bankID int, f QuestionFilter) ([]model.Question, error)
+	FindByBankPaged(bankID int, f QuestionFilter, page, pageSize int) ([]model.Question, int64, error)
 	FindByBankAndDifficulty(bankID int, difficulty string, f QuestionFilter) ([]model.Question, error)
 	FindByGroup(groupID int) ([]model.Question, error)
 	FindByID(id int) (*model.Question, error)
@@ -43,6 +44,23 @@ func (r *questionRepo) FindByBank(bankID int, f QuestionFilter) ([]model.Questio
 	q = applyQuestionFilter(q, f)
 	err := q.Preload("Item").Preload("Choice").Order("created_at DESC").Find(&qs).Error
 	return qs, err
+}
+
+func (r *questionRepo) FindByBankPaged(bankID int, f QuestionFilter, page, pageSize int) ([]model.Question, int64, error) {
+	base := r.db.Model(&model.Question{}).Where("bank_id = ?", bankID)
+	base = applyQuestionFilter(base, f)
+
+	var total int64
+	if err := base.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var qs []model.Question
+	err := base.Preload("Item").Preload("Choice").
+		Order("created_at DESC").
+		Limit(pageSize).Offset((page - 1) * pageSize).
+		Find(&qs).Error
+	return qs, total, err
 }
 
 func (r *questionRepo) FindByBankAndDifficulty(bankID int, difficulty string, f QuestionFilter) ([]model.Question, error) {

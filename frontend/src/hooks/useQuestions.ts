@@ -2,16 +2,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { questionsApi, CreateQuestionPayload, UpdateQuestionPayload } from '../api/questions'
 import { QuestionFilter } from '../types'
 
+export const PAGE_SIZE = 20
+
 export const questionKeys = {
-  all:    (bankId: string, filter?: QuestionFilter) => ['questions', bankId, filter] as const,
-  detail: (bankId: string, id: string)              => ['questions', bankId, id] as const,
+  all:    (bankId: string, filter?: QuestionFilter, page?: number) => ['questions', bankId, filter, page] as const,
+  detail: (bankId: string, id: string)                             => ['questions', bankId, id] as const,
 }
 
-export function useQuestions(bankId: string, filter: QuestionFilter = {}) {
+export function useQuestions(bankId: string, filter: QuestionFilter = {}, page = 1) {
   return useQuery({
-    queryKey: questionKeys.all(bankId, filter),
-    queryFn:  () => questionsApi.list(bankId, filter),
+    queryKey: questionKeys.all(bankId, filter, page),
+    queryFn:  () => questionsApi.list(bankId, filter, page, PAGE_SIZE),
     enabled:  !!bankId,
+    placeholderData: (prev) => prev,  // keep previous page visible while fetching next
   })
 }
 
