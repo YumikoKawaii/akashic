@@ -176,7 +176,7 @@ export default function GenerateTestForm({ bank, categories }: Props) {
           disabled={isPending}
           style={{ height: 38, padding: '0 20px', whiteSpace: 'nowrap', marginLeft: 'auto' }}
         >
-          {isPending ? '…' : '⚔ Generate'}
+          {isPending ? '…' : '▶ Generate'}
         </button>
       </div>
     </OrnatePanel>

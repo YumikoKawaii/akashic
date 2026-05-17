@@ -345,7 +345,7 @@ export default function BankPage() {
                         disabled={generatingPassageId === p.id}
                         onClick={() => handleGenerateFromPassage(p)}
                       >
-                        {generatingPassageId === p.id ? '…' : '⚔ Generate'}
+                        {generatingPassageId === p.id ? '…' : '▶ Generate'}
                       </button>
                       {canEdit && (
                         <>
