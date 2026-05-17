@@ -3,7 +3,7 @@
 Base URL: `http://localhost:8080/api/v1`  
 Auth: all endpoints require an `auth_token` cookie (JWT). Set via Google OAuth or `POST /auth/login`.
 
-All responses are JSON. Success wraps data in `{ "data": ... }`. Errors return `{ "error": "message" }`.
+All responses are JSON. Success returns the resource directly (no wrapper). Errors return `{ "error": "message" }`.
 
 ---
 
@@ -145,6 +145,66 @@ See `docs/question_format.md` for the full import schema and examples.
 
 ---
 
+## Passages
+
+```
+GET    /banks/:bankId/passages                  → list (query: category_id, difficulty)
+POST   /banks/:bankId/passages                  → create
+GET    /banks/:bankId/passages/:id              → get (includes groups + questions with item/choice)
+PUT    /banks/:bankId/passages/:id              → update
+DELETE /banks/:bankId/passages/:id              → soft-delete
+PUT    /banks/:bankId/passages/:id/restore
+```
+
+**Create body:**
+```json
+{ "category_id": 1, "title": "The History of Rockets", "body": "...", "difficulty": "hard" }
+```
+
+**Update body** (all optional):
+```json
+{ "title": "...", "body": "...", "difficulty": "hard", "category_id": 1 }
+```
+
+---
+
+## Question Groups
+
+```
+GET    /banks/:bankId/question-groups           → list (query: category_id, difficulty, type)
+POST   /banks/:bankId/question-groups           → create
+GET    /banks/:bankId/question-groups/:id       → get (includes questions with item/choice)
+PUT    /banks/:bankId/question-groups/:id       → update difficulty / context
+DELETE /banks/:bankId/question-groups/:id       → soft-delete
+PUT    /banks/:bankId/question-groups/:id/restore
+```
+
+**Create body:**
+```json
+{
+  "category_id": 1,
+  "passage_id": 3,
+  "type": "matching_headings",
+  "difficulty": "hard",
+  "context": {
+    "sections": [{ "key": "B", "label": "Paragraph B" }],
+    "headings": [{ "key": "i", "text": "Undeveloped for centuries" }]
+  },
+  "questions": [
+    { "content": "Paragraph B", "answer": "i" }
+  ]
+}
+```
+
+`passage_id` is optional (omit for standalone groups). `context` shape depends on `type` — see `GroupContext` in `docs/question_format.md`.
+
+**Update body** (all optional):
+```json
+{ "difficulty": "medium", "context": { ... } }
+```
+
+---
+
 ## Tests
 
 ### Generate
@@ -163,7 +223,7 @@ POST /banks/:bankId/tests/generate
   }
 }
 ```
-`config` is optional — omits falls back to the bank's `default_config`.
+`config` is optional — if omitted, falls back to the bank's `default_config`.
 
 ```
 GET    /banks/:bankId/tests

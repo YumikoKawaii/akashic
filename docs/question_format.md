@@ -224,7 +224,33 @@ paragraph keys, feature options, word limits, or form templates.
   "difficulty": "hard",
   "category_name": "Vocabulary",
   "content": "Write a sentence using the word 'ephemeral' correctly.",
-  "answer": ""
+  "answer": "The ephemeral beauty of cherry blossoms lasts only a week."
+}
+```
+
+### standalone group
+A group not attached to any passage. Detected by `"kind": "group"` at the top level.
+
+```json
+{
+  "kind": "group",
+  "type": "matching_headings",
+  "difficulty": "medium",
+  "category_name": "IELTS Reading",
+  "context": {
+    "sections": [
+      { "key": "A", "label": "Paragraph A" },
+      { "key": "B", "label": "Paragraph B" }
+    ],
+    "headings": [
+      { "key": "i",  "text": "Early discoveries" },
+      { "key": "ii", "text": "Modern applications" }
+    ]
+  },
+  "questions": [
+    { "content": "Paragraph A", "answer": "ii" },
+    { "content": "Paragraph B", "answer": "i" }
+  ]
 }
 ```
 
