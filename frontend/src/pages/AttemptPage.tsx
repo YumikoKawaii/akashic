@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAttempt, useSubmitAttempt } from '../hooks/useAttempts'
-import { Question, QuestionGroup, TestQuestion } from '../types'
+import { Passage, Question, QuestionGroup, TestQuestion } from '../types'
 import OrnatePanel from '../components/ui/OrnatePanel'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
 import Starfield from '../components/ui/Starfield'
@@ -204,37 +204,31 @@ function AnswerOptions({ q, selected, onSelect, revealed = false }: {
   )
 }
 
-// ── Passage body with paragraph detection ─────────────────────────────────────
+// ── Passage body ──────────────────────────────────────────────────────────────
 
-function PassageBody({ body }: { body: string }) {
-  // Detect IELTS-style paragraph labels: single capital letter (A–Z) followed by space
-  // at word boundaries, e.g. "A The concept... B An intellectual..."
-  const parts = body.split(/\s+(?=[A-Z]\s[A-Z])/)
+function PassageBody({ passage }: { passage: Passage }) {
+  const paragraphs = passage.paragraphs
 
-  if (parts.length <= 1) {
-    // No paragraph structure detected — render as-is with line breaks
+  if (paragraphs && paragraphs.length > 0) {
     return (
-      <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '1rem', lineHeight: 1.9, color: 'var(--ink)', whiteSpace: 'pre-wrap' }}>
-        {body}
+      <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '1rem', lineHeight: 1.9, color: 'var(--ink)' }}>
+        {paragraphs.map((para, i) => (
+          <p key={i} style={{ marginBottom: 18, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            {para.label && (
+              <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', fontWeight: 700, color: 'var(--gold-dim)', minWidth: 18, paddingTop: 4, flexShrink: 0 }}>
+                {para.label}
+              </span>
+            )}
+            <span>{para.text}</span>
+          </p>
+        ))}
       </div>
     )
   }
 
   return (
-    <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '1rem', lineHeight: 1.9, color: 'var(--ink)' }}>
-      {parts.map((part, i) => {
-        const m = part.match(/^([A-Z])\s(.+)$/s)
-        if (!m) return <p key={i} style={{ marginBottom: 16 }}>{part}</p>
-        return (
-          <p key={i} style={{ marginBottom: 18, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-            <span style={{
-              fontFamily: 'Cinzel, serif', fontSize: '0.72rem', fontWeight: 700,
-              color: 'var(--gold-dim)', minWidth: 18, paddingTop: 4, flexShrink: 0,
-            }}>{m[1]}</span>
-            <span>{m[2]}</span>
-          </p>
-        )
-      })}
+    <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '1rem', lineHeight: 1.9, color: 'var(--ink)', whiteSpace: 'pre-wrap' }}>
+      {passage.body}
     </div>
   )
 }
@@ -304,7 +298,7 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
               <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'var(--ink)', marginBottom: 18, lineHeight: 1.4 }}>
                 {passage.title}
               </h2>
-              <PassageBody body={passage.body} />
+              <PassageBody passage={passage} />
             </>
           )}
         </div>

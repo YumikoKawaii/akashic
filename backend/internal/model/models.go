@@ -9,6 +9,11 @@ import (
 
 // ── Value types ────────────────────────────────────────────────────────────────
 
+type PassageParagraph struct {
+	Label string `json:"label"`
+	Text  string `json:"text"`
+}
+
 type TestConfig struct {
 	EasyCount      int      `json:"easy_count"`
 	MediumCount    int      `json:"medium_count"`
@@ -111,17 +116,18 @@ type Category struct {
 }
 
 type Passage struct {
-	ID         int             `gorm:"primaryKey;autoIncrement" json:"id"`
-	BankID     int             `gorm:"not null;index"           json:"bank_id"`
-	CategoryID int             `gorm:"not null;index"           json:"category_id"`
-	Category   *Category       `gorm:"foreignKey:CategoryID"    json:"category,omitempty"`
-	Title      string          `gorm:"not null"                 json:"title"`
-	Body       string          `gorm:"not null;default:''"      json:"body"`
-	Difficulty string          `gorm:"not null"                 json:"difficulty"`
-	Groups     []QuestionGroup `gorm:"foreignKey:PassageID"     json:"groups,omitempty"`
-	CreatedAt  time.Time       `                                json:"created_at"`
-	UpdatedAt  time.Time       `                                json:"updated_at"`
-	DeletedAt  gorm.DeletedAt  `gorm:"index"                    json:"-"`
+	ID         int                `gorm:"primaryKey;autoIncrement" json:"id"`
+	BankID     int                `gorm:"not null;index"           json:"bank_id"`
+	CategoryID int                `gorm:"not null;index"           json:"category_id"`
+	Category   *Category          `gorm:"foreignKey:CategoryID"    json:"category,omitempty"`
+	Title      string             `gorm:"not null"                 json:"title"`
+	Body       string             `gorm:"not null;default:''"      json:"body"`
+	Paragraphs []PassageParagraph `gorm:"serializer:json"          json:"paragraphs,omitempty"`
+	Difficulty string             `gorm:"not null"                 json:"difficulty"`
+	Groups     []QuestionGroup    `gorm:"foreignKey:PassageID"     json:"groups,omitempty"`
+	CreatedAt  time.Time          `                                json:"created_at"`
+	UpdatedAt  time.Time          `                                json:"updated_at"`
+	DeletedAt  gorm.DeletedAt     `gorm:"index"                    json:"-"`
 }
 
 type QuestionGroup struct {

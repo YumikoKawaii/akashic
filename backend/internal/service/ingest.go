@@ -56,14 +56,15 @@ type IngestPassageGroup struct {
 // IngestPassageRow is a passage with its questions embedded.
 // Detected by "type": "passage" in JSON/YAML.
 type IngestPassageRow struct {
-	Type         string                  `json:"type"          yaml:"type"`
-	Title        string                  `json:"title"         yaml:"title"`
-	Body         string                  `json:"body"          yaml:"body"`
-	Difficulty   string                  `json:"difficulty"    yaml:"difficulty"`
-	CategoryName string                  `json:"category_name" yaml:"category_name"`
-	Tags         []string                `json:"tags"          yaml:"tags"`
-	Questions    []IngestPassageQuestion `json:"questions"     yaml:"questions"`
-	Groups       []IngestPassageGroup    `json:"groups"        yaml:"groups"`
+	Type         string                     `json:"type"          yaml:"type"`
+	Title        string                     `json:"title"         yaml:"title"`
+	Body         string                     `json:"body"          yaml:"body"`
+	Paragraphs   []model.PassageParagraph   `json:"paragraphs"    yaml:"paragraphs"`
+	Difficulty   string                     `json:"difficulty"    yaml:"difficulty"`
+	CategoryName string                     `json:"category_name" yaml:"category_name"`
+	Tags         []string                   `json:"tags"          yaml:"tags"`
+	Questions    []IngestPassageQuestion    `json:"questions"     yaml:"questions"`
+	Groups       []IngestPassageGroup       `json:"groups"        yaml:"groups"`
 }
 
 // IngestGroupQuestion is a question within a group.
@@ -261,6 +262,7 @@ func (s *IngestService) Ingest(bankID int, r io.Reader, ext string) (*IngestResu
 				CategoryID: catID,
 				Title:      row.Title,
 				Body:       row.Body,
+				Paragraphs: row.Paragraphs,
 				Difficulty: row.Difficulty,
 			}
 			if err := tx.Passages.Create(p); err != nil {

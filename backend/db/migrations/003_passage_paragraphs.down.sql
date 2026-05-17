@@ -1,0 +1,1 @@
+ALTER TABLE passages DROP COLUMN IF EXISTS paragraphs;

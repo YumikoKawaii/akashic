@@ -105,6 +105,11 @@ export interface QuestionGroup {
   updated_at: string
 }
 
+export interface PassageParagraph {
+  label: string
+  text: string
+}
+
 export interface Passage {
   id: number
   bank_id: number
@@ -112,6 +117,7 @@ export interface Passage {
   category?: Category
   title: string
   body: string
+  paragraphs?: PassageParagraph[]
   difficulty: QuestionDifficulty
   groups?: QuestionGroup[]
   created_at: string

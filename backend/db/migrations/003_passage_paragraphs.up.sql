@@ -1,0 +1,1 @@
+ALTER TABLE passages ADD COLUMN paragraphs JSONB NOT NULL DEFAULT '[]';
