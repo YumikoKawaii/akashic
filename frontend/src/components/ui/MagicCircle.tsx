@@ -5,9 +5,9 @@ import React from 'react'
 function px(r: number, deg: number) { return r * Math.cos((deg * Math.PI) / 180) }
 function py(r: number, deg: number) { return r * Math.sin((deg * Math.PI) / 180) }
 
-function spin(dur: string, dir: 'cw' | 'ccw' = 'cw'): React.CSSProperties {
+function spin(baseDur: number, dir: 'cw' | 'ccw' = 'cw', speed = 1): React.CSSProperties {
   return {
-    animation: `mc-${dir} ${dur} linear infinite`,
+    animation: `mc-${dir} ${(baseDur / speed).toFixed(1)}s linear infinite`,
     transformBox: 'fill-box',
     transformOrigin: 'center',
   }
@@ -17,10 +17,11 @@ function spin(dur: string, dir: 'cw' | 'ccw' = 'cw'): React.CSSProperties {
 
 type Variant = 'full' | 'outer' | 'inner'
 
-export default function MagicCircle({ style, className, variant = 'full' }: {
+export default function MagicCircle({ style, className, variant = 'full', speed = 1 }: {
   style?: React.CSSProperties
   className?: string
   variant?: Variant
+  speed?: number
 }) {
   const ro = 90   // outer ring
   const rd = 78   // dashed ring
@@ -83,13 +84,13 @@ export default function MagicCircle({ style, className, variant = 'full' }: {
 
         {/* ── outer variant: big rings ── */}
         {variant !== 'inner' && <>
-          <g style={spin('90s')}>
+          <g style={spin(90, 'cw', speed)}>
             <circle r={ro} strokeWidth="0.8" />
             {ticks}
             {diamonds}
           </g>
-          <circle r={rd} strokeWidth="0.5" strokeDasharray="3 7" style={spin('70s', 'ccw')} />
-          <g style={spin('50s')}>
+          <circle r={rd} strokeWidth="0.5" strokeDasharray="3 7" style={spin(70, 'ccw', speed)} />
+          <g style={spin(50, 'cw', speed)}>
             <polygon points={`${sq},${sq} ${-sq},${sq} ${-sq},${-sq} ${sq},${-sq}`} strokeWidth="0.7" />
             <polygon points={`${rg},0 0,${rg} ${-rg},0 0,${-rg}`} strokeWidth="0.7" />
           </g>
@@ -105,7 +106,7 @@ export default function MagicCircle({ style, className, variant = 'full' }: {
         {variant !== 'outer' && <>
           <circle r={rm} strokeWidth="0.8" strokeOpacity={variant === 'inner' ? 0.75 : 0.5} />
           {variant === 'inner' && midDots}
-          <g style={spin('38s', 'ccw')}>
+          <g style={spin(38, 'ccw', speed)}>
             <polygon points={hexUp}   strokeWidth="0.7" />
             <polygon points={hexDown} strokeWidth="0.7" />
           </g>
