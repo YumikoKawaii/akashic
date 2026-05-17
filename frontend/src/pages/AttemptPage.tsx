@@ -6,6 +6,9 @@ import OrnatePanel from '../components/ui/OrnatePanel'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
 import Starfield from '../components/ui/Starfield'
 import MagicCircle, { Spinner, MagicCircleBackground } from '../components/ui/MagicCircle'
+import RuneCorners from '../components/ui/RuneCorners'
+import OghamBorder from '../components/ui/OghamBorder'
+import OrnateDivider from '../components/ui/OrnateDivider'
 import Select from '../components/ui/Select'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -34,7 +37,7 @@ function CorrectAnswerBox({ answer }: { answer: string }) {
   )
 }
 
-// ── Group context (headings / options list) ────────────────────────────────────
+// ── Group context box ──────────────────────────────────────────────────────────
 
 function GroupContextBox({ group }: { group: QuestionGroup }) {
   const ctx = group.context
@@ -48,7 +51,8 @@ function GroupContextBox({ group }: { group: QuestionGroup }) {
           : 'Complete the sentences using words from the passage.'
     )
     return (
-      <div style={{ marginBottom: 12, padding: '10px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.92rem', fontFamily: 'EB Garamond, serif', fontStyle: 'italic', color: 'var(--ink-dim)' }}>
+      <div style={{ position: 'relative', marginBottom: 12, padding: '10px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.92rem', fontFamily: 'EB Garamond, serif', fontStyle: 'italic', color: 'var(--ink-dim)' }}>
+        <RuneCorners size={18} color="var(--gold-dim)" opacity={0.4} />
         {instruction}
       </div>
     )
@@ -74,6 +78,7 @@ function GroupContextBox({ group }: { group: QuestionGroup }) {
       <div style={{ position: 'absolute', bottom: -32, left: -32, width: 70, height: 70, color: '#6b4c8a', opacity: 0.22, pointerEvents: 'none', zIndex: 0 }}>
         <MagicCircle variant="halo" speed={2} />
       </div>
+      <RuneCorners size={20} color="var(--gold-dim)" opacity={0.45} />
       <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.14em', color: 'var(--gold-dim)', marginBottom: 8, textTransform: 'uppercase' }}>{label}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -89,7 +94,7 @@ function GroupContextBox({ group }: { group: QuestionGroup }) {
   )
 }
 
-// ── Answer options (flash-card and passage both use this) ──────────────────────
+// ── Answer options ─────────────────────────────────────────────────────────────
 
 function AnswerOptions({ q, selected, onSelect, revealed = false }: {
   q: Question; selected: string; onSelect: (v: string) => void; revealed?: boolean
@@ -124,8 +129,8 @@ function AnswerOptions({ q, selected, onSelect, revealed = false }: {
     return (
       <div className="answer-options">
         {shuffledMCQ.map(opt => {
-          const isSel  = selectedKeys.has(opt.key)
-          const isCorr = locked && correctKeys.has(opt.key)
+          const isSel   = selectedKeys.has(opt.key)
+          const isCorr  = locked && correctKeys.has(opt.key)
           const isWrong = locked && isSel && !correctKeys.has(opt.key)
           return (
             <button key={opt.key} className={`answer-option ${!locked && isSel ? 'selected' : ''}`}
@@ -194,14 +199,10 @@ function AnswerOptions({ q, selected, onSelect, revealed = false }: {
     const isCorr  = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
     return (
       <div style={{ width: '100%' }}>
-        <Select
-          value={selected}
-          onChange={val => !locked && onSelect(val)}
+        <Select value={selected} onChange={val => !locked && onSelect(val)}
           options={ctx.headings.map(h => ({ value: h.text, label: `${h.key}. ${h.text}` }))}
-          placeholder="— Select a heading —"
-          disabled={locked}
-          triggerStyle={locked ? { borderColor: isCorr ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorr ? '#2a8a3a' : '#b03030' } : undefined}
-        />
+          placeholder="— Select a heading —" disabled={locked}
+          triggerStyle={locked ? { borderColor: isCorr ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorr ? '#2a8a3a' : '#b03030' } : undefined} />
         {locked && !isCorr && <CorrectAnswerBox answer={correct} />}
       </div>
     )
@@ -214,14 +215,10 @@ function AnswerOptions({ q, selected, onSelect, revealed = false }: {
     const corrLabel = opts.find(o => o.key.toLowerCase() === correct.toLowerCase())
     return (
       <div style={{ width: '100%' }}>
-        <Select
-          value={selected}
-          onChange={val => !locked && onSelect(val)}
+        <Select value={selected} onChange={val => !locked && onSelect(val)}
           options={opts.map(o => ({ value: o.key, label: `${o.key}. ${o.text}` }))}
-          placeholder="— Select —"
-          disabled={locked}
-          triggerStyle={locked ? { borderColor: isCorr ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorr ? '#2a8a3a' : '#b03030' } : undefined}
-        />
+          placeholder="— Select —" disabled={locked}
+          triggerStyle={locked ? { borderColor: isCorr ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorr ? '#2a8a3a' : '#b03030' } : undefined} />
         {locked && !isCorr && <CorrectAnswerBox answer={`${correct}${corrLabel ? ` — ${corrLabel.text}` : ''}`} />}
       </div>
     )
@@ -239,15 +236,19 @@ function AnswerOptions({ q, selected, onSelect, revealed = false }: {
   )
 }
 
-// ── Passage body ──────────────────────────────────────────────────────────────
+// ── Passage body ───────────────────────────────────────────────────────────────
 
 function PassageBody({ passage }: { passage: Passage }) {
   return (
     <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '1rem', lineHeight: 1.9, color: 'var(--ink)' }}>
       {(passage.paragraphs ?? []).map((para, i) => (
-        <p key={i} style={{ marginBottom: 18, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <p key={i} style={{ marginBottom: 18, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           {para.label && (
-            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', fontWeight: 700, color: 'var(--gold-dim)', minWidth: 18, paddingTop: 4, flexShrink: 0 }}>
+            <span style={{
+              fontFamily: 'Cinzel, serif', fontSize: '0.78rem', fontWeight: 700,
+              color: 'var(--gold)', minWidth: 20, paddingTop: 3, flexShrink: 0,
+              textShadow: '0 0 8px rgba(154,112,24,0.3)',
+            }}>
               {para.label}
             </span>
           )}
@@ -258,13 +259,9 @@ function PassageBody({ passage }: { passage: Passage }) {
   )
 }
 
-// ── Passage layout — all questions at once ─────────────────────────────────────
+// ── Passage layout ─────────────────────────────────────────────────────────────
 
-interface GroupedSection {
-  groupId: number
-  group: QuestionGroup
-  items: TestQuestion[]
-}
+interface GroupedSection { groupId: number; group: QuestionGroup; items: TestQuestion[] }
 
 function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmit, isPending }: {
   attempt: any
@@ -298,53 +295,86 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
       <Starfield />
       <MagicCircleBackground />
 
-      {/* Header */}
-      <div style={{ position: 'relative', zIndex: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', borderBottom: '1px solid var(--border-dim)', background: 'var(--bg-panel)' }}>
-        <div>
-          <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>{attempt.test.name}</div>
-          <div style={{ fontSize: '0.78rem', color: 'var(--ink-dim)', marginTop: 2 }}>
+      {/* ── Header ── */}
+      <div style={{ position: 'relative', zIndex: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 28px', borderBottom: '1px solid var(--border-dim)', background: 'linear-gradient(90deg, var(--bg-panel) 0%, var(--bg-elevated) 100%)' }}>
+        <RuneCorners size={22} color="var(--gold-dim)" opacity={0.5} />
+
+        {/* decorative circle — top-right */}
+        <div style={{ position: 'absolute', top: -28, right: 120, width: 72, height: 72, color: 'var(--gold)', opacity: 0.22, pointerEvents: 'none' }}>
+          <MagicCircle variant="orbit" speed={3} />
+        </div>
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'var(--ink)' }}>{attempt.test.name}</div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--ink-dim)', marginTop: 2 }}>
             {answered} / {questions.length} answered
           </div>
         </div>
-        <button className="btn btn-primary" onClick={onSubmit} disabled={isPending} style={{ padding: '10px 28px' }}>
+
+        {/* Progress dots */}
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap', maxWidth: 400, position: 'relative', zIndex: 1 }}>
+          {questions.map(tq => {
+            const ans = answers[String(tq.question?.id)]
+            return (
+              <div key={tq.question_id} style={{
+                width: 7, height: 7, borderRadius: '50%',
+                background: ans ? 'var(--gold)' : 'var(--border-dim)',
+                boxShadow: ans ? '0 0 4px rgba(154,112,24,0.5)' : 'none',
+                transition: 'background 0.25s, box-shadow 0.25s',
+              }} />
+            )
+          })}
+        </div>
+
+        <button className="btn btn-primary" onClick={onSubmit} disabled={isPending} style={{ padding: '9px 26px', position: 'relative', zIndex: 1 }}>
           {isPending ? '…' : 'Submit All →'}
         </button>
       </div>
 
-      {/* Two panels */}
+      {/* ── Two panels ── */}
       <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
 
-        {/* Left — passage body */}
-        <div style={{ overflowY: 'auto', padding: '24px 28px', borderRight: '1px solid var(--border-dim)' }}>
+        {/* Left — passage */}
+        <div style={{ position: 'relative', overflowY: 'auto', padding: '28px 32px', borderRight: '1px solid var(--border-dim)' }}>
+          <OghamBorder side="right" color="var(--gold-dim)" opacity={0.30} />
+
           {passage && (
             <>
-              <div style={{ position: 'relative', marginBottom: 18 }}>
-                <div style={{ position: 'absolute', top: -20, right: -10, width: 70, height: 70, color: 'var(--gold)', opacity: 0.2, pointerEvents: 'none' }}>
+              <div style={{ position: 'relative', marginBottom: 6 }}>
+                {/* accent circle top-right */}
+                <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, color: 'var(--gold)', opacity: 0.20, pointerEvents: 'none' }}>
                   <MagicCircle variant="spark" speed={2} />
                 </div>
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.68rem', letterSpacing: '0.14em', color: 'var(--gold-dim)', marginBottom: 12, textTransform: 'uppercase', position: 'relative' }}>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.18em', color: 'var(--gold-dim)', marginBottom: 8, textTransform: 'uppercase', position: 'relative' }}>
                   Passage
                 </div>
-                <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'var(--ink)', lineHeight: 1.4, position: 'relative' }}>
+                <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'var(--ink)', lineHeight: 1.4, position: 'relative', marginBottom: 14 }}>
                   {passage.title}
                 </h2>
               </div>
-              <PassageBody passage={passage} />
+              <OrnateDivider />
+              <div style={{ marginTop: 18 }}>
+                <PassageBody passage={passage} />
+              </div>
             </>
           )}
         </div>
 
-        {/* Right — all questions */}
-        <div style={{ overflowY: 'auto', padding: '24px 28px' }}>
+        {/* Right — questions */}
+        <div style={{ overflowY: 'auto', padding: '28px 32px' }}>
           {sections.map(({ groupId, group, items }) => (
-            <div key={groupId} style={{ marginBottom: 32 }}>
+            <div key={groupId} style={{ position: 'relative', marginBottom: 36, paddingLeft: 12, borderLeft: '2px solid var(--border-dim)' }}>
+              {/* small sigil at section start */}
+              <div style={{ position: 'absolute', top: -18, left: -18, width: 42, height: 42, color: 'var(--gold)', opacity: 0.30, pointerEvents: 'none' }}>
+                <MagicCircle variant="sigil" speed={2} />
+              </div>
               <GroupContextBox group={group} />
               {items.map((tq) => {
                 const q = tq.question!
                 const sel = answers[String(q.id)] ?? ''
                 const isFillBlank = q.type === 'sentence_completion' || q.type === 'form_completion'
                 return (
-                  <div key={q.id} style={{ marginBottom: 18 }}>
+                  <div key={q.id} style={{ marginBottom: 20 }}>
                     {isFillBlank ? (
                       <div style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
                         <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 28, flexShrink: 0 }}>
@@ -381,7 +411,7 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
   )
 }
 
-// ── Flash-card layout (standalone) ────────────────────────────────────────────
+// ── Flash-card layout ──────────────────────────────────────────────────────────
 
 function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }: {
   attempt: any
@@ -403,12 +433,11 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
 
   if (!q) return null
 
-  const group      = q.group
-  const passage    = group?.passage
-  const content    = questionContent(q)
+  const group       = q.group
+  const passage     = group?.passage
+  const content     = questionContent(q)
   const isScoreable = q.type !== 'short_answer'
-  const isCorrect  = revealed && isScoreable && checkAnswer(q, selected)
-  const progress   = ((currentIdx + (revealed ? 1 : 0)) / total) * 100
+  const isCorrect   = revealed && isScoreable && checkAnswer(q, selected)
 
   const handleReveal = () => {
     if (!selected) return
@@ -432,18 +461,45 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
       <Starfield />
       <MagicCircleBackground />
       <div className="attempt-layout">
-        <div className="attempt-progress-bar">
-          <div className="attempt-progress-fill" style={{ width: `${progress}%`, transition: 'width 0.4s ease' }} />
+
+        {/* ── Segmented progress ── */}
+        <div style={{ display: 'flex', gap: 2, padding: '0 48px', height: 6, background: 'var(--bg-panel)', borderBottom: '1px solid var(--border-dim)', alignItems: 'stretch' }}>
+          {questions.map((_, i) => {
+            const done = i < currentIdx || (i === currentIdx && revealed)
+            return (
+              <div key={i} style={{
+                flex: 1, height: '100%',
+                background: done ? 'var(--gold)' : 'var(--border-dim)',
+                boxShadow: done ? '0 0 6px rgba(154,112,24,0.4)' : 'none',
+                transition: 'background 0.3s, box-shadow 0.3s',
+              }} />
+            )
+          })}
         </div>
 
-        <div className="attempt-header">
-          <div>
-            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>{attempt.test.name}</div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--ink-dim)', marginTop: 2 }}>Question {currentIdx + 1} / {total}</div>
+        {/* ── Header ── */}
+        <div className="attempt-header" style={{ position: 'relative' }}>
+          <RuneCorners size={22} color="var(--gold-dim)" opacity={0.50} />
+
+          {/* decorative circles */}
+          <div style={{ position: 'absolute', top: -24, left: 80, width: 64, height: 64, color: '#6b4c8a', opacity: 0.20, pointerEvents: 'none' }}>
+            <MagicCircle variant="halo" speed={2} />
           </div>
+
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>{attempt.test.name}</div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--ink-dim)', marginTop: 2 }}>
+              Question {currentIdx + 1} / {total}
+            </div>
+          </div>
+
           {scorable > 0 && (
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.4rem', color: 'var(--gold)', lineHeight: 1 }}>
+            <div style={{ textAlign: 'right', position: 'relative', zIndex: 1 }}>
+              {/* halo ring behind score */}
+              <div style={{ position: 'absolute', top: '50%', right: -8, transform: 'translateY(-50%)', width: 64, height: 64, color: 'var(--gold)', opacity: 0.25, pointerEvents: 'none' }}>
+                <MagicCircle variant="halo" speed={1.5} />
+              </div>
+              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.4rem', color: 'var(--gold)', lineHeight: 1, position: 'relative' }}>
                 {score}<span style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', marginLeft: 2 }}>/ {scorable}</span>
               </div>
               <div style={{ fontSize: '0.68rem', color: 'var(--ink-dim)', letterSpacing: '0.12em', fontFamily: 'Cinzel, serif' }}>SCORE</div>
@@ -451,20 +507,33 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
           )}
         </div>
 
+        {/* ── Body ── */}
         <div className="attempt-body">
           <div className="w-full" style={{ maxWidth: 720 }}>
+
             {passage && (
-              <div style={{ marginBottom: 14, padding: '12px 16px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.88rem', color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', letterSpacing: '0.06em' }}>
-                Passage: {passage.title}
+              <div style={{ position: 'relative', marginBottom: 14, padding: '12px 16px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.88rem', color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', letterSpacing: '0.06em' }}>
+                <RuneCorners size={18} color="var(--gold-dim)" opacity={0.38} />
+                <div style={{ position: 'absolute', top: -18, right: -18, width: 48, height: 48, color: 'var(--gold)', opacity: 0.20, pointerEvents: 'none' }}>
+                  <MagicCircle variant="spark" speed={2} />
+                </div>
+                <span style={{ color: 'var(--gold-dim)', marginRight: 8 }}>Passage</span>
+                {passage.title}
               </div>
             )}
+
             {group && <GroupContextBox group={group} />}
 
             <OrnatePanel style={{ marginBottom: 14 } as React.CSSProperties}>
               <div className="flex items-start gap-4">
-                <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'var(--gold-dim)', paddingTop: 2, minWidth: 32 }}>
-                  {String(currentIdx + 1).padStart(2, '0')}
-                </span>
+                <div style={{ position: 'relative' }}>
+                  <div style={{ position: 'absolute', top: -14, left: -14, width: 44, height: 44, color: 'var(--gold)', opacity: 0.30, pointerEvents: 'none' }}>
+                    <MagicCircle variant="full" speed={3} />
+                  </div>
+                  <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'var(--gold-dim)', paddingTop: 2, minWidth: 32, display: 'block', position: 'relative' }}>
+                    {String(currentIdx + 1).padStart(2, '0')}
+                  </span>
+                </div>
                 <div style={{ flex: 1 }}>
                   <p className="question-text">{content}</p>
                   <div className="flex gap-2 mt-3 flex-wrap">
@@ -515,8 +584,8 @@ export default function AttemptPage() {
     </div>
   )
 
-  const questions  = attempt.test.questions ?? []
-  const total      = questions.length
+  const questions = attempt.test.questions ?? []
+  const total     = questions.length
 
   if (total === 0) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
