@@ -160,13 +160,19 @@ function StandaloneForm({ bank, categories }: { bank: Bank; categories: Category
   const [medium,     setMedium]     = useState(def.medium_count ?? 5)
   const [hard,       setHard]       = useState(def.hard_count   ?? 2)
   const [totalCount, setTotalCount] = useState(10)
+  const [genError,   setGenError]   = useState<string | null>(null)
 
   const handleGenerate = async () => {
+    setGenError(null)
     const categoryIds = catIds.map(Number).filter(Boolean)
     const config = diffMode === 'count'
       ? (() => { const [e, m, h] = autoSplit(totalCount); return { easy_count: e, medium_count: m, hard_count: h, standalone_only: true, ...(categoryIds.length ? { category_ids: categoryIds } : {}), ...(types.length ? { types } : {}) } })()
       : { easy_count: easy, medium_count: medium, hard_count: hard, standalone_only: true, ...(categoryIds.length ? { category_ids: categoryIds } : {}), ...(types.length ? { types } : {}) }
-    const test    = await generate.mutateAsync({ name: name.trim() || `${bank.name} — ${new Date().toLocaleString()}`, config })
+    const test = await generate.mutateAsync({ name: name.trim() || `${bank.name} — ${new Date().toLocaleString()}`, config })
+    if (!test.questions?.length) {
+      setGenError('No standalone questions found. Questions organised into passages cannot be used in Standalone mode — switch to Passage mode.')
+      return
+    }
     const attempt = await start.mutateAsync({ bankId: String(bank.id), testId: test.id })
     navigate(`/attempts/${attempt.id}`)
   }
@@ -194,6 +200,11 @@ function StandaloneForm({ bank, categories }: { bank: Bank; categories: Category
         onGenerate={handleGenerate}
         isPending={generate.isPending || start.isPending}
       />
+      {genError && (
+        <div style={{ marginTop: 14, padding: '10px 14px', background: 'rgba(176,48,48,0.06)', border: '1px solid rgba(176,48,48,0.3)', fontSize: '0.85rem', color: '#b03030' }}>
+          {genError}
+        </div>
+      )}
     </OrnatePanel>
   )
 }
@@ -211,6 +222,7 @@ function PassageForm({ bank, passages }: { bank: Bank; passages: Passage[] }) {
   const [medium,      setMedium]     = useState(0)
   const [hard,        setHard]       = useState(0)
   const [totalCount,  setTotalCount] = useState(10)
+  const [genError,    setGenError]   = useState<string | null>(null)
 
   const refillFromPassages = (ids: string[]) => {
     const selected = passages.filter(p => ids.includes(String(p.id)))
@@ -222,6 +234,7 @@ function PassageForm({ bank, passages }: { bank: Bank; passages: Passage[] }) {
 
   const handlePassageChange = (ids: string[]) => {
     setPassageIds(ids)
+    setGenError(null)
     if (diffMode === 'difficulty') refillFromPassages(ids)
   }
 
@@ -231,13 +244,21 @@ function PassageForm({ bank, passages }: { bank: Bank; passages: Passage[] }) {
   }
 
   const handleGenerate = async () => {
-    if (!passageIds.length) return
+    setGenError(null)
+    if (!passageIds.length) {
+      setGenError('Select at least one passage.')
+      return
+    }
     const pIds = passageIds.map(Number).filter(Boolean)
     const selectedPassages = passages.filter(p => pIds.includes(p.id))
     const config = diffMode === 'count'
       ? (() => { const [e, m, h] = autoSplit(totalCount); return { easy_count: e, medium_count: m, hard_count: h, passage_ids: pIds } })()
       : { easy_count: easy, medium_count: medium, hard_count: hard, passage_ids: pIds }
-    const test    = await generate.mutateAsync({ name: name.trim() || selectedPassages.map(p => p.title).join(' + '), config })
+    const test = await generate.mutateAsync({ name: name.trim() || selectedPassages.map(p => p.title).join(' + '), config })
+    if (!test.questions?.length) {
+      setGenError('No questions found for the selected passages and difficulty settings.')
+      return
+    }
     const attempt = await start.mutateAsync({ bankId: String(bank.id), testId: test.id })
     navigate(`/attempts/${attempt.id}`)
   }
@@ -266,6 +287,11 @@ function PassageForm({ bank, passages }: { bank: Bank; passages: Passage[] }) {
         onGenerate={handleGenerate}
         isPending={generate.isPending || start.isPending}
       />
+      {genError && (
+        <div style={{ marginTop: 14, padding: '10px 14px', background: 'rgba(176,48,48,0.06)', border: '1px solid rgba(176,48,48,0.3)', fontSize: '0.85rem', color: '#b03030' }}>
+          {genError}
+        </div>
+      )}
     </OrnatePanel>
   )
 }
