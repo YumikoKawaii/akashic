@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import TopBar from './TopBar'
 import Sidebar from './Sidebar'
 import Starfield from '../ui/Starfield'
+import { MagicCircleBackground } from '../ui/MagicCircle'
 import { LayoutProvider, useLayout } from '../../context/LayoutContext'
 
 function LayoutInner() {
@@ -15,6 +16,7 @@ function LayoutInner() {
   return (
     <>
       <Starfield />
+      <MagicCircleBackground />
       <div className="app-layout">
         <TopBar />
         <Sidebar />

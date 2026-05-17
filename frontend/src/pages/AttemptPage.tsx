@@ -6,6 +6,7 @@ import OrnatePanel from '../components/ui/OrnatePanel'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
 import Starfield from '../components/ui/Starfield'
 import { Spinner, MagicCircleBackground } from '../components/ui/MagicCircle'
+import Select from '../components/ui/Select'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -166,28 +167,34 @@ function AnswerOptions({ q, selected, onSelect, revealed = false }: {
     const isCorr  = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
     return (
       <div style={{ width: '100%' }}>
-        <select value={selected} disabled={locked} onChange={e => !locked && onSelect(e.target.value)} className="form-input"
-          style={{ cursor: locked ? 'default' : 'pointer', color: locked ? (isCorr ? '#2a8a3a' : '#b03030') : selected ? 'var(--ink)' : 'var(--ink-dim)', borderColor: locked ? (isCorr ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)') : undefined }}>
-          <option value="">— Select a heading —</option>
-          {ctx.headings.map(h => <option key={h.key} value={h.text}>{h.key}. {h.text}</option>)}
-        </select>
+        <Select
+          value={selected}
+          onChange={val => !locked && onSelect(val)}
+          options={ctx.headings.map(h => ({ value: h.text, label: `${h.key}. ${h.text}` }))}
+          placeholder="— Select a heading —"
+          disabled={locked}
+          triggerStyle={locked ? { borderColor: isCorr ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorr ? '#2a8a3a' : '#b03030' } : undefined}
+        />
         {locked && !isCorr && <CorrectAnswerBox answer={correct} />}
       </div>
     )
   }
 
   if ((q.type === 'matching_features' || q.type === 'matching_information') && (ctx?.options?.length || ctx?.paragraphs?.length)) {
-    const opts    = ctx?.options ?? ctx?.paragraphs ?? []
-    const correct = q.item?.answer ?? ''
-    const isCorr  = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
+    const opts      = ctx?.options ?? ctx?.paragraphs ?? []
+    const correct   = q.item?.answer ?? ''
+    const isCorr    = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
     const corrLabel = opts.find(o => o.key.toLowerCase() === correct.toLowerCase())
     return (
       <div style={{ width: '100%' }}>
-        <select value={selected} disabled={locked} onChange={e => !locked && onSelect(e.target.value)} className="form-input"
-          style={{ cursor: locked ? 'default' : 'pointer', color: locked ? (isCorr ? '#2a8a3a' : '#b03030') : selected ? 'var(--ink)' : 'var(--ink-dim)', borderColor: locked ? (isCorr ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)') : undefined }}>
-          <option value="">— Select —</option>
-          {opts.map(o => <option key={o.key} value={o.key}>{o.key}. {o.text}</option>)}
-        </select>
+        <Select
+          value={selected}
+          onChange={val => !locked && onSelect(val)}
+          options={opts.map(o => ({ value: o.key, label: `${o.key}. ${o.text}` }))}
+          placeholder="— Select —"
+          disabled={locked}
+          triggerStyle={locked ? { borderColor: isCorr ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorr ? '#2a8a3a' : '#b03030' } : undefined}
+        />
         {locked && !isCorr && <CorrectAnswerBox answer={`${correct}${corrLabel ? ` — ${corrLabel.text}` : ''}`} />}
       </div>
     )

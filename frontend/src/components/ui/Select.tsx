@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 
 export interface SelectOption {
   value: string
@@ -10,9 +10,11 @@ interface Props {
   onChange: (value: string) => void
   options: SelectOption[]
   placeholder?: string
+  disabled?: boolean
+  triggerStyle?: React.CSSProperties
 }
 
-export default function Select({ value, onChange, options, placeholder = '' }: Props) {
+export default function Select({ value, onChange, options, placeholder = '', disabled = false, triggerStyle }: Props) {
   const [open, setOpen]   = useState(false)
   const ref               = useRef<HTMLDivElement>(null)
 
@@ -31,17 +33,18 @@ export default function Select({ value, onChange, options, placeholder = '' }: P
       {/* Trigger */}
       <button
         type="button"
-        onClick={() => setOpen(v => !v)}
+        onClick={() => !disabled && setOpen(v => !v)}
         className="form-input"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          cursor: 'pointer',
+          cursor: disabled ? 'default' : 'pointer',
           textAlign: 'left',
           color: selected ? 'var(--ink)' : 'var(--ink-dim)',
           borderColor: open ? 'var(--gold)' : undefined,
           boxShadow: open ? '0 0 8px rgba(154,112,24,0.15)' : undefined,
+          ...triggerStyle,
         }}
       >
         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
