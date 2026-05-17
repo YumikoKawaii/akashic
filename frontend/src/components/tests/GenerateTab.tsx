@@ -7,7 +7,6 @@ import MultiSelect from '../ui/MultiSelect'
 import { useGenerateTest } from '../../hooks/useTests'
 import { useStartAttempt } from '../../hooks/useAttempts'
 import MagicCircle from '../ui/MagicCircle'
-import MoonPhaseFrieze from '../ui/MoonPhaseFrieze'
 
 type GenMode  = 'standalone' | 'passage'
 type DiffMode = 'difficulty' | 'count'
@@ -77,10 +76,6 @@ function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium
 
   return (
     <div style={{ paddingTop: 4 }}>
-      {/* moon phase divider */}
-      <div style={{ color: 'var(--gold-dim)', marginBottom: 12 }}>
-        <MoonPhaseFrieze height={18} opacity={0.55} />
-      </div>
     <div className="flex flex-wrap gap-3 items-center">
       <SegToggle
         value={diffMode} onChange={setDiffMode}
@@ -160,10 +155,6 @@ export default function GenerateTab({ bank, categories, passages }: Props) {
             options={[{ value: 'standalone', label: 'Standalone' }, { value: 'passage', label: 'Passage' }]} />
         </div>
 
-        {/* moon phase frieze as divider */}
-        <div style={{ position: 'relative', zIndex: 1, marginTop: 10, color: 'var(--gold-dim)' }}>
-          <MoonPhaseFrieze opacity={0.65} />
-        </div>
       </div>
 
       {mode === 'standalone'
