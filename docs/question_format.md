@@ -107,6 +107,10 @@ question.
 Use `groups` when the question type needs shared context such as heading pools,
 paragraph keys, feature options, word limits, or form templates.
 
+`context.title` — displayed as the instruction line above the question group. Always set this for `sentence_completion` and `form_completion` groups so test-takers see the word-limit rule (e.g. *"Choose NO MORE THAN TWO WORDS"*). If omitted, a default instruction is generated from `context.word_limit`.
+
+`context.word_limit` — integer; used to auto-generate the default instruction when `title` is absent.
+
 ```json
 {
   "type": "passage",
@@ -183,7 +187,7 @@ paragraph keys, feature options, word limits, or form templates.
 }
 ```
 
-### sentence_completion
+### sentence_completion (standalone)
 ```json
 {
   "type": "sentence_completion",
@@ -191,6 +195,24 @@ paragraph keys, feature options, word limits, or form templates.
   "category_name": "Reading",
   "content": "Forests act as carbon ___, absorbing CO₂ from the atmosphere.",
   "answer": "sinks"
+}
+```
+
+### sentence_completion group (in a passage)
+Use a group when multiple fill-blank questions share a word-limit instruction. `context.title` sets the instruction shown above the questions; `context.word_limit` is used to auto-generate one if `title` is absent.
+
+```json
+{
+  "type": "sentence_completion",
+  "difficulty": "medium",
+  "context": {
+    "title": "Complete the sentences below. Choose NO MORE THAN TWO WORDS from the passage for each answer.",
+    "word_limit": 2
+  },
+  "questions": [
+    { "content": "Forests act as carbon ___, absorbing CO₂.", "answer": "sinks" },
+    { "content": "The Amazon basin covers roughly ___ of South America.", "answer": "half" }
+  ]
 }
 ```
 

@@ -84,6 +84,30 @@
           { "content": "Item one to match", "answer": "B" },
           { "content": "Item two to match", "answer": "A" }
         ]
+      },
+      {
+        "type": "sentence_completion",
+        "difficulty": "hard",
+        "context": {
+          "title": "Complete the sentences below. Choose NO MORE THAN TWO WORDS from the passage for each answer.",
+          "word_limit": 2
+        },
+        "questions": [
+          { "content": "The first known use of rockets was for ___ purposes.", "answer": "military" },
+          { "content": "Rockets work by expelling ___ in one direction.", "answer": "gas" }
+        ]
+      },
+      {
+        "type": "form_completion",
+        "difficulty": "hard",
+        "context": {
+          "title": "Complete the form below. Write NO MORE THAN ONE WORD for each answer.",
+          "word_limit": 1
+        },
+        "questions": [
+          { "content": "Type of fuel used: ___", "answer": "solid" },
+          { "content": "Maximum altitude reached: ___ km", "answer": "120" }
+        ]
       }
     ]
   }

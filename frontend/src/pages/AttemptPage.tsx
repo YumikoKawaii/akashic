@@ -38,6 +38,22 @@ function CorrectAnswerBox({ answer }: { answer: string }) {
 
 function GroupContextBox({ group }: { group: QuestionGroup }) {
   const ctx = group.context
+
+  if (group.type === 'sentence_completion' || group.type === 'form_completion') {
+    const instruction = ctx.title ?? (
+      group.type === 'form_completion'
+        ? 'Complete the form below.'
+        : ctx.word_limit
+          ? `Complete the sentences using NO MORE THAN ${ctx.word_limit} WORD${ctx.word_limit > 1 ? 'S' : ''} from the passage.`
+          : 'Complete the sentences using words from the passage.'
+    )
+    return (
+      <div style={{ marginBottom: 12, padding: '10px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.92rem', fontFamily: 'EB Garamond, serif', fontStyle: 'italic', color: 'var(--ink-dim)' }}>
+        {instruction}
+      </div>
+    )
+  }
+
   let label = ''
   let items: { key: string; text: string }[] = []
 
@@ -326,19 +342,33 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
               {items.map((tq) => {
                 const q = tq.question!
                 const sel = answers[String(q.id)] ?? ''
+                const isFillBlank = q.type === 'sentence_completion' || q.type === 'form_completion'
                 return (
                   <div key={q.id} style={{ marginBottom: 18 }}>
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
-                      <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 28, paddingTop: 2 }}>
-                        {tq.position}.
-                      </span>
-                      <p style={{ flex: 1, margin: 0, fontFamily: 'EB Garamond, serif', fontSize: '1rem', color: 'var(--ink)', lineHeight: 1.5 }}>
-                        {questionContent(q)}
-                      </p>
-                    </div>
-                    <div style={{ paddingLeft: 40 }}>
-                      <AnswerOptions q={q} selected={sel} onSelect={val => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))} />
-                    </div>
+                    {isFillBlank ? (
+                      <div style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
+                        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 28, flexShrink: 0 }}>
+                          {tq.position}.
+                        </span>
+                        <div style={{ flex: 1 }}>
+                          <AnswerOptions q={q} selected={sel} onSelect={val => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))} />
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
+                          <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 28, paddingTop: 2 }}>
+                            {tq.position}.
+                          </span>
+                          <p style={{ flex: 1, margin: 0, fontFamily: 'EB Garamond, serif', fontSize: '1rem', color: 'var(--ink)', lineHeight: 1.5 }}>
+                            {questionContent(q)}
+                          </p>
+                        </div>
+                        <div style={{ paddingLeft: 40 }}>
+                          <AnswerOptions q={q} selected={sel} onSelect={val => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))} />
+                        </div>
+                      </>
+                    )}
                   </div>
                 )
               })}
