@@ -4,6 +4,11 @@ import { Test } from '../../types'
 import DifficultyBar from '../ui/DifficultyBar'
 import { useDeleteTest } from '../../hooks/useTests'
 import { useStartAttempt, useTestAttempts } from '../../hooks/useAttempts'
+import MagicCircle from '../ui/MagicCircle'
+
+const DIFF_COLOR: Record<string, string> = {
+  easy: '#2a8a3a', medium: '#9a7018', hard: '#b03030',
+}
 
 interface Props { test: Test; bankId: string }
 
@@ -25,8 +30,22 @@ export default function TestCard({ test, bankId }: Props) {
 
   const completed = attempts.filter(a => a.completed_at)
 
+  const dominant = cfg.hard_count >= cfg.medium_count && cfg.hard_count >= cfg.easy_count
+    ? 'hard' : cfg.medium_count >= cfg.easy_count ? 'medium' : 'easy'
+  const diffColor = DIFF_COLOR[dominant]
+
   return (
     <div className="test-card">
+      {/* Top-left — dominant difficulty color */}
+      <div style={{ position: 'absolute', top: -44, left: -44, width: 110, height: 110, color: diffColor, opacity: 0.55, pointerEvents: 'none', zIndex: 0 }}>
+        <MagicCircle variant="full" speed={5} />
+      </div>
+      {/* Bottom-right — purple */}
+      <div style={{ position: 'absolute', bottom: -44, right: -44, width: 110, height: 110, color: '#6b4c8a', opacity: 0.45, pointerEvents: 'none', zIndex: 0 }}>
+        <MagicCircle variant="full" speed={5} />
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
       <div className="test-card-title">{test.name}</div>
       <div className="test-card-meta">
         {total} questions<br />
@@ -116,6 +135,7 @@ export default function TestCard({ test, bankId }: Props) {
           })}
         </div>
       )}
+      </div>
     </div>
   )
 }
