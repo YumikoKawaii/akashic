@@ -75,7 +75,14 @@ function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium
   }
 
   return (
-    <div className="flex flex-wrap gap-3 items-center" style={{ paddingTop: 14, borderTop: '1px solid var(--border-dim)' }}>
+    <div style={{ paddingTop: 4 }}>
+      {/* ornate divider */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, var(--border-dim))' }} />
+        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: 'var(--gold-dim)', letterSpacing: '0.3em', opacity: 0.8 }}>✦</span>
+        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, var(--border-dim))' }} />
+      </div>
+    <div className="flex flex-wrap gap-3 items-center">
       <SegToggle
         value={diffMode} onChange={setDiffMode}
         options={[{ value: 'difficulty', label: 'By Difficulty' }, { value: 'count', label: 'By Count' }]}
@@ -116,10 +123,16 @@ function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium
         </div>
       )}
 
-      <button className="btn btn-primary" onClick={onGenerate} disabled={isPending}
-        style={{ height: 38, padding: '0 24px', marginLeft: 'auto' }}>
-        {isPending ? '…' : '▶ Generate'}
-      </button>
+      <div style={{ marginLeft: 'auto', position: 'relative' }}>
+        <div style={{ position: 'absolute', top: -22, right: -22, width: 82, height: 82, color: 'var(--gold)', opacity: 0.55, pointerEvents: 'none', zIndex: 0 }}>
+          <MagicCircle variant="halo" speed={2} />
+        </div>
+        <button className="btn btn-primary" onClick={onGenerate} disabled={isPending}
+          style={{ height: 38, padding: '0 24px', position: 'relative', zIndex: 1 }}>
+          {isPending ? '…' : '▶ Generate'}
+        </button>
+      </div>
+    </div>
     </div>
   )
 }
