@@ -7,7 +7,6 @@ import MultiSelect from '../ui/MultiSelect'
 import { useGenerateTest } from '../../hooks/useTests'
 import { useStartAttempt } from '../../hooks/useAttempts'
 import MagicCircle from '../ui/MagicCircle'
-import AstrolabeBand from '../ui/AstrolabeBand'
 import MoonPhaseFrieze from '../ui/MoonPhaseFrieze'
 
 type GenMode  = 'standalone' | 'passage'
@@ -145,11 +144,6 @@ export default function GenerateTab({ bank, categories, passages }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* astrolabe band spanning full width */}
-      <div style={{ color: 'var(--gold-dim)', margin: '0 -2px' }}>
-        <AstrolabeBand opacity={0.65} />
-      </div>
-
       <div style={{ position: 'relative' }}>
         {/* decorative circles flanking the title row */}
         <div style={{ position: 'absolute', top: -40, left: -40, width: 110, height: 110, color: 'var(--gold)', opacity: 0.50, pointerEvents: 'none', zIndex: 0 }}>

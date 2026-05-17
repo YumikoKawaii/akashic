@@ -1,7 +1,6 @@
 import { CSSProperties, ReactNode } from 'react'
 import MagicCircle from './MagicCircle'
 import RuneCorners from './RuneCorners'
-import AlchemicalBg from './AlchemicalBg'
 import OghamBorder from './OghamBorder'
 
 interface Props {
@@ -13,9 +12,6 @@ interface Props {
 export default function OrnatePanel({ children, className = '', style }: Props) {
   return (
     <div className={`ornate-panel ${className}`} style={{ overflow: 'hidden', ...style }}>
-      {/* alchemical symbol background texture */}
-      <AlchemicalBg />
-
       {/* ogham border on the right side */}
       <OghamBorder side="right" color="var(--gold-dim)" opacity={0.38} />
 
