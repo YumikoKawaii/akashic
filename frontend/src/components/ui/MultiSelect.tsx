@@ -44,7 +44,10 @@ export default function MultiSelect({ value, onChange, options, placeholder = 'A
   // Close on scroll / resize to avoid stale positions
   useEffect(() => {
     if (!open) return
-    const close = () => setOpen(false)
+    const close = (e: Event) => {
+      if (dropdownRef.current?.contains(e.target as Node)) return
+      setOpen(false)
+    }
     window.addEventListener('scroll', close, true)
     window.addEventListener('resize', close)
     return () => {
