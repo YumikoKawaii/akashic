@@ -72,6 +72,7 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 	}
 	gFilter := repository.GroupFilter{
 		CategoryIDs: config.CategoryIDs,
+		PassageIDs:  config.PassageIDs,
 		Types:       config.Types,
 	}
 

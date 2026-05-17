@@ -3,7 +3,8 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useBank, useMembers, useAddMember, useRemoveMember } from '../hooks/useBanks'
 import { useQuestions } from '../hooks/useQuestions'
-import { useTests } from '../hooks/useTests'
+import { useTests, useGenerateTest } from '../hooks/useTests'
+import { useStartAttempt } from '../hooks/useAttempts'
 import { useCategories } from '../hooks/useCategories'
 import { usePassages, useDeletePassage } from '../hooks/usePassages'
 import { useAuth } from '../contexts/AuthContext'
@@ -46,6 +47,8 @@ export default function BankPage() {
   const { data: passages = [] }    = usePassages(bankId)
   const { data: members = [] }     = useMembers(bankId)
   const deletePassage              = useDeletePassage(bankId)
+  const generateTest               = useGenerateTest(bankId)
+  const startAttempt               = useStartAttempt()
   const addMember                  = useAddMember(bankId)
   const removeMember               = useRemoveMember(bankId)
 
@@ -58,6 +61,26 @@ export default function BankPage() {
   const [importing,     setImporting]     = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [pConfirmDel,   setPConfirmDel]   = useState<number | null>(null)
+
+  const [generatingPassageId, setGeneratingPassageId] = useState<number | null>(null)
+
+  const handleGenerateFromPassage = async (p: typeof passages[0]) => {
+    setGeneratingPassageId(p.id)
+    try {
+      const groups = p.groups ?? []
+      const easy   = groups.filter(g => g.difficulty === 'easy').length
+      const medium = groups.filter(g => g.difficulty === 'medium').length
+      const hard   = groups.filter(g => g.difficulty === 'hard').length
+      const test = await generateTest.mutateAsync({
+        name: p.title,
+        config: { easy_count: easy, medium_count: medium, hard_count: hard, passage_ids: [p.id] },
+      })
+      const attempt = await startAttempt.mutateAsync({ bankId, testId: test.id })
+      navigate(`/attempts/${attempt.id}`)
+    } finally {
+      setGeneratingPassageId(null)
+    }
+  }
 
   const [shareOpen,  setShareOpen]  = useState(false)
   const [shareEmail, setShareEmail] = useState('')
@@ -315,20 +338,30 @@ export default function BankPage() {
                         {p.category?.name} · {p.difficulty}
                       </div>
                     </div>
-                    {canEdit && (
-                      <div className="flex gap-2">
-                        {pConfirmDel === p.id ? (
-                          <>
-                            <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px', color: '#b03030', borderColor: 'rgba(176,48,48,0.4)' }}
-                              onClick={() => { deletePassage.mutate(String(p.id)); setPConfirmDel(null) }}>Yes</button>
-                            <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px' }}
-                              onClick={() => setPConfirmDel(null)}>Cancel</button>
-                          </>
-                        ) : (
-                          <button className="btn-danger" onClick={() => setPConfirmDel(p.id)}>✕</button>
-                        )}
-                      </div>
-                    )}
+                    <div className="flex gap-2 items-center">
+                      <button
+                        className="btn btn-ghost"
+                        style={{ fontSize: '0.6rem', padding: '4px 10px', whiteSpace: 'nowrap' }}
+                        disabled={generatingPassageId === p.id}
+                        onClick={() => handleGenerateFromPassage(p)}
+                      >
+                        {generatingPassageId === p.id ? '…' : '⚔ Generate'}
+                      </button>
+                      {canEdit && (
+                        <>
+                          {pConfirmDel === p.id ? (
+                            <>
+                              <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px', color: '#b03030', borderColor: 'rgba(176,48,48,0.4)' }}
+                                onClick={() => { deletePassage.mutate(String(p.id)); setPConfirmDel(null) }}>Yes</button>
+                              <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px' }}
+                                onClick={() => setPConfirmDel(null)}>Cancel</button>
+                            </>
+                          ) : (
+                            <button className="btn-danger" onClick={() => setPConfirmDel(p.id)}>✕</button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
 	                  {p.body && (
 	                    <p style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', lineHeight: 1.6, whiteSpace: 'pre-wrap',

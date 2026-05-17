@@ -10,6 +10,7 @@ import (
 type GroupFilter struct {
 	CategoryIDs []int
 	PassageID   *int
+	PassageIDs  []int
 	Type        string
 	Types       []string
 	Difficulty  string
@@ -39,6 +40,9 @@ func (r *questionGroupRepo) FindByBank(bankID int, f GroupFilter) ([]model.Quest
 	}
 	if f.PassageID != nil {
 		q = q.Where("passage_id = ?", *f.PassageID)
+	}
+	if len(f.PassageIDs) > 0 {
+		q = q.Where("passage_id IN ?", f.PassageIDs)
 	}
 	if f.Type != "" {
 		q = q.Where("type = ?", f.Type)

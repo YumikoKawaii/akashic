@@ -22,6 +22,7 @@ export interface TestConfig {
   medium_count: number
   hard_count: number
   category_ids?: number[]
+  passage_ids?: number[]
   types?: string[]
   tags?: string[]
 }
