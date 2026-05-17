@@ -245,15 +245,27 @@ function PassageForm({ bank, passages }: { bank: Bank; passages: Passage[] }) {
 
   const handleGenerate = async () => {
     setGenError(null)
-    if (!passageIds.length) {
-      setGenError('Select at least one passage.')
+    const effectiveIds = passageIds.length
+      ? passageIds
+      : passages.length
+        ? [String(passages[Math.floor(Math.random() * passages.length)].id)]
+        : []
+    if (!effectiveIds.length) {
+      setGenError('No passages available in this bank.')
       return
     }
-    const pIds = passageIds.map(Number).filter(Boolean)
+    const pIds             = effectiveIds.map(Number).filter(Boolean)
     const selectedPassages = passages.filter(p => pIds.includes(p.id))
-    const config = diffMode === 'count'
-      ? (() => { const [e, m, h] = autoSplit(totalCount); return { easy_count: e, medium_count: m, hard_count: h, passage_ids: pIds } })()
-      : { easy_count: easy, medium_count: medium, hard_count: hard, passage_ids: pIds }
+    const eCounts          = diffMode === 'difficulty'
+      ? { easy_count: easy, medium_count: medium, hard_count: hard }
+      : (() => { const [e, m, h] = autoSplit(totalCount); return { easy_count: e, medium_count: m, hard_count: h } })()
+    const counts           = passageIds.length
+      ? eCounts
+      : (() => {
+          const groups = selectedPassages.flatMap(p => p.groups ?? [])
+          return { easy_count: groups.filter(g => g.difficulty === 'easy').length, medium_count: groups.filter(g => g.difficulty === 'medium').length, hard_count: groups.filter(g => g.difficulty === 'hard').length }
+        })()
+    const config = { ...counts, passage_ids: pIds }
     const test = await generate.mutateAsync({ name: name.trim() || selectedPassages.map(p => p.title).join(' + '), config })
     if (!test.questions?.length) {
       setGenError('No questions found for the selected passages and difficulty settings.')
