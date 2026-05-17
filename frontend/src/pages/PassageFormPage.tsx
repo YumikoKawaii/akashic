@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useCategories } from '../hooks/useCategories'
 import { useCreatePassage, useUpdatePassage, usePassage } from '../hooks/usePassages'
-import { FormField, Input, Textarea } from '../components/ui/FormField'
+import { FormField, Input } from '../components/ui/FormField'
 import Select from '../components/ui/Select'
 import OrnatePanel from '../components/ui/OrnatePanel'
 import { QuestionDifficulty } from '../types'
@@ -29,14 +29,13 @@ export default function PassageFormPage() {
   )
 
   const [title,      setTitle]      = useState(existing?.title ?? '')
-  const [body,       setBody]       = useState(existing?.body ?? '')
   const [difficulty, setDifficulty] = useState<QuestionDifficulty>(existing?.difficulty ?? 'medium')
   const [categoryId, setCategoryId] = useState<number>(existing?.category_id ?? (categories[0]?.id ?? 0))
 
   const isPending = create.isPending || update.isPending
 
   const handleSubmit = async () => {
-    const payload = { title: title.trim(), body, difficulty, category_id: categoryId }
+    const payload = { title: title.trim(), difficulty, category_id: categoryId }
     if (isEdit) {
       await update.mutateAsync({ id: passageId!, data: payload })
     } else {
@@ -75,15 +74,6 @@ export default function PassageFormPage() {
               <Select value={difficulty} onChange={v => setDifficulty(v as QuestionDifficulty)} options={DIFF_OPTIONS} />
             </FormField>
           </div>
-
-          <FormField label="Body">
-            <Textarea
-              value={body}
-              onChange={e => setBody(e.target.value)}
-              placeholder="Paste or type the passage text…"
-              rows={12}
-            />
-          </FormField>
 
           <div className="flex gap-3 mt-2">
             <button className="btn btn-primary" onClick={handleSubmit} disabled={isPending || !title.trim() || !categoryId}>

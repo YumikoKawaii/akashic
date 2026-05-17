@@ -58,7 +58,6 @@ type IngestPassageGroup struct {
 type IngestPassageRow struct {
 	Type         string                     `json:"type"          yaml:"type"`
 	Title        string                     `json:"title"         yaml:"title"`
-	Body         string                     `json:"body"          yaml:"body"`
 	Paragraphs   []model.PassageParagraph   `json:"paragraphs"    yaml:"paragraphs"`
 	Difficulty   string                     `json:"difficulty"    yaml:"difficulty"`
 	CategoryName string                     `json:"category_name" yaml:"category_name"`
@@ -261,7 +260,6 @@ func (s *IngestService) Ingest(bankID int, r io.Reader, ext string) (*IngestResu
 				BankID:     bankID,
 				CategoryID: catID,
 				Title:      row.Title,
-				Body:       row.Body,
 				Paragraphs: row.Paragraphs,
 				Difficulty: row.Difficulty,
 			}

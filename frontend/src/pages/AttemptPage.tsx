@@ -207,28 +207,18 @@ function AnswerOptions({ q, selected, onSelect, revealed = false }: {
 // ── Passage body ──────────────────────────────────────────────────────────────
 
 function PassageBody({ passage }: { passage: Passage }) {
-  const paragraphs = passage.paragraphs
-
-  if (paragraphs && paragraphs.length > 0) {
-    return (
-      <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '1rem', lineHeight: 1.9, color: 'var(--ink)' }}>
-        {paragraphs.map((para, i) => (
-          <p key={i} style={{ marginBottom: 18, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-            {para.label && (
-              <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', fontWeight: 700, color: 'var(--gold-dim)', minWidth: 18, paddingTop: 4, flexShrink: 0 }}>
-                {para.label}
-              </span>
-            )}
-            <span>{para.text}</span>
-          </p>
-        ))}
-      </div>
-    )
-  }
-
   return (
-    <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '1rem', lineHeight: 1.9, color: 'var(--ink)', whiteSpace: 'pre-wrap' }}>
-      {passage.body}
+    <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '1rem', lineHeight: 1.9, color: 'var(--ink)' }}>
+      {(passage.paragraphs ?? []).map((para, i) => (
+        <p key={i} style={{ marginBottom: 18, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          {para.label && (
+            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', fontWeight: 700, color: 'var(--gold-dim)', minWidth: 18, paddingTop: 4, flexShrink: 0 }}>
+              {para.label}
+            </span>
+          )}
+          <span>{para.text}</span>
+        </p>
+      ))}
     </div>
   )
 }

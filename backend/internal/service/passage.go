@@ -40,7 +40,6 @@ func (s *PassageService) GetByID(bankID, id int) (*model.Passage, error) {
 type CreatePassageInput struct {
 	CategoryID int    `json:"category_id" binding:"required"`
 	Title      string `json:"title"       binding:"required"`
-	Body       string `json:"body"`
 	Difficulty string `json:"difficulty"  binding:"required"`
 }
 
@@ -59,7 +58,6 @@ func (s *PassageService) Create(bankID int, input CreatePassageInput) (*model.Pa
 		BankID:     bankID,
 		CategoryID: input.CategoryID,
 		Title:      input.Title,
-		Body:       input.Body,
 		Difficulty: input.Difficulty,
 	}
 	return passage, s.repo.Create(passage)
@@ -68,7 +66,6 @@ func (s *PassageService) Create(bankID int, input CreatePassageInput) (*model.Pa
 type UpdatePassageInput struct {
 	CategoryID *int   `json:"category_id"`
 	Title      string `json:"title"`
-	Body       string `json:"body"`
 	Difficulty string `json:"difficulty"`
 }
 
@@ -92,9 +89,6 @@ func (s *PassageService) Update(bankID, id int, input UpdatePassageInput) (*mode
 	}
 	if input.Title != "" {
 		p.Title = input.Title
-	}
-	if input.Body != "" {
-		p.Body = input.Body
 	}
 	if input.Difficulty != "" {
 		p.Difficulty = input.Difficulty

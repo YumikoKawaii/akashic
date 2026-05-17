@@ -2,7 +2,11 @@
   {
     "type": "passage",
     "title": "Passage title — replace with actual passage title",
-    "body": "Full passage body text goes here. This is the reading text that test-takers will read before answering the questions below. Replace with the actual passage content.",
+    "paragraphs": [
+      { "label": "A", "text": "First paragraph text goes here." },
+      { "label": "B", "text": "Second paragraph text goes here." },
+      { "label": "C", "text": "Third paragraph text goes here." }
+    ],
     "difficulty": "hard",
     "category_name": "IELTS Reading",
     "tags": ["cambridge-3", "test-1", "passage-3"],

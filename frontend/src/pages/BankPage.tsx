@@ -368,9 +368,9 @@ export default function BankPage() {
                       )}
                     </div>
 
-                    {p.body && (
-                      <p style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', lineHeight: 1.6, whiteSpace: 'pre-wrap', maxHeight: 100, overflow: 'hidden', maskImage: 'linear-gradient(to bottom, black 60%, transparent)', marginBottom: 8 }}>
-                        {p.body}
+                    {p.paragraphs && p.paragraphs.length > 0 && (
+                      <p style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', lineHeight: 1.6, maxHeight: 100, overflow: 'hidden', maskImage: 'linear-gradient(to bottom, black 60%, transparent)', marginBottom: 8 }}>
+                        {p.paragraphs[0].text}
                       </p>
                     )}
 

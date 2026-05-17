@@ -25,7 +25,7 @@ export function usePassage(bankId: string, id: string) {
 export function useCreatePassage(bankId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: { category_id: number; title: string; body: string; difficulty: string }) =>
+    mutationFn: (data: { category_id: number; title: string; difficulty: string }) =>
       passagesApi.create(bankId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: passageKeys.all(bankId) }),
   })
@@ -34,7 +34,7 @@ export function useCreatePassage(bankId: string) {
 export function useUpdatePassage(bankId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<{ category_id: number; title: string; body: string; difficulty: string }> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<{ category_id: number; title: string; difficulty: string }> }) =>
       passagesApi.update(bankId, id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: passageKeys.all(bankId) }),
   })

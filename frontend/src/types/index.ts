@@ -116,7 +116,6 @@ export interface Passage {
   category_id: number
   category?: Category
   title: string
-  body: string
   paragraphs?: PassageParagraph[]
   difficulty: QuestionDifficulty
   groups?: QuestionGroup[]
