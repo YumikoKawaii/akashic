@@ -36,11 +36,11 @@ export default function QuestionCard({ question, index, bankId }: Props) {
       onClick={() => navigate(`/banks/${bankId}/questions/${question.id}/edit`)}
     >
       {/* Top-left: outer rings, difficulty-colored */}
-      <div style={{ position: 'absolute', top: -28, left: -28, width: 72, height: 72, color: diffColor, opacity: 0.22, pointerEvents: 'none', zIndex: 0 }}>
+      <div style={{ position: 'absolute', top: -28, left: -28, width: 80, height: 80, color: diffColor, opacity: 0.45, pointerEvents: 'none', zIndex: 0 }}>
         <MagicCircle variant="outer" />
       </div>
       {/* Bottom-right: inner geometry, gold */}
-      <div style={{ position: 'absolute', bottom: -28, right: -28, width: 64, height: 64, color: '#9a7018', opacity: 0.18, pointerEvents: 'none', zIndex: 0 }}>
+      <div style={{ position: 'absolute', bottom: -28, right: -28, width: 70, height: 70, color: '#9a7018', opacity: 0.38, pointerEvents: 'none', zIndex: 0 }}>
         <MagicCircle variant="inner" />
       </div>
 
