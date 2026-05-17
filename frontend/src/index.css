@@ -615,7 +615,7 @@ input[type=number].form-input { -moz-appearance: textfield; }
 }
 .answer-option {
   position: relative;
-  padding: 20px 24px;
+  padding: 16px 20px;
   background: var(--bg-card);
   border: 1px solid var(--border-dim);
   cursor: pointer;
@@ -626,6 +626,17 @@ input[type=number].form-input { -moz-appearance: textfield; }
   align-items: center;
   gap: 14px;
 }
+/* left accent bar */
+.answer-option::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--gold-dim), var(--gold));
+  opacity: 0;
+  transition: opacity 0.22s;
+}
+/* shimmer sweep */
 .answer-option::after {
   content: '';
   position: absolute; inset: 0;
@@ -633,22 +644,41 @@ input[type=number].form-input { -moz-appearance: textfield; }
   transform: translateX(-100%);
   transition: transform 0.5s ease;
 }
-.answer-option:hover { border-color: var(--border); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(154,112,24,0.12); }
-.answer-option:hover::after { transform: translateX(100%); }
+.answer-option:hover { border-color: var(--border); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(154,112,24,0.10); }
+.answer-option:hover::before  { opacity: 0.45; }
+.answer-option:hover::after   { transform: translateX(100%); }
 .answer-option.selected {
   border-color: var(--gold);
-  background: rgba(200,160,48,0.08);
-  box-shadow: 0 0 20px rgba(200,160,48,0.15), inset 0 0 12px rgba(200,160,48,0.04);
+  background: rgba(200,160,48,0.07);
+  box-shadow: 0 0 20px rgba(200,160,48,0.12), inset 0 0 12px rgba(200,160,48,0.04);
 }
-.answer-option.correct { border-color: rgba(61,170,80,0.6); background: rgba(61,170,80,0.08); }
-.answer-option.wrong   { border-color: rgba(204,56,56,0.6); background: rgba(204,56,56,0.08); }
+.answer-option.selected::before { opacity: 1; }
+.answer-option.correct { border-color: rgba(42,138,58,0.6); background: rgba(42,138,58,0.07); }
+.answer-option.correct::before { background: #2a8a3a; opacity: 1; }
+.answer-option.wrong   { border-color: rgba(176,48,48,0.6); background: rgba(176,48,48,0.06); }
+.answer-option.wrong::before   { background: #b03030; opacity: 1; }
 .answer-key {
   font-family: 'Cinzel', serif;
-  font-size: 0.95rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
   color: var(--gold-dim);
-  min-width: 24px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--gold-dim);
+  flex-shrink: 0;
+  transition: background 0.22s, color 0.22s, border-color 0.22s;
+  position: relative;
+  z-index: 1;
 }
-.answer-text { font-size: 1.05rem; color: var(--ink); flex: 1; }
+.answer-option:hover   .answer-key { border-color: var(--gold); color: var(--gold); }
+.answer-option.selected .answer-key { background: var(--gold); border-color: var(--gold); color: var(--bg); }
+.answer-option.correct  .answer-key { background: rgba(42,138,58,0.15); border-color: rgba(42,138,58,0.6); color: #2a8a3a; }
+.answer-option.wrong    .answer-key { background: rgba(176,48,48,0.10); border-color: rgba(176,48,48,0.5); color: #b03030; }
+.answer-text { font-size: 1rem; color: var(--ink); flex: 1; position: relative; z-index: 1; }
 
 /* ─── Word Bank ────────────────────────────────────────────────── */
 .word-bank {
