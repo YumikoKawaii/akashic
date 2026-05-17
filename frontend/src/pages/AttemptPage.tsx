@@ -72,7 +72,16 @@ function GroupContextBox({ group }: { group: QuestionGroup }) {
     label = 'Paragraphs'; items = ctx.paragraphs ?? ctx.options ?? []
     defaultTitle = 'Which paragraph contains the following information?'
   }
-  if (!items.length) return null
+  if (!items.length) {
+    const title = ctx.title
+    if (!title) return null
+    return (
+      <div style={{ position: 'relative', marginBottom: 12, padding: '10px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.92rem', fontFamily: 'EB Garamond, serif', fontStyle: 'italic', color: 'var(--ink-dim)' }}>
+        <RuneCorners size={18} color="var(--gold-dim)" opacity={0.4} />
+        {title}
+      </div>
+    )
+  }
 
   const instruction = ctx.title ?? defaultTitle
 

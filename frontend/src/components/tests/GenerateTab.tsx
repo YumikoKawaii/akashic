@@ -230,65 +230,57 @@ function StandaloneForm({ bank, categories }: { bank: Bank; categories: Category
 }
 
 /* ── Passage ────────────────────────────────────────────────────── */
+type PassageDiff = 'any' | 'easy' | 'medium' | 'hard'
+
 function PassageForm({ bank, passages }: { bank: Bank; passages: Passage[] }) {
   const navigate = useNavigate()
   const generate = useGenerateTest(String(bank.id))
   const start    = useStartAttempt()
 
-  const [name,        setName]       = useState('')
-  const [passageIds,  setPassageIds] = useState<string[]>([])
-  const [diffMode,    setDiffMode]   = useState<DiffMode>('difficulty')
-  const [easy,        setEasy]       = useState(0)
-  const [medium,      setMedium]     = useState(0)
-  const [hard,        setHard]       = useState(0)
-  const [totalCount,  setTotalCount] = useState(10)
-  const [genError,    setGenError]   = useState<string | null>(null)
+  const [name,       setName]      = useState('')
+  const [passageIds, setPassageIds] = useState<string[]>([])
+  const [passDiff,   setPassDiff]  = useState<PassageDiff>('any')
+  const [genError,   setGenError]  = useState<string | null>(null)
 
-  const refillFromPassages = (ids: string[]) => {
-    const selected = passages.filter(p => ids.includes(String(p.id)))
-    const groups   = selected.flatMap(p => p.groups ?? [])
-    setEasy  (groups.filter(g => g.difficulty === 'easy').length)
-    setMedium(groups.filter(g => g.difficulty === 'medium').length)
-    setHard  (groups.filter(g => g.difficulty === 'hard').length)
-  }
+  // Passages to use: explicit selection overrides difficulty filter
+  const filtered = passDiff === 'any'
+    ? passages
+    : passages.filter(p => p.difficulty === passDiff)
 
-  const handlePassageChange = (ids: string[]) => {
-    setPassageIds(ids)
-    setGenError(null)
-    if (diffMode === 'difficulty') refillFromPassages(ids)
-  }
-
-  const handleDiffModeChange = (m: DiffMode) => {
-    setDiffMode(m)
-    if (m === 'difficulty') refillFromPassages(passageIds)
-  }
+  const matchCount = filtered.length
 
   const handleGenerate = async () => {
     setGenError(null)
-    const effectiveIds = passageIds.length
-      ? passageIds
-      : passages.length
-        ? [String(passages[Math.floor(Math.random() * passages.length)].id)]
-        : []
-    if (!effectiveIds.length) {
-      setGenError('No passages available in this bank.')
+
+    // Resolve which passages to generate from
+    let toUse: Passage[]
+    if (passageIds.length) {
+      toUse = passages.filter(p => passageIds.includes(String(p.id)))
+    } else if (passDiff !== 'any') {
+      toUse = filtered
+    } else {
+      // No filter — pick one at random
+      if (!passages.length) { setGenError('No passages available in this bank.'); return }
+      toUse = [passages[Math.floor(Math.random() * passages.length)]]
+    }
+
+    if (!toUse.length) {
+      setGenError(`No ${passDiff} passages found in this bank.`)
       return
     }
-    const pIds             = effectiveIds.map(Number).filter(Boolean)
-    const selectedPassages = passages.filter(p => pIds.includes(p.id))
-    const eCounts          = diffMode === 'difficulty'
-      ? { easy_count: easy, medium_count: medium, hard_count: hard }
-      : (() => { const [e, m, h] = autoSplit(totalCount); return { easy_count: e, medium_count: m, hard_count: h } })()
-    const counts           = passageIds.length
-      ? eCounts
-      : (() => {
-          const groups = selectedPassages.flatMap(p => p.groups ?? [])
-          return { easy_count: groups.filter(g => g.difficulty === 'easy').length, medium_count: groups.filter(g => g.difficulty === 'medium').length, hard_count: groups.filter(g => g.difficulty === 'hard').length }
-        })()
-    const config = { ...counts, passage_ids: pIds }
-    const test = await generate.mutateAsync({ name: name.trim() || selectedPassages.map(p => p.title).join(' + '), config })
+
+    const pIds   = toUse.map(p => p.id)
+    const groups = toUse.flatMap(p => p.groups ?? [])
+    const config = {
+      easy_count:   groups.filter(g => g.difficulty === 'easy').length,
+      medium_count: groups.filter(g => g.difficulty === 'medium').length,
+      hard_count:   groups.filter(g => g.difficulty === 'hard').length,
+      passage_ids:  pIds,
+    }
+
+    const test = await generate.mutateAsync({ name: name.trim() || toUse.map(p => p.title).join(' + '), config })
     if (!test.questions?.length) {
-      setGenError('No questions found for the selected passages and difficulty settings.')
+      setGenError('No questions found for the selected passages.')
       return
     }
     const attempt = await start.mutateAsync({ bankId: String(bank.id), testId: test.id })
@@ -304,21 +296,47 @@ function PassageForm({ bank, passages }: { bank: Bank; passages: Passage[] }) {
         <FormField label="Passages">
           <MultiSelect
             value={passageIds}
-            onChange={handlePassageChange}
-            placeholder="Select Passages"
+            onChange={ids => { setPassageIds(ids); setGenError(null) }}
+            placeholder="All passages (optional)"
             options={passages.map(p => ({ value: String(p.id), label: p.title }))}
           />
         </FormField>
       </div>
-      <DifficultyRow
-        diffMode={diffMode} setDiffMode={handleDiffModeChange}
-        easy={easy} setEasy={setEasy}
-        medium={medium} setMedium={setMedium}
-        hard={hard} setHard={setHard}
-        totalCount={totalCount} setTotalCount={setTotalCount}
-        onGenerate={handleGenerate}
-        isPending={generate.isPending || start.isPending}
-      />
+
+      {/* Difficulty — only shown when no explicit passages selected */}
+      {!passageIds.length && (
+        <div className="flex items-center gap-3" style={{ marginBottom: 14 }}>
+          <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.14em', color: 'var(--ink-dim)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+            Difficulty
+          </span>
+          <SegToggle
+            value={passDiff}
+            onChange={(d: PassageDiff) => { setPassDiff(d); setGenError(null) }}
+            options={[
+              { value: 'any',    label: 'Any' },
+              { value: 'easy',   label: 'Easy' },
+              { value: 'medium', label: 'Medium' },
+              { value: 'hard',   label: 'Hard' },
+            ]}
+          />
+          <span style={{ fontSize: '0.78rem', color: 'var(--ink-dim)', fontFamily: 'EB Garamond, serif' }}>
+            {matchCount} passage{matchCount !== 1 ? 's' : ''}
+          </span>
+        </div>
+      )}
+
+      <div className="flex justify-end">
+        <div style={{ position: 'relative' }}>
+          <div style={{ position: 'absolute', top: -22, right: -22, width: 82, height: 82, color: 'var(--gold)', opacity: 0.55, pointerEvents: 'none', zIndex: 0 }}>
+            <MagicCircle variant="halo" speed={2} />
+          </div>
+          <button className="btn btn-primary" onClick={handleGenerate} disabled={generate.isPending || start.isPending}
+            style={{ height: 38, padding: '0 24px', position: 'relative', zIndex: 1 }}>
+            {generate.isPending || start.isPending ? '…' : '▶ Generate'}
+          </button>
+        </div>
+      </div>
+
       {genError && (
         <div style={{ marginTop: 14, padding: '10px 14px', background: 'rgba(176,48,48,0.06)', border: '1px solid rgba(176,48,48,0.3)', fontSize: '0.85rem', color: '#b03030' }}>
           {genError}
