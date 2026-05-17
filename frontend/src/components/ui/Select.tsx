@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 
 export interface SelectOption {
   value: string
@@ -14,26 +15,57 @@ interface Props {
   triggerStyle?: React.CSSProperties
 }
 
+interface DropPos { top: number; left: number; width: number }
+
 export default function Select({ value, onChange, options, placeholder = '', disabled = false, triggerStyle }: Props) {
   const [open, setOpen]   = useState(false)
-  const ref               = useRef<HTMLDivElement>(null)
+  const [pos,  setPos]    = useState<DropPos>({ top: 0, left: 0, width: 0 })
+  const triggerRef        = useRef<HTMLButtonElement>(null)
+  const dropdownRef       = useRef<HTMLDivElement>(null)
 
   const selected = options.find(o => o.value === value)
 
+  const updatePos = useCallback(() => {
+    if (triggerRef.current) {
+      const r = triggerRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + 2, left: r.left, width: r.width })
+    }
+  }, [])
+
+  const handleToggle = () => {
+    if (disabled) return
+    if (!open) updatePos()
+    setOpen(v => !v)
+  }
+
   useEffect(() => {
+    if (!open) return
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      const t = e.target as Node
+      if (triggerRef.current?.contains(t) || dropdownRef.current?.contains(t)) return
+      setOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [])
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const close = () => setOpen(false)
+    window.addEventListener('scroll', close, true)
+    window.addEventListener('resize', close)
+    return () => {
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
+    }
+  }, [open])
 
   return (
-    <div ref={ref} style={{ position: 'relative', width: '100%' }}>
-      {/* Trigger */}
+    <div style={{ position: 'relative', width: '100%' }}>
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => !disabled && setOpen(v => !v)}
+        onClick={handleToggle}
         className="form-input"
         style={{
           display: 'flex',
@@ -58,20 +90,20 @@ export default function Select({ value, onChange, options, placeholder = '', dis
         </svg>
       </button>
 
-      {/* Dropdown */}
-      {open && (
-        <div style={{
-          position: 'absolute',
-          top: 'calc(100% + 2px)',
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          background: '#f5ecda',
-          border: '1px solid var(--gold)',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(154,112,24,0.08)',
-          maxHeight: 220,
-          overflowY: 'auto',
-        }}>
+      {open && createPortal(
+        <div
+          ref={dropdownRef}
+          style={{
+            position: 'fixed',
+            top: pos.top, left: pos.left, width: pos.width,
+            zIndex: 9999,
+            background: '#f5ecda',
+            border: '1px solid var(--gold)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(154,112,24,0.08)',
+            maxHeight: 220,
+            overflowY: 'auto',
+          }}
+        >
           {options.map(opt => (
             <div
               key={opt.value}
@@ -92,7 +124,8 @@ export default function Select({ value, onChange, options, placeholder = '', dis
               {opt.label}
             </div>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { SelectOption } from './Select'
 
 interface Props {
@@ -8,17 +9,49 @@ interface Props {
   placeholder?: string
 }
 
-export default function MultiSelect({ value, onChange, options, placeholder = 'All' }: Props) {
-  const [open, setOpen] = useState(false)
-  const ref             = useRef<HTMLDivElement>(null)
+interface DropPos { top: number; left: number; width: number }
 
+export default function MultiSelect({ value, onChange, options, placeholder = 'All' }: Props) {
+  const [open, setOpen]     = useState(false)
+  const [pos,  setPos]      = useState<DropPos>({ top: 0, left: 0, width: 0 })
+  const triggerRef          = useRef<HTMLButtonElement>(null)
+  const dropdownRef         = useRef<HTMLDivElement>(null)
+
+  const updatePos = useCallback(() => {
+    if (triggerRef.current) {
+      const r = triggerRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + 2, left: r.left, width: r.width })
+    }
+  }, [])
+
+  const handleToggle = () => {
+    if (!open) updatePos()
+    setOpen(v => !v)
+  }
+
+  // Close on outside click
   useEffect(() => {
+    if (!open) return
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      const t = e.target as Node
+      if (triggerRef.current?.contains(t) || dropdownRef.current?.contains(t)) return
+      setOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [])
+  }, [open])
+
+  // Close on scroll / resize to avoid stale positions
+  useEffect(() => {
+    if (!open) return
+    const close = () => setOpen(false)
+    window.addEventListener('scroll', close, true)
+    window.addEventListener('resize', close)
+    return () => {
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
+    }
+  }, [open])
 
   const toggle = (id: string) =>
     onChange(value.includes(id) ? value.filter(v => v !== id) : [...value, id])
@@ -26,14 +59,15 @@ export default function MultiSelect({ value, onChange, options, placeholder = 'A
   const label = value.length === 0
     ? placeholder
     : value.length === options.length
-      ? 'All Categories'
+      ? 'All'
       : options.filter(o => value.includes(o.value)).map(o => o.label).join(', ')
 
   return (
-    <div ref={ref} style={{ position: 'relative', width: '100%' }}>
+    <div style={{ position: 'relative', width: '100%' }}>
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setOpen(v => !v)}
+        onClick={handleToggle}
         className="form-input"
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -52,14 +86,18 @@ export default function MultiSelect({ value, onChange, options, placeholder = 'A
         </svg>
       </button>
 
-      {open && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0, zIndex: 100,
-          background: 'var(--bg-card)', border: '1px solid var(--gold)',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
-          maxHeight: 220, overflowY: 'auto',
-        }}>
-          {/* All / None */}
+      {open && createPortal(
+        <div
+          ref={dropdownRef}
+          style={{
+            position: 'fixed',
+            top: pos.top, left: pos.left, width: pos.width,
+            zIndex: 9999,
+            background: 'var(--bg-card)', border: '1px solid var(--gold)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
+            maxHeight: 220, overflowY: 'auto',
+          }}
+        >
           <div
             onClick={() => onChange(value.length === options.length ? [] : options.map(o => o.value))}
             style={{
@@ -104,7 +142,8 @@ export default function MultiSelect({ value, onChange, options, placeholder = 'A
               </div>
             )
           })}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
