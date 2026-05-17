@@ -245,13 +245,13 @@ export default function BankPage() {
       {/* ── Stats ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {([
-          { value: questions.length,  label: 'Questions',  color: 'var(--gold)',     circle: { variant: 'orbit' as const, color: 'var(--gold)',    opacity: 0.38 } },
-          { value: passages.length,   label: 'Passages',   color: 'var(--ink-dim)',  circle: { variant: 'halo'  as const, color: '#2a8a3a',         opacity: 0.32 } },
-          { value: categories.length, label: 'Categories', color: 'var(--ink-dim)',  circle: { variant: 'sigil' as const, color: 'var(--gold-dim)', opacity: 0.32 } },
-          { value: tests.length,      label: 'Tests',      color: 'var(--ink-dim)',  circle: { variant: 'spark' as const, color: '#6b4c8a',          opacity: 0.30 } },
+          { value: questions.length,  label: 'Questions',  color: 'var(--gold)',     circle: { variant: 'orbit' as const, color: 'var(--gold)',    opacity: 0.60 } },
+          { value: passages.length,   label: 'Passages',   color: 'var(--ink-dim)',  circle: { variant: 'halo'  as const, color: '#2a8a3a',         opacity: 0.55 } },
+          { value: categories.length, label: 'Categories', color: 'var(--ink-dim)',  circle: { variant: 'sigil' as const, color: 'var(--gold-dim)', opacity: 0.55 } },
+          { value: tests.length,      label: 'Tests',      color: 'var(--ink-dim)',  circle: { variant: 'spark' as const, color: '#6b4c8a',          opacity: 0.52 } },
         ]).map(s => (
           <div key={s.label} className="stat-card">
-            <div style={{ position: 'absolute', bottom: -34, right: -34, width: 90, height: 90, color: s.circle.color, opacity: s.circle.opacity, pointerEvents: 'none', zIndex: 0 }}>
+            <div style={{ position: 'absolute', bottom: -100, right: -100, width: 200, height: 200, color: s.circle.color, opacity: s.circle.opacity, pointerEvents: 'none', zIndex: 0 }}>
               <MagicCircle variant={s.circle.variant} speed={4} />
             </div>
             <div style={{ position: 'relative', zIndex: 1 }}>

@@ -132,14 +132,27 @@ export default function GenerateTab({ bank, categories, passages }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-4 flex-wrap" style={{ position: 'relative' }}>
-        <div style={{ position: 'absolute', top: -28, left: -28, width: 80, height: 80, color: 'var(--gold)', opacity: 0.30, pointerEvents: 'none', zIndex: 0 }}>
+      <div style={{ position: 'relative' }}>
+        {/* decorative circles flanking the title row */}
+        <div style={{ position: 'absolute', top: -40, left: -40, width: 110, height: 110, color: 'var(--gold)', opacity: 0.50, pointerEvents: 'none', zIndex: 0 }}>
           <MagicCircle variant="sigil" speed={2} />
         </div>
-        <div className="section-title" style={{ marginBottom: 0, flex: 1, position: 'relative', zIndex: 1 }}>Generate Test</div>
-        <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ position: 'absolute', top: -30, right: -30, width: 90, height: 90, color: '#6b4c8a', opacity: 0.40, pointerEvents: 'none', zIndex: 0 }}>
+          <MagicCircle variant="orbit" speed={3} />
+        </div>
+
+        {/* title + mode toggle */}
+        <div className="flex items-center gap-4 flex-wrap" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="section-title" style={{ marginBottom: 0, flex: 1 }}>Generate Test</div>
           <SegToggle value={mode} onChange={setMode}
             options={[{ value: 'standalone', label: 'Standalone' }, { value: 'passage', label: 'Passage' }]} />
+        </div>
+
+        {/* ornamental divider */}
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+          <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, var(--gold-dim))' }} />
+          <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'var(--gold-dim)', letterSpacing: '0.25em', opacity: 0.7 }}>⬡ ✦ ⬡</span>
+          <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, var(--gold-dim))' }} />
         </div>
       </div>
 
