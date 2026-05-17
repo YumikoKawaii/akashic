@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
 
+const CONNECT_DIST = 140
+
 export default function Starfield() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -15,7 +17,7 @@ export default function Starfield() {
     resize()
     window.addEventListener('resize', resize)
 
-    const motes = Array.from({ length: 80 }, () => ({
+    const motes = Array.from({ length: 88 }, () => ({
       x:       Math.random() * canvas.width,
       y:       Math.random() * canvas.height,
       r:       Math.random() * 2.2 + 0.4,
@@ -28,6 +30,27 @@ export default function Starfield() {
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       t += 0.004
+
+      // constellation lines between nearby stars
+      for (let i = 0; i < motes.length; i++) {
+        for (let j = i + 1; j < motes.length; j++) {
+          const a = motes[i], b = motes[j]
+          const dx = a.x - b.x, dy = a.y - b.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist < CONNECT_DIST) {
+            const fade = (1 - dist / CONNECT_DIST)
+            const flicker = 0.5 + 0.5 * Math.sin(t * 0.4 + i * 0.7)
+            ctx.beginPath()
+            ctx.moveTo(a.x, a.y)
+            ctx.lineTo(b.x, b.y)
+            ctx.strokeStyle = `rgba(154, 112, 24, ${fade * 0.07 * flicker})`
+            ctx.lineWidth = 0.5
+            ctx.stroke()
+          }
+        }
+      }
+
+      // stars on top of lines
       motes.forEach(s => {
         const flicker = s.opacity * (0.5 + 0.5 * Math.sin(t * s.speed + s.x))
         ctx.beginPath()
@@ -35,6 +58,7 @@ export default function Starfield() {
         ctx.fillStyle = `rgba(154, 112, 24, ${flicker})`
         ctx.fill()
       })
+
       raf = requestAnimationFrame(draw)
     }
     draw()

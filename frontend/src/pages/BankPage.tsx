@@ -17,6 +17,7 @@ import OrnatePanel from '../components/ui/OrnatePanel'
 import { FormField, Input } from '../components/ui/FormField'
 import { Spinner } from '../components/ui/MagicCircle'
 import MagicCircle from '../components/ui/MagicCircle'
+import RuneCorners from '../components/ui/RuneCorners'
 
 type Tab = 'questions' | 'passages' | 'generate' | 'tests'
 
@@ -251,6 +252,7 @@ export default function BankPage() {
           { value: tests.length,      label: 'Tests',      color: 'var(--ink-dim)',  circle: { variant: 'spark' as const, color: '#6b4c8a',          opacity: 0.82 } },
         ]).map(s => (
           <div key={s.label} className="stat-card">
+            <RuneCorners color="var(--gold-dim)" opacity={0.60} />
             <div style={{ position: 'absolute', bottom: -100, right: -100, width: 200, height: 200, color: s.circle.color, opacity: s.circle.opacity, pointerEvents: 'none', zIndex: 0 }}>
               <MagicCircle variant={s.circle.variant} speed={4} />
             </div>

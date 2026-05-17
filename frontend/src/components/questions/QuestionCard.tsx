@@ -3,6 +3,7 @@ import { TypeTag, DifficultyTag, CategoryTag } from '../ui/Tag'
 import { useDeleteQuestion } from '../../hooks/useQuestions'
 import { useNavigate } from 'react-router-dom'
 import MagicCircle from '../ui/MagicCircle'
+import RuneCorners from '../ui/RuneCorners'
 
 const DIFF_CIRCLE_COLOR: Record<string, string> = {
   easy:   '#2a8a3a',
@@ -35,6 +36,7 @@ export default function QuestionCard({ question, index, bankId }: Props) {
       style={{ animationDelay: `${Math.min(index * 0.05, 0.3)}s` }}
       onClick={() => navigate(`/banks/${bankId}/questions/${question.id}/edit`)}
     >
+      <RuneCorners color="var(--gold-dim)" opacity={0.55} />
       {/* Top-left — full circle, difficulty color */}
       <div style={{ position: 'absolute', top: -44, left: -44, width: 110, height: 110, color: diffColor, opacity: 0.55, pointerEvents: 'none', zIndex: 0 }}>
         <MagicCircle variant="full" speed={5} />

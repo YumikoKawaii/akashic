@@ -5,6 +5,7 @@ import DifficultyBar from '../ui/DifficultyBar'
 import { useDeleteTest } from '../../hooks/useTests'
 import { useStartAttempt, useTestAttempts } from '../../hooks/useAttempts'
 import MagicCircle from '../ui/MagicCircle'
+import RuneCorners from '../ui/RuneCorners'
 
 const DIFF_COLOR: Record<string, string> = {
   easy: '#2a8a3a', medium: '#9a7018', hard: '#b03030',
@@ -36,6 +37,7 @@ export default function TestCard({ test, bankId }: Props) {
 
   return (
     <div className="test-card">
+      <RuneCorners color="var(--gold-dim)" opacity={0.55} />
       {/* Top-left — dominant difficulty color */}
       <div style={{ position: 'absolute', top: -44, left: -44, width: 110, height: 110, color: diffColor, opacity: 0.55, pointerEvents: 'none', zIndex: 0 }}>
         <MagicCircle variant="full" speed={5} />
