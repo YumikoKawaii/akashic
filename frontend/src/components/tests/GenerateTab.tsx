@@ -7,6 +7,8 @@ import MultiSelect from '../ui/MultiSelect'
 import { useGenerateTest } from '../../hooks/useTests'
 import { useStartAttempt } from '../../hooks/useAttempts'
 import MagicCircle from '../ui/MagicCircle'
+import AstrolabeBand from '../ui/AstrolabeBand'
+import MoonPhaseFrieze from '../ui/MoonPhaseFrieze'
 
 type GenMode  = 'standalone' | 'passage'
 type DiffMode = 'difficulty' | 'count'
@@ -76,11 +78,9 @@ function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium
 
   return (
     <div style={{ paddingTop: 4 }}>
-      {/* ornate divider */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, var(--border-dim))' }} />
-        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: 'var(--gold-dim)', letterSpacing: '0.3em', opacity: 0.8 }}>✦</span>
-        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, var(--border-dim))' }} />
+      {/* moon phase divider */}
+      <div style={{ color: 'var(--gold-dim)', marginBottom: 12 }}>
+        <MoonPhaseFrieze height={18} opacity={0.55} />
       </div>
     <div className="flex flex-wrap gap-3 items-center">
       <SegToggle
@@ -144,7 +144,12 @@ export default function GenerateTab({ bank, categories, passages }: Props) {
   const [mode, setMode] = useState<GenMode>('standalone')
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
+      {/* astrolabe band spanning full width */}
+      <div style={{ color: 'var(--gold-dim)', margin: '0 -2px' }}>
+        <AstrolabeBand opacity={0.65} />
+      </div>
+
       <div style={{ position: 'relative' }}>
         {/* decorative circles flanking the title row */}
         <div style={{ position: 'absolute', top: -40, left: -40, width: 110, height: 110, color: 'var(--gold)', opacity: 0.50, pointerEvents: 'none', zIndex: 0 }}>
@@ -161,11 +166,9 @@ export default function GenerateTab({ bank, categories, passages }: Props) {
             options={[{ value: 'standalone', label: 'Standalone' }, { value: 'passage', label: 'Passage' }]} />
         </div>
 
-        {/* ornamental divider */}
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
-          <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, var(--gold-dim))' }} />
-          <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'var(--gold-dim)', letterSpacing: '0.25em', opacity: 0.7 }}>⬡ ✦ ⬡</span>
-          <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, var(--gold-dim))' }} />
+        {/* moon phase frieze as divider */}
+        <div style={{ position: 'relative', zIndex: 1, marginTop: 10, color: 'var(--gold-dim)' }}>
+          <MoonPhaseFrieze opacity={0.65} />
         </div>
       </div>
 
