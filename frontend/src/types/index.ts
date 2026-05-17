@@ -96,6 +96,7 @@ export interface QuestionGroup {
   bank_id: number
   category_id: number
   passage_id?: number
+  passage?: Passage
   type: QuestionType
   difficulty: QuestionDifficulty
   context: GroupContext
@@ -123,6 +124,7 @@ export interface Question {
   category_id: number
   category?: Category
   group_id?: number
+  group?: QuestionGroup
   type: QuestionType
   difficulty: QuestionDifficulty
   tags: string[]

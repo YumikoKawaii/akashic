@@ -25,6 +25,8 @@ func (r *attemptRepo) FindByID(id int) (*model.TestAttempt, error) {
 		Preload("Test.TestQuestions", func(db *gorm.DB) *gorm.DB { return db.Order("position ASC") }).
 		Preload("Test.TestQuestions.Question.Item").
 		Preload("Test.TestQuestions.Question.Choice").
+		Preload("Test.TestQuestions.Question.Group").
+		Preload("Test.TestQuestions.Question.Group.Passage").
 		First(&a, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound

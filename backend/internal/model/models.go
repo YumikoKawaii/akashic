@@ -129,6 +129,7 @@ type QuestionGroup struct {
 	BankID     int            `gorm:"not null;index"           json:"bank_id"`
 	CategoryID int            `gorm:"not null;index"           json:"category_id"`
 	PassageID  *int           `gorm:"index"                    json:"passage_id,omitempty"`
+	Passage    *Passage       `gorm:"foreignKey:PassageID"     json:"passage,omitempty"`
 	Type       string         `gorm:"not null"                 json:"type"`
 	Difficulty string         `gorm:"not null"                 json:"difficulty"`
 	Context    GroupContext   `gorm:"serializer:json"          json:"context"`
@@ -143,6 +144,7 @@ type Question struct {
 	BankID     int              `gorm:"not null;index"           json:"bank_id"`
 	CategoryID int              `gorm:"not null;index"           json:"category_id"`
 	GroupID    *int             `gorm:"index"                    json:"group_id,omitempty"`
+	Group      *QuestionGroup   `gorm:"foreignKey:GroupID"       json:"group,omitempty"`
 	Type       string           `gorm:"not null"                 json:"type"`
 	Difficulty string           `gorm:"not null"                 json:"difficulty"`
 	Tags       pq.StringArray   `gorm:"type:text[]"              json:"tags"`

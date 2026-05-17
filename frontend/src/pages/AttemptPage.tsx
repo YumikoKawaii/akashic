@@ -1,15 +1,15 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAttempt, useSubmitAttempt } from '../hooks/useAttempts'
-import { Question } from '../types'
+import { Question, QuestionGroup } from '../types'
 import OrnatePanel from '../components/ui/OrnatePanel'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
 import Starfield from '../components/ui/Starfield'
 
-// ── Answer checking (mirrors backend grader) ──────────────────────────────────
+// ── Answer checking ────────────────────────────────────────────────────────────
 
 function checkAnswer(q: Question, answer: string): boolean {
-  const got  = answer.trim()
+  const got = answer.trim()
   if (q.choice) {
     const want = [...q.choice.answers].sort()
     const got2 = got.split('|').map(s => s.trim()).filter(Boolean).sort()
@@ -25,7 +25,7 @@ function checkAnswer(q: Question, answer: string): boolean {
     case 'yn_ng':
       return got.toLowerCase() === want.toLowerCase()
     default:
-      return got === want
+      return got.toLowerCase() === want.toLowerCase()
   }
 }
 
@@ -33,7 +33,86 @@ function questionContent(q: Question): string {
   return q.item?.content ?? q.choice?.content ?? ''
 }
 
-// ── Answer options renderer ────────────────────────────────────────────────────
+// ── Passage panel ──────────────────────────────────────────────────────────────
+
+function PassagePanel({ title, body }: { title: string; body: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{
+      width: '100%', maxWidth: 720, marginBottom: 14,
+      border: '1px solid var(--border-dim)', background: 'var(--bg-card)',
+    }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer',
+          fontFamily: 'Cinzel, serif', fontSize: '0.72rem', letterSpacing: '0.12em',
+          color: 'var(--gold-dim)', textTransform: 'uppercase',
+        }}
+      >
+        <span>Passage — {title}</span>
+        <span style={{ transition: 'transform 0.2s', display: 'inline-block', transform: open ? 'rotate(180deg)' : 'none' }}>▾</span>
+      </button>
+      {open && (
+        <div style={{
+          padding: '0 16px 16px',
+          maxHeight: 360, overflowY: 'auto',
+          borderTop: '1px solid var(--border-dim)',
+          fontSize: '0.95rem', lineHeight: 1.8,
+          color: 'var(--ink)', fontFamily: 'EB Garamond, serif',
+          whiteSpace: 'pre-wrap',
+        }}>
+          {body}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Group context box ──────────────────────────────────────────────────────────
+
+function GroupContextBox({ group }: { group: QuestionGroup }) {
+  const ctx = group.context
+  const items: { key: string; text: string }[] = []
+  let label = ''
+
+  if (group.type === 'matching_headings' && ctx.headings?.length) {
+    label = 'Headings'
+    items.push(...ctx.headings)
+  } else if ((group.type === 'matching_features' || group.type === 'matching_information') && ctx.options?.length) {
+    label = group.type === 'matching_information' ? 'Paragraphs' : 'Features'
+    items.push(...ctx.options)
+  } else if (group.type === 'matching_information' && ctx.paragraphs?.length) {
+    label = 'Paragraphs'
+    items.push(...ctx.paragraphs)
+  }
+
+  if (!items.length) return null
+
+  return (
+    <div style={{
+      width: '100%', maxWidth: 720, marginBottom: 10,
+      border: '1px solid var(--border-dim)', background: 'var(--bg-panel)',
+      padding: '12px 16px',
+    }}>
+      <div style={{
+        fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.14em',
+        color: 'var(--gold-dim)', marginBottom: 8, textTransform: 'uppercase',
+      }}>{label}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {items.map(item => (
+          <div key={item.key} style={{ display: 'flex', gap: 10, fontSize: '0.9rem', fontFamily: 'EB Garamond, serif', color: 'var(--ink)' }}>
+            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'var(--gold-dim)', minWidth: 24, paddingTop: 2 }}>{item.key}.</span>
+            <span style={{ lineHeight: 1.5 }}>{item.text}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Answer options ─────────────────────────────────────────────────────────────
 
 function AnswerOptions({ q, selected, onSelect, revealed }: {
   q: Question
@@ -42,6 +121,7 @@ function AnswerOptions({ q, selected, onSelect, revealed }: {
   revealed?: boolean
 }) {
   const locked = !!revealed
+  const ctx    = q.group?.context
 
   const shuffledMCQ = useMemo(() => {
     if (!q.choice) return []
@@ -54,8 +134,9 @@ function AnswerOptions({ q, selected, onSelect, revealed }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q.id])
 
+  // MCQ ────────────────────────────────────────────────────────────────────────
   if (q.type === 'mcq' && q.choice) {
-    const correctKeys = new Set(q.choice.answers)
+    const correctKeys  = new Set(q.choice.answers)
     const selectedKeys = new Set(selected.split('|').map(s => s.trim()).filter(Boolean))
     const isSingleAnswer = q.choice.answers.length === 1
 
@@ -98,8 +179,9 @@ function AnswerOptions({ q, selected, onSelect, revealed }: {
     )
   }
 
+  // T/F/NG ─────────────────────────────────────────────────────────────────────
   if (q.type === 'tf_ng') {
-    const opts = ['True', 'False', 'Not Given'] as const
+    const opts    = ['True', 'False', 'Not Given'] as const
     const correct = q.item?.answer ?? ''
     return (
       <div className="answer-options" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
@@ -125,8 +207,9 @@ function AnswerOptions({ q, selected, onSelect, revealed }: {
     )
   }
 
+  // Y/N/NG ─────────────────────────────────────────────────────────────────────
   if (q.type === 'yn_ng') {
-    const opts = ['Yes', 'No', 'Not Given'] as const
+    const opts    = ['Yes', 'No', 'Not Given'] as const
     const correct = q.item?.answer ?? ''
     return (
       <div className="answer-options" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
@@ -152,8 +235,9 @@ function AnswerOptions({ q, selected, onSelect, revealed }: {
     )
   }
 
+  // Sentence / Form completion ──────────────────────────────────────────────────
   if (q.type === 'sentence_completion' || q.type === 'form_completion') {
-    const parts = questionContent(q).split('___')
+    const parts   = questionContent(q).split('___')
     const correct = q.item?.answer ?? ''
     const isCorrect = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
     const inputColor = locked ? (isCorrect ? 'rgba(42,138,58,0.7)' : 'rgba(176,48,48,0.7)') : 'var(--gold-dim)'
@@ -174,16 +258,12 @@ function AnswerOptions({ q, selected, onSelect, revealed }: {
                     display: 'inline-block',
                     minWidth: 120,
                     width: `${Math.max(selected.length, correct.length, 10) * 0.68}ch`,
-                    background: 'transparent',
-                    border: 'none',
+                    background: 'transparent', border: 'none',
                     borderBottom: `2px solid ${inputColor}`,
-                    outline: 'none',
-                    fontSize: '1.1rem',
+                    outline: 'none', fontSize: '1.1rem',
                     color: locked ? inputColor : 'var(--ink)',
-                    padding: '0 4px',
-                    textAlign: 'center',
-                    fontFamily: 'inherit',
-                    transition: 'border-color 0.2s, color 0.2s',
+                    padding: '0 4px', textAlign: 'center',
+                    fontFamily: 'inherit', transition: 'border-color 0.2s, color 0.2s',
                   }}
                   placeholder="…"
                 />
@@ -191,22 +271,71 @@ function AnswerOptions({ q, selected, onSelect, revealed }: {
             </span>
           ))}
         </p>
-        {locked && !isCorrect && (
-          <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
-            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>CORRECT ANSWER</div>
-            <div style={{ color: '#2a8a3a' }}>{correct}</div>
-          </div>
-        )}
+        {locked && !isCorrect && <CorrectAnswerBox answer={correct} />}
       </div>
     )
   }
 
-  // short_answer and matching types — text input
-  const correct = q.item?.answer ?? ''
+  // Matching — dropdown when context available ──────────────────────────────────
+  if (q.type === 'matching_headings' && ctx?.headings?.length) {
+    const headings  = ctx.headings
+    const correct   = q.item?.answer ?? ''
+    const isCorrect = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
+    return (
+      <div style={{ width: '100%' }}>
+        <select
+          value={selected}
+          disabled={locked}
+          onChange={e => !locked && onSelect(e.target.value)}
+          className="form-input"
+          style={{
+            cursor: locked ? 'default' : 'pointer',
+            color: locked ? (isCorrect ? '#2a8a3a' : '#b03030') : selected ? 'var(--ink)' : 'var(--ink-dim)',
+            borderColor: locked ? (isCorrect ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)') : undefined,
+          }}
+        >
+          <option value="">— Select a heading —</option>
+          {headings.map(h => (
+            <option key={h.key} value={h.text}>{h.key}. {h.text}</option>
+          ))}
+        </select>
+        {locked && !isCorrect && <CorrectAnswerBox answer={correct} />}
+      </div>
+    )
+  }
+
+  if ((q.type === 'matching_features' || q.type === 'matching_information') &&
+      (ctx?.options?.length || ctx?.paragraphs?.length)) {
+    const opts      = ctx?.options ?? ctx?.paragraphs ?? []
+    const correct   = q.item?.answer ?? ''
+    const isCorrect = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
+    const correctLabel = opts.find(o => o.key.toLowerCase() === correct.toLowerCase())
+    return (
+      <div style={{ width: '100%' }}>
+        <select
+          value={selected}
+          disabled={locked}
+          onChange={e => !locked && onSelect(e.target.value)}
+          className="form-input"
+          style={{
+            cursor: locked ? 'default' : 'pointer',
+            color: locked ? (isCorrect ? '#2a8a3a' : '#b03030') : selected ? 'var(--ink)' : 'var(--ink-dim)',
+            borderColor: locked ? (isCorrect ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)') : undefined,
+          }}
+        >
+          <option value="">— Select —</option>
+          {opts.map(o => (
+            <option key={o.key} value={o.key}>{o.key}. {o.text}</option>
+          ))}
+        </select>
+        {locked && !isCorrect && <CorrectAnswerBox answer={`${correct}${correctLabel ? ` — ${correctLabel.text}` : ''}`} />}
+      </div>
+    )
+  }
+
+  // Short answer / fallback text input ──────────────────────────────────────────
+  const correct   = q.item?.answer ?? ''
   const isCorrect = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
-  const borderColor = locked
-    ? (isCorrect ? 'rgba(42,138,58,0.6)' : 'rgba(176,48,48,0.6)')
-    : 'var(--border-dim)'
   return (
     <div style={{ width: '100%' }}>
       <input
@@ -216,19 +345,23 @@ function AnswerOptions({ q, selected, onSelect, revealed }: {
         onChange={e => !locked && onSelect(e.target.value)}
         readOnly={locked}
         placeholder="Your answer…"
-        style={{ borderColor, color: locked ? (isCorrect ? '#2a8a3a' : '#b03030') : undefined }}
+        style={{ borderColor: locked ? (isCorrect ? 'rgba(42,138,58,0.6)' : 'rgba(176,48,48,0.6)') : undefined, color: locked ? (isCorrect ? '#2a8a3a' : '#b03030') : undefined }}
       />
-      {locked && !isCorrect && (
-        <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
-          <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>CORRECT ANSWER</div>
-          <div style={{ color: '#2a8a3a' }}>{correct}</div>
-        </div>
-      )}
+      {locked && !isCorrect && <CorrectAnswerBox answer={correct} />}
     </div>
   )
 }
 
-// ── Main component ─────────────────────────────────────────────────────────────
+function CorrectAnswerBox({ answer }: { answer: string }) {
+  return (
+    <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
+      <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>CORRECT ANSWER</div>
+      <div style={{ color: '#2a8a3a' }}>{answer}</div>
+    </div>
+  )
+}
+
+// ── Main ───────────────────────────────────────────────────────────────────────
 
 export default function AttemptPage() {
   const { id = '' }       = useParams<{ id: string }>()
@@ -252,12 +385,26 @@ export default function AttemptPage() {
 
   const questions = attempt.test.questions ?? []
   const total     = questions.length
-  const tq        = questions[currentIdx]
-  const q         = tq?.question
-  const isLast    = currentIdx === total - 1
+
+  if (total === 0) return (
+    <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
+      <Starfield />
+      <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
+        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>No Questions</div>
+        <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>This test was generated with no matching questions.</div>
+        <button className="btn btn-primary" onClick={() => navigate(-1)} style={{ padding: '10px 28px' }}>Go Back</button>
+      </div>
+    </div>
+  )
+
+  const tq         = questions[currentIdx]
+  const q          = tq?.question
+  const isLast     = currentIdx === total - 1
 
   if (!q) return null
 
+  const group      = q.group
+  const passage    = group?.passage
   const content    = questionContent(q)
   const isScoreable = q.type !== 'short_answer'
   const isCorrect  = revealed && isScoreable && checkAnswer(q, selected)
@@ -316,6 +463,11 @@ export default function AttemptPage() {
 
         <div className="attempt-body">
           <div className="w-full" style={{ maxWidth: 720 }}>
+
+            {passage && <PassagePanel title={passage.title} body={passage.body} />}
+
+            {group && <GroupContextBox group={group} />}
+
             <OrnatePanel style={{ marginBottom: 14 } as React.CSSProperties}>
               <div className="flex items-start gap-4">
                 <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'var(--gold-dim)', paddingTop: 2, minWidth: 32 }}>
@@ -365,6 +517,7 @@ export default function AttemptPage() {
                 </button>
               )}
             </div>
+
           </div>
         </div>
       </div>
