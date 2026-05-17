@@ -77,6 +77,31 @@ export interface QMultipleChoice {
   answers: string[]
 }
 
+export interface GroupContext {
+  sections?: Array<{ key: string; label: string }>
+  headings?: MCQOption[]
+  paragraphs?: MCQOption[]
+  options?: MCQOption[]
+  word_limit?: number
+  word_bank?: string[]
+  form_type?: string
+  title?: string
+  template?: string
+}
+
+export interface QuestionGroup {
+  id: number
+  bank_id: number
+  category_id: number
+  passage_id?: number
+  type: QuestionType
+  difficulty: QuestionDifficulty
+  context: GroupContext
+  questions?: Question[]
+  created_at: string
+  updated_at: string
+}
+
 export interface Passage {
   id: number
   bank_id: number
@@ -85,6 +110,7 @@ export interface Passage {
   title: string
   body: string
   difficulty: QuestionDifficulty
+  groups?: QuestionGroup[]
   created_at: string
   updated_at: string
 }

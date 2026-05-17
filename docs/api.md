@@ -134,7 +134,11 @@ Content-Type: multipart/form-data
 field: file  (.json / .yaml / .csv)
 ```
 
-Response on success: `200 { "data": { "created": N, "failed": 0 } }`  
+JSON/YAML may include standalone questions, `kind: "group"` question groups, or
+`type: "passage"` passage wrappers with embedded questions/groups. CSV supports
+standalone questions only.
+
+Response on success: `200 { "created": N, "failed": 0 }`
 Response on error: `422 { "created": 0, "failed": N, "errors": [{ "row": 2, "message": "..." }] }`
 
 See `docs/question_format.md` for the full import schema and examples.

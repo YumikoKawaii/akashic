@@ -66,11 +66,13 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 
 	qFilter := repository.QuestionFilter{
 		CategoryIDs:    config.CategoryIDs,
+		Types:          config.Types,
 		Tags:           config.Tags,
 		StandaloneOnly: true,
 	}
 	gFilter := repository.GroupFilter{
 		CategoryIDs: config.CategoryIDs,
+		Types:       config.Types,
 	}
 
 	// Build shuffled pools per difficulty.

@@ -34,7 +34,14 @@ func (r *passageRepo) FindByBank(bankID int, f PassageFilter) ([]model.Passage, 
 	if f.Difficulty != "" {
 		q = q.Where("difficulty = ?", f.Difficulty)
 	}
-	err := q.Preload("Category").Order("created_at DESC").Find(&ps).Error
+	err := q.
+		Preload("Category").
+		Preload("Groups", "deleted_at IS NULL").
+		Preload("Groups.Questions", func(db *gorm.DB) *gorm.DB {
+			return db.Where("deleted_at IS NULL").Order("position ASC")
+		}).
+		Order("created_at DESC").
+		Find(&ps).Error
 	return ps, err
 }
 

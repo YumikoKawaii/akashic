@@ -1,0 +1,86 @@
+[
+  {
+    "type": "passage",
+    "title": "Passage title — replace with actual passage title",
+    "body": "Full passage body text goes here. This is the reading text that test-takers will read before answering the questions below. Replace with the actual passage content.",
+    "difficulty": "hard",
+    "category_name": "IELTS Reading",
+    "tags": ["cambridge-3", "test-1", "passage-3"],
+    "groups": [
+      {
+        "type": "matching_headings",
+        "difficulty": "hard",
+        "context": {
+          "sections": [
+            { "key": "A", "label": "Paragraph A" },
+            { "key": "B", "label": "Paragraph B" },
+            { "key": "C", "label": "Paragraph C" }
+          ],
+          "headings": [
+            { "key": "i",   "text": "Heading option i"   },
+            { "key": "ii",  "text": "Heading option ii"  },
+            { "key": "iii", "text": "Heading option iii" },
+            { "key": "iv",  "text": "Heading option iv"  }
+          ]
+        },
+        "questions": [
+          { "content": "Paragraph A", "answer": "ii"  },
+          { "content": "Paragraph B", "answer": "iv"  },
+          { "content": "Paragraph C", "answer": "i"   }
+        ]
+      },
+      {
+        "type": "tf_ng",
+        "difficulty": "hard",
+        "context": {},
+        "questions": [
+          { "content": "Statement one about the passage.", "answer": "true"      },
+          { "content": "Statement two about the passage.", "answer": "false"     },
+          { "content": "Statement three about the passage.", "answer": "not given" }
+        ]
+      },
+      {
+        "type": "mcq",
+        "difficulty": "hard",
+        "context": {},
+        "questions": [
+          {
+            "content": "According to the passage, which of the following is correct?",
+            "options": [
+              { "key": "A", "text": "Option A text" },
+              { "key": "B", "text": "Option B text" },
+              { "key": "C", "text": "Option C text" },
+              { "key": "D", "text": "Option D text" }
+            ],
+            "answers": ["B"]
+          },
+          {
+            "content": "In which TWO paragraphs does the author give examples?",
+            "options": [
+              { "key": "A", "text": "A" },
+              { "key": "B", "text": "B" },
+              { "key": "C", "text": "C" },
+              { "key": "D", "text": "D" }
+            ],
+            "answers": ["A", "C"]
+          }
+        ]
+      },
+      {
+        "type": "matching_features",
+        "difficulty": "hard",
+        "context": {
+          "options": [
+            { "key": "A", "text": "Feature option A" },
+            { "key": "B", "text": "Feature option B" },
+            { "key": "C", "text": "Feature option C" }
+          ]
+        },
+        "questions": [
+          { "content": "Item one to match", "answer": "B" },
+          { "content": "Item two to match", "answer": "A" }
+        ]
+      }
+    ]
+  }
+]

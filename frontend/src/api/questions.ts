@@ -25,7 +25,7 @@ export interface UpdateQuestionPayload {
 export interface IngestResult {
   created: number
   failed: number
-  errors?: Array<{ row: number; text?: string; message: string }>
+  errors?: Array<{ row: number; label?: string; message: string }>
 }
 
 export const questionsApi = {

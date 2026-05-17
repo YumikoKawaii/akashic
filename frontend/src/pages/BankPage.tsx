@@ -30,6 +30,9 @@ const QUESTION_TYPES = [
   { value: 'matching_features',    label: 'Match Features' },
 ]
 
+const questionTypeLabel = (value: string) =>
+  QUESTION_TYPES.find(t => t.value === value)?.label ?? value
+
 export default function BankPage() {
   const { bankId = '' }       = useParams<{ bankId: string }>()
   const navigate              = useNavigate()
@@ -78,20 +81,21 @@ export default function BankPage() {
         const result = await questionsApi.ingest(bankId, file)
         totalCreated += result.created
       } catch (err: any) {
-        const data = err?.response?.data?.data
+        const data = err?.response?.data
         const detail = data?.errors?.length
           ? data.errors.map((e: any) => `row ${e.row}: ${e.message}`).join('; ')
-          : 'invalid format'
+          : data?.error ?? 'invalid format'
         fileErrors.push(`${file.name}: ${detail}`)
       }
     }
 
     queryClient.invalidateQueries({ queryKey: ['questions', bankId] })
+    queryClient.invalidateQueries({ queryKey: ['passages', bankId] })
 
     if (fileErrors.length === 0) {
-      setImportMessage(`Imported ${totalCreated} question${totalCreated !== 1 ? 's' : ''} from ${files.length} file${files.length !== 1 ? 's' : ''}.`)
+      setImportMessage(`Imported ${totalCreated} item${totalCreated !== 1 ? 's' : ''} from ${files.length} file${files.length !== 1 ? 's' : ''}.`)
     } else if (totalCreated > 0) {
-      setImportMessage(`Imported ${totalCreated} question${totalCreated !== 1 ? 's' : ''}. Errors: ${fileErrors.join(' | ')}`)
+      setImportMessage(`Imported ${totalCreated} item${totalCreated !== 1 ? 's' : ''}. Errors: ${fileErrors.join(' | ')}`)
     } else {
       setImportMessage(`Import failed — ${fileErrors.join(' | ')}`)
     }
@@ -326,14 +330,29 @@ export default function BankPage() {
                       </div>
                     )}
                   </div>
-                  {p.body && (
-                    <p style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', lineHeight: 1.6, whiteSpace: 'pre-wrap',
-                      maxHeight: 120, overflow: 'hidden', maskImage: 'linear-gradient(to bottom, black 60%, transparent)' }}>
-                      {p.body}
-                    </p>
-                  )}
-                </div>
-              ))}
+	                  {p.body && (
+	                    <p style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', lineHeight: 1.6, whiteSpace: 'pre-wrap',
+	                      maxHeight: 120, overflow: 'hidden', maskImage: 'linear-gradient(to bottom, black 60%, transparent)' }}>
+	                      {p.body}
+	                    </p>
+	                  )}
+	                  {p.groups && p.groups.length > 0 && (
+	                    <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+	                      {p.groups.map(g => (
+	                        <span key={g.id} style={{
+	                          border: '1px solid var(--border-dim)',
+	                          color: 'var(--ink-dim)',
+	                          fontSize: '0.68rem',
+	                          padding: '4px 8px',
+	                          fontFamily: 'Cinzel, serif',
+	                        }}>
+	                          {questionTypeLabel(g.type)} · {g.questions?.length ?? 0}
+	                        </span>
+	                      ))}
+	                    </div>
+	                  )}
+	                </div>
+	              ))}
             </div>
           )}
         </>

@@ -1,6 +1,8 @@
 # Question Format
 
-Questions are imported as standalone rows — one question per row. No passage wrappers.
+Imports can contain standalone questions, question groups, or passages with embedded
+questions/groups. CSV supports standalone questions only. JSON and YAML support all
+formats.
 
 ---
 
@@ -63,11 +65,76 @@ Questions are imported as standalone rows — one question per row. No passage w
 | `"word_bank_completion"` | `"sentence_completion"` |
 | `"matching"` | `"matching_headings"`, `"matching_information"`, or `"matching_features"` |
 | `"multi_select"` | `"mcq"` with multiple keys in `"answers"` |
-| Top-level `"type": "passage"` wrapper | Flatten — each question is its own row |
+| Unknown passage wrapper shape | Use top-level `"type": "passage"` with `title`, `body`, `category_name`, `difficulty`, and either `questions` or `groups` |
 
 ---
 
 ## Examples
+
+### passage with flat questions
+Flat passage questions are automatically grouped by `type` and `difficulty`, and
+linked to the created passage. Passage-level `tags` are merged into every
+question.
+
+```json
+{
+  "type": "passage",
+  "title": "The History of Rockets",
+  "body": "A reading passage goes here...",
+  "difficulty": "medium",
+  "category_name": "IELTS Reading",
+  "tags": ["cambridge-3", "test-1", "passage-1"],
+  "questions": [
+    {
+      "type": "matching_headings",
+      "content": "Paragraph B",
+      "answer": "Undeveloped for centuries"
+    },
+    {
+      "type": "mcq",
+      "content": "The greatest outcome of the discovery of the reaction principle was that",
+      "options": [
+        { "key": "A", "text": "rockets could be propelled into the air." },
+        { "key": "B", "text": "space travel became a reality." }
+      ],
+      "answers": ["B"]
+    }
+  ]
+}
+```
+
+### passage with explicit groups
+Use `groups` when the question type needs shared context such as heading pools,
+paragraph keys, feature options, word limits, or form templates.
+
+```json
+{
+  "type": "passage",
+  "title": "The History of Rockets",
+  "body": "A reading passage goes here...",
+  "difficulty": "medium",
+  "category_name": "IELTS Reading",
+  "groups": [
+    {
+      "type": "matching_headings",
+      "context": {
+        "sections": [
+          { "key": "B", "label": "Paragraph B" },
+          { "key": "C", "label": "Paragraph C" }
+        ],
+        "headings": [
+          { "key": "i", "text": "Undeveloped for centuries" },
+          { "key": "ii", "text": "How the reaction principle works" }
+        ]
+      },
+      "questions": [
+        { "content": "B", "answer": "i" },
+        { "content": "C", "answer": "ii" }
+      ]
+    }
+  ]
+}
+```
 
 ### tf_ng
 ```json
