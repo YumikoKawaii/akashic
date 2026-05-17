@@ -204,7 +204,10 @@ func (s *TestService) buildPool(bankID int, diff string, qf repository.QuestionF
 		}
 	}
 
-	rand.Shuffle(len(pool), func(i, j int) { pool[i], pool[j] = pool[j], pool[i] })
+	// Passage-only pools preserve original group order; standalone/mixed pools are shuffled.
+	if !skipStandalone {
+		rand.Shuffle(len(pool), func(i, j int) { pool[i], pool[j] = pool[j], pool[i] })
+	}
 	return pool, nil
 }
 

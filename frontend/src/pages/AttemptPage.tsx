@@ -204,6 +204,41 @@ function AnswerOptions({ q, selected, onSelect, revealed = false }: {
   )
 }
 
+// ── Passage body with paragraph detection ─────────────────────────────────────
+
+function PassageBody({ body }: { body: string }) {
+  // Detect IELTS-style paragraph labels: single capital letter (A–Z) followed by space
+  // at word boundaries, e.g. "A The concept... B An intellectual..."
+  const parts = body.split(/\s+(?=[A-Z]\s[A-Z])/)
+
+  if (parts.length <= 1) {
+    // No paragraph structure detected — render as-is with line breaks
+    return (
+      <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '1rem', lineHeight: 1.9, color: 'var(--ink)', whiteSpace: 'pre-wrap' }}>
+        {body}
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '1rem', lineHeight: 1.9, color: 'var(--ink)' }}>
+      {parts.map((part, i) => {
+        const m = part.match(/^([A-Z])\s(.+)$/s)
+        if (!m) return <p key={i} style={{ marginBottom: 16 }}>{part}</p>
+        return (
+          <p key={i} style={{ marginBottom: 18, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <span style={{
+              fontFamily: 'Cinzel, serif', fontSize: '0.72rem', fontWeight: 700,
+              color: 'var(--gold-dim)', minWidth: 18, paddingTop: 4, flexShrink: 0,
+            }}>{m[1]}</span>
+            <span>{m[2]}</span>
+          </p>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Passage layout — all questions at once ─────────────────────────────────────
 
 interface GroupedSection {
@@ -233,6 +268,8 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
       map.get(q.group_id)!.items.push(tq)
     })
     return [...map.values()]
+      .map(s => ({ ...s, items: [...s.items].sort((a, b) => a.position - b.position) }))
+      .sort((a, b) => Math.min(...a.items.map(t => t.position)) - Math.min(...b.items.map(t => t.position)))
   }, [questions])
 
   const answered = Object.values(answers).filter(Boolean).length
@@ -267,9 +304,7 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
               <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'var(--ink)', marginBottom: 18, lineHeight: 1.4 }}>
                 {passage.title}
               </h2>
-              <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '1rem', lineHeight: 1.9, color: 'var(--ink)', whiteSpace: 'pre-wrap' }}>
-                {passage.body}
-              </div>
+              <PassageBody body={passage.body} />
             </>
           )}
         </div>
