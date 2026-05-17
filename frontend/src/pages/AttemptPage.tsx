@@ -361,7 +361,7 @@ export default function AttemptPage() {
                   disabled={submit.isPending}
                   style={{ padding: '10px 32px' }}
                 >
-                  {submit.isPending ? '…' : isLast ? '⚔ Finish' : 'Next →'}
+                  {submit.isPending ? '…' : isLast ? 'Finish →' : 'Next →'}
                 </button>
               )}
             </div>

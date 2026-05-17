@@ -58,7 +58,7 @@ export default function Sidebar() {
             placeholder="Bank name…"
             style={{
               flex: 1,
-              background: 'var(--parchment-dark)',
+              background: 'var(--bg-elevated)',
               border: '1px solid var(--border)',
               borderRadius: 3,
               padding: '4px 8px',

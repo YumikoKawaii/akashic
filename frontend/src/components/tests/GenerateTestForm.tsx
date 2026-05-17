@@ -9,7 +9,7 @@ import { useStartAttempt } from '../../hooks/useAttempts'
 
 interface Props { bank: Bank; categories: Category[]; passages: Passage[] }
 
-const DIFF_COLORS = { easy: '#3a9a4a', medium: 'var(--gold)', hard: '#b03030' }
+const DIFF_COLORS = { easy: '#3daa50', medium: 'var(--gold)', hard: '#cc3838' }
 const DIFF_LABELS = { easy: 'Easy', medium: 'Med', hard: 'Hard' }
 
 const TYPE_OPTIONS = [
@@ -84,11 +84,16 @@ export default function GenerateTestForm({ bank, categories, passages }: Props) 
 
   const isPending = generate.isPending || start.isPending
 
+  const colCount = passages.length > 0 ? 4 : 3
+
   return (
     <OrnatePanel>
-      <div className="section-title" style={{ marginBottom: 18 }}>Quick Generate</div>
+      <div className="section-title" style={{ marginBottom: 16 }}>Quick Generate</div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ marginBottom: 10 }}>
+      <div
+        className={`grid grid-cols-1 gap-4`}
+        style={{ gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))`, marginBottom: 12 }}
+      >
         <FormField label="Test Name">
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="Morning Practice" />
         </FormField>
@@ -108,9 +113,7 @@ export default function GenerateTestForm({ bank, categories, passages }: Props) 
             options={TYPE_OPTIONS}
           />
         </FormField>
-      </div>
-      {passages.length > 0 && (
-        <div style={{ marginBottom: 14 }}>
+        {passages.length > 0 && (
           <FormField label="Passages">
             <MultiSelect
               value={passageIds}
@@ -119,8 +122,8 @@ export default function GenerateTestForm({ bank, categories, passages }: Props) 
               options={passages.map(p => ({ value: String(p.id), label: p.title }))}
             />
           </FormField>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="flex flex-wrap gap-4 items-end">
         <div className="flex gap-1" style={{ border: '1px solid var(--border-dim)', padding: 3, borderRadius: 4 }}>
