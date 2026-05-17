@@ -10,13 +10,14 @@ import (
 // ── Value types ────────────────────────────────────────────────────────────────
 
 type TestConfig struct {
-	EasyCount   int      `json:"easy_count"`
-	MediumCount int      `json:"medium_count"`
-	HardCount   int      `json:"hard_count"`
-	CategoryIDs []int    `json:"category_ids,omitempty"`
-	PassageIDs  []int    `json:"passage_ids,omitempty"`
-	Types       []string `json:"types,omitempty"`
-	Tags        []string `json:"tags,omitempty"`
+	EasyCount      int      `json:"easy_count"`
+	MediumCount    int      `json:"medium_count"`
+	HardCount      int      `json:"hard_count"`
+	CategoryIDs    []int    `json:"category_ids,omitempty"`
+	PassageIDs     []int    `json:"passage_ids,omitempty"`
+	Types          []string `json:"types,omitempty"`
+	Tags           []string `json:"tags,omitempty"`
+	StandaloneOnly bool     `json:"standalone_only,omitempty"`
 }
 
 func (t TestConfig) QuestionCount() int {

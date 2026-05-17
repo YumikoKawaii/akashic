@@ -64,6 +64,9 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 		config = *input.Config
 	}
 
+	skipGroups     := config.StandaloneOnly
+	skipStandalone := len(config.PassageIDs) > 0 && !config.StandaloneOnly
+
 	qFilter := repository.QuestionFilter{
 		CategoryIDs:    config.CategoryIDs,
 		Types:          config.Types,
@@ -79,7 +82,7 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 	// Build shuffled pools per difficulty.
 	pools := map[string][]selUnit{}
 	for _, diff := range []string{"easy", "medium", "hard"} {
-		pools[diff], err = s.buildPool(bankID, diff, qFilter, gFilter)
+		pools[diff], err = s.buildPool(bankID, diff, qFilter, gFilter, skipStandalone, skipGroups)
 		if err != nil {
 			return nil, err
 		}
@@ -177,24 +180,28 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 	return s.testRepo.FindByID(test.ID)
 }
 
-func (s *TestService) buildPool(bankID int, diff string, qf repository.QuestionFilter, gf repository.GroupFilter) ([]selUnit, error) {
+func (s *TestService) buildPool(bankID int, diff string, qf repository.QuestionFilter, gf repository.GroupFilter, skipStandalone, skipGroups bool) ([]selUnit, error) {
 	var pool []selUnit
 
-	standalones, err := s.questionRepo.FindByBankAndDifficulty(bankID, diff, qf)
-	if err != nil {
-		return nil, err
-	}
-	for i := range standalones {
-		pool = append(pool, selUnit{question: &standalones[i]})
+	if !skipStandalone {
+		standalones, err := s.questionRepo.FindByBankAndDifficulty(bankID, diff, qf)
+		if err != nil {
+			return nil, err
+		}
+		for i := range standalones {
+			pool = append(pool, selUnit{question: &standalones[i]})
+		}
 	}
 
-	gf.Difficulty = diff
-	groups, err := s.groupRepo.FindByBank(bankID, gf)
-	if err != nil {
-		return nil, err
-	}
-	for _, g := range groups {
-		pool = append(pool, selUnit{groupID: g.ID})
+	if !skipGroups {
+		gf.Difficulty = diff
+		groups, err := s.groupRepo.FindByBank(bankID, gf)
+		if err != nil {
+			return nil, err
+		}
+		for _, g := range groups {
+			pool = append(pool, selUnit{groupID: g.ID})
+		}
 	}
 
 	rand.Shuffle(len(pool), func(i, j int) { pool[i], pool[j] = pool[j], pool[i] })

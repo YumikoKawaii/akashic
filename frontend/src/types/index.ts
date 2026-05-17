@@ -25,6 +25,7 @@ export interface TestConfig {
   passage_ids?: number[]
   types?: string[]
   tags?: string[]
+  standalone_only?: boolean
 }
 
 export interface Bank {

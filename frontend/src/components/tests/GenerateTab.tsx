@@ -164,8 +164,8 @@ function StandaloneForm({ bank, categories }: { bank: Bank; categories: Category
   const handleGenerate = async () => {
     const categoryIds = catIds.map(Number).filter(Boolean)
     const config = diffMode === 'count'
-      ? (() => { const [e, m, h] = autoSplit(totalCount); return { easy_count: e, medium_count: m, hard_count: h, ...(categoryIds.length ? { category_ids: categoryIds } : {}), ...(types.length ? { types } : {}) } })()
-      : { easy_count: easy, medium_count: medium, hard_count: hard, ...(categoryIds.length ? { category_ids: categoryIds } : {}), ...(types.length ? { types } : {}) }
+      ? (() => { const [e, m, h] = autoSplit(totalCount); return { easy_count: e, medium_count: m, hard_count: h, standalone_only: true, ...(categoryIds.length ? { category_ids: categoryIds } : {}), ...(types.length ? { types } : {}) } })()
+      : { easy_count: easy, medium_count: medium, hard_count: hard, standalone_only: true, ...(categoryIds.length ? { category_ids: categoryIds } : {}), ...(types.length ? { types } : {}) }
     const test    = await generate.mutateAsync({ name: name.trim() || `${bank.name} — ${new Date().toLocaleString()}`, config })
     const attempt = await start.mutateAsync({ bankId: String(bank.id), testId: test.id })
     navigate(`/attempts/${attempt.id}`)
