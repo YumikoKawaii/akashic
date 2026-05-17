@@ -110,7 +110,7 @@ export default function Select({ value, onChange, options, placeholder = '', dis
           {options.map(opt => (
             <div
               key={opt.value}
-              onClick={() => { onChange(opt.value); setOpen(false) }}
+              onClick={() => { onChange(opt.value === value ? '' : opt.value); setOpen(false) }}
               style={{
                 padding: '8px 12px',
                 fontSize: '0.9rem',
