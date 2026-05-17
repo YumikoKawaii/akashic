@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bank, Category, Passage } from '../../types'
 import OrnatePanel from '../ui/OrnatePanel'
@@ -7,8 +7,8 @@ import MultiSelect from '../ui/MultiSelect'
 import { useGenerateTest } from '../../hooks/useTests'
 import { useStartAttempt } from '../../hooks/useAttempts'
 
-type GenMode   = 'standalone' | 'passage'
-type DiffMode  = 'difficulty' | 'count'
+type GenMode  = 'standalone' | 'passage'
+type DiffMode = 'difficulty' | 'count'
 
 const TYPE_OPTIONS = [
   { value: 'mcq',                  label: 'MCQ' },
@@ -22,13 +22,13 @@ const TYPE_OPTIONS = [
   { value: 'matching_features',    label: 'Match Features' },
 ]
 
+const NUM = { width: 52, textAlign: 'center' as const, padding: '8px 4px' }
+
 const DIFF = {
   easy:   { dot: '#2a8a3a', border: 'rgba(42,138,58,0.45)',   bg: 'rgba(42,138,58,0.07)'  },
   medium: { dot: '#9a7018', border: 'rgba(154,112,24,0.45)',  bg: 'rgba(154,112,24,0.07)' },
   hard:   { dot: '#b03030', border: 'rgba(176,48,48,0.45)',   bg: 'rgba(176,48,48,0.07)'  },
 } as const
-
-const NUM = { width: 52, textAlign: 'center' as const, padding: '8px 4px' }
 
 function autoSplit(total: number): [number, number, number] {
   const e = Math.round(total * 0.25)
@@ -36,26 +36,20 @@ function autoSplit(total: number): [number, number, number] {
   return [e, Math.max(0, total - e - h), h]
 }
 
-/* ── Mode toggle pill ─────────────────────────────────────────── */
+/* ── Pill toggle ──────────────────────────────────────────────── */
 function SegToggle<T extends string>({ value, options, onChange }: {
-  value: T
-  options: { value: T; label: string }[]
-  onChange: (v: T) => void
+  value: T; options: { value: T; label: string }[]; onChange: (v: T) => void
 }) {
   return (
     <div className="flex gap-1" style={{ border: '1px solid var(--border-dim)', padding: 3, borderRadius: 4, flexShrink: 0 }}>
       {options.map(o => (
-        <button
-          key={o.value}
-          onClick={() => onChange(o.value)}
-          style={{
-            fontFamily: 'Cinzel, serif', fontSize: '0.58rem', letterSpacing: '0.12em',
-            padding: '4px 12px', border: 'none', cursor: 'pointer', borderRadius: 2,
-            background: value === o.value ? 'var(--gold-dim)' : 'transparent',
-            color:      value === o.value ? 'var(--bg)' : 'var(--ink-dim)',
-            textTransform: 'uppercase', transition: 'all 0.15s', whiteSpace: 'nowrap',
-          }}
-        >
+        <button key={o.value} onClick={() => onChange(o.value)} style={{
+          fontFamily: 'Cinzel, serif', fontSize: '0.58rem', letterSpacing: '0.12em',
+          padding: '4px 12px', border: 'none', cursor: 'pointer', borderRadius: 2,
+          background: value === o.value ? 'var(--gold-dim)' : 'transparent',
+          color:      value === o.value ? 'var(--bg)'      : 'var(--ink-dim)',
+          textTransform: 'uppercase', transition: 'all 0.15s', whiteSpace: 'nowrap',
+        }}>
           {o.label}
         </button>
       ))}
@@ -63,7 +57,7 @@ function SegToggle<T extends string>({ value, options, onChange }: {
   )
 }
 
-/* ── Difficulty row (shared) ──────────────────────────────────── */
+/* ── Shared difficulty / generate row ─────────────────────────── */
 function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium, hard, setHard, totalCount, setTotalCount, onGenerate, isPending }: {
   diffMode: DiffMode; setDiffMode: (m: DiffMode) => void
   easy: number; setEasy: (n: number) => void
@@ -74,7 +68,7 @@ function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium
 }) {
   const diffTotal = easy + medium + hard
 
-  const handleTotalChange = (n: number) => {
+  const handleTotal = (n: number) => {
     const [e, m, h] = autoSplit(Math.max(0, n))
     setEasy(e); setMedium(m); setHard(h)
   }
@@ -82,8 +76,7 @@ function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium
   return (
     <div className="flex flex-wrap gap-3 items-center" style={{ paddingTop: 14, borderTop: '1px solid var(--border-dim)' }}>
       <SegToggle
-        value={diffMode}
-        onChange={setDiffMode}
+        value={diffMode} onChange={setDiffMode}
         options={[{ value: 'difficulty', label: 'By Difficulty' }, { value: 'count', label: 'By Count' }]}
       />
 
@@ -93,7 +86,7 @@ function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium
             Total
           </span>
           <input type="number" min={0} max={200} value={diffTotal}
-            onChange={e => handleTotalChange(Number(e.target.value))}
+            onChange={e => handleTotal(Number(e.target.value))}
             className="form-input" style={NUM}
             title="Auto-splits 25% easy / 50% medium / 25% hard" />
           <span style={{ color: 'var(--border-dim)', fontSize: '0.7rem' }}>▸</span>
@@ -130,7 +123,7 @@ function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium
   )
 }
 
-/* ── Root tab ─────────────────────────────────────────────────── */
+/* ── Root ─────────────────────────────────────────────────────── */
 interface Props { bank: Bank; categories: Category[]; passages: Passage[] }
 
 export default function GenerateTab({ bank, categories, passages }: Props) {
@@ -140,11 +133,8 @@ export default function GenerateTab({ bank, categories, passages }: Props) {
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-4 flex-wrap">
         <div className="section-title" style={{ marginBottom: 0, flex: 1 }}>Generate Test</div>
-        <SegToggle
-          value={mode}
-          onChange={setMode}
-          options={[{ value: 'standalone', label: 'Standalone' }, { value: 'passage', label: 'Passage' }]}
-        />
+        <SegToggle value={mode} onChange={setMode}
+          options={[{ value: 'standalone', label: 'Standalone' }, { value: 'passage', label: 'Passage' }]} />
       </div>
 
       {mode === 'standalone'
@@ -183,7 +173,6 @@ function StandaloneForm({ bank, categories }: { bank: Bank; categories: Category
 
   return (
     <OrnatePanel>
-      {/* ─ Input row ─ */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1.5fr', gap: 14, marginBottom: 14 }}>
         <FormField label="Test Name">
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="Morning Practice" />
@@ -196,8 +185,6 @@ function StandaloneForm({ bank, categories }: { bank: Bank; categories: Category
           <MultiSelect value={types} onChange={setTypes} placeholder="All Types" options={TYPE_OPTIONS} />
         </FormField>
       </div>
-
-      {/* ─ Difficulty row ─ */}
       <DifficultyRow
         diffMode={diffMode} setDiffMode={setDiffMode}
         easy={easy} setEasy={setEasy}
@@ -217,137 +204,68 @@ function PassageForm({ bank, passages }: { bank: Bank; passages: Passage[] }) {
   const generate = useGenerateTest(String(bank.id))
   const start    = useStartAttempt()
 
-  const [name,       setName]       = useState('')
-  const [selected,   setSelected]   = useState<Set<number>>(new Set())
-  const [diffMode,   setDiffMode]   = useState<DiffMode>('difficulty')
-  const [easy,       setEasy]       = useState(0)
-  const [medium,     setMedium]     = useState(0)
-  const [hard,       setHard]       = useState(0)
-  const [totalCount, setTotalCount] = useState(10)
+  const [name,        setName]       = useState('')
+  const [passageIds,  setPassageIds] = useState<string[]>([])
+  const [diffMode,    setDiffMode]   = useState<DiffMode>('difficulty')
+  const [easy,        setEasy]       = useState(0)
+  const [medium,      setMedium]     = useState(0)
+  const [hard,        setHard]       = useState(0)
+  const [totalCount,  setTotalCount] = useState(10)
 
-  const selectedPassages = passages.filter(p => selected.has(p.id))
-
-  // Auto-fill difficulty counts from selected passages when in difficulty mode
-  useEffect(() => {
-    if (diffMode !== 'difficulty') return
-    const groups = selectedPassages.flatMap(p => p.groups ?? [])
+  const refillFromPassages = (ids: string[]) => {
+    const selected = passages.filter(p => ids.includes(String(p.id)))
+    const groups   = selected.flatMap(p => p.groups ?? [])
     setEasy  (groups.filter(g => g.difficulty === 'easy').length)
     setMedium(groups.filter(g => g.difficulty === 'medium').length)
     setHard  (groups.filter(g => g.difficulty === 'hard').length)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected, diffMode])
+  }
 
-  const toggle = (id: number) =>
-    setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const handlePassageChange = (ids: string[]) => {
+    setPassageIds(ids)
+    if (diffMode === 'difficulty') refillFromPassages(ids)
+  }
+
+  const handleDiffModeChange = (m: DiffMode) => {
+    setDiffMode(m)
+    if (m === 'difficulty') refillFromPassages(passageIds)
+  }
 
   const handleGenerate = async () => {
-    if (selected.size === 0) return
+    if (!passageIds.length) return
+    const pIds = passageIds.map(Number).filter(Boolean)
+    const selectedPassages = passages.filter(p => pIds.includes(p.id))
     const config = diffMode === 'count'
-      ? (() => { const [e, m, h] = autoSplit(totalCount); return { easy_count: e, medium_count: m, hard_count: h, passage_ids: [...selected] } })()
-      : { easy_count: easy, medium_count: medium, hard_count: hard, passage_ids: [...selected] }
+      ? (() => { const [e, m, h] = autoSplit(totalCount); return { easy_count: e, medium_count: m, hard_count: h, passage_ids: pIds } })()
+      : { easy_count: easy, medium_count: medium, hard_count: hard, passage_ids: pIds }
     const test    = await generate.mutateAsync({ name: name.trim() || selectedPassages.map(p => p.title).join(' + '), config })
     const attempt = await start.mutateAsync({ bankId: String(bank.id), testId: test.id })
     navigate(`/attempts/${attempt.id}`)
   }
 
-  if (passages.length === 0) {
-    return (
-      <OrnatePanel>
-        <p style={{ color: 'var(--ink-dim)', fontSize: '0.88rem', textAlign: 'center', padding: '16px 0' }}>
-          No passages in this bank yet. Import or add passages first.
-        </p>
-      </OrnatePanel>
-    )
-  }
-
   return (
-    <div className="flex flex-col gap-4">
-      {/* ─ Passage cards ─ */}
-      <div className="flex flex-col gap-2">
-        {passages.map(p => {
-          const groups = p.groups ?? []
-          const qCount = groups.reduce((acc, g) => acc + (g.questions?.length ?? 0), 0)
-          const isSel  = selected.has(p.id)
-          const dc     = DIFF[p.difficulty] ?? DIFF.medium
-
-          return (
-            <div
-              key={p.id}
-              onClick={() => toggle(p.id)}
-              style={{
-                padding: '14px 18px',
-                background: isSel ? 'rgba(154,112,24,0.05)' : 'var(--bg-card)',
-                border: `1px solid ${isSel ? 'var(--gold)' : 'var(--border-dim)'}`,
-                cursor: 'pointer', transition: 'all 0.18s',
-                boxShadow: isSel ? '0 0 10px rgba(154,112,24,0.10)' : 'none',
-              }}
-            >
-              <div className="flex items-start gap-3">
-                {/* checkbox */}
-                <div style={{
-                  width: 15, height: 15, marginTop: 3, flexShrink: 0,
-                  border: `1px solid ${isSel ? 'var(--gold)' : 'var(--border-dim)'}`,
-                  background: isSel ? 'var(--gold)' : 'transparent',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.15s',
-                }}>
-                  {isSel && <span style={{ color: '#fff8e8', fontSize: '0.6rem', lineHeight: 1 }}>✓</span>}
-                </div>
-
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="flex items-center gap-2 flex-wrap" style={{ marginBottom: 3 }}>
-                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: 'var(--ink)' }}>{p.title}</span>
-                    <span style={{ fontSize: '0.58rem', padding: '1px 7px', border: `1px solid ${dc.border}`, color: dc.dot, fontFamily: 'Cinzel, serif', letterSpacing: '0.08em', background: dc.bg }}>
-                      {p.difficulty}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--ink-dim)', marginBottom: groups.length ? 7 : 0 }}>
-                    {p.category?.name}{p.category?.name ? ' · ' : ''}{groups.length} group{groups.length !== 1 ? 's' : ''} · {qCount}q
-                  </div>
-                  {groups.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {groups.map(g => {
-                        const gc = DIFF[g.difficulty] ?? DIFF.medium
-                        return (
-                          <span key={g.id} style={{ fontSize: '0.58rem', padding: '2px 7px', border: `1px solid ${gc.border}`, color: gc.dot, fontFamily: 'Cinzel, serif', background: gc.bg, letterSpacing: '0.06em' }}>
-                            {g.type.replace(/_/g, ' ')} · {g.questions?.length ?? '?'}q
-                          </span>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* ─ Config panel (appears when passages are selected) ─ */}
-      {selected.size > 0 && (
-        <OrnatePanel>
-          <div style={{ marginBottom: 14 }}>
-            <FormField label="Test Name">
-              <Input
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder={selectedPassages.map(p => p.title).join(' + ')}
-                style={{ maxWidth: 480 }}
-              />
-            </FormField>
-          </div>
-
-          <DifficultyRow
-            diffMode={diffMode} setDiffMode={setDiffMode}
-            easy={easy} setEasy={setEasy}
-            medium={medium} setMedium={setMedium}
-            hard={hard} setHard={setHard}
-            totalCount={totalCount} setTotalCount={setTotalCount}
-            onGenerate={handleGenerate}
-            isPending={generate.isPending || start.isPending}
+    <OrnatePanel>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr', gap: 14, marginBottom: 14 }}>
+        <FormField label="Test Name">
+          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Passage Practice" />
+        </FormField>
+        <FormField label="Passages">
+          <MultiSelect
+            value={passageIds}
+            onChange={handlePassageChange}
+            placeholder="Select Passages"
+            options={passages.map(p => ({ value: String(p.id), label: p.title }))}
           />
-        </OrnatePanel>
-      )}
-    </div>
+        </FormField>
+      </div>
+      <DifficultyRow
+        diffMode={diffMode} setDiffMode={handleDiffModeChange}
+        easy={easy} setEasy={setEasy}
+        medium={medium} setMedium={setMedium}
+        hard={hard} setHard={setHard}
+        totalCount={totalCount} setTotalCount={setTotalCount}
+        onGenerate={handleGenerate}
+        isPending={generate.isPending || start.isPending}
+      />
+    </OrnatePanel>
   )
 }
