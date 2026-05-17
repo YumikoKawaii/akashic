@@ -5,7 +5,7 @@ import { Passage, Question, QuestionGroup, TestQuestion } from '../types'
 import OrnatePanel from '../components/ui/OrnatePanel'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
 import Starfield from '../components/ui/Starfield'
-import { Spinner, MagicCircleBackground } from '../components/ui/MagicCircle'
+import MagicCircle, { Spinner, MagicCircleBackground } from '../components/ui/MagicCircle'
 import Select from '../components/ui/Select'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -51,15 +51,23 @@ function GroupContextBox({ group }: { group: QuestionGroup }) {
   if (!items.length) return null
 
   return (
-    <div style={{ marginBottom: 12, padding: '12px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)' }}>
-      <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.14em', color: 'var(--gold-dim)', marginBottom: 8, textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {items.map(item => (
-          <div key={item.key} style={{ display: 'flex', gap: 10, fontSize: '0.9rem', fontFamily: 'EB Garamond, serif', color: 'var(--ink)' }}>
-            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'var(--gold-dim)', minWidth: 22 }}>{item.key}.</span>
-            <span>{item.text}</span>
-          </div>
-        ))}
+    <div style={{ position: 'relative', overflow: 'hidden', marginBottom: 12, padding: '12px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)' }}>
+      <div style={{ position: 'absolute', top: -32, right: -32, width: 80, height: 80, color: 'var(--gold)', opacity: 0.28, pointerEvents: 'none', zIndex: 0 }}>
+        <MagicCircle variant="halo" speed={2} />
+      </div>
+      <div style={{ position: 'absolute', bottom: -32, left: -32, width: 70, height: 70, color: '#6b4c8a', opacity: 0.22, pointerEvents: 'none', zIndex: 0 }}>
+        <MagicCircle variant="halo" speed={2} />
+      </div>
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.14em', color: 'var(--gold-dim)', marginBottom: 8, textTransform: 'uppercase' }}>{label}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {items.map(item => (
+            <div key={item.key} style={{ display: 'flex', gap: 10, fontSize: '0.9rem', fontFamily: 'EB Garamond, serif', color: 'var(--ink)' }}>
+              <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'var(--gold-dim)', minWidth: 22 }}>{item.key}.</span>
+              <span>{item.text}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -107,9 +115,12 @@ function AnswerOptions({ q, selected, onSelect, revealed = false }: {
             <button key={opt.key} className={`answer-option ${!locked && isSel ? 'selected' : ''}`}
               onClick={() => toggle(opt.key)}
               style={{ cursor: locked ? 'default' : 'pointer', borderColor: isCorr ? 'rgba(42,138,58,0.6)' : isWrong ? 'rgba(176,48,48,0.6)' : undefined, background: isCorr ? 'rgba(42,138,58,0.08)' : isWrong ? 'rgba(176,48,48,0.06)' : undefined }}>
-              <span className="answer-key">{opt.key}</span>
-              <span className="answer-text">{opt.text}</span>
-              {isCorr && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.8rem' }}>✓</span>}
+              <div style={{ position: 'absolute', bottom: -22, right: -22, width: 55, height: 55, color: 'var(--gold)', opacity: 0.18, pointerEvents: 'none', zIndex: 0 }}>
+                <MagicCircle variant="sigil" speed={4} />
+              </div>
+              <span className="answer-key" style={{ position: 'relative', zIndex: 1 }}>{opt.key}</span>
+              <span className="answer-text" style={{ position: 'relative', zIndex: 1 }}>{opt.text}</span>
+              {isCorr && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.8rem', position: 'relative', zIndex: 1 }}>✓</span>}
             </button>
           )
         })}
@@ -291,12 +302,17 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
         <div style={{ overflowY: 'auto', padding: '24px 28px', borderRight: '1px solid var(--border-dim)' }}>
           {passage && (
             <>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.68rem', letterSpacing: '0.14em', color: 'var(--gold-dim)', marginBottom: 12, textTransform: 'uppercase' }}>
-                Passage
+              <div style={{ position: 'relative', marginBottom: 18 }}>
+                <div style={{ position: 'absolute', top: -20, right: -10, width: 70, height: 70, color: 'var(--gold)', opacity: 0.2, pointerEvents: 'none' }}>
+                  <MagicCircle variant="spark" speed={2} />
+                </div>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.68rem', letterSpacing: '0.14em', color: 'var(--gold-dim)', marginBottom: 12, textTransform: 'uppercase', position: 'relative' }}>
+                  Passage
+                </div>
+                <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'var(--ink)', lineHeight: 1.4, position: 'relative' }}>
+                  {passage.title}
+                </h2>
               </div>
-              <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'var(--ink)', marginBottom: 18, lineHeight: 1.4 }}>
-                {passage.title}
-              </h2>
               <PassageBody passage={passage} />
             </>
           )}

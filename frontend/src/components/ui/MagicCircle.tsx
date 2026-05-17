@@ -15,7 +15,7 @@ function spin(baseDur: number, dir: 'cw' | 'ccw' = 'cw', speed = 1): React.CSSPr
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-type Variant = 'full' | 'outer' | 'inner'
+type Variant = 'full' | 'outer' | 'inner' | 'halo' | 'sigil' | 'orbit' | 'spark'
 
 export default function MagicCircle({ style, className, variant = 'full', speed = 1 }: {
   style?: React.CSSProperties
@@ -82,8 +82,8 @@ export default function MagicCircle({ style, className, variant = 'full', speed 
     >
       <g transform="translate(100,100)" strokeOpacity="0.75">
 
-        {/* ── outer variant: big rings ── */}
-        {variant !== 'inner' && <>
+        {/* ── outer / full: big outer rings ── */}
+        {(variant === 'full' || variant === 'outer') && <>
           <g style={spin(90, 'cw', speed)}>
             <circle r={ro} strokeWidth="0.8" />
             {ticks}
@@ -96,14 +96,14 @@ export default function MagicCircle({ style, className, variant = 'full', speed 
           </g>
         </>}
 
-        {/* ── full variant: middle layer ── */}
+        {/* ── full: middle layer ── */}
         {variant === 'full' && <>
           <circle r={rm} strokeWidth="0.8" strokeOpacity="0.5" />
           {midDots}
         </>}
 
-        {/* ── inner variant: tight geometry ── */}
-        {variant !== 'outer' && <>
+        {/* ── full / inner: inner geometry ── */}
+        {(variant === 'full' || variant === 'inner') && <>
           <circle r={rm} strokeWidth="0.8" strokeOpacity={variant === 'inner' ? 0.75 : 0.5} />
           {variant === 'inner' && midDots}
           <g style={spin(38, 'ccw', speed)}>
@@ -113,6 +113,52 @@ export default function MagicCircle({ style, className, variant = 'full', speed 
           <circle r={ri} strokeWidth="0.7" strokeOpacity="0.5" />
           <circle r={9}  strokeWidth="0.5" strokeOpacity="0.4" />
           <circle r={4}  fill="currentColor" fillOpacity="0.3" stroke="none" />
+        </>}
+
+        {/* ── halo: outer ring + ticks only ── */}
+        {variant === 'halo' && <>
+          <g style={spin(90, 'cw', speed)}>
+            <circle r={ro} strokeWidth="0.8" />
+            {ticks}
+            {diamonds}
+          </g>
+          <circle r={rd} strokeWidth="0.4" strokeDasharray="2 10" style={spin(60, 'ccw', speed)} />
+        </>}
+
+        {/* ── sigil: hexagram + center, no outer rings ── */}
+        {variant === 'sigil' && <>
+          <g style={spin(28, 'ccw', speed)}>
+            <polygon points={hexUp}   strokeWidth="0.8" />
+            <polygon points={hexDown} strokeWidth="0.8" />
+          </g>
+          <circle r={ri} strokeWidth="0.6" strokeOpacity="0.6" />
+          <circle r={9}  strokeWidth="0.4" strokeOpacity="0.35" />
+          <circle r={4}  fill="currentColor" fillOpacity="0.35" stroke="none" />
+        </>}
+
+        {/* ── orbit: dashed outer ring + orbiting dots ── */}
+        {variant === 'orbit' && <>
+          <circle r={rd} strokeWidth="0.5" strokeDasharray="2 9" style={spin(55, 'ccw', speed)} />
+          <circle r={rm} strokeWidth="0.4" strokeOpacity="0.35" />
+          <g style={spin(35, 'cw', speed)}>
+            {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => (
+              <circle key={deg} cx={px(rm, deg)} cy={py(rm, deg)} r={2.8}
+                fill="currentColor" fillOpacity="0.6" stroke="none" />
+            ))}
+          </g>
+          <circle r={9}  strokeWidth="0.4" strokeOpacity="0.35" />
+          <circle r={4}  fill="currentColor" fillOpacity="0.3" stroke="none" />
+        </>}
+
+        {/* ── spark: octagram + dashed ring, angular ── */}
+        {variant === 'spark' && <>
+          <circle r={rd} strokeWidth="0.5" strokeDasharray="3 6" style={spin(65, 'ccw', speed)} />
+          <g style={spin(40, 'cw', speed)}>
+            <polygon points={`${sq},${sq} ${-sq},${sq} ${-sq},${-sq} ${sq},${-sq}`} strokeWidth="0.8" />
+            <polygon points={`${rg},0 0,${rg} ${-rg},0 0,${-rg}`} strokeWidth="0.8" />
+          </g>
+          <circle r={ri} strokeWidth="0.5" strokeOpacity="0.4" />
+          <circle r={4}  fill="currentColor" fillOpacity="0.25" stroke="none" />
         </>}
 
       </g>
