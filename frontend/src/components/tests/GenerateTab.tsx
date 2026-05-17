@@ -26,7 +26,7 @@ const TYPE_OPTIONS = [
 const NUM = {
   width: 52,
   textAlign: 'center' as const,
-  padding: '8px 4px',
+  padding: '4px 4px',
   background: 'var(--bg)',
   borderColor: 'rgba(154,112,24,0.40)',
   fontFamily: 'Cinzel, serif',
