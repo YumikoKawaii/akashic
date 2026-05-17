@@ -15,6 +15,7 @@
         "type": "matching_headings",
         "difficulty": "hard",
         "context": {
+          "title": "The reading passage has several paragraphs. Choose the correct heading for each paragraph from the list of headings below.",
           "sections": [
             { "key": "A", "label": "Paragraph A" },
             { "key": "B", "label": "Paragraph B" },
@@ -36,7 +37,9 @@
       {
         "type": "tf_ng",
         "difficulty": "hard",
-        "context": {},
+        "context": {
+          "title": "Do the following statements agree with the information given in the reading passage? Write TRUE, FALSE or NOT GIVEN."
+        },
         "questions": [
           { "content": "Statement one about the passage.", "answer": "true"      },
           { "content": "Statement two about the passage.", "answer": "false"     },
@@ -46,7 +49,9 @@
       {
         "type": "mcq",
         "difficulty": "hard",
-        "context": {},
+        "context": {
+          "title": "Choose the correct letter, A, B, C or D."
+        },
         "questions": [
           {
             "content": "According to the passage, which of the following is correct?",
@@ -74,6 +79,7 @@
         "type": "matching_features",
         "difficulty": "hard",
         "context": {
+          "title": "Match each statement with the correct feature. You may use any letter more than once.",
           "options": [
             { "key": "A", "text": "Feature option A" },
             { "key": "B", "text": "Feature option B" },
@@ -83,6 +89,22 @@
         "questions": [
           { "content": "Item one to match", "answer": "B" },
           { "content": "Item two to match", "answer": "A" }
+        ]
+      },
+      {
+        "type": "matching_information",
+        "difficulty": "hard",
+        "context": {
+          "title": "Which paragraph contains the following information?",
+          "paragraphs": [
+            { "key": "A", "text": "Paragraph A summary" },
+            { "key": "B", "text": "Paragraph B summary" },
+            { "key": "C", "text": "Paragraph C summary" }
+          ]
+        },
+        "questions": [
+          { "content": "A description of the process.", "answer": "B" },
+          { "content": "A reference to historical evidence.", "answer": "A" }
         ]
       },
       {

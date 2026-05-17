@@ -60,15 +60,21 @@ function GroupContextBox({ group }: { group: QuestionGroup }) {
 
   let label = ''
   let items: { key: string; text: string }[] = []
+  let defaultTitle = ''
 
   if (group.type === 'matching_headings' && ctx.headings?.length) {
     label = 'Headings'; items = ctx.headings
+    defaultTitle = 'Match each paragraph with the correct heading from the list below.'
   } else if (group.type === 'matching_features' && ctx.options?.length) {
     label = 'Features'; items = ctx.options
+    defaultTitle = 'Match each statement with the correct feature.'
   } else if (group.type === 'matching_information') {
     label = 'Paragraphs'; items = ctx.paragraphs ?? ctx.options ?? []
+    defaultTitle = 'Which paragraph contains the following information?'
   }
   if (!items.length) return null
+
+  const instruction = ctx.title ?? defaultTitle
 
   return (
     <div style={{ position: 'relative', overflow: 'hidden', marginBottom: 12, padding: '12px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)' }}>
@@ -80,6 +86,11 @@ function GroupContextBox({ group }: { group: QuestionGroup }) {
       </div>
       <RuneCorners size={20} color="var(--gold-dim)" opacity={0.45} />
       <div style={{ position: 'relative', zIndex: 1 }}>
+        {instruction && (
+          <div style={{ fontFamily: 'EB Garamond, serif', fontStyle: 'italic', fontSize: '0.92rem', color: 'var(--ink-dim)', marginBottom: 10 }}>
+            {instruction}
+          </div>
+        )}
         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.14em', color: 'var(--gold-dim)', marginBottom: 8, textTransform: 'uppercase' }}>{label}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {items.map(item => (
@@ -309,21 +320,6 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
           <div style={{ fontSize: '0.72rem', color: 'var(--ink-dim)', marginTop: 2 }}>
             {answered} / {questions.length} answered
           </div>
-        </div>
-
-        {/* Progress dots */}
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap', maxWidth: 400, position: 'relative', zIndex: 1 }}>
-          {questions.map(tq => {
-            const ans = answers[String(tq.question?.id)]
-            return (
-              <div key={tq.question_id} style={{
-                width: 7, height: 7, borderRadius: '50%',
-                background: ans ? 'var(--gold)' : 'var(--border-dim)',
-                boxShadow: ans ? '0 0 4px rgba(154,112,24,0.5)' : 'none',
-                transition: 'background 0.25s, box-shadow 0.25s',
-              }} />
-            )
-          })}
         </div>
 
         <button className="btn btn-primary" onClick={onSubmit} disabled={isPending} style={{ padding: '9px 26px', position: 'relative', zIndex: 1 }}>
