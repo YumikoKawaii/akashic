@@ -51,7 +51,7 @@ function GroupContextBox({ group }: { group: QuestionGroup }) {
           : 'Complete the sentences using words from the passage.'
     )
     return (
-      <div style={{ position: 'relative', marginBottom: 12, padding: '10px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.92rem', fontFamily: 'EB Garamond, serif', fontStyle: 'italic', color: 'var(--ink-dim)' }}>
+      <div style={{ position: 'relative', marginBottom: 12, padding: '10px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.92rem', fontFamily: 'EB Garamond, serif', color: 'var(--ink-dim)' }}>
         <RuneCorners size={18} color="var(--gold-dim)" opacity={0.4} />
         {instruction}
       </div>
@@ -76,7 +76,7 @@ function GroupContextBox({ group }: { group: QuestionGroup }) {
     const title = ctx.title
     if (!title) return null
     return (
-      <div style={{ position: 'relative', marginBottom: 12, padding: '10px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.92rem', fontFamily: 'EB Garamond, serif', fontStyle: 'italic', color: 'var(--ink-dim)' }}>
+      <div style={{ position: 'relative', marginBottom: 12, padding: '10px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.92rem', fontFamily: 'EB Garamond, serif', color: 'var(--ink-dim)' }}>
         <RuneCorners size={18} color="var(--gold-dim)" opacity={0.4} />
         {title}
       </div>
@@ -96,7 +96,7 @@ function GroupContextBox({ group }: { group: QuestionGroup }) {
       <RuneCorners size={20} color="var(--gold-dim)" opacity={0.45} />
       <div style={{ position: 'relative', zIndex: 1 }}>
         {instruction && (
-          <div style={{ fontFamily: 'EB Garamond, serif', fontStyle: 'italic', fontSize: '0.92rem', color: 'var(--ink-dim)', marginBottom: 10 }}>
+          <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '0.92rem', color: 'var(--ink-dim)', marginBottom: 10 }}>
             {instruction}
           </div>
         )}
