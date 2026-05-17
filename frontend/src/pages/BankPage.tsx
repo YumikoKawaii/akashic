@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useBank, useMembers, useAddMember, useRemoveMember } from '../hooks/useBanks'
 import { useQuestions } from '../hooks/useQuestions'
-import { useTests } from '../hooks/useTests'
+import { useTestsPaged } from '../hooks/useTests'
 import { useCategories } from '../hooks/useCategories'
 import { usePassages, usePassagesPaged, useDeletePassage } from '../hooks/usePassages'
 import { useAuth } from '../contexts/AuthContext'
@@ -58,7 +58,6 @@ export default function BankPage() {
   const { user }                   = useAuth()
   const { data: bank }             = useBank(bankId)
   const { data: categories = [] }  = useCategories(bankId)
-  const { data: tests = [] }       = useTests(bankId)
   const { data: passages = [] }    = usePassages(bankId)   // full list for GenerateTab
   const { data: members = [] }     = useMembers(bankId)
   const deletePassage              = useDeletePassage(bankId)
@@ -73,11 +72,17 @@ export default function BankPage() {
   const [filter,        setFilter]        = useState<QuestionFilter>({})
   const [page,          setPage]          = useState(1)
   const [passagePage,   setPassagePage]   = useState(1)
+  const [testPage,      setTestPage]      = useState(1)
 
   const { data: passagePageData }  = usePassagesPaged(bankId, passagePage)
   const pagedPassages      = passagePageData?.data      ?? []
   const totalPassages      = passagePageData?.total     ?? passages.length
   const totalPassagePages  = Math.max(1, Math.ceil(totalPassages / (passagePageData?.page_size ?? 10)))
+
+  const { data: testPageData }     = useTestsPaged(bankId, testPage)
+  const pagedTests         = testPageData?.data         ?? []
+  const totalTests         = testPageData?.total        ?? 0
+  const totalTestPages     = Math.max(1, Math.ceil(totalTests / (testPageData?.page_size ?? 10)))
   const [importing,     setImporting]     = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [pConfirmDel,   setPConfirmDel]   = useState<number | null>(null)
@@ -263,7 +268,7 @@ export default function BankPage() {
           { value: totalQ,             label: 'Questions',  color: 'var(--gold)',     circle: { variant: 'orbit' as const, color: 'var(--gold)',    opacity: 0.90 } },
           { value: passages.length,   label: 'Passages',   color: 'var(--ink-dim)',  circle: { variant: 'halo'  as const, color: '#2a8a3a',         opacity: 0.85 } },
           { value: categories.length, label: 'Categories', color: 'var(--ink-dim)',  circle: { variant: 'sigil' as const, color: 'var(--gold-dim)', opacity: 0.85 } },
-          { value: tests.length,      label: 'Tests',      color: 'var(--ink-dim)',  circle: { variant: 'spark' as const, color: '#6b4c8a',          opacity: 0.82 } },
+          { value: totalTests,         label: 'Tests',      color: 'var(--ink-dim)',  circle: { variant: 'spark' as const, color: '#6b4c8a',          opacity: 0.82 } },
         ]).map(s => (
           <div key={s.label} className="stat-card">
             <RuneCorners color="var(--gold-dim)" opacity={0.60} />
@@ -525,8 +530,13 @@ export default function BankPage() {
       {tab === 'tests' && (
         <>
           <OrnateDivider />
-          <div className="section-title">Tests ({tests.length})</div>
-          {tests.length === 0 ? (
+          <div className="section-title">
+            Tests ({totalTests}
+            {totalTestPages > 1 && <span style={{ fontWeight: 400, fontSize: '0.7rem', color: 'var(--ink-dim)', letterSpacing: '0.05em' }}> — page {testPage}/{totalTestPages}</span>}
+            )
+          </div>
+
+          {pagedTests.length === 0 ? (
             <div style={{ color: 'var(--ink-dim)', fontSize: '0.88rem', padding: '24px 0', textAlign: 'center' }}>
               No tests yet.{' '}
               <span style={{ color: 'var(--gold)', cursor: 'pointer' }} onClick={() => setTab('generate')}>
@@ -535,7 +545,47 @@ export default function BankPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {tests.map(t => <TestCard key={t.id} test={t} bankId={bankId} />)}
+              {pagedTests.map(t => <TestCard key={t.id} test={t} bankId={bankId} />)}
+            </div>
+          )}
+
+          {totalTestPages > 1 && (
+            <div className="flex items-center justify-center gap-3" style={{ paddingTop: 8 }}>
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: '0.7rem', padding: '5px 14px' }}
+                onClick={() => setTestPage(p => p - 1)}
+                disabled={testPage === 1}
+              >
+                ← Prev
+              </button>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {Array.from({ length: totalTestPages }, (_, i) => i + 1).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setTestPage(p)}
+                    style={{
+                      width: 28, height: 28,
+                      fontFamily: 'Cinzel, serif', fontSize: '0.6rem',
+                      border: '1px solid',
+                      borderColor: p === testPage ? 'var(--gold)' : 'var(--border-dim)',
+                      background: p === testPage ? 'var(--gold)' : 'transparent',
+                      color: p === testPage ? 'var(--bg)' : 'var(--ink-dim)',
+                      cursor: 'pointer', borderRadius: 2,
+                    }}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: '0.7rem', padding: '5px 14px' }}
+                onClick={() => setTestPage(p => p + 1)}
+                disabled={testPage >= totalTestPages}
+              >
+                Next →
+              </button>
             </div>
           )}
         </>

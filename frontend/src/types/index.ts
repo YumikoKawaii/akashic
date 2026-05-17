@@ -189,3 +189,10 @@ export interface PassagePage {
   page:      number
   page_size: number
 }
+
+export interface TestPage {
+  data:      Test[]
+  total:     number
+  page:      number
+  page_size: number
+}

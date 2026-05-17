@@ -9,6 +9,7 @@ import (
 
 type TestRepository interface {
 	FindByBank(bankID int) ([]model.Test, error)
+	FindByBankPaged(bankID int, page, pageSize int) ([]model.Test, int64, error)
 	FindByID(id int) (*model.Test, error)
 	FindByBankAndID(bankID, id int) (*model.Test, error)
 	Create(t *model.Test) error
@@ -25,6 +26,21 @@ func (r *testRepo) FindByBank(bankID int) ([]model.Test, error) {
 	var ts []model.Test
 	err := r.db.Where("bank_id = ?", bankID).Order("created_at DESC").Find(&ts).Error
 	return ts, err
+}
+
+func (r *testRepo) FindByBankPaged(bankID int, page, pageSize int) ([]model.Test, int64, error) {
+	base := r.db.Model(&model.Test{}).Where("bank_id = ?", bankID)
+
+	var total int64
+	if err := base.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var ts []model.Test
+	err := base.Order("created_at DESC").
+		Limit(pageSize).Offset((page - 1) * pageSize).
+		Find(&ts).Error
+	return ts, total, err
 }
 
 func (r *testRepo) FindByID(id int) (*model.Test, error) {

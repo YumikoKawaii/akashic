@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yumikokawaii/akashic/internal/service"
@@ -21,12 +22,23 @@ func (h *TestHandler) List(c *gin.Context) {
 	if !ok2 {
 		return
 	}
-	tests, err := h.svc.ListByBank(bankID)
+	page, pageSize := 1, 10
+	if v := c.Query("page"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			page = n
+		}
+	}
+	if v := c.Query("page_size"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 50 {
+			pageSize = n
+		}
+	}
+	result, err := h.svc.ListByBankPaged(bankID, page, pageSize)
 	if err != nil {
 		handleError(c, err)
 		return
 	}
-	ok(c, tests)
+	ok(c, result)
 }
 
 func (h *TestHandler) Get(c *gin.Context) {

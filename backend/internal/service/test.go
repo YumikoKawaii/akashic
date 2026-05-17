@@ -33,6 +33,24 @@ func (s *TestService) ListByBank(bankID int) ([]model.Test, error) {
 	return s.testRepo.FindByBank(bankID)
 }
 
+type TestPage struct {
+	Data     []model.Test `json:"data"`
+	Total    int64        `json:"total"`
+	Page     int          `json:"page"`
+	PageSize int          `json:"page_size"`
+}
+
+func (s *TestService) ListByBankPaged(bankID, page, pageSize int) (*TestPage, error) {
+	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+		return nil, err
+	}
+	ts, total, err := s.testRepo.FindByBankPaged(bankID, page, pageSize)
+	if err != nil {
+		return nil, err
+	}
+	return &TestPage{Data: ts, Total: total, Page: page, PageSize: pageSize}, nil
+}
+
 func (s *TestService) GetByID(bankID, id int) (*model.Test, error) {
 	t, err := s.testRepo.FindByBankAndID(bankID, id)
 	if err != nil {
