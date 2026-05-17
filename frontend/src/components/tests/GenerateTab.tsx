@@ -23,16 +23,7 @@ const TYPE_OPTIONS = [
   { value: 'matching_features',    label: 'Match Features' },
 ]
 
-const NUM = {
-  width: 52,
-  textAlign: 'center' as const,
-  padding: '4px 4px',
-  background: 'var(--bg)',
-  borderColor: 'rgba(154,112,24,0.40)',
-  fontFamily: 'Cinzel, serif',
-  fontSize: '0.85rem',
-  color: 'var(--ink)',
-}
+const NUM = { width: 52, textAlign: 'center' as const, padding: '4px 4px' }
 
 const DIFF = {
   easy:   { dot: '#2a8a3a', border: 'rgba(42,138,58,0.45)',   bg: 'rgba(42,138,58,0.07)'  },
