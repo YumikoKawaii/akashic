@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom'
 import { useCategories } from '../hooks/useCategories'
 import { useQuestion } from '../hooks/useQuestions'
 import QuestionForm from '../components/questions/QuestionForm'
+import { Spinner } from '../components/ui/MagicCircle'
 
 export default function QuestionFormPage() {
   const { bankId = '', questionId } = useParams<{ bankId: string; questionId?: string }>()
@@ -10,8 +11,8 @@ export default function QuestionFormPage() {
 
   const isEdit = !!questionId
   if (isEdit && !question) return (
-    <div style={{ color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.8rem', letterSpacing: '0.2em', padding: 40 }}>
-      Loading…
+    <div className="flex items-center justify-center h-full">
+      <Spinner />
     </div>
   )
 

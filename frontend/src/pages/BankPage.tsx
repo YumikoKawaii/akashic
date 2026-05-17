@@ -15,6 +15,7 @@ import GenerateTab from '../components/tests/GenerateTab'
 import OrnateDivider from '../components/ui/OrnateDivider'
 import OrnatePanel from '../components/ui/OrnatePanel'
 import { FormField, Input } from '../components/ui/FormField'
+import { Spinner } from '../components/ui/MagicCircle'
 
 type Tab = 'questions' | 'passages' | 'generate' | 'tests'
 
@@ -119,8 +120,8 @@ export default function BankPage() {
   const { data: questions = [] } = useQuestions(bankId, filter)
 
   if (!bank) return (
-    <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.8rem', letterSpacing: '0.2em' }}>
-      Loading…
+    <div className="flex items-center justify-center h-full">
+      <Spinner />
     </div>
   )
 

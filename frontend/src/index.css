@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Magic circle animations ──────────────────────────────── */
+@keyframes mc-cw  { to { transform: rotate(360deg);  } }
+@keyframes mc-ccw { to { transform: rotate(-360deg); } }
+
 /* ─── Theme variables ──────────────────────────────────────── */
 :root {
   --bg:           #f0ead6;

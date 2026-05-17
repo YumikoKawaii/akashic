@@ -5,6 +5,7 @@ import { useCreatePassage, useUpdatePassage, usePassage } from '../hooks/usePass
 import { FormField, Input } from '../components/ui/FormField'
 import Select from '../components/ui/Select'
 import OrnatePanel from '../components/ui/OrnatePanel'
+import { Spinner } from '../components/ui/MagicCircle'
 import { QuestionDifficulty } from '../types'
 
 const DIFF_OPTIONS = [
@@ -23,8 +24,8 @@ export default function PassageFormPage() {
 
   const isEdit = !!passageId
   if (isEdit && !existing) return (
-    <div style={{ color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.8rem', letterSpacing: '0.2em', padding: 40 }}>
-      Loading…
+    <div className="flex items-center justify-center h-full">
+      <Spinner />
     </div>
   )
 

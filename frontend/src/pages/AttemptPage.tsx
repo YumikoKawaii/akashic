@@ -5,6 +5,7 @@ import { Passage, Question, QuestionGroup, TestQuestion } from '../types'
 import OrnatePanel from '../components/ui/OrnatePanel'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
 import Starfield from '../components/ui/Starfield'
+import { Spinner, MagicCircleBackground } from '../components/ui/MagicCircle'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -261,6 +262,7 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg)' }}>
       <Starfield />
+      <MagicCircleBackground />
 
       {/* Header */}
       <div style={{ position: 'relative', zIndex: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', borderBottom: '1px solid var(--border-dim)', background: 'var(--bg-panel)' }}>
@@ -375,6 +377,7 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
   return (
     <>
       <Starfield />
+      <MagicCircleBackground />
       <div className="attempt-layout">
         <div className="attempt-progress-bar">
           <div className="attempt-progress-fill" style={{ width: `${progress}%`, transition: 'width 0.4s ease' }} />
@@ -454,7 +457,8 @@ export default function AttemptPage() {
   if (!attempt?.test) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <Starfield />
-      <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'var(--ink-dim)', letterSpacing: '0.2em' }}>Loading…</span>
+      <MagicCircleBackground />
+      <Spinner size={100} />
     </div>
   )
 

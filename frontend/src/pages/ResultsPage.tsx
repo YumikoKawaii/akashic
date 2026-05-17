@@ -5,6 +5,7 @@ import OrnatePanel from '../components/ui/OrnatePanel'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
 import OrnateDivider from '../components/ui/OrnateDivider'
 import Starfield from '../components/ui/Starfield'
+import { Spinner, MagicCircleBackground } from '../components/ui/MagicCircle'
 
 function questionContent(q: Question): string {
   return q.item?.content ?? q.choice?.content ?? ''
@@ -40,7 +41,8 @@ export default function ResultsPage() {
   if (!attempt?.test) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <Starfield />
-      <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'var(--ink-dim)', letterSpacing: '0.2em' }}>Loading…</span>
+      <MagicCircleBackground />
+      <Spinner size={100} />
     </div>
   )
 
@@ -55,6 +57,7 @@ export default function ResultsPage() {
   return (
     <>
       <Starfield />
+      <MagicCircleBackground />
       <div className="attempt-layout">
         <div className="attempt-header">
           <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>
