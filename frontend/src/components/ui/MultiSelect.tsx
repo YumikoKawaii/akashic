@@ -55,7 +55,7 @@ export default function MultiSelect({ value, onChange, options, placeholder = 'A
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0, zIndex: 100,
-          background: '#f5ecda', border: '1px solid var(--gold)',
+          background: 'var(--bg-card)', border: '1px solid var(--gold)',
           boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
           maxHeight: 220, overflowY: 'auto',
         }}>
