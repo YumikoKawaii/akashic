@@ -16,7 +16,7 @@ function CompassRose() {
       stroke="currentColor" strokeLinecap="round" strokeOpacity="0.82">
       <g transform="translate(100,100)">
         <g style={spin(70, 'cw')}>
-          <circle r={88} strokeWidth="1.5"/>
+          <circle r={88} strokeWidth="0.6"/>
           {/* 4 large cardinal diamonds */}
           {[0, 90, 180, 270].map(d => (
             <polygon key={d} transform={`rotate(${d})`}
@@ -59,7 +59,7 @@ function Trefoil() {
       stroke="currentColor" strokeLinecap="round" strokeOpacity="0.82">
       <g transform="translate(100,100)">
         <g style={spin(80, 'ccw')}>
-          <circle r={88} strokeWidth="1.5"/>
+          <circle r={88} strokeWidth="0.6"/>
           {Array.from({ length: 12 }, (_, i) => (
             <line key={i} x1={0} y1={-83} x2={0} y2={-88}
               strokeWidth="1.1" transform={`rotate(${i * 30})`}/>
@@ -101,7 +101,7 @@ function Pentacle() {
       stroke="currentColor" strokeLinecap="round" strokeOpacity="0.82">
       <g transform="translate(100,100)">
         <g style={spin(75, 'cw')}>
-          <circle r={88} strokeWidth="1.5"/>
+          <circle r={88} strokeWidth="0.6"/>
           {verts(88).map(([x, y], i) => (
             <line key={i} x1={x * 0.93} y1={y * 0.93} x2={x} y2={y} strokeWidth="1.3"/>
           ))}
@@ -128,7 +128,7 @@ function SolarWheel() {
       stroke="currentColor" strokeLinecap="round" strokeOpacity="0.82">
       <g transform="translate(100,100)">
         <g style={spin(65, 'cw')}>
-          <circle r={88} strokeWidth="1.5"/>
+          <circle r={88} strokeWidth="0.6"/>
           {Array.from({ length: 8 }, (_, i) => (
             <line key={i} x1={0} y1={-88} x2={0} y2={-28}
               strokeWidth="1" transform={`rotate(${i * 45})`}/>
@@ -172,7 +172,7 @@ export default function SolarSystemBackground() {
           position: 'absolute', left: '50%', top: '50%',
           transform: 'translate(-50%, -50%)',
           width: r * 2, height: r * 2, borderRadius: '50%',
-          border: '1px solid rgba(154,112,24,0.07)',
+          border: '1px solid rgba(154,112,24,0.16)',
         }}/>
       ))}
 
