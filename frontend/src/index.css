@@ -557,6 +557,23 @@ input[type=number].form-input { -moz-appearance: textfield; }
   overflow: hidden;
 }
 
+/* ── Background flash on answer ────────────────────────────────────── */
+@keyframes bg-flash {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+.bg-flash {
+  position: absolute; inset: 0; pointer-events: none;
+  animation: bg-flash 1.4s ease-out forwards;
+}
+.bg-flash-correct {
+  background: radial-gradient(ellipse at 50% 60%, rgba(42,138,58,0.32) 0%, rgba(42,138,58,0.10) 40%, transparent 70%);
+}
+.bg-flash-wrong {
+  background: radial-gradient(ellipse at 50% 60%, rgba(176,48,48,0.38) 0%, rgba(176,48,48,0.12) 40%, transparent 70%);
+}
+
 .attempt-progress-bar {
   height: 2px;
   background: var(--border-dim);

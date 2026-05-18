@@ -163,7 +163,9 @@ const PLANETS = [
   { orbitR: 460, size:  85, period: 68, startAngle: 75,  dir: 'cw'  as const, color: '#0d2268', opacity: 0.82, Planet: SolarWheel },
 ]
 
-export default function SolarSystemBackground() {
+export default function SolarSystemBackground({ flash }: {
+  flash?: { key: number; type: 'correct' | 'wrong' } | null
+}) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
 
@@ -211,6 +213,7 @@ export default function SolarSystemBackground() {
         )
       })}
 
+      {flash && <div key={flash.key} className={`bg-flash bg-flash-${flash.type}`}/>}
     </div>
   )
 }

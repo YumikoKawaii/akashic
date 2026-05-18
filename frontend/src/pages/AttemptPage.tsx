@@ -431,6 +431,7 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
   const [revealed,   setRevealed]   = useState(false)
   const [score,      setScore]      = useState(0)
   const [scorable,   setScorable]   = useState(0)
+  const [flash,      setFlash]      = useState<{ key: number; type: 'correct' | 'wrong' } | null>(null)
 
   const total  = questions.length
   const tq     = questions[currentIdx]
@@ -450,8 +451,10 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
     setAnswers(prev => ({ ...prev, [String(q.id)]: selected }))
     setRevealed(true)
     if (isScoreable) {
+      const correct = checkAnswer(q, selected)
       setScorable(s => s + 1)
-      if (checkAnswer(q, selected)) setScore(s => s + 1)
+      if (correct) setScore(s => s + 1)
+      setFlash({ key: Date.now(), type: correct ? 'correct' : 'wrong' })
     }
   }
 
@@ -465,7 +468,7 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
   return (
     <>
       <Starfield />
-      <SolarSystemBackground />
+      <SolarSystemBackground flash={flash} />
       <div className="attempt-layout">
 
         {/* ── Segmented progress ── */}
