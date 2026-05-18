@@ -111,8 +111,9 @@ function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium
       ) : (
         <div className="flex items-center gap-2">
           <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.12em', color: 'var(--ink-dim)' }}>Questions</span>
-          <input type="number" min={1} max={200} value={totalCount}
-            onChange={e => setTotalCount(Math.max(1, Number(e.target.value)))}
+          <input type="number" min={0} max={200} value={totalCount || ''}
+            onChange={e => setTotalCount(e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)))}
+            onBlur={e => { if (!e.target.value || Number(e.target.value) < 1) setTotalCount(1) }}
             className="form-input" style={NUM} />
         </div>
       )}
