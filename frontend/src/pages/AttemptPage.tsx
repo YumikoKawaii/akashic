@@ -11,6 +11,7 @@ import RuneCorners from '../components/ui/RuneCorners'
 import OghamBorder from '../components/ui/OghamBorder'
 import OrnateDivider from '../components/ui/OrnateDivider'
 import Select from '../components/ui/Select'
+import PocketWatch from '../components/ui/PocketWatch'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -491,9 +492,9 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
         <div className="attempt-header" style={{ position: 'relative' }}>
           <RuneCorners size={22} color="var(--gold-dim)" opacity={0.50} />
 
-          {/* decorative circles */}
-          <div style={{ position: 'absolute', top: -24, left: 80, width: 64, height: 64, color: '#6b4c8a', opacity: 0.20, pointerEvents: 'none' }}>
-            <MagicCircle variant="halo" speed={2} />
+          {/* Pocket watch — centered in header */}
+          <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -58%)', zIndex: 1, pointerEvents: 'none', opacity: 0.88 }}>
+            <PocketWatch size={82} />
           </div>
 
           <div style={{ position: 'relative', zIndex: 1 }}>
