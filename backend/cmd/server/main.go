@@ -53,10 +53,10 @@ func main() {
 	categorySvc     := service.NewCategoryService(categoryRepo, bankRepo)
 	passageSvc      := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
 	questionGroupSvc := service.NewQuestionGroupService(unitOfWork, questionGroupRepo, bankRepo, categoryRepo)
-	questionSvc     := service.NewQuestionService(unitOfWork, questionRepo, bankRepo, categoryRepo, generateCache)
+	questionSvc     := service.NewQuestionService(unitOfWork, questionRepo, bankRepo, categoryRepo)
 	testSvc         := service.NewTestService(unitOfWork, testRepo, questionRepo, questionGroupRepo, bankRepo, generateCache)
 	attemptSvc      := service.NewAttemptService(attemptRepo, testRepo)
-	ingestSvc       := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo, generateCache)
+	ingestSvc       := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo)
 
 	authMW := middleware.Auth(authSvc)
 

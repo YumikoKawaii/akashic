@@ -12,7 +12,6 @@ type QuestionService struct {
 	repo         repository.QuestionRepository
 	bankRepo     repository.BankRepository
 	categoryRepo repository.CategoryRepository
-	cache        *GenerateCache
 }
 
 func NewQuestionService(
@@ -20,9 +19,8 @@ func NewQuestionService(
 	repo repository.QuestionRepository,
 	bankRepo repository.BankRepository,
 	categoryRepo repository.CategoryRepository,
-	cache *GenerateCache,
 ) *QuestionService {
-	return &QuestionService{uow: u, repo: repo, bankRepo: bankRepo, categoryRepo: categoryRepo, cache: cache}
+	return &QuestionService{uow: u, repo: repo, bankRepo: bankRepo, categoryRepo: categoryRepo}
 }
 
 func (s *QuestionService) List(bankID int, f repository.QuestionFilter) ([]model.Question, error) {
@@ -121,7 +119,6 @@ func (s *QuestionService) Create(bankID int, input CreateQuestionInput) (*model.
 	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
-	s.cache.InvalidateBank(bankID)
 	return s.repo.FindByID(q.ID)
 }
 
@@ -184,7 +181,6 @@ func (s *QuestionService) Update(bankID, id int, input UpdateQuestionInput) (*mo
 		}
 	}
 
-	s.cache.InvalidateBank(bankID)
 	return s.repo.FindByID(q.ID)
 }
 
@@ -196,11 +192,7 @@ func (s *QuestionService) Delete(bankID, id int) error {
 	if q.BankID != bankID {
 		return ErrForbidden
 	}
-	if err := s.repo.SoftDelete(id); err != nil {
-		return err
-	}
-	s.cache.InvalidateBank(bankID)
-	return nil
+	return s.repo.SoftDelete(id)
 }
 
 func (s *QuestionService) Restore(bankID, id int) (*model.Question, error) {

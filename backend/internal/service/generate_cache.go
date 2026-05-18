@@ -26,13 +26,12 @@ type attemptRecord struct {
 	ids map[int]struct{}
 }
 
-// GenerateCache holds in-memory question pools and per-user attempt history.
-// Designed for single-pod deployment; no external cache required.
+// GenerateCache holds per-user attempt history for cooldown deduplication.
+// Question pools are loaded from DB on each generation request.
 // All methods are safe for concurrent use.
 type GenerateCache struct {
 	mu      sync.RWMutex
 	config  GenerateConfig
-	pools   map[int][]CachedQuestion        // bankID → question pool
 	history map[int]map[int][]attemptRecord // userID → bankID → recent attempts
 }
 
@@ -42,30 +41,8 @@ func NewGenerateCache(cfg GenerateConfig) *GenerateCache {
 	}
 	return &GenerateCache{
 		config:  cfg,
-		pools:   make(map[int][]CachedQuestion),
 		history: make(map[int]map[int][]attemptRecord),
 	}
-}
-
-// InvalidateBank clears the question pool for a bank.
-// Must be called after any question is created, updated, or deleted.
-func (c *GenerateCache) InvalidateBank(bankID int) {
-	c.mu.Lock()
-	delete(c.pools, bankID)
-	c.mu.Unlock()
-}
-
-func (c *GenerateCache) setPool(bankID int, questions []CachedQuestion) {
-	c.mu.Lock()
-	c.pools[bankID] = questions
-	c.mu.Unlock()
-}
-
-func (c *GenerateCache) getPool(bankID int) ([]CachedQuestion, bool) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	qs, ok := c.pools[bankID]
-	return qs, ok
 }
 
 // excludedForUser returns question IDs the user saw in their last

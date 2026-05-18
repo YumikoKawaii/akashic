@@ -260,11 +260,8 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 	return s.testRepo.FindByID(test.ID)
 }
 
-// loadPool returns the cached question pool for a bank, loading from DB on first call.
+// loadPool loads question metadata from the DB for pool filtering and selection.
 func (s *TestService) loadPool(bankID int) ([]CachedQuestion, error) {
-	if pool, ok := s.cache.getPool(bankID); ok {
-		return pool, nil
-	}
 	metas, err := s.questionRepo.FindAllMeta(bankID)
 	if err != nil {
 		return nil, err
@@ -280,7 +277,6 @@ func (s *TestService) loadPool(bankID int) ([]CachedQuestion, error) {
 			GroupID:    m.GroupID,
 		}
 	}
-	s.cache.setPool(bankID, pool)
 	return pool, nil
 }
 
