@@ -1,6 +1,5 @@
 import MagicCircle from './MagicCircle'
 
-// Each planet is itself a mini magic circle, matching the reference image
 interface Planet {
   orbitR: number
   size: number
@@ -13,17 +12,17 @@ interface Planet {
   mcSpeed: number
 }
 
-const ORBIT_RADII = [145, 245, 360]
+const ORBIT_RADII = [130, 215, 310]
 
 const PLANETS: Planet[] = [
-  // inner orbit — 1 large ring-world
-  { orbitR: 145, size: 70,  period: 22,  startAngle: 50,  dir: 'cw',  color: 'var(--gold)', variant: 'full',  opacity: 0.48, mcSpeed: 1.8 },
-  // middle orbit — 2 ring-worlds
-  { orbitR: 245, size: 58,  period: 38,  startAngle: 140, dir: 'ccw', color: 'var(--gold)', variant: 'orbit', opacity: 0.40, mcSpeed: 1.4 },
-  { orbitR: 245, size: 52,  period: 38,  startAngle: 320, dir: 'ccw', color: '#7c5a9a',     variant: 'full',  opacity: 0.30, mcSpeed: 1.6 },
-  // outer orbit — 2 smaller ring-worlds
-  { orbitR: 360, size: 50,  period: 60,  startAngle: 70,  dir: 'cw',  color: 'var(--gold)', variant: 'orbit', opacity: 0.32, mcSpeed: 1.0 },
-  { orbitR: 360, size: 42,  period: 60,  startAngle: 240, dir: 'cw',  color: '#7c5a9a',     variant: 'full',  opacity: 0.24, mcSpeed: 0.9 },
+  // inner — gold
+  { orbitR: 130, size: 130, period: 20,  startAngle: 50,  dir: 'cw',  color: '#c8900a', variant: 'full',  opacity: 0.70, mcSpeed: 1.6 },
+  // middle — purple + teal
+  { orbitR: 215, size: 110, period: 36,  startAngle: 140, dir: 'ccw', color: '#7c3aaa', variant: 'orbit', opacity: 0.62, mcSpeed: 1.2 },
+  { orbitR: 215, size: 105, period: 36,  startAngle: 320, dir: 'ccw', color: '#1a8a9a', variant: 'full',  opacity: 0.58, mcSpeed: 1.4 },
+  // outer — rose + sage
+  { orbitR: 310, size:  95, period: 58,  startAngle: 70,  dir: 'cw',  color: '#b03468', variant: 'orbit', opacity: 0.55, mcSpeed: 1.0 },
+  { orbitR: 310, size:  88, period: 58,  startAngle: 245, dir: 'cw',  color: '#2a8a50', variant: 'full',  opacity: 0.50, mcSpeed: 0.9 },
 ]
 
 export default function SolarSystemBackground() {
@@ -34,22 +33,21 @@ export default function SolarSystemBackground() {
       {ORBIT_RADII.map(r => (
         <div key={r} style={{
           position: 'absolute',
-          left: '50%', top: '63%',
+          left: '50%', top: '60%',
           transform: 'translate(-50%, -50%)',
           width: r * 2, height: r * 2,
           borderRadius: '50%',
-          border: '1px solid rgba(154,112,24,0.11)',
-          boxShadow: '0 0 12px rgba(154,112,24,0.04) inset',
+          border: '1px solid rgba(154,112,24,0.18)',
         }} />
       ))}
 
-      {/* center sun — large elaborate magic circle */}
+      {/* center sun */}
       <div style={{
         position: 'absolute',
-        left: '50%', top: '63%',
+        left: '50%', top: '60%',
         transform: 'translate(-50%, -50%)',
-        width: 200, height: 200,
-        color: 'var(--gold)', opacity: 0.32,
+        width: 240, height: 240,
+        color: '#c8900a', opacity: 0.55,
       }}>
         <MagicCircle variant="full" speed={0.28} />
       </div>
@@ -60,13 +58,12 @@ export default function SolarSystemBackground() {
         return (
           <div key={i} style={{
             position: 'absolute',
-            left: '50%', top: '63%',
+            left: '50%', top: '60%',
             width: 0, height: 0,
             animation: `mc-${p.dir} ${p.period}s linear infinite`,
             animationDelay: `${delay}s`,
             transformOrigin: '0 0',
           }}>
-            {/* counter-rotates so the planet ring keeps its orientation */}
             <div style={{
               position: 'absolute',
               left:  p.orbitR - p.size / 2,
