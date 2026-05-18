@@ -560,12 +560,12 @@ input[type=number].form-input { -moz-appearance: textfield; }
 /* ── Background flash + ring glow on answer ────────────────────────── */
 @keyframes ring-glow-correct {
   0%   { box-shadow: none; border-color: rgba(154,112,24,0.16); }
-  8%   { box-shadow: 0 0 14px rgba(88,120,72,0.40), inset 0 0 8px rgba(88,120,72,0.10); border-color: rgba(88,120,72,0.50); }
+  8%   { box-shadow: 0 0 16px rgba(240,220,160,0.55), inset 0 0 8px rgba(240,220,160,0.18); border-color: rgba(230,210,150,0.60); }
   100% { box-shadow: none; border-color: rgba(154,112,24,0.16); }
 }
 @keyframes ring-glow-wrong {
   0%   { box-shadow: none; border-color: rgba(154,112,24,0.16); }
-  8%   { box-shadow: 0 0 14px rgba(162,72,38,0.40), inset 0 0 8px rgba(162,72,38,0.10); border-color: rgba(162,72,38,0.50); }
+  8%   { box-shadow: 0 0 14px rgba(165,80,70,0.38), inset 0 0 8px rgba(165,80,70,0.10); border-color: rgba(165,80,70,0.48); }
   100% { box-shadow: none; border-color: rgba(154,112,24,0.16); }
 }
 @keyframes bg-flash {
@@ -578,10 +578,10 @@ input[type=number].form-input { -moz-appearance: textfield; }
   animation: bg-flash 1.4s ease-out forwards;
 }
 .bg-flash-correct {
-  background: radial-gradient(ellipse at 50% 60%, rgba(88,120,72,0.18) 0%, rgba(88,120,72,0.06) 45%, transparent 70%);
+  background: radial-gradient(ellipse at 50% 60%, rgba(255,248,220,0.50) 0%, rgba(240,220,160,0.15) 45%, transparent 70%);
 }
 .bg-flash-wrong {
-  background: radial-gradient(ellipse at 50% 60%, rgba(162,72,38,0.20) 0%, rgba(162,72,38,0.06) 45%, transparent 70%);
+  background: radial-gradient(ellipse at 50% 60%, rgba(165,80,70,0.20) 0%, rgba(165,80,70,0.06) 45%, transparent 70%);
 }
 
 .attempt-progress-bar {
