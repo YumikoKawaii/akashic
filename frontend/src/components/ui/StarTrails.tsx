@@ -18,7 +18,7 @@ function StarTip({ size = 6 }: { size?: number }) {
   )
 }
 
-const TRAILS = Array.from({ length: 14 }, (_, i) => ({
+const TRAILS = Array.from({ length: 28 }, (_, i) => ({
   top:      `${8 + (i * 6.7 + (i % 3) * 4.1) % 82}%`,
   width:    120 + (i * 23) % 140,
   height:   i % 4 === 0 ? 3 : 2,
