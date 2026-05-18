@@ -470,7 +470,13 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
   return (
     <>
       <Starfield />
-      <SolarSystemBackground flash={flash} />
+      {/* Watch background — swap SolarSystemBackground back to restore solar system */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.13 }}>
+        <PocketWatch size={620} />
+      </div>
+      {flash && <div key={flash.key} className={`bg-flash bg-flash-${flash.type}`}
+        style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}/>}
       <div className="attempt-layout">
 
         {/* ── Segmented progress ── */}
@@ -492,9 +498,9 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
         <div className="attempt-header" style={{ position: 'relative' }}>
           <RuneCorners size={22} color="var(--gold-dim)" opacity={0.50} />
 
-          {/* Pocket watch — centered in header */}
-          <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -58%)', zIndex: 1, pointerEvents: 'none', opacity: 0.88 }}>
-            <PocketWatch size={82} />
+          {/* decorative circles */}
+          <div style={{ position: 'absolute', top: -24, left: 80, width: 64, height: 64, color: '#6b4c8a', opacity: 0.20, pointerEvents: 'none' }}>
+            <MagicCircle variant="halo" speed={2} />
           </div>
 
           <div style={{ position: 'relative', zIndex: 1 }}>
