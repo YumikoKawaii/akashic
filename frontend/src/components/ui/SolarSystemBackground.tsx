@@ -1,5 +1,7 @@
 import MagicCircle from './MagicCircle'
 
+type Variant = 'full' | 'orbit' | 'halo' | 'sigil' | 'spark'
+
 interface Planet {
   orbitR: number
   size: number
@@ -7,6 +9,7 @@ interface Planet {
   startAngle: number
   dir: 'cw' | 'ccw'
   color: string
+  variant: Variant
   opacity: number
   mcSpeed: number
 }
@@ -14,14 +17,14 @@ interface Planet {
 const ORBIT_RADII = [185, 310, 450]
 
 const PLANETS: Planet[] = [
-  // inner — gold
-  { orbitR: 185, size: 160, period: 22,  startAngle: 50,  dir: 'cw',  color: '#c8900a', opacity: 0.70, mcSpeed: 1.5 },
-  // middle — purple + teal
-  { orbitR: 310, size: 140, period: 38,  startAngle: 140, dir: 'ccw', color: '#7c3aaa', opacity: 0.62, mcSpeed: 1.2 },
-  { orbitR: 310, size: 135, period: 38,  startAngle: 310, dir: 'ccw', color: '#1a8a9a', opacity: 0.58, mcSpeed: 1.3 },
-  // outer — rose + sage
-  { orbitR: 450, size: 120, period: 62,  startAngle: 80,  dir: 'cw',  color: '#b03468', opacity: 0.55, mcSpeed: 1.0 },
-  { orbitR: 450, size: 112, period: 62,  startAngle: 250, dir: 'cw',  color: '#2a8a50', opacity: 0.50, mcSpeed: 0.9 },
+  // inner — gold, full rings (elaborate mandala)
+  { orbitR: 185, size: 160, period: 22,  startAngle: 50,  dir: 'cw',  color: '#c8900a', variant: 'full',  opacity: 0.70, mcSpeed: 1.5 },
+  // middle — purple orbit arcs + teal sigil star
+  { orbitR: 310, size: 140, period: 38,  startAngle: 140, dir: 'ccw', color: '#7c3aaa', variant: 'orbit', opacity: 0.62, mcSpeed: 1.2 },
+  { orbitR: 310, size: 135, period: 38,  startAngle: 310, dir: 'ccw', color: '#1a8a9a', variant: 'sigil', opacity: 0.60, mcSpeed: 1.6 },
+  // outer — rose spark burst + sage halo ring
+  { orbitR: 450, size: 120, period: 62,  startAngle: 80,  dir: 'cw',  color: '#b03468', variant: 'spark', opacity: 0.55, mcSpeed: 1.0 },
+  { orbitR: 450, size: 112, period: 62,  startAngle: 250, dir: 'cw',  color: '#2a8a50', variant: 'halo',  opacity: 0.52, mcSpeed: 0.8 },
 ]
 
 export default function SolarSystemBackground() {
@@ -73,7 +76,7 @@ export default function SolarSystemBackground() {
               animationDelay: `${delay}s`,
               transformOrigin: 'center',
             }}>
-              <MagicCircle variant="full" speed={p.mcSpeed} />
+              <MagicCircle variant={p.variant} speed={p.mcSpeed} />
             </div>
           </div>
         )
