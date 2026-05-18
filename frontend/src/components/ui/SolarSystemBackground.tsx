@@ -1,409 +1,279 @@
 import React from 'react'
 
-// All SVGs use viewBox="0 0 680 680", center at (340,340).
-// stroke="currentColor" so each circle picks up its parent's color.
-// transform-origin 340px 340px = center of the SVG.
+// SVG viewBox 0 0 680 680, center at (340,340).
+// Stroke width guide: planet renders at ~260px → scale 260/680 = 0.38
+// SW 8 → 3px rendered, SW 5 → 1.9px, SW 3 → 1.1px
 
-const O = '340px 340px' // shared transform-origin shorthand
-
-function s(dur: number, dir: 'cw' | 'ccw'): React.CSSProperties {
+const O = '340px 340px'
+function anim(dur: number, dir: 'cw' | 'ccw'): React.CSSProperties {
   return { transformOrigin: O, animation: `mc-${dir} ${dur}s linear infinite` }
 }
 
-// ── Shared rune band (24 glyphs at every 15°) ─────────────────────
-function RuneBand({ r = 274, gap = 10 }: { r?: number; gap?: number }) {
-  const glyphs = [
-    // Each glyph: array of [x1,y1,x2,y2] line segments, at rotate(0) pointing up
-    [[0,-r,0,-(r-gap)],[0,-r,-6,-(r-4)],[0,-(r-5),-6,-(r-9)]],          // 0°
-    [[0,-r,0,-(r-gap)],[-4,-r,4,-(r-gap)]],                              // 15°
-    [[0,-r,0,-(r-gap)],[0,-r,6,-(r-4)],[0,-(r-5),6,-(r-9)]],            // 30°
-    [[-3,-r,3,-(r-gap)],[3,-r,-3,-(r-gap)]],                             // 45°
-    [[0,-r,0,-(r-gap)],[0,-r,-6,-(r-4)]],                                // 60°
-    [[0,-r,0,-(r-gap)],[-5,-(r-3),5,-(r-3)]],                           // 75°
-    [[0,-r,0,-(r-gap)],[0,-r,6,-(r-8)],[0,-(r-8),6,-(r-16)]],          // 90°
-    [[-3,-r,0,-(r-gap)],[3,-r,0,-(r-gap)]],                              // 105°
-    [[0,-r,0,-(r-gap)],[-5,-r,5,-(r-gap)]],                              // 120°
-    [[0,-r,0,-(r-gap)],[0,-(r-4),-5,-(r-8)],[0,-(r-4),5,-(r-8)]],     // 135°
-    [[0,-r,0,-(r-gap)],[0,-r,-6,-(r-7)]],                               // 150°
-    [[-4,-(r-2),4,-(r-2)],[0,-r,0,-(r-gap)]],                           // 165°
-    [[0,-r,0,-(r-gap)],[0,-r,6,-(r-4)],[0,-(r-5),6,-(r-9)]],           // 180°
-    [[-3,-r,3,-(r-gap)],[3,-r,-3,-(r-gap)]],                             // 195°
-    [[0,-r,0,-(r-gap)],[0,-r,-6,-(r-4)],[0,-(r-5),-6,-(r-9)]],         // 210°
-    [[-3,-r,0,-(r-gap)],[3,-r,0,-(r-gap)]],                              // 225°
-    [[0,-r,0,-(r-gap)],[0,-r,6,-(r-4)]],                                // 240°
-    [[0,-r,0,-(r-gap)],[-5,-(r-3),5,-(r-3)]],                           // 255°
-    [[0,-r,0,-(r-gap)],[0,-r,-6,-(r-8)],[0,-(r-8),-6,-(r-16)]],        // 270°
-    [[-3,-r,3,-(r-gap)],[3,-r,-3,-(r-gap)]],                             // 285°
-    [[0,-r,0,-(r-gap)],[-5,-r,5,-(r-gap)]],                              // 300°
-    [[0,-r,0,-(r-gap)],[0,-(r-4),-5,-(r-8)],[0,-(r-4),5,-(r-8)]],     // 315°
-    [[0,-r,0,-(r-gap)],[0,-r,6,-(r-7)]],                                // 330°
-    [[-4,-(r-2),4,-(r-2)],[0,-r,0,-(r-gap)]],                           // 345°
-  ]
+function Hexagram({ r, sw = 7, op = 1 }: { r: number; sw?: number; op?: number }) {
+  const pt = (d: number) => `${r * Math.sin(d * Math.PI / 180)},${-r * Math.cos(d * Math.PI / 180)}`
   return (
-    <g stroke="currentColor" fill="none" strokeWidth="1" opacity="0.85" strokeLinecap="round">
-      {glyphs.map((segs, i) => (
-        <g key={i} transform={`rotate(${i * 15})`}>
-          {segs.map((seg, j) => (
-            <line key={j} x1={seg[0]} y1={seg[1]} x2={seg[2]} y2={seg[3]} />
-          ))}
-        </g>
+    <g stroke="currentColor" fill="none" strokeWidth={sw} opacity={op} strokeLinejoin="round">
+      <polygon points={`${pt(0)} ${pt(120)} ${pt(240)}`}/>
+      <polygon points={`${pt(60)} ${pt(180)} ${pt(300)}`}/>
+    </g>
+  )
+}
+
+function Octagram({ r, sw = 7 }: { r: number; sw?: number }) {
+  const h = r * 0.7071
+  return (
+    <g stroke="currentColor" fill="none" strokeWidth={sw} strokeLinejoin="round">
+      <rect x={-h} y={-h} width={h * 2} height={h * 2}/>
+      <rect x={-h} y={-h} width={h * 2} height={h * 2} transform="rotate(45)"/>
+    </g>
+  )
+}
+
+function Ticks({ r, n, len, sw }: { r: number; n: number; len: number; sw: number }) {
+  return (
+    <g stroke="currentColor" strokeWidth={sw} strokeLinecap="round">
+      {Array.from({ length: n }, (_, i) => (
+        <line key={i} x1={0} y1={-r} x2={0} y2={-(r - len)} transform={`rotate(${i * (360 / n)})`}/>
       ))}
     </g>
   )
 }
 
-// ── Shared medallion ring (6 positions, each with a unique symbol) ─
-function MedallionRing({ r = 240, mr = 18 }: { r?: number; mr?: number }) {
-  const symbols = [
-    // cross
-    (cx: number, cy: number) => <>
-      <line x1={cx-8} y1={cy} x2={cx+8} y2={cy} strokeWidth="1.2"/>
-      <line x1={cx} y1={cy-8} x2={cx} y2={cy+8} strokeWidth="1.2"/>
-    </>,
-    // upward triangle
-    (cx: number, cy: number) => <path d={`M${cx},${cy-6} L${cx+6},${cy+4} L${cx-6},${cy+4}Z`} strokeWidth="1.2" fill="none"/>,
-    // fork / trident
-    (cx: number, cy: number) => <>
-      <line x1={cx} y1={cy-6} x2={cx} y2={cy+5} strokeWidth="1.2"/>
-      <line x1={cx} y1={cy-6} x2={cx+5} y2={cy} strokeWidth="1.2"/>
-    </>,
-    // wave / S
-    (cx: number, cy: number) => <path d={`M${cx-5},${cy-5} Q${cx},${cy-10} ${cx+5},${cy-5} M${cx-5},${cy+5} Q${cx},${cy+10} ${cx+5},${cy+5}`} strokeWidth="1.2" fill="none"/>,
-    // dot + underline
-    (cx: number, cy: number) => <>
-      <circle cx={cx} cy={cy-3} r="3.5" fill="currentColor"/>
-      <line x1={cx-6} y1={cy+4} x2={cx+6} y2={cy+4} strokeWidth="1.2"/>
-    </>,
-    // downward triangle
-    (cx: number, cy: number) => <path d={`M${cx-6},${cy-4} L${cx+6},${cy-4} L${cx},${cy+6}Z`} strokeWidth="1.2" fill="none"/>,
-  ]
+function Medallions({ r, cr, n = 6, sw = 5 }: { r: number; cr: number; n?: number; sw?: number }) {
   return (
-    <g stroke="currentColor" fill="none" strokeWidth="1.2" opacity="0.9">
-      {[0, 60, 120, 180, 240, 300].map((deg, i) => {
-        const rad = (deg * Math.PI) / 180
-        const cx = r * Math.sin(rad), cy = -r * Math.cos(rad)
-        return (
-          <g key={deg} transform={`rotate(${deg})`}>
-            <circle cx={0} cy={-r} r={mr} strokeWidth="1.2"/>
-            <circle cx={0} cy={-r} r={mr * 0.67} strokeWidth="0.7" opacity="0.6"/>
-            {symbols[i](0, -r)}
-          </g>
-        )
-        void cx; void cy // suppress unused warning
+    <g stroke="currentColor" fill="none" strokeWidth={sw}>
+      {Array.from({ length: n }, (_, i) => (
+        <circle key={i} cx={0} cy={-r} r={cr} transform={`rotate(${i * (360 / n)})`}/>
+      ))}
+    </g>
+  )
+}
+
+function Petals({ r, cr, n = 6, sw = 5 }: { r: number; cr: number; n?: number; sw?: number }) {
+  return (
+    <g stroke="currentColor" fill="none" strokeWidth={sw}>
+      {Array.from({ length: n }, (_, i) => {
+        const a = i * (360 / n) * Math.PI / 180
+        return <circle key={i} cx={r * Math.sin(a)} cy={-r * Math.cos(a)} r={cr}/>
       })}
     </g>
   )
 }
 
-// ── Hexagram (Star of David) at given radius ──────────────────────
-function Hexagram({ r, sw = 1.8, op = 0.95 }: { r: number; sw?: number; op?: number }) {
-  const p = (d: number) => `${r * Math.sin((d * Math.PI) / 180)},${-r * Math.cos((d * Math.PI) / 180)}`
-  return (
-    <g stroke="currentColor" fill="none" strokeWidth={sw} opacity={op}>
-      <polygon points={`${p(0)} ${p(120)} ${p(240)}`}/>
-      <polygon points={`${p(60)} ${p(180)} ${p(300)}`}/>
-    </g>
-  )
-}
-
-// ── Center Sun — full 10-layer design from reference ─────────────
+// ── Center Sun (gold, large) ─────────────────────────────────────────
 function CenterSun() {
   return (
     <svg viewBox="0 0 680 680" width="100%" height="100%" fill="none" stroke="currentColor" strokeLinecap="round">
-      {/* Outer ring */}
-      <g style={s(60, 'cw')} transform="translate(340,340)">
-        <circle r="306" strokeWidth="1.5"/>
-        <circle r="300" strokeWidth="0.5" opacity="0.4"/>
-        <circle r="293" strokeWidth="0.8" strokeDasharray="4 3" opacity="0.6"/>
-        <g strokeWidth="0.6" opacity="0.4">
-          {[0,30,60,90,120,150].map(d => <line key={d} x1="0" y1="-306" x2="0" y2="306" transform={`rotate(${d})`}/>)}
-        </g>
-        <g strokeWidth="1.5" opacity="0.8">
-          {[0,60,120,180,240,300].map(d => <line key={d} x1="0" y1="-306" x2="0" y2="-260" transform={`rotate(${d})`}/>)}
-        </g>
+      <g style={anim(60, 'cw')} transform="translate(340,340)">
+        <circle r={310} strokeWidth={6}/>
+        <circle r={298} strokeWidth={2.5}/>
+        <Ticks r={310} n={6} len={32} sw={5}/>
+        <Ticks r={310} n={24} len={16} sw={3}/>
       </g>
-      {/* Rune band */}
-      <g style={s(40, 'ccw')} transform="translate(340,340)">
-        <circle r="278" strokeWidth="2"/>
-        <circle r="270" strokeWidth="0.5" opacity="0.4"/>
-        <circle r="262" strokeWidth="0.8" strokeDasharray="6 4" opacity="0.5"/>
-        <RuneBand r={274} gap={10}/>
+      <g style={anim(40, 'ccw')} transform="translate(340,340)">
+        <circle r={276} strokeWidth={6}/>
+        <circle r={262} strokeWidth={2.5}/>
+        <Ticks r={276} n={12} len={14} sw={4}/>
+        <Ticks r={262} n={12} len={10} sw={3}/>
       </g>
-      {/* Mid ring 1 + medallions */}
-      <g style={s(30, 'cw')} transform="translate(340,340)">
-        <circle r="248" strokeWidth="1.8"/>
-        <circle r="240" strokeWidth="0.6" opacity="0.5"/>
-        <circle r="232" strokeWidth="0.8" strokeDasharray="5 3" opacity="0.5"/>
-        <MedallionRing r={240} mr={18}/>
+      <g style={anim(30, 'cw')} transform="translate(340,340)">
+        <circle r={244} strokeWidth={5}/>
+        <Medallions r={238} cr={16} n={6} sw={4}/>
+        <circle r={220} strokeWidth={2.5}/>
       </g>
-      {/* Star layer 1 */}
-      <g style={s(20, 'ccw')} transform="translate(340,340)">
-        <circle r="218" strokeWidth="1.2"/>
-        <circle r="210" strokeWidth="0.6" strokeDasharray="4 3" opacity="0.6"/>
-        <Hexagram r={204} sw={1.8}/>
-        <circle r="196" strokeWidth="0.8"/>
+      <g style={anim(20, 'ccw')} transform="translate(340,340)">
+        <circle r={208} strokeWidth={5}/>
+        <Hexagram r={192} sw={5}/>
+        <circle r={176} strokeWidth={2.5}/>
       </g>
-      {/* Mid ring 2 */}
-      <g style={s(25, 'cw')} transform="translate(340,340)">
-        <circle r="182" strokeWidth="1.5"/>
-        <circle r="174" strokeWidth="0.6" strokeDasharray="5 4" opacity="0.6"/>
-        <Hexagram r={170} sw={1.3} op={0.85}/>
-        <circle r="162" strokeWidth="0.7" opacity="0.6"/>
+      <g style={anim(15, 'cw')} transform="translate(340,340)">
+        <circle r={162} strokeWidth={5}/>
+        <Hexagram r={146} sw={4.5}/>
+        <circle r={130} strokeWidth={2.5}/>
       </g>
-      {/* Star layer 2 */}
-      <g style={s(15, 'ccw')} transform="translate(340,340)">
-        <circle r="150" strokeWidth="2"/>
-        <circle r="142" strokeWidth="0.6" strokeDasharray="4 3" opacity="0.6"/>
-        <Hexagram r={138} sw={2}/>
-        <circle r="126" strokeWidth="1"/>
+      <g style={anim(18, 'ccw')} transform="translate(340,340)">
+        <circle r={116} strokeWidth={4.5}/>
+        <Octagram r={106} sw={4.5}/>
+        <circle r={94} strokeWidth={2.5}/>
       </g>
-      {/* Squares / octagram */}
-      <g style={s(18, 'cw')} transform="translate(340,340)">
-        <circle r="114" strokeWidth="1.2"/>
-        <g strokeWidth="1.2" opacity="0.7">
-          <rect x="-88" y="-88" width="176" height="176"/>
-          <rect x="-88" y="-88" width="176" height="176" transform="rotate(45)"/>
-        </g>
-        <circle r="100" strokeWidth="0.7" strokeDasharray="4 3" opacity="0.6"/>
-        <Hexagram r={96} sw={1} op={0.6}/>
+      <g style={anim(10, 'cw')} transform="translate(340,340)">
+        <circle r={80} strokeWidth={4.5}/>
+        <Petals r={56} cr={14} n={6} sw={3.5}/>
+        <Hexagram r={70} sw={3.5} op={0.8}/>
+        <circle r={40} strokeWidth={2.5}/>
       </g>
-      {/* Inner flower petals */}
-      <g style={s(10, 'ccw')} transform="translate(340,340)">
-        <circle r="86" strokeWidth="1.8"/>
-        <circle r="78" strokeWidth="0.6" opacity="0.5"/>
-        <g strokeWidth="1.5" opacity="0.9">
-          {[[0,-62],[53.7,31],[-53.7,31],[0,62],[53.7,-31],[-53.7,-31]].map(([cx,cy],i) =>
-            <circle key={i} cx={cx} cy={cy} r="10"/>
-          )}
-        </g>
-        <Hexagram r={70} sw={1.5} op={0.85}/>
+      <g style={anim(7, 'ccw')} transform="translate(340,340)">
+        <circle r={28} strokeWidth={4.5}/>
+        <Hexagram r={18} sw={3.5}/>
       </g>
-      {/* Core */}
-      <g style={s(7, 'cw')} transform="translate(340,340)">
-        <circle r="44" strokeWidth="1.5"/>
-        <circle r="36" strokeWidth="0.8" strokeDasharray="3 2" opacity="0.7"/>
-        <Hexagram r={32} sw={1.8} op={0.95}/>
-      </g>
-      {/* Center gem */}
-      <g style={s(5, 'ccw')} transform="translate(340,340)">
-        <circle r="20" strokeWidth="2"/>
-        <circle r="13" fill="rgba(240,234,214,0.85)" strokeWidth="1.5"/>
-        <circle r="8"  fill="currentColor" opacity="0.4" stroke="none"/>
-        <circle r="4"  fill="currentColor" opacity="0.85" stroke="none"/>
-        <circle r="1.5" fill="white" opacity="0.9" stroke="none"/>
+      <g style={anim(4, 'cw')} transform="translate(340,340)">
+        <circle r={12} strokeWidth={4}/>
+        <circle r={6} fill="currentColor" opacity={0.9} stroke="none"/>
       </g>
     </svg>
   )
 }
 
-// ── Planet A — outer ring + rune band + hexagrams (no medallions) ─
+// ── Planet A: outer ring + hexagram stack (deep purple) ──────────────
 function PlanetA() {
   return (
     <svg viewBox="0 0 680 680" width="100%" height="100%" fill="none" stroke="currentColor" strokeLinecap="round">
-      <g style={s(55, 'cw')} transform="translate(340,340)">
-        <circle r="306" strokeWidth="1.5"/>
-        <circle r="293" strokeWidth="0.8" strokeDasharray="4 3" opacity="0.6"/>
-        <g strokeWidth="1.5" opacity="0.8">
-          {[0,60,120,180,240,300].map(d => <line key={d} x1="0" y1="-306" x2="0" y2="-268" transform={`rotate(${d})`}/>)}
-        </g>
+      <g style={anim(55, 'cw')} transform="translate(340,340)">
+        <circle r={308} strokeWidth={9}/>
+        <circle r={295} strokeWidth={4}/>
+        <Ticks r={308} n={12} len={22} sw={5}/>
       </g>
-      <g style={s(38, 'ccw')} transform="translate(340,340)">
-        <circle r="278" strokeWidth="2"/>
-        <circle r="262" strokeWidth="0.8" strokeDasharray="6 4" opacity="0.5"/>
-        <RuneBand r={274} gap={10}/>
+      <g style={anim(32, 'ccw')} transform="translate(340,340)">
+        <circle r={256} strokeWidth={8}/>
+        <Hexagram r={236} sw={7}/>
+        <circle r={216} strokeWidth={4}/>
       </g>
-      <g style={s(22, 'cw')} transform="translate(340,340)">
-        <circle r="218" strokeWidth="1.2"/>
-        <Hexagram r={204} sw={1.8}/>
-        <circle r="196" strokeWidth="0.8"/>
+      <g style={anim(18, 'cw')} transform="translate(340,340)">
+        <circle r={166} strokeWidth={8}/>
+        <Hexagram r={146} sw={6}/>
+        <circle r={126} strokeWidth={4}/>
       </g>
-      <g style={s(14, 'ccw')} transform="translate(340,340)">
-        <circle r="150" strokeWidth="2"/>
-        <Hexagram r={138} sw={2}/>
-        <circle r="126" strokeWidth="1"/>
+      <g style={anim(9, 'ccw')} transform="translate(340,340)">
+        <circle r={88} strokeWidth={8}/>
+        <Hexagram r={68} sw={5}/>
       </g>
-      <g style={s(8, 'cw')} transform="translate(340,340)">
-        <circle r="86" strokeWidth="1.8"/>
-        <Hexagram r={70} sw={1.5} op={0.85}/>
-      </g>
-      <g style={s(5, 'ccw')} transform="translate(340,340)">
-        <circle r="44" strokeWidth="1.5"/>
-        <circle r="36" strokeWidth="0.8" strokeDasharray="3 2" opacity="0.7"/>
-        <Hexagram r={32} sw={1.8}/>
-      </g>
-      <g style={s(4, 'cw')} transform="translate(340,340)">
-        <circle r="20" strokeWidth="2"/>
-        <circle r="8" fill="currentColor" opacity="0.4" stroke="none"/>
-        <circle r="4" fill="currentColor" opacity="0.85" stroke="none"/>
+      <g style={anim(5, 'cw')} transform="translate(340,340)">
+        <circle r={38} strokeWidth={7}/>
+        <circle r={17} fill="currentColor" opacity={0.5} stroke="none"/>
+        <circle r={8} fill="currentColor" opacity={0.9} stroke="none"/>
       </g>
     </svg>
   )
 }
 
-// ── Planet B — mid rings + medallions + squares ───────────────────
+// ── Planet B: medallions + octagram (deep teal) ──────────────────────
 function PlanetB() {
   return (
     <svg viewBox="0 0 680 680" width="100%" height="100%" fill="none" stroke="currentColor" strokeLinecap="round">
-      <g style={s(65, 'ccw')} transform="translate(340,340)">
-        <circle r="306" strokeWidth="1.5"/>
-        <circle r="293" strokeWidth="0.8" strokeDasharray="4 3" opacity="0.5"/>
+      <g style={anim(60, 'ccw')} transform="translate(340,340)">
+        <circle r={308} strokeWidth={9}/>
+        <circle r={295} strokeWidth={4}/>
       </g>
-      <g style={s(32, 'cw')} transform="translate(340,340)">
-        <circle r="248" strokeWidth="1.8"/>
-        <circle r="232" strokeWidth="0.8" strokeDasharray="5 3" opacity="0.5"/>
-        <MedallionRing r={240} mr={18}/>
+      <g style={anim(35, 'cw')} transform="translate(340,340)">
+        <circle r={252} strokeWidth={8}/>
+        <Medallions r={240} cr={22} n={6} sw={6}/>
+        <circle r={216} strokeWidth={4}/>
       </g>
-      <g style={s(20, 'ccw')} transform="translate(340,340)">
-        <circle r="182" strokeWidth="1.5"/>
-        <Hexagram r={170} sw={1.5} op={0.9}/>
-        <circle r="162" strokeWidth="0.7" opacity="0.6"/>
+      <g style={anim(22, 'ccw')} transform="translate(340,340)">
+        <circle r={172} strokeWidth={8}/>
+        <Octagram r={154} sw={6}/>
+        <circle r={134} strokeWidth={4}/>
       </g>
-      <g style={s(16, 'cw')} transform="translate(340,340)">
-        <circle r="114" strokeWidth="1.2"/>
-        <g strokeWidth="1.2" opacity="0.7">
-          <rect x="-88" y="-88" width="176" height="176"/>
-          <rect x="-88" y="-88" width="176" height="176" transform="rotate(45)"/>
-        </g>
-        <circle r="100" strokeWidth="0.7" strokeDasharray="4 3" opacity="0.6"/>
+      <g style={anim(12, 'cw')} transform="translate(340,340)">
+        <circle r={86} strokeWidth={8}/>
+        <Hexagram r={66} sw={5}/>
       </g>
-      <g style={s(8, 'ccw')} transform="translate(340,340)">
-        <circle r="44" strokeWidth="1.5"/>
-        <Hexagram r={32} sw={1.8}/>
-      </g>
-      <g style={s(4, 'cw')} transform="translate(340,340)">
-        <circle r="20" strokeWidth="2"/>
-        <circle r="8" fill="currentColor" opacity="0.4" stroke="none"/>
-        <circle r="4" fill="currentColor" opacity="0.85" stroke="none"/>
+      <g style={anim(5, 'ccw')} transform="translate(340,340)">
+        <circle r={36} strokeWidth={7}/>
+        <circle r={16} fill="currentColor" opacity={0.5} stroke="none"/>
+        <circle r={7} fill="currentColor" opacity={0.9} stroke="none"/>
       </g>
     </svg>
   )
 }
 
-// ── Planet C — flower petals + star layers only ───────────────────
+// ── Planet C: crosshair + hexagram + petals (deep rose) ─────────────
 function PlanetC() {
   return (
     <svg viewBox="0 0 680 680" width="100%" height="100%" fill="none" stroke="currentColor" strokeLinecap="round">
-      <g style={s(70, 'cw')} transform="translate(340,340)">
-        <circle r="306" strokeWidth="1.5"/>
-        <g strokeWidth="0.6" opacity="0.4">
-          {[0,30,60,90,120,150].map(d => <line key={d} x1="0" y1="-306" x2="0" y2="306" transform={`rotate(${d})`}/>)}
-        </g>
+      <g style={anim(65, 'cw')} transform="translate(340,340)">
+        <circle r={308} strokeWidth={9}/>
+        {[0, 45, 90, 135].map(d => (
+          <line key={d} x1={0} y1={-308} x2={0} y2={308} strokeWidth={3} opacity={0.4} transform={`rotate(${d})`}/>
+        ))}
       </g>
-      <g style={s(28, 'ccw')} transform="translate(340,340)">
-        <circle r="218" strokeWidth="1.2"/>
-        <Hexagram r={204} sw={1.8}/>
-        <circle r="196" strokeWidth="0.8"/>
+      <g style={anim(38, 'ccw')} transform="translate(340,340)">
+        <circle r={242} strokeWidth={8}/>
+        <Hexagram r={224} sw={7}/>
+        <circle r={204} strokeWidth={4}/>
       </g>
-      <g style={s(18, 'cw')} transform="translate(340,340)">
-        <circle r="150" strokeWidth="2"/>
-        <Hexagram r={138} sw={2}/>
+      <g style={anim(20, 'cw')} transform="translate(340,340)">
+        <circle r={156} strokeWidth={8}/>
+        <Petals r={90} cr={36} n={6} sw={5}/>
+        <Hexagram r={146} sw={5} op={0.65}/>
       </g>
-      <g style={s(11, 'ccw')} transform="translate(340,340)">
-        <circle r="86" strokeWidth="1.8"/>
-        <circle r="78" strokeWidth="0.6" opacity="0.5"/>
-        <g strokeWidth="1.5" opacity="0.9">
-          {[[0,-62],[53.7,31],[-53.7,31],[0,62],[53.7,-31],[-53.7,-31]].map(([cx,cy],i) =>
-            <circle key={i} cx={cx} cy={cy} r="10"/>
-          )}
-        </g>
-        <Hexagram r={70} sw={1.5} op={0.85}/>
+      <g style={anim(9, 'ccw')} transform="translate(340,340)">
+        <circle r={66} strokeWidth={8}/>
+        <Hexagram r={48} sw={5}/>
       </g>
-      <g style={s(6, 'cw')} transform="translate(340,340)">
-        <circle r="44" strokeWidth="1.5"/>
-        <Hexagram r={32} sw={1.8}/>
-      </g>
-      <g style={s(3, 'ccw')} transform="translate(340,340)">
-        <circle r="20" strokeWidth="2"/>
-        <circle r="8" fill="currentColor" opacity="0.4" stroke="none"/>
-        <circle r="4" fill="currentColor" opacity="0.85" stroke="none"/>
+      <g style={anim(4, 'cw')} transform="translate(340,340)">
+        <circle r={32} strokeWidth={7}/>
+        <circle r={14} fill="currentColor" opacity={0.5} stroke="none"/>
+        <circle r={6} fill="currentColor" opacity={0.9} stroke="none"/>
       </g>
     </svg>
   )
 }
 
-// ── Planet D — octagram focus + rune ring ─────────────────────────
+// ── Planet D: double tick band + octagram (deep green) ──────────────
 function PlanetD() {
   return (
     <svg viewBox="0 0 680 680" width="100%" height="100%" fill="none" stroke="currentColor" strokeLinecap="round">
-      <g style={s(60, 'ccw')} transform="translate(340,340)">
-        <circle r="306" strokeWidth="1.5"/>
-        <circle r="293" strokeWidth="0.8" strokeDasharray="4 3" opacity="0.6"/>
-        <g strokeWidth="1.5" opacity="0.8">
-          {[0,60,120,180,240,300].map(d => <line key={d} x1="0" y1="-306" x2="0" y2="-268" transform={`rotate(${d})`}/>)}
-        </g>
+      <g style={anim(58, 'ccw')} transform="translate(340,340)">
+        <circle r={308} strokeWidth={9}/>
+        <Ticks r={308} n={24} len={16} sw={4}/>
+        <circle r={290} strokeWidth={4}/>
       </g>
-      <g style={s(35, 'cw')} transform="translate(340,340)">
-        <circle r="278" strokeWidth="2"/>
-        <circle r="262" strokeWidth="0.8" strokeDasharray="6 4" opacity="0.5"/>
-        <RuneBand r={274} gap={10}/>
+      <g style={anim(32, 'cw')} transform="translate(340,340)">
+        <circle r={252} strokeWidth={8}/>
+        <Ticks r={252} n={12} len={20} sw={5}/>
+        <circle r={230} strokeWidth={4}/>
       </g>
-      <g style={s(17, 'ccw')} transform="translate(340,340)">
-        <circle r="114" strokeWidth="1.2"/>
-        <g strokeWidth="1.4" opacity="0.75">
-          <rect x="-88" y="-88" width="176" height="176"/>
-          <rect x="-88" y="-88" width="176" height="176" transform="rotate(45)"/>
-        </g>
-        <circle r="100" strokeWidth="0.7" strokeDasharray="4 3" opacity="0.6"/>
-        <Hexagram r={96} sw={1} op={0.65}/>
+      <g style={anim(18, 'ccw')} transform="translate(340,340)">
+        <circle r={172} strokeWidth={8}/>
+        <Octagram r={154} sw={7}/>
+        <circle r={134} strokeWidth={4}/>
+        <Hexagram r={116} sw={4} op={0.7}/>
       </g>
-      <g style={s(9, 'cw')} transform="translate(340,340)">
-        <circle r="86" strokeWidth="1.8"/>
-        <Hexagram r={70} sw={1.5} op={0.85}/>
+      <g style={anim(8, 'cw')} transform="translate(340,340)">
+        <circle r={78} strokeWidth={8}/>
+        <Hexagram r={60} sw={5}/>
       </g>
-      <g style={s(5, 'ccw')} transform="translate(340,340)">
-        <circle r="44" strokeWidth="1.5"/>
-        <circle r="36" strokeWidth="0.8" strokeDasharray="3 2" opacity="0.7"/>
-        <Hexagram r={32} sw={1.8}/>
-      </g>
-      <g style={s(3, 'cw')} transform="translate(340,340)">
-        <circle r="20" strokeWidth="2"/>
-        <circle r="8" fill="currentColor" opacity="0.4" stroke="none"/>
-        <circle r="4" fill="currentColor" opacity="0.85" stroke="none"/>
+      <g style={anim(4, 'ccw')} transform="translate(340,340)">
+        <circle r={34} strokeWidth={7}/>
+        <circle r={15} fill="currentColor" opacity={0.5} stroke="none"/>
+        <circle r={7} fill="currentColor" opacity={0.9} stroke="none"/>
       </g>
     </svg>
   )
 }
 
-// ── Planet E — medallions + full star stack ───────────────────────
+// ── Planet E: medallions + double hexagram (deep navy) ──────────────
 function PlanetE() {
   return (
     <svg viewBox="0 0 680 680" width="100%" height="100%" fill="none" stroke="currentColor" strokeLinecap="round">
-      <g style={s(50, 'cw')} transform="translate(340,340)">
-        <circle r="306" strokeWidth="1.5"/>
-        <circle r="293" strokeWidth="0.8" strokeDasharray="4 3" opacity="0.6"/>
+      <g style={anim(52, 'cw')} transform="translate(340,340)">
+        <circle r={308} strokeWidth={9}/>
+        <circle r={295} strokeWidth={4}/>
       </g>
-      <g style={s(30, 'ccw')} transform="translate(340,340)">
-        <circle r="248" strokeWidth="1.8"/>
-        <circle r="232" strokeWidth="0.8" strokeDasharray="5 3" opacity="0.5"/>
-        <MedallionRing r={240} mr={18}/>
+      <g style={anim(30, 'ccw')} transform="translate(340,340)">
+        <circle r={246} strokeWidth={8}/>
+        <Medallions r={234} cr={20} n={6} sw={5}/>
+        <circle r={211} strokeWidth={4}/>
       </g>
-      <g style={s(22, 'cw')} transform="translate(340,340)">
-        <circle r="218" strokeWidth="1.2"/>
-        <Hexagram r={204} sw={1.8}/>
-        <circle r="196" strokeWidth="0.8"/>
+      <g style={anim(20, 'cw')} transform="translate(340,340)">
+        <circle r={176} strokeWidth={8}/>
+        <Hexagram r={156} sw={7}/>
+        <circle r={136} strokeWidth={4}/>
       </g>
-      <g style={s(13, 'ccw')} transform="translate(340,340)">
-        <circle r="150" strokeWidth="2"/>
-        <Hexagram r={138} sw={2}/>
-        <circle r="126" strokeWidth="1"/>
+      <g style={anim(12, 'ccw')} transform="translate(340,340)">
+        <circle r={104} strokeWidth={8}/>
+        <Hexagram r={84} sw={6}/>
+        <circle r={64} strokeWidth={4}/>
       </g>
-      <g style={s(7, 'cw')} transform="translate(340,340)">
-        <circle r="44" strokeWidth="1.5"/>
-        <circle r="36" strokeWidth="0.8" strokeDasharray="3 2" opacity="0.7"/>
-        <Hexagram r={32} sw={1.8}/>
-      </g>
-      <g style={s(4, 'ccw')} transform="translate(340,340)">
-        <circle r="20" strokeWidth="2"/>
-        <circle r="13" fill="rgba(240,234,214,0.85)" strokeWidth="1.5"/>
-        <circle r="8"  fill="currentColor" opacity="0.4" stroke="none"/>
-        <circle r="4"  fill="currentColor" opacity="0.85" stroke="none"/>
-        <circle r="1.5" fill="white" opacity="0.9" stroke="none"/>
+      <g style={anim(6, 'cw')} transform="translate(340,340)">
+        <circle r={40} strokeWidth={7}/>
+        <circle r={18} fill="currentColor" opacity={0.5} stroke="none"/>
+        <circle r={8} fill="currentColor" opacity={0.9} stroke="none"/>
       </g>
     </svg>
   )
 }
-
-// ── Orbit config ──────────────────────────────────────────────────
 
 interface Planet {
   orbitR: number; size: number; period: number
@@ -415,35 +285,31 @@ interface Planet {
 const ORBIT_RADII = [185, 310, 450]
 
 const PLANETS: Planet[] = [
-  { orbitR: 185, size: 180, period: 22, startAngle: 50,  dir: 'cw',  color: '#5a1a8a', opacity: 0.88, Component: PlanetA },
-  { orbitR: 310, size: 160, period: 38, startAngle: 140, dir: 'ccw', color: '#0a6878', opacity: 0.85, Component: PlanetB },
-  { orbitR: 310, size: 155, period: 38, startAngle: 310, dir: 'ccw', color: '#8a1848', opacity: 0.85, Component: PlanetC },
-  { orbitR: 450, size: 140, period: 62, startAngle: 80,  dir: 'cw',  color: '#1a6838', opacity: 0.82, Component: PlanetD },
-  { orbitR: 450, size: 130, period: 62, startAngle: 250, dir: 'cw',  color: '#1a3888', opacity: 0.80, Component: PlanetE },
+  { orbitR: 185, size: 280, period: 22, startAngle: 50,  dir: 'cw',  color: '#4a1278', opacity: 0.9,  Component: PlanetA },
+  { orbitR: 310, size: 260, period: 38, startAngle: 140, dir: 'ccw', color: '#065868', opacity: 0.88, Component: PlanetB },
+  { orbitR: 310, size: 260, period: 38, startAngle: 310, dir: 'ccw', color: '#720d38', opacity: 0.88, Component: PlanetC },
+  { orbitR: 450, size: 240, period: 62, startAngle: 80,  dir: 'cw',  color: '#0d4820', opacity: 0.85, Component: PlanetD },
+  { orbitR: 450, size: 220, period: 62, startAngle: 250, dir: 'cw',  color: '#0d2268', opacity: 0.85, Component: PlanetE },
 ]
 
 export default function SolarSystemBackground() {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-
       {ORBIT_RADII.map(r => (
         <div key={r} style={{
           position: 'absolute', left: '50%', top: '50%',
           transform: 'translate(-50%, -50%)',
           width: r * 2, height: r * 2, borderRadius: '50%',
-          border: '1px solid rgba(154,112,24,0.18)',
-        }} />
+          border: '1px solid rgba(154,112,24,0.22)',
+        }}/>
       ))}
-
-      {/* Center Sun */}
       <div style={{
         position: 'absolute', left: '50%', top: '50%',
         transform: 'translate(-50%, -50%)',
-        width: 300, height: 300, color: '#c8900a', opacity: 0.88,
+        width: 400, height: 400, color: '#9a7018', opacity: 0.9,
       }}>
         <CenterSun />
       </div>
-
       {PLANETS.map((p, i) => {
         const delay = -((p.startAngle / 360) * p.period)
         return (
@@ -456,7 +322,8 @@ export default function SolarSystemBackground() {
           }}>
             <div style={{
               position: 'absolute',
-              left: p.orbitR - p.size / 2, top: -p.size / 2,
+              left: p.orbitR - p.size / 2,
+              top: -p.size / 2,
               width: p.size, height: p.size,
               color: p.color, opacity: p.opacity,
               animation: `mc-${p.dir === 'cw' ? 'ccw' : 'cw'} ${p.period}s linear infinite`,
