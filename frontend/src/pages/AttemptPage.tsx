@@ -149,10 +149,11 @@ function AnswerOptions({ q, selected, onSelect, revealed = false }: {
     }
     return (
       <div className="answer-options">
-        {shuffledMCQ.map(opt => {
+        {shuffledMCQ.map((opt, idx) => {
           const isSel   = selectedKeys.has(opt.key)
           const isCorr  = locked && correctKeys.has(opt.key)
           const isWrong = locked && isSel && !correctKeys.has(opt.key)
+          const label   = String.fromCharCode(65 + idx)
           return (
             <button key={opt.key} className={`answer-option ${!locked && isSel ? 'selected' : ''}`}
               onClick={() => toggle(opt.key)}
@@ -160,7 +161,7 @@ function AnswerOptions({ q, selected, onSelect, revealed = false }: {
               <div style={{ position: 'absolute', bottom: -22, right: -22, width: 55, height: 55, color: 'var(--gold)', opacity: 0.18, pointerEvents: 'none', zIndex: 0 }}>
                 <MagicCircle variant="sigil" speed={4} />
               </div>
-              <span className="answer-key" style={{ position: 'relative', zIndex: 1 }}>{opt.key}</span>
+              <span className="answer-key" style={{ position: 'relative', zIndex: 1 }}>{label}</span>
               <span className="answer-text" style={{ position: 'relative', zIndex: 1 }}>{opt.text}</span>
               {isCorr && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.8rem', position: 'relative', zIndex: 1 }}>✓</span>}
             </button>
