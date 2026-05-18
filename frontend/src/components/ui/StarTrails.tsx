@@ -12,7 +12,7 @@ function StarTip({ size = 6 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox={`${-R} ${-R} ${size} ${size}`}
       style={{ flexShrink: 0, overflow: 'visible',
-               filter: 'drop-shadow(0 0 2px rgba(220,175,55,0.9))' }}>
+               filter: 'drop-shadow(0 0 4px rgba(220,175,55,0.9))' }}>
       <polygon points={pts} fill="rgba(235,200,85,0.95)" />
     </svg>
   )
@@ -20,12 +20,12 @@ function StarTip({ size = 6 }: { size?: number }) {
 
 const TRAILS = Array.from({ length: 14 }, (_, i) => ({
   top:      `${8 + (i * 6.7 + (i % 3) * 4.1) % 82}%`,
-  width:    50 + (i * 13) % 72,
-  height:   i % 4 === 0 ? 1.5 : 1,
-  starSize: 5 + (i % 3),
+  width:    120 + (i * 23) % 140,
+  height:   i % 4 === 0 ? 3 : 2,
+  starSize: 11 + (i % 4) * 3,
   duration: `${8 + (i * 1.1) % 7}s`,
   delay:    `${-((i * 2.3) % 9)}s`,
-  opacity:  0.28 + (i % 5) * 0.06,
+  opacity:  0.35 + (i % 5) * 0.07,
 }))
 
 export default function StarTrails() {
