@@ -557,6 +557,14 @@ input[type=number].form-input { -moz-appearance: textfield; }
   overflow: hidden;
 }
 
+/* ── Ember motes ───────────────────────────────────────────────────── */
+@keyframes ember-rise {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  12%  { opacity: 0.55; }
+  70%  { opacity: 0.20; }
+  100% { transform: translateY(-42px) translateX(var(--mote-tx)); opacity: 0; }
+}
+
 /* ── Background flash + ring glow on answer ────────────────────────── */
 @keyframes ring-glow-correct {
   0%   { box-shadow: none; border-color: rgba(154,112,24,0.16); }
@@ -598,6 +606,8 @@ input[type=number].form-input { -moz-appearance: textfield; }
 }
 
 .attempt-header {
+  position: relative;
+  overflow: hidden;
   padding: 16px 48px;
   display: flex;
   align-items: center;
