@@ -157,10 +157,10 @@ function SolarWheel() {
 const ORBIT_RINGS = [210, 340, 460]
 
 const PLANETS = [
-  { orbitR: 210, size: 210, period: 25, startAngle: 60,  dir: 'cw'  as const, color: '#4a1278', opacity: 0.88, Planet: CompassRose },
-  { orbitR: 340, size: 200, period: 42, startAngle: 130, dir: 'ccw' as const, color: '#065868', opacity: 0.85, Planet: Trefoil    },
-  { orbitR: 340, size: 200, period: 42, startAngle: 300, dir: 'ccw' as const, color: '#720d38', opacity: 0.85, Planet: Pentacle   },
-  { orbitR: 460, size: 190, period: 68, startAngle: 75,  dir: 'cw'  as const, color: '#0d2268', opacity: 0.82, Planet: SolarWheel },
+  { orbitR: 210, size: 260, period: 25, startAngle: 60,  dir: 'cw'  as const, color: '#4a1278', opacity: 0.88, Planet: CompassRose },
+  { orbitR: 340, size: 190, period: 42, startAngle: 130, dir: 'ccw' as const, color: '#065868', opacity: 0.85, Planet: Trefoil    },
+  { orbitR: 340, size: 190, period: 42, startAngle: 300, dir: 'ccw' as const, color: '#720d38', opacity: 0.85, Planet: Pentacle   },
+  { orbitR: 460, size: 135, period: 68, startAngle: 75,  dir: 'cw'  as const, color: '#0d2268', opacity: 0.82, Planet: SolarWheel },
 ]
 
 export default function SolarSystemBackground() {
