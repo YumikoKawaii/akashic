@@ -172,7 +172,7 @@ export default function SolarSystemBackground() {
           position: 'absolute', left: '50%', top: '50%',
           transform: 'translate(-50%, -50%)',
           width: r * 2, height: r * 2, borderRadius: '50%',
-          border: '1px solid rgba(154,112,24,0.16)',
+          border: '1px solid rgba(154,112,24,0.07)',
         }}/>
       ))}
 
