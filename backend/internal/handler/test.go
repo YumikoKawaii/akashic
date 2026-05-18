@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/yumikokawaii/akashic/internal/middleware"
 	"github.com/yumikokawaii/akashic/internal/service"
 )
 
@@ -68,6 +69,7 @@ func (h *TestHandler) Generate(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	input.UserID = middleware.UserID(c)
 	test, err := h.svc.Generate(bankID, input)
 	if err != nil {
 		handleError(c, err)

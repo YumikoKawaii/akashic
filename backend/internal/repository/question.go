@@ -19,10 +19,22 @@ type QuestionFilter struct {
 	ExcludeIDs     []int
 }
 
+// QuestionMeta holds the minimal fields needed for pool building.
+type QuestionMeta struct {
+	ID         int            `gorm:"column:id"`
+	Difficulty string         `gorm:"column:difficulty"`
+	CategoryID *int           `gorm:"column:category_id"`
+	Type       string         `gorm:"column:type"`
+	Tags       pq.StringArray `gorm:"column:tags;type:text[]"`
+	GroupID    *int           `gorm:"column:group_id"`
+}
+
 type QuestionRepository interface {
 	FindByBank(bankID int, f QuestionFilter) ([]model.Question, error)
 	FindByBankPaged(bankID int, f QuestionFilter, page, pageSize int) ([]model.Question, int64, error)
 	FindByBankAndDifficulty(bankID int, difficulty string, f QuestionFilter) ([]model.Question, error)
+	FindAllMeta(bankID int) ([]QuestionMeta, error)
+	FindByIDs(ids []int) ([]model.Question, error)
 	FindByGroup(groupID int) ([]model.Question, error)
 	FindByID(id int) (*model.Question, error)
 	Create(q *model.Question) error
@@ -70,6 +82,37 @@ func (r *questionRepo) FindByBankAndDifficulty(bankID int, difficulty string, f 
 	q = applyQuestionFilter(q, f)
 	err := q.Preload("Item").Preload("Choice").Order("RANDOM()").Find(&qs).Error
 	return qs, err
+}
+
+func (r *questionRepo) FindAllMeta(bankID int) ([]QuestionMeta, error) {
+	var metas []QuestionMeta
+	err := r.db.Model(&model.Question{}).
+		Select("id, difficulty, category_id, type, tags, group_id").
+		Where("bank_id = ? AND deleted_at IS NULL", bankID).
+		Scan(&metas).Error
+	return metas, err
+}
+
+func (r *questionRepo) FindByIDs(ids []int) ([]model.Question, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var qs []model.Question
+	if err := r.db.Where("id IN ?", ids).Preload("Item").Preload("Choice").Find(&qs).Error; err != nil {
+		return nil, err
+	}
+	// Reorder to match the requested ID order (preserves test question positions).
+	byID := make(map[int]model.Question, len(qs))
+	for _, q := range qs {
+		byID[q.ID] = q
+	}
+	result := make([]model.Question, 0, len(ids))
+	for _, id := range ids {
+		if q, ok := byID[id]; ok {
+			result = append(result, q)
+		}
+	}
+	return result, nil
 }
 
 func (r *questionRepo) FindByGroup(groupID int) ([]model.Question, error) {

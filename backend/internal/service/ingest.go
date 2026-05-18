@@ -111,6 +111,7 @@ type IngestService struct {
 	bankRepo     repository.BankRepository
 	categoryRepo repository.CategoryRepository
 	questionRepo repository.QuestionRepository
+	cache        *GenerateCache
 }
 
 func NewIngestService(
@@ -118,8 +119,9 @@ func NewIngestService(
 	bankRepo repository.BankRepository,
 	categoryRepo repository.CategoryRepository,
 	questionRepo repository.QuestionRepository,
+	cache *GenerateCache,
 ) *IngestService {
-	return &IngestService{uow: u, bankRepo: bankRepo, categoryRepo: categoryRepo, questionRepo: questionRepo}
+	return &IngestService{uow: u, bankRepo: bankRepo, categoryRepo: categoryRepo, questionRepo: questionRepo, cache: cache}
 }
 
 func (s *IngestService) Ingest(bankID int, r io.Reader, ext string) (*IngestResult, error) {
@@ -388,6 +390,7 @@ func (s *IngestService) Ingest(bankID int, r io.Reader, ext string) (*IngestResu
 	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
+	s.cache.InvalidateBank(bankID)
 	return &IngestResult{Created: created}, nil
 }
 

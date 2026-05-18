@@ -46,15 +46,17 @@ func main() {
 	userRepo          := repository.NewUserRepo(db)
 	memberRepo        := repository.NewMemberRepo(db)
 
+	generateCache   := service.NewGenerateCache(service.GenerateConfig{UserCooldownAttempts: 3})
+
 	authSvc         := service.NewAuthService(userRepo, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleCallbackURL, cfg.JWTSecret)
 	bankSvc         := service.NewBankService(bankRepo, memberRepo, userRepo)
 	categorySvc     := service.NewCategoryService(categoryRepo, bankRepo)
 	passageSvc      := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
 	questionGroupSvc := service.NewQuestionGroupService(unitOfWork, questionGroupRepo, bankRepo, categoryRepo)
-	questionSvc     := service.NewQuestionService(unitOfWork, questionRepo, bankRepo, categoryRepo)
-	testSvc         := service.NewTestService(unitOfWork, testRepo, questionRepo, questionGroupRepo, bankRepo)
+	questionSvc     := service.NewQuestionService(unitOfWork, questionRepo, bankRepo, categoryRepo, generateCache)
+	testSvc         := service.NewTestService(unitOfWork, testRepo, questionRepo, questionGroupRepo, bankRepo, generateCache)
 	attemptSvc      := service.NewAttemptService(attemptRepo, testRepo)
-	ingestSvc       := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo)
+	ingestSvc       := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo, generateCache)
 
 	authMW := middleware.Auth(authSvc)
 
