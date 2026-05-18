@@ -157,10 +157,10 @@ function SolarWheel() {
 const ORBIT_RINGS = [210, 340, 460]
 
 const PLANETS = [
-  { orbitR: 210, size: 260, period: 25, startAngle: 60,  dir: 'cw'  as const, color: '#4a1278', opacity: 0.88, Planet: CompassRose },
-  { orbitR: 340, size: 190, period: 42, startAngle: 130, dir: 'ccw' as const, color: '#065868', opacity: 0.85, Planet: Trefoil    },
-  { orbitR: 340, size: 190, period: 42, startAngle: 300, dir: 'ccw' as const, color: '#720d38', opacity: 0.85, Planet: Pentacle   },
-  { orbitR: 460, size: 135, period: 68, startAngle: 75,  dir: 'cw'  as const, color: '#0d2268', opacity: 0.82, Planet: SolarWheel },
+  { orbitR: 210, size: 160, period: 25, startAngle: 60,  dir: 'cw'  as const, color: '#4a1278', opacity: 0.88, Planet: CompassRose },
+  { orbitR: 340, size: 120, period: 42, startAngle: 130, dir: 'ccw' as const, color: '#065868', opacity: 0.85, Planet: Trefoil    },
+  { orbitR: 340, size: 120, period: 42, startAngle: 300, dir: 'ccw' as const, color: '#720d38', opacity: 0.85, Planet: Pentacle   },
+  { orbitR: 460, size:  85, period: 68, startAngle: 75,  dir: 'cw'  as const, color: '#0d2268', opacity: 0.82, Planet: SolarWheel },
 ]
 
 export default function SolarSystemBackground() {
@@ -180,7 +180,7 @@ export default function SolarSystemBackground() {
       <div style={{
         position: 'absolute', left: '50%', top: '50%',
         transform: 'translate(-50%, -50%)',
-        width: 280, height: 280, color: '#9a7018', opacity: 0.85,
+        width: 180, height: 180, color: '#9a7018', opacity: 0.85,
       }}>
         <MagicCircle variant="full"/>
       </div>
