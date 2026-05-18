@@ -8,7 +8,7 @@ import Starfield from '../components/ui/Starfield'
 import MagicCircle, { Spinner } from '../components/ui/MagicCircle'
 import SolarSystemBackground from '../components/ui/SolarSystemBackground'
 import RuneCorners from '../components/ui/RuneCorners'
-import EmberMotes from '../components/ui/EmberMotes'
+import StarTrails from '../components/ui/StarTrails'
 import OghamBorder from '../components/ui/OghamBorder'
 import OrnateDivider from '../components/ui/OrnateDivider'
 import Select from '../components/ui/Select'
@@ -320,7 +320,7 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
 
       {/* ── Header ── */}
       <div style={{ position: 'relative', overflow: 'hidden', zIndex: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 28px', borderBottom: '1px solid var(--border-dim)', background: 'linear-gradient(90deg, var(--bg-panel) 0%, var(--bg-elevated) 100%)' }}>
-        <EmberMotes />
+        <StarTrails />
         <RuneCorners size={22} color="var(--gold-dim)" opacity={0.5} />
 
         {/* decorative circle — top-right */}
@@ -493,7 +493,7 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
 
         {/* ── Header ── */}
         <div className="attempt-header">
-          <EmberMotes />
+          <StarTrails />
           <RuneCorners size={22} color="var(--gold-dim)" opacity={0.50} />
 
           {/* decorative circles */}
