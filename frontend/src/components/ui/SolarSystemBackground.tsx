@@ -170,11 +170,12 @@ export default function SolarSystemBackground({ flash }: {
     <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
 
       {ORBIT_RINGS.map(r => (
-        <div key={r} style={{
+        <div key={`${r}-${flash?.key ?? 0}`} style={{
           position: 'absolute', left: '50%', top: '50%',
           transform: 'translate(-50%, -50%)',
           width: r * 2, height: r * 2, borderRadius: '50%',
           border: '1px solid rgba(154,112,24,0.16)',
+          animation: flash ? `ring-glow-${flash.type} 1.4s ease-out forwards` : undefined,
         }}/>
       ))}
 
