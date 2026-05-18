@@ -5,7 +5,8 @@ import { Passage, Question, QuestionGroup, TestQuestion } from '../types'
 import OrnatePanel from '../components/ui/OrnatePanel'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
 import Starfield from '../components/ui/Starfield'
-import MagicCircle, { Spinner, MagicCircleBackground } from '../components/ui/MagicCircle'
+import MagicCircle, { Spinner } from '../components/ui/MagicCircle'
+import SolarSystemBackground from '../components/ui/SolarSystemBackground'
 import RuneCorners from '../components/ui/RuneCorners'
 import OghamBorder from '../components/ui/OghamBorder'
 import OrnateDivider from '../components/ui/OrnateDivider'
@@ -313,7 +314,7 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg)' }}>
       <Starfield />
-      <MagicCircleBackground />
+      <SolarSystemBackground />
 
       {/* ── Header ── */}
       <div style={{ position: 'relative', zIndex: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 28px', borderBottom: '1px solid var(--border-dim)', background: 'linear-gradient(90deg, var(--bg-panel) 0%, var(--bg-elevated) 100%)' }}>
@@ -464,7 +465,7 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
   return (
     <>
       <Starfield />
-      <MagicCircleBackground />
+      <SolarSystemBackground />
       <div className="attempt-layout">
 
         {/* ── Segmented progress ── */}
@@ -584,7 +585,7 @@ export default function AttemptPage() {
   if (!attempt?.test) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <Starfield />
-      <MagicCircleBackground />
+      <SolarSystemBackground />
       <Spinner size={100} />
     </div>
   )
