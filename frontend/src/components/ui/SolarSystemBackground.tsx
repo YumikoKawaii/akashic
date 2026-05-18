@@ -180,7 +180,7 @@ export default function SolarSystemBackground() {
       <div style={{
         position: 'absolute', left: '50%', top: '50%',
         transform: 'translate(-50%, -50%)',
-        width: 180, height: 180, color: '#9a7018', opacity: 0.85,
+        width: 260, height: 260, color: '#9a7018', opacity: 0.85,
       }}>
         <MagicCircle variant="full"/>
       </div>
