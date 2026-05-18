@@ -11,7 +11,6 @@ import RuneCorners from '../components/ui/RuneCorners'
 import OghamBorder from '../components/ui/OghamBorder'
 import OrnateDivider from '../components/ui/OrnateDivider'
 import Select from '../components/ui/Select'
-import PocketWatch from '../components/ui/PocketWatch'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -470,11 +469,7 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
   return (
     <>
       <Starfield />
-      {/* Watch background — swap SolarSystemBackground back to restore solar system */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.13 }}>
-        <PocketWatch size={620} />
-      </div>
+      <SolarSystemBackground flash={flash} />
       {flash && <div key={flash.key} className={`bg-flash bg-flash-${flash.type}`}
         style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}/>}
       <div className="attempt-layout">
