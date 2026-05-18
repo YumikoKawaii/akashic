@@ -559,8 +559,10 @@ input[type=number].form-input { -moz-appearance: textfield; }
 
 /* ── Star trails ────────────────────────────────────────────────────── */
 @keyframes star-trail {
-  0%   { transform: translateY(0) translateX(0); }
-  100% { transform: translateY(400px) translateX(107px); }
+  0%   { transform: translateX(0); opacity: 0; }
+  5%   { opacity: var(--trail-opacity); }
+  95%  { opacity: var(--trail-opacity); }
+  100% { transform: translateX(calc(100vw + 160px)); opacity: 0; }
 }
 
 /* ── Background flash + ring glow on answer ────────────────────────── */

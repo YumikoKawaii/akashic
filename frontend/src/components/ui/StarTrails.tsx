@@ -1,6 +1,4 @@
-// 15° from vertical = 75° clockwise from horizontal
-// Each outer div animates straight down+right; inner div rotates the trail visually
-const TRAIL_ROT = 75
+import React from 'react'
 
 function StarTip({ size = 6 }: { size?: number }) {
   const R = size / 2
@@ -20,43 +18,36 @@ function StarTip({ size = 6 }: { size?: number }) {
 }
 
 const TRAILS = Array.from({ length: 28 }, (_, i) => ({
-  left:      `${(i * 3.6 + (i % 5) * 4.3) % 110 - 5}%`,
-  length:    80 + (i * 17) % 120,
-  thickness: i % 4 === 0 ? 3 : 2,
-  starSize:  11 + (i % 4) * 3,
-  duration:  `${3.5 + (i * 0.55) % 2.5}s`,
-  delay:     `${-((i * 1.3) % 5)}s`,
-  opacity:   0.38 + (i % 5) * 0.07,
+  top:      `${8 + (i * 6.7 + (i % 3) * 4.1) % 82}%`,
+  width:    120 + (i * 23) % 140,
+  height:   i % 4 === 0 ? 3 : 2,
+  starSize: 11 + (i % 4) * 3,
+  duration: `${8 + (i * 1.1) % 7}s`,
+  delay:    `${-((i * 2.3) % 9)}s`,
+  opacity:  0.35 + (i % 5) * 0.07,
 }))
 
 export default function StarTrails() {
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
       {TRAILS.map((t, i) => (
-        // Outer: diagonal movement animation (down + slight rightward drift)
         <div key={i} style={{
           position: 'absolute',
-          top: -(t.length + t.starSize + 10),
-          left: t.left,
-          opacity: t.opacity,
+          top: t.top,
+          left: -140,
+          display: 'flex',
+          alignItems: 'center',
+          '--trail-opacity': t.opacity,
           animation: `star-trail ${t.duration} linear infinite`,
           animationDelay: t.delay,
-        }}>
-          {/* Inner: static rotation to angle the trail like rain */}
+        } as React.CSSProperties}>
           <div style={{
-            transform: `rotate(${TRAIL_ROT}deg)`,
-            transformOrigin: '0 0',
-            display: 'flex',
-            alignItems: 'center',
-          }}>
-            <div style={{
-              width: t.length,
-              height: t.thickness,
-              borderRadius: t.thickness,
-              background: 'linear-gradient(90deg, transparent 0%, rgba(200,160,48,0.15) 20%, rgba(200,160,48,0.72) 80%, rgba(200,160,48,0.92) 100%)',
-            }}/>
-            <StarTip size={t.starSize} />
-          </div>
+            width: t.width,
+            height: t.height,
+            borderRadius: t.height,
+            background: 'linear-gradient(90deg, transparent 0%, rgba(200,160,48,0.15) 20%, rgba(200,160,48,0.72) 80%, rgba(200,160,48,0.92) 100%)',
+          }}/>
+          <StarTip size={t.starSize} />
         </div>
       ))}
     </div>
