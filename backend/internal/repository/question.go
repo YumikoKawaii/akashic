@@ -16,6 +16,7 @@ type QuestionFilter struct {
 	Difficulty     string
 	Tags           []string
 	StandaloneOnly bool
+	ExcludeIDs     []int
 }
 
 type QuestionRepository interface {
@@ -67,7 +68,7 @@ func (r *questionRepo) FindByBankAndDifficulty(bankID int, difficulty string, f 
 	var qs []model.Question
 	q := r.db.Where("bank_id = ? AND difficulty = ?", bankID, difficulty)
 	q = applyQuestionFilter(q, f)
-	err := q.Preload("Item").Preload("Choice").Find(&qs).Error
+	err := q.Preload("Item").Preload("Choice").Order("RANDOM()").Find(&qs).Error
 	return qs, err
 }
 
@@ -130,6 +131,9 @@ func applyQuestionFilter(q *gorm.DB, f QuestionFilter) *gorm.DB {
 	}
 	if f.StandaloneOnly {
 		q = q.Where("group_id IS NULL")
+	}
+	if len(f.ExcludeIDs) > 0 {
+		q = q.Where("id NOT IN ?", f.ExcludeIDs)
 	}
 	return q
 }

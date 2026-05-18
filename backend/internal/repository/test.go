@@ -12,6 +12,7 @@ type TestRepository interface {
 	FindByBankPaged(bankID int, page, pageSize int) ([]model.Test, int64, error)
 	FindByID(id int) (*model.Test, error)
 	FindByBankAndID(bankID, id int) (*model.Test, error)
+	RecentlyUsedQuestionIDs(bankID, lastN int) ([]int, error)
 	Create(t *model.Test) error
 	SoftDelete(id int) error
 	Restore(id int) error
@@ -81,4 +82,17 @@ func (r *testRepo) Restore(id int) error {
 
 func (r *testRepo) CreateTestQuestion(tq *model.TestQuestion) error {
 	return r.db.Create(tq).Error
+}
+
+// RecentlyUsedQuestionIDs returns distinct question IDs from the last N tests in a bank.
+func (r *testRepo) RecentlyUsedQuestionIDs(bankID, lastN int) ([]int, error) {
+	var ids []int
+	err := r.db.Raw(`
+		SELECT DISTINCT question_id FROM test_questions
+		WHERE test_id IN (
+			SELECT id FROM tests WHERE bank_id = ? AND deleted_at IS NULL
+			ORDER BY created_at DESC LIMIT ?
+		)
+	`, bankID, lastN).Scan(&ids).Error
+	return ids, err
 }

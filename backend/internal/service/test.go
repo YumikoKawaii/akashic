@@ -1,8 +1,6 @@
 package service
 
 import (
-	"math/rand"
-
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
 	"github.com/yumikokawaii/akashic/internal/uow"
@@ -97,12 +95,32 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 		Types:       config.Types,
 	}
 
-	// Build shuffled pools per difficulty.
+	// Exclude questions used in the last 10 tests to reduce repeats.
+	recentIDs, _ := s.testRepo.RecentlyUsedQuestionIDs(bankID, 10)
+
+	required := map[string]int{
+		"easy":   config.EasyCount,
+		"medium": config.MediumCount,
+		"hard":   config.HardCount,
+	}
+
 	pools := map[string][]selUnit{}
 	for _, diff := range []string{"easy", "medium", "hard"} {
-		pools[diff], err = s.buildPool(bankID, diff, qFilter, gFilter, skipStandalone, skipGroups)
-		if err != nil {
-			return nil, err
+		// Try fresh pool (excluding recently used questions).
+		if len(recentIDs) > 0 {
+			fresh := qFilter
+			fresh.ExcludeIDs = recentIDs
+			pools[diff], err = s.buildPool(bankID, diff, fresh, gFilter, skipStandalone, skipGroups)
+			if err != nil {
+				return nil, err
+			}
+		}
+		// Fall back to full pool if fresh questions are insufficient.
+		if len(pools[diff]) < required[diff] {
+			pools[diff], err = s.buildPool(bankID, diff, qFilter, gFilter, skipStandalone, skipGroups)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -222,10 +240,6 @@ func (s *TestService) buildPool(bankID int, diff string, qf repository.QuestionF
 		}
 	}
 
-	// Passage-only pools preserve original group order; standalone/mixed pools are shuffled.
-	if !skipStandalone {
-		rand.Shuffle(len(pool), func(i, j int) { pool[i], pool[j] = pool[j], pool[i] })
-	}
 	return pool, nil
 }
 
