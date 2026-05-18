@@ -1,8 +1,28 @@
-// Star trails — thin golden streaks sliding left-to-right across the header
+import React from 'react'
+
+// 4-pointed sparkle star at the leading tip of each trail
+function StarTip({ size = 6 }: { size?: number }) {
+  const R = size / 2
+  const r = R * 0.22
+  const s2 = r * Math.SQRT1_2
+  const pts = [
+    [0, -R], [s2, -s2], [R, 0], [s2, s2],
+    [0, R],  [-s2, s2], [-R, 0], [-s2, -s2],
+  ].map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ')
+  return (
+    <svg width={size} height={size} viewBox={`${-R} ${-R} ${size} ${size}`}
+      style={{ flexShrink: 0, overflow: 'visible',
+               filter: 'drop-shadow(0 0 2px rgba(220,175,55,0.9))' }}>
+      <polygon points={pts} fill="rgba(235,200,85,0.95)" />
+    </svg>
+  )
+}
+
 const TRAILS = Array.from({ length: 14 }, (_, i) => ({
   top:      `${8 + (i * 6.7 + (i % 3) * 4.1) % 82}%`,
   width:    50 + (i * 13) % 72,
   height:   i % 4 === 0 ? 1.5 : 1,
+  starSize: 5 + (i % 3),
   duration: `${8 + (i * 1.1) % 7}s`,
   delay:    `${-((i * 2.3) % 9)}s`,
   opacity:  0.28 + (i % 5) * 0.06,
@@ -15,16 +35,23 @@ export default function StarTrails() {
         <div key={i} style={{
           position: 'absolute',
           top: t.top,
-          left: -130,
-          width: t.width,
-          height: t.height,
-          borderRadius: t.height,
-          background: 'linear-gradient(90deg, transparent 0%, rgba(200,160,48,0.18) 20%, rgba(200,160,48,0.75) 78%, rgba(200,160,48,0.95) 90%, transparent 100%)',
-          boxShadow: '0 0 3px rgba(200,160,48,0.45)',
+          left: -140,
+          display: 'flex',
+          alignItems: 'center',
           '--trail-opacity': t.opacity,
           animation: `star-trail ${t.duration} linear infinite`,
           animationDelay: t.delay,
-        } as React.CSSProperties}/>
+        } as React.CSSProperties}>
+          {/* gradient tail */}
+          <div style={{
+            width: t.width,
+            height: t.height,
+            borderRadius: t.height,
+            background: 'linear-gradient(90deg, transparent 0%, rgba(200,160,48,0.15) 20%, rgba(200,160,48,0.72) 80%, rgba(200,160,48,0.92) 100%)',
+          }}/>
+          {/* leading star */}
+          <StarTip size={t.starSize} />
+        </div>
       ))}
     </div>
   )
