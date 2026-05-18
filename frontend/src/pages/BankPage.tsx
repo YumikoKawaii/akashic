@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useBank, useMembers, useAddMember, useRemoveMember } from '../hooks/useBanks'
@@ -47,6 +47,43 @@ const DIFF_COLORS = {
   easy:   { dot: '#2a8a3a', border: 'rgba(42,138,58,0.45)',   bg: 'rgba(42,138,58,0.07)' },
   medium: { dot: '#9a7018', border: 'rgba(154,112,24,0.45)',  bg: 'rgba(154,112,24,0.07)' },
   hard:   { dot: '#b03030', border: 'rgba(176,48,48,0.45)',   bg: 'rgba(176,48,48,0.07)' },
+}
+
+function PageInput({ page, totalPages, onChange }: {
+  page: number; totalPages: number; onChange: (p: number) => void
+}) {
+  const [val, setVal] = useState(String(page))
+  useEffect(() => { setVal(String(page)) }, [page])
+
+  const commit = (v: string) => {
+    const n = parseInt(v, 10)
+    if (!isNaN(n) && n >= 1 && n <= totalPages) onChange(n)
+    else setVal(String(page))
+  }
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, paddingTop: 8 }}>
+      <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '5px 14px' }}
+        onClick={() => onChange(page - 1)} disabled={page === 1}>← Prev</button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <input
+          type="text" inputMode="numeric" value={val}
+          onChange={e => setVal(e.target.value)}
+          onBlur={e => commit(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && commit(val)}
+          style={{
+            width: 44, height: 28, textAlign: 'center',
+            fontFamily: 'Cinzel, serif', fontSize: '0.65rem',
+            border: '1px solid var(--gold)', background: 'transparent',
+            color: 'var(--ink)', outline: 'none', borderRadius: 2,
+          }}
+        />
+        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'var(--ink-dim)' }}>/ {totalPages}</span>
+      </div>
+      <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '5px 14px' }}
+        onClick={() => onChange(page + 1)} disabled={page >= totalPages}>Next →</button>
+    </div>
+  )
 }
 
 export default function BankPage() {
@@ -343,45 +380,7 @@ export default function BankPage() {
             )}
           </div>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-3" style={{ paddingTop: 8 }}>
-              <button
-                className="btn btn-ghost"
-                style={{ fontSize: '0.7rem', padding: '5px 14px' }}
-                onClick={() => setPage(p => p - 1)}
-                disabled={page === 1}
-              >
-                ← Prev
-              </button>
-              <div style={{ display: 'flex', gap: 4 }}>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    style={{
-                      width: 28, height: 28,
-                      fontFamily: 'Cinzel, serif', fontSize: '0.6rem',
-                      border: '1px solid',
-                      borderColor: p === page ? 'var(--gold)' : 'var(--border-dim)',
-                      background: p === page ? 'var(--gold)' : 'transparent',
-                      color: p === page ? 'var(--bg)' : 'var(--ink-dim)',
-                      cursor: 'pointer', borderRadius: 2,
-                    }}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-              <button
-                className="btn btn-ghost"
-                style={{ fontSize: '0.7rem', padding: '5px 14px' }}
-                onClick={() => setPage(p => p + 1)}
-                disabled={page >= totalPages}
-              >
-                Next →
-              </button>
-            </div>
-          )}
+          {totalPages > 1 && <PageInput page={page} totalPages={totalPages} onChange={setPage} />}
 
         </>
       )}
@@ -479,45 +478,7 @@ export default function BankPage() {
             </div>
           )}
 
-          {totalPassagePages > 1 && (
-            <div className="flex items-center justify-center gap-3" style={{ paddingTop: 8, maxWidth: 760 }}>
-              <button
-                className="btn btn-ghost"
-                style={{ fontSize: '0.7rem', padding: '5px 14px' }}
-                onClick={() => setPassagePage(p => p - 1)}
-                disabled={passagePage === 1}
-              >
-                ← Prev
-              </button>
-              <div style={{ display: 'flex', gap: 4 }}>
-                {Array.from({ length: totalPassagePages }, (_, i) => i + 1).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setPassagePage(p)}
-                    style={{
-                      width: 28, height: 28,
-                      fontFamily: 'Cinzel, serif', fontSize: '0.6rem',
-                      border: '1px solid',
-                      borderColor: p === passagePage ? 'var(--gold)' : 'var(--border-dim)',
-                      background: p === passagePage ? 'var(--gold)' : 'transparent',
-                      color: p === passagePage ? 'var(--bg)' : 'var(--ink-dim)',
-                      cursor: 'pointer', borderRadius: 2,
-                    }}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-              <button
-                className="btn btn-ghost"
-                style={{ fontSize: '0.7rem', padding: '5px 14px' }}
-                onClick={() => setPassagePage(p => p + 1)}
-                disabled={passagePage >= totalPassagePages}
-              >
-                Next →
-              </button>
-            </div>
-          )}
+          {totalPassagePages > 1 && <PageInput page={passagePage} totalPages={totalPassagePages} onChange={setPassagePage} />}
         </>
       )}
 
@@ -549,45 +510,7 @@ export default function BankPage() {
             </div>
           )}
 
-          {totalTestPages > 1 && (
-            <div className="flex items-center justify-center gap-3" style={{ paddingTop: 8 }}>
-              <button
-                className="btn btn-ghost"
-                style={{ fontSize: '0.7rem', padding: '5px 14px' }}
-                onClick={() => setTestPage(p => p - 1)}
-                disabled={testPage === 1}
-              >
-                ← Prev
-              </button>
-              <div style={{ display: 'flex', gap: 4 }}>
-                {Array.from({ length: totalTestPages }, (_, i) => i + 1).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setTestPage(p)}
-                    style={{
-                      width: 28, height: 28,
-                      fontFamily: 'Cinzel, serif', fontSize: '0.6rem',
-                      border: '1px solid',
-                      borderColor: p === testPage ? 'var(--gold)' : 'var(--border-dim)',
-                      background: p === testPage ? 'var(--gold)' : 'transparent',
-                      color: p === testPage ? 'var(--bg)' : 'var(--ink-dim)',
-                      cursor: 'pointer', borderRadius: 2,
-                    }}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-              <button
-                className="btn btn-ghost"
-                style={{ fontSize: '0.7rem', padding: '5px 14px' }}
-                onClick={() => setTestPage(p => p + 1)}
-                disabled={testPage >= totalTestPages}
-              >
-                Next →
-              </button>
-            </div>
-          )}
+          {totalTestPages > 1 && <PageInput page={testPage} totalPages={totalTestPages} onChange={setTestPage} />}
         </>
       )}
 
