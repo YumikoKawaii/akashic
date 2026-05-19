@@ -446,8 +446,9 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
   const group       = q.group
   const passage     = group?.passage
   const content     = questionContent(q)
-  const isScoreable = q.type !== 'short_answer'
-  const isCorrect   = revealed && isScoreable && checkAnswer(q, selected)
+  const isScoreable  = q.type !== 'short_answer'
+  const isSkippable  = q.type === 'sentence_completion' || q.type === 'form_completion'
+  const isCorrect    = revealed && isScoreable && checkAnswer(q, selected)
 
   const handleReveal = () => {
     if (!selected) return
@@ -462,6 +463,14 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
   }
 
   const handleNext = async () => {
+    if (isLast) { onFinish(); return }
+    setCurrentIdx(i => i + 1)
+    setSelected('')
+    setRevealed(false)
+  }
+
+  const handleSkip = async () => {
+    setAnswers(prev => ({ ...prev, [String(q.id)]: '' }))
     if (isLast) { onFinish(); return }
     setCurrentIdx(i => i + 1)
     setSelected('')
@@ -568,7 +577,12 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
 
             <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
               {!revealed ? (
-                <button className="btn btn-primary" onClick={handleReveal} disabled={!selected} style={{ padding: '10px 32px' }}>Submit</button>
+                <>
+                  <button className="btn btn-primary" onClick={handleReveal} disabled={!selected} style={{ padding: '10px 32px' }}>Submit</button>
+                  {isSkippable && (
+                    <button className="btn" onClick={handleSkip} style={{ padding: '10px 24px', color: 'var(--ink-dim)', borderColor: 'var(--border-dim)' }}>Skip</button>
+                  )}
+                </>
               ) : (
                 <button className="btn btn-primary pulse" onClick={handleNext} disabled={isPending} style={{ padding: '10px 32px' }}>
                   {isPending ? '…' : isLast ? 'Finish →' : 'Next →'}
