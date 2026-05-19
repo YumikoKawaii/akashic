@@ -16,7 +16,7 @@ function LayoutInner() {
   return (
     <>
       <Starfield />
-      <MagicCircleBackground />
+      <MagicCircleBackground leftOffset={240} />
       <div className="app-layout">
         <TopBar />
         <Sidebar />

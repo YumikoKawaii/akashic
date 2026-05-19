@@ -178,10 +178,10 @@ export function Spinner({ size = 80 }: { size?: number }) {
 
 // ── Background ────────────────────────────────────────────────────────────────
 
-export function MagicCircleBackground() {
+export function MagicCircleBackground({ leftOffset = 0 }: { leftOffset?: number }) {
   return (
     <div style={{
-      position: 'fixed', inset: 0,
+      position: 'fixed', top: 0, bottom: 0, right: 0, left: leftOffset,
       zIndex: 0, pointerEvents: 'none',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>

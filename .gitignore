@@ -16,3 +16,4 @@ samples/test1_reading.json
 .idea/
 .vscode/
 *.iml
+.claude
