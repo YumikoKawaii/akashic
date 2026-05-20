@@ -19,13 +19,13 @@ jobs:
           docker save yumikokawaii/akashic:${{ github.ref_name }} -o akashic.tar
           chmod 644 akashic.tar
 
-      - name: Copy image to EC2
+      - name: Copy image and deploy script to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: akashic.tar
+          source: "akashic.tar,deploy.sh"
           target: /tmp/
 
       - name: Load image and restart container
@@ -35,4 +35,4 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            bash ~/scripts/akashic.sh
+            bash /tmp/deploy.sh
