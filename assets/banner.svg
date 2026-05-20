@@ -1,0 +1,114 @@
+<svg width="860" height="200" viewBox="0 0 860 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400&amp;family=Cinzel:wght@400&amp;display=swap');
+    </style>
+
+    <radialGradient id="bg" cx="50%" cy="50%" r="55%">
+      <stop offset="0%"   stop-color="#f7f1e2"/>
+      <stop offset="100%" stop-color="#e8dfc8"/>
+    </radialGradient>
+
+    <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#e0c050"/>
+      <stop offset="50%"  stop-color="#c8a030"/>
+      <stop offset="100%" stop-color="#9a7828"/>
+    </linearGradient>
+
+    <linearGradient id="ruleLeft" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#9a7018" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#9a7018" stop-opacity="0.45"/>
+    </linearGradient>
+    <linearGradient id="ruleRight" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#9a7018" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#9a7018" stop-opacity="0"/>
+    </linearGradient>
+
+    <filter id="softGlow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="860" height="200" fill="url(#bg)"/>
+
+  <!-- Outer border -->
+  <rect x="9" y="9" width="842" height="182" fill="none" stroke="#9a7018" stroke-width="0.8" opacity="0.55"/>
+  <!-- Inner border -->
+  <rect x="15" y="15" width="830" height="170" fill="none" stroke="#9a7018" stroke-width="0.35" opacity="0.3"/>
+
+  <!-- Corner ornaments — L-brackets -->
+  <path d="M9 44 L9 9 L44 9"   fill="none" stroke="#b8942a" stroke-width="1.6"/>
+  <path d="M816 9 L851 9 L851 44"  fill="none" stroke="#b8942a" stroke-width="1.6"/>
+  <path d="M9 156 L9 191 L44 191"  fill="none" stroke="#b8942a" stroke-width="1.6"/>
+  <path d="M816 191 L851 191 L851 156" fill="none" stroke="#b8942a" stroke-width="1.6"/>
+
+  <!-- Corner dots -->
+  <circle cx="9"   cy="9"   r="2.2" fill="#b8942a" opacity="0.85"/>
+  <circle cx="851" cy="9"   r="2.2" fill="#b8942a" opacity="0.85"/>
+  <circle cx="9"   cy="191" r="2.2" fill="#b8942a" opacity="0.85"/>
+  <circle cx="851" cy="191" r="2.2" fill="#b8942a" opacity="0.85"/>
+
+  <!-- Magic circle geometry (subtle) -->
+  <circle cx="430" cy="100" r="80" fill="none" stroke="#9a7018" stroke-width="0.6" opacity="0.16"/>
+  <circle cx="430" cy="100" r="66" fill="none" stroke="#9a7018" stroke-width="0.35" opacity="0.11"/>
+  <!-- Inscribed square 1 (axis-aligned) -->
+  <polygon points="430,20 510,100 430,180 350,100"
+           fill="none" stroke="#9a7018" stroke-width="0.45" opacity="0.13"/>
+  <!-- Inscribed square 2 (rotated 45°) -->
+  <polygon points="487,43 487,157 373,157 373,43"
+           fill="none" stroke="#9a7018" stroke-width="0.45" opacity="0.13"/>
+  <!-- Tiny dots at the 8 intersection points -->
+  <circle cx="510" cy="100" r="1.4" fill="#b8942a" opacity="0.22"/>
+  <circle cx="350" cy="100" r="1.4" fill="#b8942a" opacity="0.22"/>
+  <circle cx="430" cy="20"  r="1.4" fill="#b8942a" opacity="0.22"/>
+  <circle cx="430" cy="180" r="1.4" fill="#b8942a" opacity="0.22"/>
+  <circle cx="487" cy="43"  r="1.2" fill="#b8942a" opacity="0.18"/>
+  <circle cx="487" cy="157" r="1.2" fill="#b8942a" opacity="0.18"/>
+  <circle cx="373" cy="43"  r="1.2" fill="#b8942a" opacity="0.18"/>
+  <circle cx="373" cy="157" r="1.2" fill="#b8942a" opacity="0.18"/>
+
+  <!-- Horizontal rules -->
+  <line x1="48"  y1="100" x2="318" y2="100" stroke="url(#ruleLeft)"  stroke-width="0.6"/>
+  <line x1="542" y1="100" x2="812" y2="100" stroke="url(#ruleRight)" stroke-width="0.6"/>
+  <circle cx="318" cy="100" r="1.5" fill="#9a7018" opacity="0.4"/>
+  <circle cx="542" cy="100" r="1.5" fill="#9a7018" opacity="0.4"/>
+
+  <!-- Border midpoint marks -->
+  <text x="430" y="16"  text-anchor="middle" font-size="7" fill="#9a7018" opacity="0.32">⊕</text>
+  <text x="430" y="197" text-anchor="middle" font-size="7" fill="#9a7018" opacity="0.32">⊕</text>
+  <text x="16"  y="104" text-anchor="middle" font-size="7" fill="#9a7018" opacity="0.32">⊕</text>
+  <text x="844" y="104" text-anchor="middle" font-size="7" fill="#9a7018" opacity="0.32">⊕</text>
+
+  <!-- Scattered stars -->
+  <text x="75"  y="50"  text-anchor="middle" font-size="7.5" fill="#9a7018" opacity="0.42">✦</text>
+  <text x="785" y="50"  text-anchor="middle" font-size="7.5" fill="#9a7018" opacity="0.42">✦</text>
+  <text x="75"  y="158" text-anchor="middle" font-size="7.5" fill="#9a7018" opacity="0.42">✦</text>
+  <text x="785" y="158" text-anchor="middle" font-size="7.5" fill="#9a7018" opacity="0.42">✦</text>
+  <text x="155" y="34"  text-anchor="middle" font-size="5.5" fill="#9a7018" opacity="0.28">✦</text>
+  <text x="705" y="34"  text-anchor="middle" font-size="5.5" fill="#9a7018" opacity="0.28">✦</text>
+  <text x="155" y="173" text-anchor="middle" font-size="5.5" fill="#9a7018" opacity="0.28">✦</text>
+  <text x="705" y="173" text-anchor="middle" font-size="5.5" fill="#9a7018" opacity="0.28">✦</text>
+  <text x="240" y="26"  text-anchor="middle" font-size="4"   fill="#9a7018" opacity="0.2">✦</text>
+  <text x="620" y="26"  text-anchor="middle" font-size="4"   fill="#9a7018" opacity="0.2">✦</text>
+  <text x="240" y="180" text-anchor="middle" font-size="4"   fill="#9a7018" opacity="0.2">✦</text>
+  <text x="620" y="180" text-anchor="middle" font-size="4"   fill="#9a7018" opacity="0.2">✦</text>
+
+  <!-- Main title -->
+  <text x="430" y="113"
+        text-anchor="middle"
+        font-family="'Cinzel Decorative', 'Cinzel', Palatino, 'Book Antiqua', Georgia, serif"
+        font-size="40" font-weight="400"
+        fill="url(#titleGrad)"
+        filter="url(#softGlow)"
+        letter-spacing="16">AKASHIC</text>
+
+  <!-- Subtitle -->
+  <text x="430" y="143"
+        text-anchor="middle"
+        font-family="'Cinzel', Palatino, 'Book Antiqua', Georgia, serif"
+        font-size="9" font-style="italic"
+        fill="#7a6848"
+        letter-spacing="6">✦  the record of all things  ✦</text>
+</svg>
