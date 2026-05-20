@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy
 
 on:
   workflow_dispatch:
@@ -19,13 +19,13 @@ jobs:
           docker save yumikokawaii/akashic:${{ github.ref_name }} -o akashic.tar
           chmod 644 akashic.tar
 
-      - name: Copy image and deploy script to server
+      - name: Copy image to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "akashic.tar,deploy.sh"
+          source: akashic.tar
           target: /tmp/
 
       - name: Load image and restart container
@@ -35,4 +35,22 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            bash /tmp/deploy.sh
+            IMAGE=$(docker load -i /tmp/akashic.tar | grep "Loaded image:" | awk '{print $3}')
+            rm -f /tmp/akashic.tar
+
+            docker stop akashic 2>/dev/null || true
+            docker rm   akashic 2>/dev/null || true
+
+            PORT=$(grep -E '^SERVER_PORT=' ~/.env.akashic | cut -d= -f2)
+            PORT="${PORT:-8080}"
+
+            docker run -d \
+              --name akashic \
+              --restart unless-stopped \
+              -p "$PORT:8080" \
+              --env-file ~/.env.akashic \
+              "$IMAGE"
+
+            docker image prune -f
+
+            docker ps --filter "name=akashic" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
