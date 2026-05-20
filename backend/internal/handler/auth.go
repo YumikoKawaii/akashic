@@ -65,33 +65,11 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
-	var input service.RegisterInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	user, token, err := h.svc.Register(input)
-	if err != nil {
-		handleError(c, err)
-		return
-	}
-	setAuthCookie(c, token)
-	created(c, user)
+	c.JSON(http.StatusGone, gin.H{"error": "password auth is disabled"})
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
-	var input service.LoginInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	user, token, err := h.svc.Login(input)
-	if err != nil {
-		handleError(c, err)
-		return
-	}
-	setAuthCookie(c, token)
-	ok(c, user)
+	c.JSON(http.StatusGone, gin.H{"error": "password auth is disabled"})
 }
 
 func setAuthCookie(c *gin.Context, token string) {
