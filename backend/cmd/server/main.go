@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,6 +9,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -34,6 +36,13 @@ func main() {
 		log.Fatalf("failed to connect database: %v", err)
 	}
 
+	rdb := redis.NewClient(&redis.Options{
+		Addr: fmt.Sprintf("%s:%s", cfg.RedisHost, cfg.RedisPort),
+	})
+	if err := rdb.Ping(context.Background()).Err(); err != nil {
+		log.Fatalf("failed to connect to redis: %v", err)
+	}
+
 	unitOfWork := uow.New(db)
 
 	bankRepo          := repository.NewBankRepo(db)
@@ -46,7 +55,7 @@ func main() {
 	userRepo          := repository.NewUserRepo(db)
 	memberRepo        := repository.NewMemberRepo(db)
 
-	generateCache   := service.NewGenerateCache(service.GenerateConfig{UserCooldownAttempts: 3})
+	generateCache   := service.NewGenerateCache(rdb, service.GenerateConfig{UserCooldownAttempts: 3})
 
 	authSvc         := service.NewAuthService(userRepo, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleCallbackURL, cfg.JWTSecret)
 	bankSvc         := service.NewBankService(bankRepo, memberRepo, userRepo)

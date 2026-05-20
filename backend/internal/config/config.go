@@ -16,6 +16,9 @@ type Config struct {
 	ServerPort string
 	StaticDir  string
 
+	RedisHost string
+	RedisPort string
+
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleCallbackURL  string
@@ -35,6 +38,9 @@ func Load() *Config {
 		DBSSLMode:  getEnv("DB_SSLMODE", "disable"),
 		ServerPort: getEnv("SERVER_PORT", "8080"),
 		StaticDir:  getEnv("STATIC_DIR", "./static"),
+
+		RedisHost: getEnv("REDIS_HOST", "localhost"),
+		RedisPort: getEnv("REDIS_PORT", "6379"),
 
 		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),

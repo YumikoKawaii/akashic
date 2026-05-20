@@ -1,8 +1,13 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"math/rand"
-	"sync"
+	"time"
+
+	"github.com/redis/go-redis/v9"
 )
 
 // GenerateConfig controls test generation deduplication behavior.
@@ -22,47 +27,42 @@ type CachedQuestion struct {
 	GroupID    *int // nil = standalone
 }
 
-type attemptRecord struct {
-	ids map[int]struct{}
-}
-
-// GenerateCache holds per-user attempt history for cooldown deduplication.
-// Question pools are loaded from DB on each generation request.
-// All methods are safe for concurrent use.
+// GenerateCache stores per-user attempt history in Redis for cooldown deduplication.
 type GenerateCache struct {
-	mu      sync.RWMutex
-	config  GenerateConfig
-	history map[int]map[int][]attemptRecord // userID → bankID → recent attempts
+	rdb    *redis.Client
+	config GenerateConfig
 }
 
-func NewGenerateCache(cfg GenerateConfig) *GenerateCache {
+func NewGenerateCache(rdb *redis.Client, cfg GenerateConfig) *GenerateCache {
 	if cfg.UserCooldownAttempts <= 0 {
 		cfg.UserCooldownAttempts = 3
 	}
-	return &GenerateCache{
-		config:  cfg,
-		history: make(map[int]map[int][]attemptRecord),
-	}
+	return &GenerateCache{rdb: rdb, config: cfg}
+}
+
+func (c *GenerateCache) historyKey(userID, bankID int) string {
+	return fmt.Sprintf("generate:history:%d:%d", userID, bankID)
 }
 
 // excludedForUser returns question IDs the user saw in their last
 // UserCooldownAttempts attempts for a bank.
 func (c *GenerateCache) excludedForUser(userID, bankID int) map[int]struct{} {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	ctx := context.Background()
+	n := int64(c.config.UserCooldownAttempts)
+
+	entries, err := c.rdb.LRange(ctx, c.historyKey(userID, bankID), -n, -1).Result()
+	if err != nil {
+		return map[int]struct{}{}
+	}
+
 	out := make(map[int]struct{})
-	if bankMap, ok := c.history[userID]; ok {
-		if records, ok := bankMap[bankID]; ok {
-			n := c.config.UserCooldownAttempts
-			start := len(records) - n
-			if start < 0 {
-				start = 0
-			}
-			for _, rec := range records[start:] {
-				for id := range rec.ids {
-					out[id] = struct{}{}
-				}
-			}
+	for _, entry := range entries {
+		var ids []int
+		if err := json.Unmarshal([]byte(entry), &ids); err != nil {
+			continue
+		}
+		for _, id := range ids {
+			out[id] = struct{}{}
 		}
 	}
 	return out
@@ -73,30 +73,28 @@ func (c *GenerateCache) RecordAttempt(userID, bankID int, questionIDs []int) {
 	if userID == 0 || len(questionIDs) == 0 {
 		return
 	}
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.history[userID] == nil {
-		c.history[userID] = make(map[int][]attemptRecord)
+
+	data, err := json.Marshal(questionIDs)
+	if err != nil {
+		return
 	}
-	rec := attemptRecord{ids: make(map[int]struct{}, len(questionIDs))}
-	for _, id := range questionIDs {
-		rec.ids[id] = struct{}{}
-	}
-	records := append(c.history[userID][bankID], rec)
-	// Keep a bounded window: cooldown*2 records, minimum 10
-	maxKeep := c.config.UserCooldownAttempts * 2
+
+	maxKeep := int64(c.config.UserCooldownAttempts * 2)
 	if maxKeep < 10 {
 		maxKeep = 10
 	}
-	if len(records) > maxKeep {
-		records = records[len(records)-maxKeep:]
-	}
-	c.history[userID][bankID] = records
+
+	ctx := context.Background()
+	key := c.historyKey(userID, bankID)
+
+	pipe := c.rdb.Pipeline()
+	pipe.RPush(ctx, key, data)
+	pipe.LTrim(ctx, key, -maxKeep, -1)
+	pipe.Expire(ctx, key, 30*24*time.Hour)
+	pipe.Exec(ctx) //nolint:errcheck
 }
 
-// filterPool filters the cached pool by the config constraints and groups
-// matching questions by difficulty. Only standalone questions (GroupID == nil)
-// are included.
+// filterPool filters the pool by config constraints, returning standalone questions grouped by difficulty.
 func filterPool(pool []CachedQuestion, categoryIDs []int, types []string, tags []string) map[string][]CachedQuestion {
 	out := map[string][]CachedQuestion{"easy": nil, "medium": nil, "hard": nil}
 
@@ -115,7 +113,7 @@ func filterPool(pool []CachedQuestion, categoryIDs []int, types []string, tags [
 
 	for _, q := range pool {
 		if q.GroupID != nil {
-			continue // standalone only
+			continue
 		}
 		if len(catSet) > 0 {
 			if q.CategoryID == nil {
@@ -147,7 +145,7 @@ func filterPool(pool []CachedQuestion, categoryIDs []int, types []string, tags [
 	return out
 }
 
-// available returns questions from pool that are not in the alreadyPicked set.
+// available returns questions from pool not in the alreadyPicked set.
 func available(pool []CachedQuestion, alreadyPicked map[int]struct{}) []CachedQuestion {
 	out := make([]CachedQuestion, 0, len(pool))
 	for _, q := range pool {
@@ -159,7 +157,6 @@ func available(pool []CachedQuestion, alreadyPicked map[int]struct{}) []CachedQu
 }
 
 // pickRandom selects up to n items, preferring questions not in excluded.
-// Falls back to excluded (stale) ones if fresh questions are insufficient.
 func pickRandom(pool []CachedQuestion, excluded map[int]struct{}, n int) []CachedQuestion {
 	if n <= 0 || len(pool) == 0 {
 		return nil
