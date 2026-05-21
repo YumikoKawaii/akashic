@@ -18,6 +18,7 @@ import { FormField, Input } from '../components/ui/FormField'
 import { Spinner } from '../components/ui/MagicCircle'
 import MagicCircle from '../components/ui/MagicCircle'
 import RuneCorners from '../components/ui/RuneCorners'
+import Select from '../components/ui/Select'
 
 type Tab = 'questions' | 'passages' | 'generate' | 'tests'
 
@@ -331,26 +332,28 @@ export default function BankPage() {
         <>
           <div className="flex gap-3 items-center flex-wrap">
             <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>Filter</span>
-            <select
-              className="form-input"
-              style={{ width: 'auto', fontSize: '0.78rem' }}
-              value={filter.type ?? ''}
-              onChange={e => { setPage(1); setFilter(f => ({ ...f, type: e.target.value || undefined })) }}
-            >
-              <option value="">All Types</option>
-              {QUESTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
-            <select
-              className="form-input"
-              style={{ width: 'auto', fontSize: '0.78rem' }}
-              value={filter.difficulty ?? ''}
-              onChange={e => { setPage(1); setFilter(f => ({ ...f, difficulty: e.target.value || undefined })) }}
-            >
-              <option value="">All Difficulties</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
+            <div style={{ width: 170 }}>
+              <Select
+                value={filter.type ?? ''}
+                onChange={val => { setPage(1); setFilter(f => ({ ...f, type: val || undefined })) }}
+                options={[
+                  { value: '', label: 'All Types' },
+                  ...QUESTION_TYPES.map(t => ({ value: t.value, label: t.label })),
+                ]}
+              />
+            </div>
+            <div style={{ width: 150 }}>
+              <Select
+                value={filter.difficulty ?? ''}
+                onChange={val => { setPage(1); setFilter(f => ({ ...f, difficulty: val || undefined })) }}
+                options={[
+                  { value: '', label: 'All Difficulties' },
+                  { value: 'easy', label: 'Easy' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'hard', label: 'Hard' },
+                ]}
+              />
+            </div>
           </div>
 
           <div className="flex items-center justify-between">
