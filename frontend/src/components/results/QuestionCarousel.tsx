@@ -260,7 +260,7 @@ export default function QuestionCarousel({ cards }: Props) {
               key={card.question.id}
               style={{
                 position: 'absolute', left: '50%', top: '50%',
-                width: cardIsExpanded ? EXPANDED_W : CARD_W,
+                width: cardIsExpanded ? `min(${EXPANDED_W}px, calc(100vw - 32px))` : CARD_W,
                 transform: `translate(calc(-50% + ${x}px), -50%) scale(${scale})`,
                 opacity,
                 transition: !isLive
