@@ -314,7 +314,7 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
   const answered = Object.values(answers).filter(Boolean).length
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div className="passage-attempt-root" style={{ background: 'var(--bg)' }}>
       <Starfield />
       <SolarSystemBackground />
 
@@ -341,10 +341,10 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
       </div>
 
       {/* ── Two panels ── */}
-      <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className="passage-panels">
 
         {/* Left — passage */}
-        <div style={{ position: 'relative', overflowY: 'auto', padding: '28px 32px', borderRight: '1px solid var(--border-dim)' }}>
+        <div className="passage-panel-left">
           <OghamBorder side="right" color="var(--gold-dim)" opacity={0.30} />
 
           {passage && (
@@ -370,7 +370,7 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
         </div>
 
         {/* Right — questions */}
-        <div style={{ overflowY: 'auto', padding: '28px 32px' }}>
+        <div className="passage-panel-right">
           {sections.map(({ groupId, group, items }) => (
             <div key={groupId} style={{ position: 'relative', marginBottom: 36, paddingLeft: 12, borderLeft: '2px solid var(--border-dim)' }}>
               {/* small sigil at section start */}
@@ -486,7 +486,7 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
       <div className="attempt-layout">
 
         {/* ── Segmented progress ── */}
-        <div style={{ display: 'flex', gap: 2, padding: '0 48px', height: 6, background: 'var(--bg-panel)', borderBottom: '1px solid var(--border-dim)', alignItems: 'stretch' }}>
+        <div className="attempt-progress">
           {questions.map((_, i) => {
             const done = i < currentIdx || (i === currentIdx && revealed)
             return (

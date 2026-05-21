@@ -64,6 +64,7 @@ body {
   grid-template-columns: 240px 1fr;
   grid-template-rows: 56px 1fr;
   height: 100vh;
+  height: 100dvh;
   position: relative;
   z-index: 1;
 }
@@ -545,6 +546,60 @@ input[type=number].form-input::-webkit-inner-spin-button,
 input[type=number].form-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type=number].form-input { -moz-appearance: textfield; }
 
+/* ─── Magic circle background ─────────────────────────────────── */
+.magic-circle-bg {
+  position: fixed;
+  top: 0; bottom: 0; right: 0;
+  z-index: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Passage attempt layout ───────────────────────────────────── */
+.passage-attempt-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.passage-panels {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+}
+
+.passage-panel-left {
+  position: relative;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 28px 32px;
+  border-right: 1px solid var(--border-dim);
+}
+
+.passage-panel-right {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 28px 32px;
+}
+
+/* ─── Attempt progress bar ─────────────────────────────────────── */
+.attempt-progress {
+  display: flex;
+  gap: 2px;
+  padding: 0 48px;
+  height: 6px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-dim);
+  align-items: stretch;
+}
+
 /* ─── Attempt / Test taking ───────────────────────────────────── */
 .attempt-layout {
   height: 100vh;
@@ -848,6 +903,7 @@ input[type=number].form-input { -moz-appearance: textfield; }
 @media (max-width: 1024px) {
   .hamburger { display: flex; }
   .app-layout { grid-template-columns: 1fr; }
+  .magic-circle-bg { left: 0 !important; }
 
   .sidebar {
     position: fixed;
@@ -887,6 +943,22 @@ input[type=number].form-input { -moz-appearance: textfield; }
   .results-score { font-size: 3.5rem; }
 
   .btn { padding: 8px 16px; font-size: 0.6rem; }
+
+  /* Passage attempt: stack panels vertically */
+  .passage-panels {
+    grid-template-columns: 1fr;
+    grid-template-rows: 42dvh 1fr;
+    overflow: hidden;
+  }
+  .passage-panel-left {
+    padding: 16px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-dim);
+  }
+  .passage-panel-right { padding: 16px; }
+
+  /* Flashcard progress bar */
+  .attempt-progress { padding: 0 16px; }
 }
 
 @media (max-width: 480px) {

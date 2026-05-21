@@ -180,11 +180,7 @@ export function Spinner({ size = 80 }: { size?: number }) {
 
 export function MagicCircleBackground({ leftOffset = 0 }: { leftOffset?: number }) {
   return (
-    <div style={{
-      position: 'fixed', top: 0, bottom: 0, right: 0, left: leftOffset,
-      zIndex: 0, pointerEvents: 'none',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
+    <div className="magic-circle-bg" style={{ left: leftOffset }}>
       <div style={{ width: '72vmin', height: '72vmin', opacity: 0.065, color: 'var(--gold)' }}>
         <MagicCircle />
       </div>
