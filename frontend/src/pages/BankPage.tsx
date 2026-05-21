@@ -179,16 +179,6 @@ export default function BankPage() {
     </div>
   )
 
-  const toggleTypeFilter = (val: string) => {
-    setPage(1)
-    setFilter(f => ({ ...f, type: f.type === val ? undefined : val }))
-  }
-
-  const toggleDiffFilter = (val: string) => {
-    setPage(1)
-    setFilter(f => ({ ...f, difficulty: f.difficulty === val ? undefined : val }))
-  }
-
   return (
     <>
       {/* ── Page header ─────────────────────────────────────────── */}
@@ -339,19 +329,28 @@ export default function BankPage() {
       {/* ── Questions tab ───────────────────────────────────────── */}
       {tab === 'questions' && (
         <>
-          <div className="flex gap-2 flex-wrap items-center">
+          <div className="flex gap-3 items-center flex-wrap">
             <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>Filter</span>
-            {QUESTION_TYPES.map(t => (
-              <button key={t.value} className={`filter-chip ${filter.type === t.value ? 'active' : ''}`} onClick={() => toggleTypeFilter(t.value)}>
-                {t.label}
-              </button>
-            ))}
-            <div style={{ width: 1, height: 18, background: 'var(--border-dim)' }} />
-            {(['easy', 'medium', 'hard'] as const).map(d => (
-              <button key={d} className={`filter-chip ${filter.difficulty === d ? 'active' : ''}`} onClick={() => toggleDiffFilter(d)}>
-                {d}
-              </button>
-            ))}
+            <select
+              className="form-input"
+              style={{ width: 'auto', fontSize: '0.78rem' }}
+              value={filter.type ?? ''}
+              onChange={e => { setPage(1); setFilter(f => ({ ...f, type: e.target.value || undefined })) }}
+            >
+              <option value="">All Types</option>
+              {QUESTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            <select
+              className="form-input"
+              style={{ width: 'auto', fontSize: '0.78rem' }}
+              value={filter.difficulty ?? ''}
+              onChange={e => { setPage(1); setFilter(f => ({ ...f, difficulty: e.target.value || undefined })) }}
+            >
+              <option value="">All Difficulties</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
           </div>
 
           <div className="flex items-center justify-between">
