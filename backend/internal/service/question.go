@@ -12,7 +12,7 @@ type QuestionService struct {
 	repo         repository.QuestionRepository
 	bankRepo     repository.BankRepository
 	categoryRepo repository.CategoryRepository
-	pool         *GenerateCache
+	pool         GenerateCache
 }
 
 func NewQuestionService(
@@ -20,7 +20,7 @@ func NewQuestionService(
 	repo repository.QuestionRepository,
 	bankRepo repository.BankRepository,
 	categoryRepo repository.CategoryRepository,
-	pool *GenerateCache,
+	pool GenerateCache,
 ) *QuestionService {
 	return &QuestionService{uow: u, repo: repo, bankRepo: bankRepo, categoryRepo: categoryRepo, pool: pool}
 }

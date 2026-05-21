@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sync"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -14,9 +15,7 @@ const historyTTL = 90 * 24 * time.Hour
 
 // GenerateConfig controls test generation deduplication behavior.
 type GenerateConfig struct {
-	// UserCooldownAttempts: a question won't appear for a user until this many
-	// of their tests have passed since it was last seen. Default: 3.
-	UserCooldownAttempts int
+	UserCooldownAttempts int // default: 3
 }
 
 // CachedQuestion holds the minimal fields needed for pool filtering and selection.
@@ -29,27 +28,46 @@ type CachedQuestion struct {
 	GroupID    *int // nil = standalone
 }
 
-// GenerateCache manages the standalone question pool cache and per-user generation history.
-type GenerateCache struct {
+// GenerateCache is the interface for pool caching and per-user generation history.
+type GenerateCache interface {
+	// Pool
+	WarmupPool(bankID int, pool []CachedQuestion)
+	GetPool(bankID int) ([]CachedQuestion, bool)
+	AddToPool(bankID int, q CachedQuestion)
+	UpdateInPool(bankID int, q CachedQuestion)
+	RemoveFromPool(bankID, questionID int)
+	// History
+	BeginGeneration(userID, bankID int) (seq int, excluded map[int]struct{})
+	RecordGeneration(userID, bankID, seq int, questionIDs []int)
+}
+
+// ── Redis implementation ───────────────────────────────────────────────────────
+
+type redisCache struct {
 	rdb    *redis.Client
 	config GenerateConfig
 }
 
-func NewGenerateCache(rdb *redis.Client, cfg GenerateConfig) *GenerateCache {
+func NewRedisCache(rdb *redis.Client, cfg GenerateConfig) GenerateCache {
 	if cfg.UserCooldownAttempts <= 0 {
 		cfg.UserCooldownAttempts = 3
 	}
-	return &GenerateCache{rdb: rdb, config: cfg}
+	return &redisCache{rdb: rdb, config: cfg}
 }
 
-// ── Pool cache ─────────────────────────────────────────────────────────────────
-
-func (c *GenerateCache) poolKey(bankID int) string {
+func (c *redisCache) poolKey(bankID int) string {
 	return fmt.Sprintf("pool:%d", bankID)
 }
 
-// WarmupPool stores the full standalone pool for a bank. Called on startup.
-func (c *GenerateCache) WarmupPool(bankID int, pool []CachedQuestion) {
+func (c *redisCache) seqKey(userID, bankID int) string {
+	return fmt.Sprintf("history:%d:%d:seq", userID, bankID)
+}
+
+func (c *redisCache) historyKey(userID, bankID, seq int) string {
+	return fmt.Sprintf("history:%d:%d:%d", userID, bankID, seq)
+}
+
+func (c *redisCache) WarmupPool(bankID int, pool []CachedQuestion) {
 	data, err := json.Marshal(pool)
 	if err != nil {
 		return
@@ -57,8 +75,7 @@ func (c *GenerateCache) WarmupPool(bankID int, pool []CachedQuestion) {
 	c.rdb.Set(context.Background(), c.poolKey(bankID), data, 0) //nolint:errcheck
 }
 
-// GetPool returns the cached pool for a bank, and false on a cache miss.
-func (c *GenerateCache) GetPool(bankID int) ([]CachedQuestion, bool) {
+func (c *redisCache) GetPool(bankID int) ([]CachedQuestion, bool) {
 	data, err := c.rdb.Get(context.Background(), c.poolKey(bankID)).Bytes()
 	if err != nil {
 		return nil, false
@@ -70,9 +87,7 @@ func (c *GenerateCache) GetPool(bankID int) ([]CachedQuestion, bool) {
 	return pool, true
 }
 
-// AddToPool appends a newly created standalone question to the bank's pool.
-// Grouped questions are ignored — they are not part of the standalone pool.
-func (c *GenerateCache) AddToPool(bankID int, q CachedQuestion) {
+func (c *redisCache) AddToPool(bankID int, q CachedQuestion) {
 	if q.GroupID != nil {
 		return
 	}
@@ -83,8 +98,7 @@ func (c *GenerateCache) AddToPool(bankID int, q CachedQuestion) {
 	c.WarmupPool(bankID, append(pool, q))
 }
 
-// UpdateInPool replaces a question's entry in the pool after an update.
-func (c *GenerateCache) UpdateInPool(bankID int, q CachedQuestion) {
+func (c *redisCache) UpdateInPool(bankID int, q CachedQuestion) {
 	if q.GroupID != nil {
 		return
 	}
@@ -101,8 +115,7 @@ func (c *GenerateCache) UpdateInPool(bankID int, q CachedQuestion) {
 	c.WarmupPool(bankID, pool)
 }
 
-// RemoveFromPool removes a question from the pool on soft delete.
-func (c *GenerateCache) RemoveFromPool(bankID, questionID int) {
+func (c *redisCache) RemoveFromPool(bankID, questionID int) {
 	pool, ok := c.GetPool(bankID)
 	if !ok {
 		return
@@ -116,20 +129,7 @@ func (c *GenerateCache) RemoveFromPool(bankID, questionID int) {
 	c.WarmupPool(bankID, out)
 }
 
-// ── User generation history ────────────────────────────────────────────────────
-
-func (c *GenerateCache) seqKey(userID, bankID int) string {
-	return fmt.Sprintf("history:%d:%d:seq", userID, bankID)
-}
-
-func (c *GenerateCache) historyKey(userID, bankID, seq int) string {
-	return fmt.Sprintf("history:%d:%d:%d", userID, bankID, seq)
-}
-
-// BeginGeneration atomically increments the per-user seq counter, deletes the
-// one key that just fell outside the cooldown window, and returns the new seq
-// plus the excluded question IDs from the last cooldown tests.
-func (c *GenerateCache) BeginGeneration(userID, bankID int) (int, map[int]struct{}) {
+func (c *redisCache) BeginGeneration(userID, bankID int) (int, map[int]struct{}) {
 	if userID == 0 {
 		return 0, map[int]struct{}{}
 	}
@@ -143,13 +143,10 @@ func (c *GenerateCache) BeginGeneration(userID, bankID int) (int, map[int]struct
 	c.rdb.Expire(ctx, c.seqKey(userID, bankID), historyTTL) //nolint:errcheck
 
 	cooldown := c.config.UserCooldownAttempts
-
-	// Delete the one key that just expired (seq - cooldown - 1).
 	if expired := seq - cooldown - 1; expired >= 1 {
 		c.rdb.Del(ctx, c.historyKey(userID, bankID, expired)) //nolint:errcheck
 	}
 
-	// Build excluded set from the last cooldown test keys (seq-cooldown to seq-1).
 	keys := make([]string, 0, cooldown)
 	for i := seq - cooldown; i < seq; i++ {
 		if i >= 1 {
@@ -181,8 +178,7 @@ func (c *GenerateCache) BeginGeneration(userID, bankID int) (int, map[int]struct
 	return seq, excluded
 }
 
-// RecordGeneration stores the standalone question IDs used in a test for future exclusion.
-func (c *GenerateCache) RecordGeneration(userID, bankID, seq int, questionIDs []int) {
+func (c *redisCache) RecordGeneration(userID, bankID, seq int, questionIDs []int) {
 	if userID == 0 || seq == 0 || len(questionIDs) == 0 {
 		return
 	}
@@ -193,9 +189,128 @@ func (c *GenerateCache) RecordGeneration(userID, bankID, seq int, questionIDs []
 	c.rdb.Set(context.Background(), c.historyKey(userID, bankID, seq), data, historyTTL) //nolint:errcheck
 }
 
+// ── In-memory fallback implementation ─────────────────────────────────────────
+
+type memCache struct {
+	config GenerateConfig
+
+	poolMu sync.RWMutex
+	pools  map[int][]CachedQuestion
+
+	histMu  sync.Mutex
+	seqs    map[string]int    // "userID:bankID" → current seq
+	history map[string][]int  // "userID:bankID:seq" → question IDs
+}
+
+func NewMemCache(cfg GenerateConfig) GenerateCache {
+	if cfg.UserCooldownAttempts <= 0 {
+		cfg.UserCooldownAttempts = 3
+	}
+	return &memCache{
+		config:  cfg,
+		pools:   make(map[int][]CachedQuestion),
+		seqs:    make(map[string]int),
+		history: make(map[string][]int),
+	}
+}
+
+func (c *memCache) WarmupPool(bankID int, pool []CachedQuestion) {
+	stored := make([]CachedQuestion, len(pool))
+	copy(stored, pool)
+	c.poolMu.Lock()
+	c.pools[bankID] = stored
+	c.poolMu.Unlock()
+}
+
+func (c *memCache) GetPool(bankID int) ([]CachedQuestion, bool) {
+	c.poolMu.RLock()
+	pool, ok := c.pools[bankID]
+	c.poolMu.RUnlock()
+	if !ok {
+		return nil, false
+	}
+	result := make([]CachedQuestion, len(pool))
+	copy(result, pool)
+	return result, true
+}
+
+func (c *memCache) AddToPool(bankID int, q CachedQuestion) {
+	if q.GroupID != nil {
+		return
+	}
+	c.poolMu.Lock()
+	c.pools[bankID] = append(c.pools[bankID], q)
+	c.poolMu.Unlock()
+}
+
+func (c *memCache) UpdateInPool(bankID int, q CachedQuestion) {
+	if q.GroupID != nil {
+		return
+	}
+	c.poolMu.Lock()
+	for i, existing := range c.pools[bankID] {
+		if existing.ID == q.ID {
+			c.pools[bankID][i] = q
+			break
+		}
+	}
+	c.poolMu.Unlock()
+}
+
+func (c *memCache) RemoveFromPool(bankID, questionID int) {
+	c.poolMu.Lock()
+	pool := c.pools[bankID]
+	out := make([]CachedQuestion, 0, len(pool))
+	for _, q := range pool {
+		if q.ID != questionID {
+			out = append(out, q)
+		}
+	}
+	c.pools[bankID] = out
+	c.poolMu.Unlock()
+}
+
+func (c *memCache) BeginGeneration(userID, bankID int) (int, map[int]struct{}) {
+	if userID == 0 {
+		return 0, map[int]struct{}{}
+	}
+
+	c.histMu.Lock()
+	defer c.histMu.Unlock()
+
+	sk := fmt.Sprintf("%d:%d", userID, bankID)
+	c.seqs[sk]++
+	seq := c.seqs[sk]
+
+	cooldown := c.config.UserCooldownAttempts
+	if expired := seq - cooldown - 1; expired >= 1 {
+		delete(c.history, fmt.Sprintf("%d:%d:%d", userID, bankID, expired))
+	}
+
+	excluded := make(map[int]struct{})
+	for i := seq - cooldown; i < seq; i++ {
+		if i >= 1 {
+			for _, id := range c.history[fmt.Sprintf("%d:%d:%d", userID, bankID, i)] {
+				excluded[id] = struct{}{}
+			}
+		}
+	}
+	return seq, excluded
+}
+
+func (c *memCache) RecordGeneration(userID, bankID, seq int, questionIDs []int) {
+	if userID == 0 || seq == 0 || len(questionIDs) == 0 {
+		return
+	}
+	stored := make([]int, len(questionIDs))
+	copy(stored, questionIDs)
+	c.histMu.Lock()
+	c.history[fmt.Sprintf("%d:%d:%d", userID, bankID, seq)] = stored
+	c.histMu.Unlock()
+}
+
 // ── Pool selection helpers (pure functions) ────────────────────────────────────
 
-// filterPool filters the pool by config constraints, returning standalone questions grouped by difficulty.
 func filterPool(pool []CachedQuestion, categoryIDs []int, types []string, tags []string) map[string][]CachedQuestion {
 	out := map[string][]CachedQuestion{"easy": nil, "medium": nil, "hard": nil}
 
@@ -246,7 +361,6 @@ func filterPool(pool []CachedQuestion, categoryIDs []int, types []string, tags [
 	return out
 }
 
-// available returns questions from pool not in the alreadyPicked set.
 func available(pool []CachedQuestion, alreadyPicked map[int]struct{}) []CachedQuestion {
 	out := make([]CachedQuestion, 0, len(pool))
 	for _, q := range pool {
@@ -257,7 +371,6 @@ func available(pool []CachedQuestion, alreadyPicked map[int]struct{}) []CachedQu
 	return out
 }
 
-// pickRandom selects up to n items, preferring questions not in excluded.
 func pickRandom(pool []CachedQuestion, excluded map[int]struct{}, n int) []CachedQuestion {
 	if n <= 0 || len(pool) == 0 {
 		return nil

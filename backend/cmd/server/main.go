@@ -39,9 +39,6 @@ func main() {
 	rdb := redis.NewClient(&redis.Options{
 		Addr: fmt.Sprintf("%s:%s", cfg.RedisHost, cfg.RedisPort),
 	})
-	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		log.Fatalf("failed to connect to redis: %v", err)
-	}
 
 	unitOfWork := uow.New(db)
 
@@ -55,7 +52,14 @@ func main() {
 	userRepo          := repository.NewUserRepo(db)
 	memberRepo        := repository.NewMemberRepo(db)
 
-	generateCache   := service.NewGenerateCache(rdb, service.GenerateConfig{UserCooldownAttempts: 3})
+	cacheCfg := service.GenerateConfig{UserCooldownAttempts: 3}
+	var generateCache service.GenerateCache
+	if err := rdb.Ping(context.Background()).Err(); err != nil {
+		log.Printf("redis unavailable (%v) — using in-memory cache", err)
+		generateCache = service.NewMemCache(cacheCfg)
+	} else {
+		generateCache = service.NewRedisCache(rdb, cacheCfg)
+	}
 
 	authSvc         := service.NewAuthService(userRepo, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleCallbackURL, cfg.JWTSecret)
 	bankSvc         := service.NewBankService(bankRepo, memberRepo, userRepo)
@@ -93,7 +97,7 @@ func main() {
 	}
 }
 
-func warmupPoolCache(bankRepo repository.BankRepository, questionRepo repository.QuestionRepository, cache *service.GenerateCache) {
+func warmupPoolCache(bankRepo repository.BankRepository, questionRepo repository.QuestionRepository, cache service.GenerateCache) {
 	bankIDs, err := bankRepo.FindAllIDs()
 	if err != nil {
 		log.Printf("pool warmup: failed to list banks: %v", err)

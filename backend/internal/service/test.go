@@ -12,7 +12,7 @@ type TestService struct {
 	questionRepo repository.QuestionRepository
 	groupRepo    repository.QuestionGroupRepository
 	bankRepo     repository.BankRepository
-	cache        *GenerateCache
+	cache        GenerateCache
 }
 
 func NewTestService(
@@ -21,7 +21,7 @@ func NewTestService(
 	questionRepo repository.QuestionRepository,
 	groupRepo repository.QuestionGroupRepository,
 	bankRepo repository.BankRepository,
-	cache *GenerateCache,
+	cache GenerateCache,
 ) *TestService {
 	return &TestService{
 		uow:          u,
