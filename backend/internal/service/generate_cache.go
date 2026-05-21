@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -58,12 +60,12 @@ func (c *redisCache) poolKey(bankID int) string {
 	return fmt.Sprintf("pool:%d", bankID)
 }
 
-func (c *redisCache) seqKey(userID, bankID int) string {
-	return fmt.Sprintf("history:%d:%d:seq", userID, bankID)
-}
-
 func (c *redisCache) historyKey(userID, bankID, seq int) string {
 	return fmt.Sprintf("history:%d:%d:%d", userID, bankID, seq)
+}
+
+func (c *redisCache) historyPattern(userID, bankID int) string {
+	return fmt.Sprintf("history:%d:%d:*", userID, bankID)
 }
 
 func (c *redisCache) WarmupPool(bankID int, pool []CachedQuestion) {
@@ -128,31 +130,45 @@ func (c *redisCache) BeginGeneration(userID, bankID int) (int, map[int]struct{})
 	}
 	ctx := context.Background()
 
-	n, err := c.rdb.Incr(ctx, c.seqKey(userID, bankID)).Result()
-	if err != nil {
-		return 0, map[int]struct{}{}
+	// Scan all existing history keys for this user+bank to find max seq.
+	var existingKeys []string
+	iter := c.rdb.Scan(ctx, 0, c.historyPattern(userID, bankID), 0).Iterator()
+	for iter.Next(ctx) {
+		existingKeys = append(existingKeys, iter.Val())
 	}
-	seq := int(n)
-	c.rdb.Expire(ctx, c.seqKey(userID, bankID), historyTTL) //nolint:errcheck
 
+	maxSeq := 0
+	for _, key := range existingKeys {
+		parts := strings.Split(key, ":")
+		if seq, err := strconv.Atoi(parts[len(parts)-1]); err == nil && seq > maxSeq {
+			maxSeq = seq
+		}
+	}
+	nextSeq := maxSeq + 1
 	cooldown := c.config.UserCooldownAttempts
-	if expired := seq - cooldown - 1; expired >= 1 {
-		c.rdb.Del(ctx, c.historyKey(userID, bankID, expired)) //nolint:errcheck
+
+	// Delete keys that have fallen outside the cooldown window.
+	for _, key := range existingKeys {
+		parts := strings.Split(key, ":")
+		if seq, err := strconv.Atoi(parts[len(parts)-1]); err == nil && seq <= nextSeq-cooldown-1 {
+			c.rdb.Del(ctx, key) //nolint:errcheck
+		}
 	}
 
+	// MGET the active cooldown window [nextSeq-cooldown, nextSeq-1].
 	keys := make([]string, 0, cooldown)
-	for i := seq - cooldown; i < seq; i++ {
+	for i := nextSeq - cooldown; i < nextSeq; i++ {
 		if i >= 1 {
 			keys = append(keys, c.historyKey(userID, bankID, i))
 		}
 	}
 	if len(keys) == 0 {
-		return seq, map[int]struct{}{}
+		return nextSeq, map[int]struct{}{}
 	}
 
 	vals, err := c.rdb.MGet(ctx, keys...).Result()
 	if err != nil {
-		return seq, map[int]struct{}{}
+		return nextSeq, map[int]struct{}{}
 	}
 
 	excluded := make(map[int]struct{})
@@ -168,7 +184,7 @@ func (c *redisCache) BeginGeneration(userID, bankID int) (int, map[int]struct{})
 			excluded[id] = struct{}{}
 		}
 	}
-	return seq, excluded
+	return nextSeq, excluded
 }
 
 func (c *redisCache) RecordGeneration(userID, bankID, seq int, questionIDs []int) {
@@ -191,8 +207,7 @@ type memCache struct {
 	pools  map[int][]CachedQuestion
 
 	histMu  sync.Mutex
-	seqs    map[string]int    // "userID:bankID" → current seq
-	history map[string][]int  // "userID:bankID:seq" → question IDs
+	history map[string][]int // "userID:bankID:seq" → question IDs
 }
 
 func NewMemCache(cfg GenerateConfig) GenerateCache {
@@ -202,7 +217,6 @@ func NewMemCache(cfg GenerateConfig) GenerateCache {
 	return &memCache{
 		config:  cfg,
 		pools:   make(map[int][]CachedQuestion),
-		seqs:    make(map[string]int),
 		history: make(map[string][]int),
 	}
 }
@@ -265,24 +279,38 @@ func (c *memCache) BeginGeneration(userID, bankID int) (int, map[int]struct{}) {
 	c.histMu.Lock()
 	defer c.histMu.Unlock()
 
-	sk := fmt.Sprintf("%d:%d", userID, bankID)
-	c.seqs[sk]++
-	seq := c.seqs[sk]
+	prefix := fmt.Sprintf("%d:%d:", userID, bankID)
 
+	// Find max seq from existing history keys.
+	maxSeq := 0
+	for k := range c.history {
+		if strings.HasPrefix(k, prefix) {
+			if seq, err := strconv.Atoi(k[len(prefix):]); err == nil && seq > maxSeq {
+				maxSeq = seq
+			}
+		}
+	}
+	nextSeq := maxSeq + 1
 	cooldown := c.config.UserCooldownAttempts
-	if expired := seq - cooldown - 1; expired >= 1 {
-		delete(c.history, fmt.Sprintf("%d:%d:%d", userID, bankID, expired))
+
+	// Delete keys outside the cooldown window.
+	for k := range c.history {
+		if strings.HasPrefix(k, prefix) {
+			if seq, err := strconv.Atoi(k[len(prefix):]); err == nil && seq <= nextSeq-cooldown-1 {
+				delete(c.history, k)
+			}
+		}
 	}
 
 	excluded := make(map[int]struct{})
-	for i := seq - cooldown; i < seq; i++ {
+	for i := nextSeq - cooldown; i < nextSeq; i++ {
 		if i >= 1 {
 			for _, id := range c.history[fmt.Sprintf("%d:%d:%d", userID, bankID, i)] {
 				excluded[id] = struct{}{}
 			}
 		}
 	}
-	return seq, excluded
+	return nextSeq, excluded
 }
 
 func (c *memCache) RecordGeneration(userID, bankID, seq int, questionIDs []int) {
