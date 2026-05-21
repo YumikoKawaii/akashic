@@ -62,10 +62,12 @@ func main() {
 	categorySvc     := service.NewCategoryService(categoryRepo, bankRepo)
 	passageSvc      := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
 	questionGroupSvc := service.NewQuestionGroupService(unitOfWork, questionGroupRepo, bankRepo, categoryRepo)
-	questionSvc     := service.NewQuestionService(unitOfWork, questionRepo, bankRepo, categoryRepo)
+	questionSvc     := service.NewQuestionService(unitOfWork, questionRepo, bankRepo, categoryRepo, generateCache)
 	testSvc         := service.NewTestService(unitOfWork, testRepo, questionRepo, questionGroupRepo, bankRepo, generateCache)
 	attemptSvc      := service.NewAttemptService(attemptRepo, testRepo)
 	ingestSvc       := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo)
+
+	warmupPoolCache(bankRepo, questionRepo, generateCache)
 
 	authMW := middleware.Auth(authSvc)
 
@@ -89,6 +91,34 @@ func main() {
 	if err := router.Run(addr); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
+}
+
+func warmupPoolCache(bankRepo repository.BankRepository, questionRepo repository.QuestionRepository, cache *service.GenerateCache) {
+	bankIDs, err := bankRepo.FindAllIDs()
+	if err != nil {
+		log.Printf("pool warmup: failed to list banks: %v", err)
+		return
+	}
+	for _, bankID := range bankIDs {
+		metas, err := questionRepo.FindAllMeta(bankID)
+		if err != nil {
+			log.Printf("pool warmup: bank %d: %v", bankID, err)
+			continue
+		}
+		pool := make([]service.CachedQuestion, len(metas))
+		for i, m := range metas {
+			pool[i] = service.CachedQuestion{
+				ID:         m.ID,
+				Difficulty: m.Difficulty,
+				CategoryID: m.CategoryID,
+				Type:       m.Type,
+				Tags:       []string(m.Tags),
+				GroupID:    m.GroupID,
+			}
+		}
+		cache.WarmupPool(bankID, pool)
+	}
+	log.Printf("pool warmup: loaded %d banks", len(bankIDs))
 }
 
 func runMigrations(cfg *config.Config) error {

@@ -89,15 +89,22 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 	skipStandalone := len(config.PassageIDs) > 0 && !config.StandaloneOnly
 
 	var picked []model.Question
+	var seq int
+	var standaloneIDs []int
 
-	// ── Standalone path: in-memory cache + per-user exclusion ────────────
+	// ── Standalone path: pool cache + per-user exclusion ─────────────────
 	if !skipStandalone {
-		pool, err := s.loadPool(bankID)
-		if err != nil {
-			return nil, err
+		pool, ok := s.cache.GetPool(bankID)
+		if !ok {
+			pool, err = s.loadPool(bankID)
+			if err != nil {
+				return nil, err
+			}
 		}
+
+		var excluded map[int]struct{}
+		seq, excluded = s.cache.BeginGeneration(input.UserID, bankID)
 		byDiff := filterPool(pool, config.CategoryIDs, config.Types, config.Tags)
-		excluded := s.cache.excludedForUser(input.UserID, bankID)
 
 		type bucket struct {
 			diff  string
@@ -114,7 +121,6 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 			"hard":   {"medium", "easy"},
 		}
 
-		selectedIDs := make([]int, 0, config.EasyCount+config.MediumCount+config.HardCount)
 		pickedSet := make(map[int]struct{})
 		shortage := map[string]int{}
 
@@ -125,7 +131,7 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 			}
 			chosen := pickRandom(available(byDiff[b.diff], pickedSet), excluded, b.count)
 			for _, q := range chosen {
-				selectedIDs = append(selectedIDs, q.ID)
+				standaloneIDs = append(standaloneIDs, q.ID)
 				pickedSet[q.ID] = struct{}{}
 			}
 			shortage[b.diff] = b.count - len(chosen)
@@ -140,15 +146,15 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 				}
 				chosen := pickRandom(available(byDiff[bf], pickedSet), excluded, need)
 				for _, q := range chosen {
-					selectedIDs = append(selectedIDs, q.ID)
+					standaloneIDs = append(standaloneIDs, q.ID)
 					pickedSet[q.ID] = struct{}{}
 					need--
 				}
 			}
 		}
 
-		if len(selectedIDs) > 0 {
-			qs, err := s.questionRepo.FindByIDs(selectedIDs)
+		if len(standaloneIDs) > 0 {
+			qs, err := s.questionRepo.FindByIDs(standaloneIDs)
 			if err != nil {
 				return nil, err
 			}
@@ -248,14 +254,8 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 		return nil, err
 	}
 
-	// ── Record attempt in per-user history cache ──────────────────────────
-	if input.UserID > 0 {
-		ids := make([]int, 0, len(picked))
-		for _, q := range picked {
-			ids = append(ids, q.ID)
-		}
-		s.cache.RecordAttempt(input.UserID, bankID, ids)
-	}
+	// ── Record standalone question history for future exclusion ──────────
+	s.cache.RecordGeneration(input.UserID, bankID, seq, standaloneIDs)
 
 	return s.testRepo.FindByID(test.ID)
 }

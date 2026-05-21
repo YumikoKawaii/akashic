@@ -12,6 +12,7 @@ type QuestionService struct {
 	repo         repository.QuestionRepository
 	bankRepo     repository.BankRepository
 	categoryRepo repository.CategoryRepository
+	pool         *GenerateCache
 }
 
 func NewQuestionService(
@@ -19,8 +20,21 @@ func NewQuestionService(
 	repo repository.QuestionRepository,
 	bankRepo repository.BankRepository,
 	categoryRepo repository.CategoryRepository,
+	pool *GenerateCache,
 ) *QuestionService {
-	return &QuestionService{uow: u, repo: repo, bankRepo: bankRepo, categoryRepo: categoryRepo}
+	return &QuestionService{uow: u, repo: repo, bankRepo: bankRepo, categoryRepo: categoryRepo, pool: pool}
+}
+
+func toCachedQuestion(q *model.Question) CachedQuestion {
+	catID := q.CategoryID
+	return CachedQuestion{
+		ID:         q.ID,
+		Difficulty: q.Difficulty,
+		CategoryID: &catID,
+		Type:       q.Type,
+		Tags:       []string(q.Tags),
+		GroupID:    q.GroupID,
+	}
 }
 
 func (s *QuestionService) List(bankID int, f repository.QuestionFilter) ([]model.Question, error) {
@@ -119,7 +133,12 @@ func (s *QuestionService) Create(bankID int, input CreateQuestionInput) (*model.
 	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
-	return s.repo.FindByID(q.ID)
+	created, err := s.repo.FindByID(q.ID)
+	if err != nil {
+		return nil, err
+	}
+	s.pool.AddToPool(bankID, toCachedQuestion(created))
+	return created, nil
 }
 
 type UpdateQuestionInput struct {
@@ -181,7 +200,12 @@ func (s *QuestionService) Update(bankID, id int, input UpdateQuestionInput) (*mo
 		}
 	}
 
-	return s.repo.FindByID(q.ID)
+	updated, err := s.repo.FindByID(q.ID)
+	if err != nil {
+		return nil, err
+	}
+	s.pool.UpdateInPool(q.BankID, toCachedQuestion(updated))
+	return updated, nil
 }
 
 func (s *QuestionService) Delete(bankID, id int) error {
@@ -192,7 +216,11 @@ func (s *QuestionService) Delete(bankID, id int) error {
 	if q.BankID != bankID {
 		return ErrForbidden
 	}
-	return s.repo.SoftDelete(id)
+	if err := s.repo.SoftDelete(id); err != nil {
+		return err
+	}
+	s.pool.RemoveFromPool(bankID, id)
+	return nil
 }
 
 func (s *QuestionService) Restore(bankID, id int) (*model.Question, error) {

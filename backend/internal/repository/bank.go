@@ -8,6 +8,7 @@ import (
 )
 
 type BankRepository interface {
+	FindAllIDs() ([]int, error)
 	FindAllForUser(userID int) ([]model.BankWithRole, error)
 	FindByID(id int) (*model.Bank, error)
 	Create(b *model.Bank) error
@@ -19,6 +20,12 @@ type BankRepository interface {
 type bankRepo struct{ db *gorm.DB }
 
 func NewBankRepo(db *gorm.DB) BankRepository { return &bankRepo{db} }
+
+func (r *bankRepo) FindAllIDs() ([]int, error) {
+	var ids []int
+	err := r.db.Model(&model.Bank{}).Pluck("id", &ids).Error
+	return ids, err
+}
 
 func (r *bankRepo) FindAllForUser(userID int) ([]model.BankWithRole, error) {
 	type row struct {
