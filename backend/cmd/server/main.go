@@ -109,16 +109,18 @@ func warmupPoolCache(bankRepo repository.BankRepository, questionRepo repository
 			log.Printf("pool warmup: bank %d: %v", bankID, err)
 			continue
 		}
-		pool := make([]service.CachedQuestion, len(metas))
-		for i, m := range metas {
-			pool[i] = service.CachedQuestion{
+		pool := make([]service.CachedQuestion, 0, len(metas))
+		for _, m := range metas {
+			if m.GroupID != nil {
+				continue
+			}
+			pool = append(pool, service.CachedQuestion{
 				ID:         m.ID,
 				Difficulty: m.Difficulty,
 				CategoryID: m.CategoryID,
 				Type:       m.Type,
 				Tags:       []string(m.Tags),
-				GroupID:    m.GroupID,
-			}
+			})
 		}
 		cache.WarmupPool(bankID, pool)
 	}

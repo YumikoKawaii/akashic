@@ -266,16 +266,18 @@ func (s *TestService) loadPool(bankID int) ([]CachedQuestion, error) {
 	if err != nil {
 		return nil, err
 	}
-	pool := make([]CachedQuestion, len(metas))
-	for i, m := range metas {
-		pool[i] = CachedQuestion{
+	pool := make([]CachedQuestion, 0, len(metas))
+	for _, m := range metas {
+		if m.GroupID != nil {
+			continue
+		}
+		pool = append(pool, CachedQuestion{
 			ID:         m.ID,
 			Difficulty: m.Difficulty,
 			CategoryID: m.CategoryID,
 			Type:       m.Type,
 			Tags:       []string(m.Tags),
-			GroupID:    m.GroupID,
-		}
+		})
 	}
 	return pool, nil
 }
