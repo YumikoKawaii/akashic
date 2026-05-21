@@ -16,4 +16,5 @@ samples/test1_reading.json
 .idea/
 .vscode/
 *.iml
-.claude.DS_Store
+.claude
+.DS_Store
