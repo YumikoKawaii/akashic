@@ -25,7 +25,6 @@ type CachedQuestion struct {
 	CategoryID *int
 	Type       string
 	Tags       []string
-	GroupID    *int // nil = standalone
 }
 
 // GenerateCache is the interface for pool caching and per-user generation history.
@@ -88,9 +87,6 @@ func (c *redisCache) GetPool(bankID int) ([]CachedQuestion, bool) {
 }
 
 func (c *redisCache) AddToPool(bankID int, q CachedQuestion) {
-	if q.GroupID != nil {
-		return
-	}
 	pool, ok := c.GetPool(bankID)
 	if !ok {
 		return
@@ -99,9 +95,6 @@ func (c *redisCache) AddToPool(bankID int, q CachedQuestion) {
 }
 
 func (c *redisCache) UpdateInPool(bankID int, q CachedQuestion) {
-	if q.GroupID != nil {
-		return
-	}
 	pool, ok := c.GetPool(bankID)
 	if !ok {
 		return
@@ -235,18 +228,12 @@ func (c *memCache) GetPool(bankID int) ([]CachedQuestion, bool) {
 }
 
 func (c *memCache) AddToPool(bankID int, q CachedQuestion) {
-	if q.GroupID != nil {
-		return
-	}
 	c.poolMu.Lock()
 	c.pools[bankID] = append(c.pools[bankID], q)
 	c.poolMu.Unlock()
 }
 
 func (c *memCache) UpdateInPool(bankID int, q CachedQuestion) {
-	if q.GroupID != nil {
-		return
-	}
 	c.poolMu.Lock()
 	for i, existing := range c.pools[bankID] {
 		if existing.ID == q.ID {
@@ -328,9 +315,6 @@ func filterPool(pool []CachedQuestion, categoryIDs []int, types []string, tags [
 	}
 
 	for _, q := range pool {
-		if q.GroupID != nil {
-			continue
-		}
 		if len(catSet) > 0 {
 			if q.CategoryID == nil {
 				continue

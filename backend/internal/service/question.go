@@ -33,7 +33,6 @@ func toCachedQuestion(q *model.Question) CachedQuestion {
 		CategoryID: &catID,
 		Type:       q.Type,
 		Tags:       []string(q.Tags),
-		GroupID:    q.GroupID,
 	}
 }
 
