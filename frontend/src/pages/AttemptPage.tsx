@@ -447,7 +447,7 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
   const passage     = group?.passage
   const content     = questionContent(q)
   const isScoreable  = q.type !== 'short_answer'
-  const isSkippable  = q.type === 'sentence_completion' || q.type === 'form_completion'
+  const isSkippable  = q.type === 'sentence_completion' || q.type === 'form_completion' || q.type === 'short_answer'
   const isCorrect    = revealed && isScoreable && checkAnswer(q, selected)
 
   const handleReveal = () => {
@@ -469,12 +469,10 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
     setRevealed(false)
   }
 
-  const handleSkip = async () => {
+  const handleSkip = () => {
     setAnswers(prev => ({ ...prev, [String(q.id)]: '' }))
-    if (isLast) { onFinish(); return }
-    setCurrentIdx(i => i + 1)
-    setSelected('')
-    setRevealed(false)
+    setRevealed(true)
+    setFlash({ key: Date.now(), type: 'wrong' })
   }
 
   return (
