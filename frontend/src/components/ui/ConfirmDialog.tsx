@@ -68,7 +68,7 @@ export default function ConfirmDialog({ message, confirmLabel = 'Delete', onConf
           </p>
 
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-            <button className="btn btn-ghost" onClick={onCancel} autoFocus>
+            <button className="btn btn-ghost" style={{ clipPath: 'none' }} onClick={onCancel} autoFocus>
               Cancel
             </button>
             <button className="btn btn-danger" style={{ clipPath: 'none', fontSize: '0.63rem', padding: '9px 22px' }} onClick={onConfirm}>
