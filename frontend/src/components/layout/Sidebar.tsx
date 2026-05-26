@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useBanks, useCreateBank, useDeleteBank } from '../../hooks/useBanks'
 import { useLayout } from '../../context/LayoutContext'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 export default function Sidebar() {
   const { bankId }  = useParams<{ bankId: string }>()
@@ -13,6 +14,7 @@ export default function Sidebar() {
 
   const [creating, setCreating] = useState(false)
   const [newName,  setNewName]  = useState('')
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; name: string } | null>(null)
 
   const goTo = (id: number) => {
     navigate(`/banks/${id}`)
@@ -29,9 +31,15 @@ export default function Sidebar() {
     goTo(bank.id)
   }
 
-  const handleDelete = async (e: React.MouseEvent, id: number, name: string) => {
+  const handleDelete = (e: React.MouseEvent, id: number, name: string) => {
     e.stopPropagation()
-    if (!confirm(`Delete "${name}"? This will remove all questions and tests inside it.`)) return
+    setPendingDelete({ id, name })
+  }
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return
+    const { id } = pendingDelete
+    setPendingDelete(null)
     await deleteBank.mutateAsync(String(id))
     if (bankId === String(id)) navigate('/banks')
   }
@@ -115,6 +123,14 @@ export default function Sidebar() {
         <div className="sidebar-item" style={{ opacity: 0.5, cursor: 'default', fontSize: '0.8rem' }}>
           No banks yet
         </div>
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          message={`Delete "${pendingDelete.name}"? This will remove all questions and tests inside it.`}
+          onConfirm={confirmDelete}
+          onCancel={() => setPendingDelete(null)}
+        />
       )}
     </nav>
   )

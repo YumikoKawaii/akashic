@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { Question } from '../../types'
 import { TypeTag, DifficultyTag, CategoryTag } from '../ui/Tag'
 import { useDeleteQuestion } from '../../hooks/useQuestions'
 import { useNavigate } from 'react-router-dom'
 import MagicCircle from '../ui/MagicCircle'
 import RuneCorners from '../ui/RuneCorners'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 const DIFF_CIRCLE_COLOR: Record<string, string> = {
   easy:   '#2a8a3a',
@@ -18,19 +20,21 @@ interface Props {
 }
 
 export default function QuestionCard({ question, index, bankId }: Props) {
-  const navigate = useNavigate()
-  const del      = useDeleteQuestion(bankId)
+  const navigate   = useNavigate()
+  const del        = useDeleteQuestion(bankId)
+  const [confirming, setConfirming] = useState(false)
 
   const content = question.item?.content ?? question.choice?.content ?? ''
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (confirm('Delete this question?')) del.mutate(question.id)
+    setConfirming(true)
   }
 
   const diffColor = DIFF_CIRCLE_COLOR[question.difficulty] ?? DIFF_CIRCLE_COLOR.medium
 
   return (
+    <>
     <div
       className="q-card"
       style={{ animationDelay: `${Math.min(index * 0.05, 0.3)}s` }}
@@ -76,5 +80,14 @@ export default function QuestionCard({ question, index, bankId }: Props) {
         </div>
       </div>
     </div>
+
+    {confirming && (
+      <ConfirmDialog
+        message="Delete this question? This action cannot be undone."
+        onConfirm={() => { setConfirming(false); del.mutate(question.id) }}
+        onCancel={() => setConfirming(false)}
+      />
+    )}
+  </>
   )
 }
