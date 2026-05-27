@@ -610,6 +610,9 @@ input[type=number].form-input { -moz-appearance: textfield; }
   position: relative;
   z-index: 1;
   overflow: hidden;
+  /* Force a GPU compositing layer so overflow:hidden properly clips
+     absolutely-positioned children with CSS transforms on iOS Safari */
+  transform: translateZ(0);
 }
 
 /* ── Star trails ────────────────────────────────────────────────────── */
