@@ -1,0 +1,105 @@
+syntax = "proto3";
+package akashic.v1;
+
+import "google/protobuf/timestamp.proto";
+import "akashic/v1/common.proto";
+
+option go_package = "github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1";
+
+service QuestionGroupService {
+  rpc ListQuestionGroups   (ListQuestionGroupsRequest)   returns (ListQuestionGroupsResponse);
+  rpc CreateQuestionGroup  (CreateQuestionGroupRequest)  returns (CreateQuestionGroupResponse);
+  rpc GetQuestionGroup     (GetQuestionGroupRequest)     returns (GetQuestionGroupResponse);
+  rpc UpdateQuestionGroup  (UpdateQuestionGroupRequest)  returns (UpdateQuestionGroupResponse);
+  rpc DeleteQuestionGroup  (DeleteQuestionGroupRequest)  returns (DeleteQuestionGroupResponse);
+  rpc RestoreQuestionGroup (RestoreQuestionGroupRequest) returns (RestoreQuestionGroupResponse);
+}
+
+// ── Context variants ──────────────────────────────────────────────────────────
+// Each group type carries different shared data for its questions.
+
+message MatchingHeadingsContext {
+  repeated SectionItem sections = 1;
+  repeated OptionItem  headings = 2;
+}
+
+message MatchingInformationContext {
+  repeated OptionItem paragraphs = 1;
+}
+
+message MatchingFeaturesContext {
+  repeated OptionItem options = 1;
+}
+
+// Used by sentence_completion and short_answer groups.
+message WordGroupContext {
+  int32           word_limit = 1;
+  repeated string word_bank  = 2;
+}
+
+message FormCompletionContext {
+  int32           word_limit = 1;
+  repeated string word_bank  = 2;
+  string          form_type  = 3;
+  string          title      = 4;
+  string          template   = 5;
+}
+
+message GroupContext {
+  oneof context {
+    MatchingHeadingsContext    matching_headings    = 1;
+    MatchingInformationContext matching_information = 2;
+    MatchingFeaturesContext    matching_features    = 3;
+    WordGroupContext           word_group           = 4;
+    FormCompletionContext      form_completion      = 5;
+  }
+}
+
+// ── Entity ────────────────────────────────────────────────────────────────────
+
+message QuestionGroup {
+  int32                     id          = 1;
+  int32                     bank_id     = 2;
+  int32                     category_id = 3;
+  optional int32            passage_id  = 4;
+  QuestionType              type        = 5;
+  Difficulty                difficulty  = 6;
+  GroupContext              context     = 7;
+  google.protobuf.Timestamp created_at  = 8;
+  google.protobuf.Timestamp updated_at  = 9;
+}
+
+// ── RPCs ──────────────────────────────────────────────────────────────────────
+
+message ListQuestionGroupsRequest  { int32 bank_id = 1; }
+message ListQuestionGroupsResponse { repeated QuestionGroup groups = 1; }
+
+message CreateQuestionGroupRequest {
+  int32          bank_id     = 1;
+  int32          category_id = 2;
+  optional int32 passage_id  = 3;
+  QuestionType   type        = 4;
+  Difficulty     difficulty  = 5;
+  GroupContext   context     = 6;
+}
+message CreateQuestionGroupResponse { QuestionGroup group = 1; }
+
+message GetQuestionGroupRequest  { int32 bank_id = 1; int32 id = 2; }
+message GetQuestionGroupResponse { QuestionGroup group = 1; }
+
+message UpdateQuestionGroupRequest {
+  int32          bank_id     = 1;
+  int32          id          = 2;
+  int32          category_id = 3;
+  optional int32 passage_id  = 4;
+  QuestionType   type        = 5;
+  Difficulty     difficulty  = 6;
+  GroupContext   context     = 7;
+}
+message UpdateQuestionGroupResponse { QuestionGroup group = 1; }
+
+message DeleteQuestionGroupRequest  { int32 bank_id = 1; int32 id = 2; }
+message DeleteQuestionGroupResponse {}
+
+message RestoreQuestionGroupRequest  { int32 bank_id = 1; int32 id = 2; }
+message RestoreQuestionGroupResponse { QuestionGroup group = 1; }

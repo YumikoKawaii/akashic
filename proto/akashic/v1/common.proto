@@ -1,0 +1,80 @@
+syntax = "proto3";
+package akashic.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1";
+
+enum Difficulty {
+  DIFFICULTY_UNSPECIFIED = 0;
+  DIFFICULTY_EASY        = 1;
+  DIFFICULTY_MEDIUM      = 2;
+  DIFFICULTY_HARD        = 3;
+}
+
+enum QuestionType {
+  QUESTION_TYPE_UNSPECIFIED          = 0;
+  QUESTION_TYPE_MCQ                  = 1;
+  QUESTION_TYPE_TF_NG                = 2;
+  QUESTION_TYPE_YN_NG                = 3;
+  QUESTION_TYPE_SHORT_ANSWER         = 4;
+  QUESTION_TYPE_SENTENCE_COMPLETION  = 5;
+  QUESTION_TYPE_FORM_COMPLETION      = 6;
+  QUESTION_TYPE_MATCHING_HEADINGS    = 7;
+  QUESTION_TYPE_MATCHING_INFORMATION = 8;
+  QUESTION_TYPE_MATCHING_FEATURES    = 9;
+}
+
+enum BankRole {
+  BANK_ROLE_UNSPECIFIED = 0;
+  BANK_ROLE_OWNER       = 1;
+  BANK_ROLE_EDITOR      = 2;
+  BANK_ROLE_VIEWER      = 3;
+}
+
+message MCQOption {
+  string key  = 1;
+  string text = 2;
+}
+
+message PassageParagraph {
+  string label = 1;
+  string text  = 2;
+}
+
+message OptionItem {
+  string key  = 1;
+  string text = 2;
+}
+
+message SectionItem {
+  string key   = 1;
+  string label = 2;
+}
+
+message TestConfig {
+  int32             easy_count      = 1;
+  int32             medium_count    = 2;
+  int32             hard_count      = 3;
+  repeated int32    category_ids    = 4;
+  repeated int32    passage_ids     = 5;
+  repeated QuestionType types       = 6;
+  repeated string   tags            = 7;
+  bool              standalone_only = 8;
+}
+
+message PageInfo {
+  int32 page        = 1;
+  int32 page_size   = 2;
+  int32 total       = 3;
+  int32 total_pages = 4;
+}
+
+message User {
+  int32                     id         = 1;
+  string                    email      = 2;
+  string                    name       = 3;
+  string                    avatar_url = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}

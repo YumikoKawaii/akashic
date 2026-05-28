@@ -1,0 +1,110 @@
+syntax = "proto3";
+package akashic.v1;
+
+import "google/protobuf/timestamp.proto";
+import "akashic/v1/common.proto";
+
+option go_package = "github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1";
+
+service BankService {
+  rpc ListBanks                (ListBanksRequest)                returns (ListBanksResponse);
+  rpc CreateBank               (CreateBankRequest)               returns (CreateBankResponse);
+  rpc GetBank                  (GetBankRequest)                  returns (GetBankResponse);
+  rpc UpdateBank               (UpdateBankRequest)               returns (UpdateBankResponse);
+  rpc UpdateBankDefaultConfig  (UpdateBankDefaultConfigRequest)  returns (UpdateBankDefaultConfigResponse);
+  rpc DeleteBank               (DeleteBankRequest)               returns (DeleteBankResponse);
+  rpc RestoreBank              (RestoreBankRequest)              returns (RestoreBankResponse);
+  rpc ListBankMembers          (ListBankMembersRequest)          returns (ListBankMembersResponse);
+  rpc AddBankMember            (AddBankMemberRequest)            returns (AddBankMemberResponse);
+  rpc RemoveBankMember         (RemoveBankMemberRequest)         returns (RemoveBankMemberResponse);
+  rpc UpdateBankMemberRole     (UpdateBankMemberRoleRequest)     returns (UpdateBankMemberRoleResponse);
+}
+
+message Bank {
+  int32                     id             = 1;
+  string                    name           = 2;
+  string                    description    = 3;
+  optional int32            owner_id       = 4;
+  TestConfig                default_config = 5;
+  google.protobuf.Timestamp created_at     = 6;
+  google.protobuf.Timestamp updated_at     = 7;
+}
+
+message BankWithRole {
+  Bank   bank    = 1;
+  string my_role = 2;
+}
+
+message BankMember {
+  int32                     id         = 1;
+  int32                     bank_id    = 2;
+  int32                     user_id    = 3;
+  User                      user       = 4;
+  BankRole                  role       = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+// ── List ──────────────────────────────────────────────────────────────────────
+
+message ListBanksRequest  {}
+message ListBanksResponse { repeated BankWithRole banks = 1; }
+
+// ── Create ────────────────────────────────────────────────────────────────────
+
+message CreateBankRequest {
+  string     name           = 1;
+  string     description    = 2;
+  TestConfig default_config = 3;
+}
+message CreateBankResponse { Bank bank = 1; }
+
+// ── Get ───────────────────────────────────────────────────────────────────────
+
+message GetBankRequest  { int32 bank_id = 1; }
+message GetBankResponse { BankWithRole bank = 1; }
+
+// ── Update ────────────────────────────────────────────────────────────────────
+
+message UpdateBankRequest {
+  int32  bank_id     = 1;
+  string name        = 2;
+  string description = 3;
+}
+message UpdateBankResponse { Bank bank = 1; }
+
+message UpdateBankDefaultConfigRequest {
+  int32      bank_id = 1;
+  TestConfig config  = 2;
+}
+message UpdateBankDefaultConfigResponse { Bank bank = 1; }
+
+// ── Delete / Restore ──────────────────────────────────────────────────────────
+
+message DeleteBankRequest  { int32 bank_id = 1; }
+message DeleteBankResponse {}
+
+message RestoreBankRequest  { int32 bank_id = 1; }
+message RestoreBankResponse { Bank bank = 1; }
+
+// ── Members ───────────────────────────────────────────────────────────────────
+
+message ListBankMembersRequest  { int32 bank_id = 1; }
+message ListBankMembersResponse { repeated BankMember members = 1; }
+
+message AddBankMemberRequest {
+  int32    bank_id = 1;
+  int32    user_id = 2;
+  BankRole role    = 3;
+}
+message AddBankMemberResponse { BankMember member = 1; }
+
+message RemoveBankMemberRequest  { int32 bank_id = 1; int32 user_id = 2; }
+message RemoveBankMemberResponse {}
+
+message UpdateBankMemberRoleRequest {
+  int32    bank_id = 1;
+  int32    user_id = 2;
+  BankRole role    = 3;
+}
+message UpdateBankMemberRoleResponse { BankMember member = 1; }

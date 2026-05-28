@@ -1,0 +1,40 @@
+syntax = "proto3";
+package akashic.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1";
+
+service AttemptService {
+  rpc ListAttemptsByTest (ListAttemptsByTestRequest) returns (ListAttemptsByTestResponse);
+  rpc StartAttempt       (StartAttemptRequest)       returns (StartAttemptResponse);
+  rpc GetAttempt         (GetAttemptRequest)         returns (GetAttemptResponse);
+  rpc SubmitAttempt      (SubmitAttemptRequest)      returns (SubmitAttemptResponse);
+}
+
+message Attempt {
+  int32                     id           = 1;
+  int32                     test_id      = 2;
+  map<string, string>       answers      = 3;
+  optional int32            score        = 4;
+  optional int32            total        = 5;
+  google.protobuf.Timestamp started_at   = 6;
+  google.protobuf.Timestamp completed_at = 7; // zero value when not yet completed
+  google.protobuf.Timestamp created_at   = 8;
+  google.protobuf.Timestamp updated_at   = 9;
+}
+
+message ListAttemptsByTestRequest  { int32 bank_id = 1; int32 test_id = 2; }
+message ListAttemptsByTestResponse { repeated Attempt attempts = 1; }
+
+message StartAttemptRequest  { int32 bank_id = 1; int32 test_id = 2; }
+message StartAttemptResponse { Attempt attempt = 1; }
+
+message GetAttemptRequest  { int32 id = 1; }
+message GetAttemptResponse { Attempt attempt = 1; }
+
+message SubmitAttemptRequest {
+  int32               id      = 1;
+  map<string, string> answers = 2;
+}
+message SubmitAttemptResponse { Attempt attempt = 1; }

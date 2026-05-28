@@ -1,0 +1,29 @@
+syntax = "proto3";
+package akashic.v1;
+
+import "akashic/v1/common.proto";
+
+option go_package = "github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1";
+
+service AuthService {
+  // Client sends the OAuth code it received from Google; backend exchanges it for a JWT.
+  rpc ExchangeGoogleCode (ExchangeGoogleCodeRequest) returns (ExchangeGoogleCodeResponse);
+  rpc GetMe              (GetMeRequest)               returns (GetMeResponse);
+  rpc Logout             (LogoutRequest)              returns (LogoutResponse);
+}
+
+message ExchangeGoogleCodeRequest {
+  string code         = 1;
+  string redirect_uri = 2;
+}
+
+message ExchangeGoogleCodeResponse {
+  string token = 1;
+  User   user  = 2;
+}
+
+message GetMeRequest  {}
+message GetMeResponse { User user = 1; }
+
+message LogoutRequest  {}
+message LogoutResponse {}
