@@ -18,6 +18,7 @@ service BankService {
   rpc AddBankMember            (AddBankMemberRequest)            returns (AddBankMemberResponse);
   rpc RemoveBankMember         (RemoveBankMemberRequest)         returns (RemoveBankMemberResponse);
   rpc UpdateBankMemberRole     (UpdateBankMemberRoleRequest)     returns (UpdateBankMemberRoleResponse);
+  rpc SetBankVisibility        (SetBankVisibilityRequest)        returns (SetBankVisibilityResponse);
 }
 
 message Bank {
@@ -28,6 +29,7 @@ message Bank {
   TestConfig                default_config = 5;
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp updated_at = 7;
+  BankVisibility            visibility = 8;
 }
 
 message BankWithRole {
@@ -108,3 +110,11 @@ message UpdateBankMemberRoleRequest {
   BankRole role = 3;
 }
 message UpdateBankMemberRoleResponse {BankMember member = 1;}
+
+// ── Visibility ────────────────────────────────────────────────────────────────
+
+message SetBankVisibilityRequest {
+  int32          bank_id = 1;
+  BankVisibility visibility = 2;
+}
+message SetBankVisibilityResponse {Bank bank = 1;}

@@ -47,19 +47,34 @@ type TestPage struct {
 	PageSize int          `json:"page_size"`
 }
 
-func (s *TestService) ListByBankPaged(bankID, page, pageSize int) (*TestPage, error) {
+// Tests are personal to their creator: every list/get/delete is scoped to the
+// calling user, so public-bank visitors can generate and manage their own
+// practice tests without seeing or touching anyone else's.
+func (s *TestService) ListByBankPaged(bankID, userID, page, pageSize int) (*TestPage, error) {
 	if _, err := s.bankRepo.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	ts, total, err := s.testRepo.FindByBankPaged(bankID, page, pageSize)
+	ts, total, err := s.testRepo.FindByBankAndCreatorPaged(bankID, userID, page, pageSize)
 	if err != nil {
 		return nil, err
 	}
 	return &TestPage{Data: ts, Total: total, Page: page, PageSize: pageSize}, nil
 }
 
-func (s *TestService) GetByID(bankID, id int) (*model.Test, error) {
-	return s.testRepo.FindByBankAndID(bankID, id)
+func (s *TestService) GetByID(bankID, id, userID int) (*model.Test, error) {
+	test, err := s.testRepo.FindByBankAndID(bankID, id)
+	if err != nil {
+		return nil, err
+	}
+	if !ownsTest(test, userID) {
+		return nil, ErrForbidden
+	}
+	return test, nil
+}
+
+// ownsTest reports whether the test was created by the given user.
+func ownsTest(test *model.Test, userID int) bool {
+	return test.CreatedBy != nil && *test.CreatedBy == userID
 }
 
 type GenerateTestInput struct {
@@ -230,6 +245,7 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 	// ── Persist test ──────────────────────────────────────────────────────
 	test := &model.Test{
 		BankID:      bankID,
+		CreatedBy:   &input.UserID,
 		Name:        input.Name,
 		Description: input.Description,
 		Config:      config,
@@ -296,16 +312,24 @@ func (s *TestService) buildGroupPool(bankID int, diff string, gf repository.Grou
 	return pool, nil
 }
 
-func (s *TestService) Delete(bankID, id int) error {
-	if _, err := s.testRepo.FindByBankAndID(bankID, id); err != nil {
+func (s *TestService) Delete(bankID, id, userID int) error {
+	test, err := s.testRepo.FindByBankAndID(bankID, id)
+	if err != nil {
 		return err
+	}
+	if !ownsTest(test, userID) {
+		return ErrForbidden
 	}
 	return s.testRepo.SoftDelete(id)
 }
 
-func (s *TestService) Restore(bankID, id int) (*model.Test, error) {
-	if _, err := s.testRepo.FindByBankAndID(bankID, id); err != nil {
+func (s *TestService) Restore(bankID, id, userID int) (*model.Test, error) {
+	test, err := s.testRepo.FindByBankAndID(bankID, id)
+	if err != nil {
 		return nil, err
+	}
+	if !ownsTest(test, userID) {
+		return nil, ErrForbidden
 	}
 	if err := s.testRepo.Restore(id); err != nil {
 		return nil, err

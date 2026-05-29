@@ -9,6 +9,7 @@ import (
 
 type BankRepository interface {
 	FindAllIDs() ([]int, error)
+	FindPublicIDs() ([]int, error)
 	FindAllForUser(userID int) ([]model.BankWithRole, error)
 	FindByID(id int) (*model.Bank, error)
 	Create(b *model.Bank) error
@@ -24,6 +25,16 @@ func NewBankRepo(db *gorm.DB) BankRepository { return &bankRepo{db} }
 func (r *bankRepo) FindAllIDs() ([]int, error) {
 	var ids []int
 	err := r.db.Model(&model.Bank{}).Pluck("id", &ids).Error
+	return ids, err
+}
+
+// FindPublicIDs returns the IDs of all active public banks (GORM excludes
+// soft-deleted rows). Used to warm the visibility cache at startup.
+func (r *bankRepo) FindPublicIDs() ([]int, error) {
+	var ids []int
+	err := r.db.Model(&model.Bank{}).
+		Where("visibility = ?", model.VisibilityPublic).
+		Pluck("id", &ids).Error
 	return ids, err
 }
 

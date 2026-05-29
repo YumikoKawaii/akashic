@@ -1,6 +1,6 @@
 // Adapters from proto-generated types (camelCase, Timestamp) to app interface types (snake_case, string).
 import type { Timestamp } from '@bufbuild/protobuf'
-import { Difficulty, QuestionType, BankRole } from '../gen/akashic/v1/common_pb'
+import { Difficulty, QuestionType, BankRole, BankVisibility } from '../gen/akashic/v1/common_pb'
 import type { Bank as PbBank, BankWithRole as PbBankWithRole, BankMember as PbBankMember } from '../gen/akashic/v1/bank_pb'
 import type { Category as PbCategory } from '../gen/akashic/v1/category_pb'
 import type { Passage as PbPassage } from '../gen/akashic/v1/passage_pb'
@@ -9,7 +9,8 @@ import type { Question as PbQuestion } from '../gen/akashic/v1/question_pb'
 import type { Test as PbTest } from '../gen/akashic/v1/test_pb'
 import type { Attempt as PbAttempt } from '../gen/akashic/v1/attempt_pb'
 import type {
-  Bank, BankMember, BankRole as AppBankRole, Category, Passage, PassageParagraph,
+  Bank, BankMember, BankRole as AppBankRole, BankVisibility as AppBankVisibility,
+  Category, Passage, PassageParagraph,
   QuestionGroup, GroupContext, Question, Test, TestQuestion, TestAttempt,
   QuestionType as AppQuestionType, QuestionDifficulty, MCQOption, QQuestionItem, QMultipleChoice
 } from '../types'
@@ -49,6 +50,12 @@ const bankRole = (r: BankRole): AppBankRole => {
   }
 }
 
+const bankVisibility = (v: BankVisibility): AppBankVisibility =>
+  v === BankVisibility.PUBLIC ? 'public' : 'private'
+
+export const toBankVisibility = (v: AppBankVisibility): BankVisibility =>
+  v === 'public' ? BankVisibility.PUBLIC : BankVisibility.PRIVATE
+
 export const fromBank = (b: PbBank): Bank => ({
   id:             b.id,
   name:           b.name,
@@ -65,6 +72,7 @@ export const fromBank = (b: PbBank): Bank => ({
     standalone_only: b.defaultConfig?.standaloneOnly ?? false,
   },
   my_role:    'viewer',
+  visibility: bankVisibility(b.visibility),
   created_at: ts(b.createdAt),
   updated_at: ts(b.updatedAt),
 })

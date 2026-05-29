@@ -32,7 +32,7 @@ func TestRoleForCacheHitSkipsDB(t *testing.T) {
 	cache := membership.NewMemRoleCache()
 	cache.Set(1, 5, membership.RoleEditor)
 	repo := &fakeMemberRepo{role: membership.RoleOwner} // would differ if consulted
-	a := NewMembershipAuthorizer(cache, repo)
+	a := NewMembershipAuthorizer(cache, membership.NewMemVisibilityCache(), repo)
 
 	role, err := a.roleFor(1, 5)
 	if err != nil || role != membership.RoleEditor {
@@ -46,7 +46,7 @@ func TestRoleForCacheHitSkipsDB(t *testing.T) {
 func TestRoleForReadThroughPopulatesCache(t *testing.T) {
 	cache := membership.NewMemRoleCache()
 	repo := &fakeMemberRepo{role: membership.RoleViewer}
-	a := NewMembershipAuthorizer(cache, repo)
+	a := NewMembershipAuthorizer(cache, membership.NewMemVisibilityCache(), repo)
 
 	role, err := a.roleFor(2, 9)
 	if err != nil || role != membership.RoleViewer {
@@ -68,7 +68,7 @@ func TestRoleForReadThroughPopulatesCache(t *testing.T) {
 func TestRoleForNonMemberNotCached(t *testing.T) {
 	cache := membership.NewMemRoleCache()
 	repo := &fakeMemberRepo{role: ""} // not a member
-	a := NewMembershipAuthorizer(cache, repo)
+	a := NewMembershipAuthorizer(cache, membership.NewMemVisibilityCache(), repo)
 
 	role, err := a.roleFor(3, 4)
 	if err != nil || role != "" {
@@ -81,7 +81,7 @@ func TestRoleForNonMemberNotCached(t *testing.T) {
 
 func TestRoleForPropagatesError(t *testing.T) {
 	want := errors.New("db down")
-	a := NewMembershipAuthorizer(membership.NewMemRoleCache(), &fakeMemberRepo{err: want})
+	a := NewMembershipAuthorizer(membership.NewMemRoleCache(), membership.NewMemVisibilityCache(), &fakeMemberRepo{err: want})
 	if _, err := a.roleFor(1, 1); !errors.Is(err, want) {
 		t.Fatalf("expected error to propagate, got %v", err)
 	}

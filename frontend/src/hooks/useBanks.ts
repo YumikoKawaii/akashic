@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { BankRole, TestConfig as PbTestConfig } from '../gen/akashic/v1/common_pb'
 import { bankClient } from '../api/connect'
-import { fromBankWithRole, fromBank, fromBankMember } from '../api/adapters'
-import type { TestConfig } from '../types'
+import { fromBankWithRole, fromBank, fromBankMember, toBankVisibility } from '../api/adapters'
+import type { TestConfig, BankVisibility } from '../types'
 
 export const memberKeys = {
   list: (bankId: string) => ['banks', bankId, 'members'] as const,
@@ -90,6 +90,23 @@ export function useUpdateDefaultConfig() {
       return fromBank(res.bank!)
     },
     onSuccess: (_, { id }) => qc.invalidateQueries({ queryKey: bankKeys.detail(id) }),
+  })
+}
+
+export function useSetBankVisibility() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, visibility }: { id: string; visibility: BankVisibility }) => {
+      const res = await bankClient.setBankVisibility({
+        bankId:     Number(id),
+        visibility: toBankVisibility(visibility),
+      })
+      return fromBank(res.bank!)
+    },
+    onSuccess: (_, { id }) => {
+      qc.invalidateQueries({ queryKey: bankKeys.all() })
+      qc.invalidateQueries({ queryKey: bankKeys.detail(id) })
+    },
   })
 }
 

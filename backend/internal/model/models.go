@@ -77,11 +77,18 @@ type User struct {
 	DeletedAt    gorm.DeletedAt `gorm:"index"                    json:"-"`
 }
 
+// Bank visibility values.
+const (
+	VisibilityPrivate = "private"
+	VisibilityPublic  = "public"
+)
+
 type Bank struct {
 	ID            int            `gorm:"primaryKey;autoIncrement"  json:"id"`
 	Name          string         `gorm:"not null"                  json:"name"`
 	Description   string         `gorm:"not null;default:''"       json:"description"`
 	OwnerID       *int           `                                 json:"owner_id,omitempty"`
+	Visibility    string         `gorm:"not null;default:'private'" json:"visibility"`
 	DefaultConfig TestConfig     `gorm:"serializer:json"           json:"default_config"`
 	Members       []BankMember   `gorm:"foreignKey:BankID"         json:"members,omitempty"`
 	CreatedAt     time.Time      `                                 json:"created_at"`
@@ -179,6 +186,7 @@ type QMultipleChoice struct {
 type Test struct {
 	ID            int            `gorm:"primaryKey;autoIncrement" json:"id"`
 	BankID        int            `gorm:"not null;index"           json:"bank_id"`
+	CreatedBy     *int           `                                json:"created_by,omitempty"`
 	Name          string         `gorm:"not null"                 json:"name"`
 	Description   string         `gorm:"not null;default:''"      json:"description"`
 	Config        TestConfig     `gorm:"serializer:json"          json:"config"`

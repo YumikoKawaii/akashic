@@ -30,7 +30,7 @@ func (h *TestServiceHandler) ListTests(
 	if pageSize <= 0 || pageSize > 50 {
 		pageSize = 10
 	}
-	result, err := h.svc.ListByBankPaged(int(req.Msg.BankId), page, pageSize)
+	result, err := h.svc.ListByBankPaged(int(req.Msg.BankId), userIDFromContext(ctx), page, pageSize)
 	if err != nil {
 		return nil, toConnectError(err)
 	}
@@ -70,7 +70,7 @@ func (h *TestServiceHandler) GetTest(
 	ctx context.Context,
 	req *connect.Request[pb.GetTestRequest],
 ) (*connect.Response[pb.GetTestResponse], error) {
-	test, err := h.svc.GetByID(int(req.Msg.BankId), int(req.Msg.Id))
+	test, err := h.svc.GetByID(int(req.Msg.BankId), int(req.Msg.Id), userIDFromContext(ctx))
 	if err != nil {
 		return nil, toConnectError(err)
 	}
@@ -81,7 +81,7 @@ func (h *TestServiceHandler) DeleteTest(
 	ctx context.Context,
 	req *connect.Request[pb.DeleteTestRequest],
 ) (*connect.Response[pb.DeleteTestResponse], error) {
-	if err := h.svc.Delete(int(req.Msg.BankId), int(req.Msg.Id)); err != nil {
+	if err := h.svc.Delete(int(req.Msg.BankId), int(req.Msg.Id), userIDFromContext(ctx)); err != nil {
 		return nil, toConnectError(err)
 	}
 	return connect.NewResponse(&pb.DeleteTestResponse{}), nil
@@ -91,10 +91,9 @@ func (h *TestServiceHandler) RestoreTest(
 	ctx context.Context,
 	req *connect.Request[pb.RestoreTestRequest],
 ) (*connect.Response[pb.RestoreTestResponse], error) {
-	test, err := h.svc.Restore(int(req.Msg.BankId), int(req.Msg.Id))
+	test, err := h.svc.Restore(int(req.Msg.BankId), int(req.Msg.Id), userIDFromContext(ctx))
 	if err != nil {
 		return nil, toConnectError(err)
 	}
 	return connect.NewResponse(&pb.RestoreTestResponse{Test: testToProto(test)}), nil
 }
-
