@@ -989,7 +989,7 @@ func (x *ListBankMembersResponse) GetMembers() []*BankMember {
 type AddBankMemberRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BankId        int32                  `protobuf:"varint,1,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
-	UserId        int32                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	Role          BankRole               `protobuf:"varint,3,opt,name=role,proto3,enum=akashic.v1.BankRole" json:"role,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1032,11 +1032,11 @@ func (x *AddBankMemberRequest) GetBankId() int32 {
 	return 0
 }
 
-func (x *AddBankMemberRequest) GetUserId() int32 {
+func (x *AddBankMemberRequest) GetEmail() string {
 	if x != nil {
-		return x.UserId
+		return x.Email
 	}
-	return 0
+	return ""
 }
 
 func (x *AddBankMemberRequest) GetRole() BankRole {
@@ -1347,10 +1347,10 @@ const file_akashic_v1_bank_proto_rawDesc = "" +
 	"\x16ListBankMembersRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\"K\n" +
 	"\x17ListBankMembersResponse\x120\n" +
-	"\amembers\x18\x01 \x03(\v2\x16.akashic.v1.BankMemberR\amembers\"r\n" +
+	"\amembers\x18\x01 \x03(\v2\x16.akashic.v1.BankMemberR\amembers\"o\n" +
 	"\x14AddBankMemberRequest\x12\x17\n" +
-	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\x05R\x06userId\x12(\n" +
+	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x12(\n" +
 	"\x04role\x18\x03 \x01(\x0e2\x14.akashic.v1.BankRoleR\x04role\"G\n" +
 	"\x15AddBankMemberResponse\x12.\n" +
 	"\x06member\x18\x01 \x01(\v2\x16.akashic.v1.BankMemberR\x06member\"K\n" +

@@ -816,9 +816,9 @@ export class AddBankMemberRequest extends Message<AddBankMemberRequest> {
   bankId = 0;
 
   /**
-   * @generated from field: int32 user_id = 2;
+   * @generated from field: string email = 2;
    */
-  userId = 0;
+  email = "";
 
   /**
    * @generated from field: akashic.v1.BankRole role = 3;
@@ -834,7 +834,7 @@ export class AddBankMemberRequest extends Message<AddBankMemberRequest> {
   static readonly typeName = "akashic.v1.AddBankMemberRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 2, name: "user_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "email", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "role", kind: "enum", T: proto3.getEnumType(BankRole) },
   ]);
 

@@ -192,29 +192,6 @@ func (s *BankService) AddMember(bankID, userID int, input ShareInput) (*model.Ba
 	return m, s.memberRepo.Create(m)
 }
 
-// AddMemberByID adds a member by user ID directly (used by the Connect RPC layer).
-func (s *BankService) AddMemberByID(bankID, requesterID, targetUserID int, role string) (*model.BankMember, error) {
-	if err := s.requireRole(bankID, requesterID, "owner"); err != nil {
-		return nil, err
-	}
-	if role != "editor" && role != "viewer" {
-		return nil, ErrBadRequest
-	}
-	existing, err := s.memberRepo.FindByBankAndUser(bankID, targetUserID)
-	if err != nil && !errors.Is(err, repository.ErrNotFound) {
-		return nil, err
-	}
-	if existing != nil {
-		existing.Role = role
-		if err := s.memberRepo.Save(existing); err != nil {
-			return nil, err
-		}
-		return existing, nil
-	}
-	m := &model.BankMember{BankID: bankID, UserID: targetUserID, Role: role}
-	return m, s.memberRepo.Create(m)
-}
-
 func (s *BankService) RemoveMember(bankID, requesterID, targetUserID int) error {
 	if err := s.requireRole(bankID, requesterID, "owner"); err != nil {
 		return err

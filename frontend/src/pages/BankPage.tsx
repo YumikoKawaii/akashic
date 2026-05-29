@@ -126,7 +126,7 @@ export default function BankPage() {
   const [pConfirmDel,   setPConfirmDel]   = useState<number | null>(null)
 
   const [shareOpen,   setShareOpen]   = useState(false)
-  const [shareUserId, setShareUserId] = useState('')
+  const [shareEmail, setShareEmail] = useState('')
   const [shareRole,  setShareRole]  = useState<'editor' | 'viewer'>('viewer')
   const [shareError, setShareError] = useState<string | null>(null)
 
@@ -231,13 +231,13 @@ export default function BankPage() {
         <OrnatePanel>
           <div className="section-title" style={{ marginBottom: 14 }}>Share Bank</div>
           <div className="flex gap-3 items-end flex-wrap" style={{ marginBottom: 16 }}>
-            <FormField label="User ID">
+            <FormField label="Email">
               <Input
-                value={shareUserId}
-                onChange={e => { setShareUserId(e.target.value); setShareError(null) }}
-                placeholder="User ID"
-                style={{ width: 140 }}
-                type="number"
+                value={shareEmail}
+                onChange={e => { setShareEmail(e.target.value); setShareError(null) }}
+                placeholder="name@example.com"
+                style={{ width: 240 }}
+                type="email"
               />
             </FormField>
             <FormField label="Role">
@@ -257,14 +257,14 @@ export default function BankPage() {
             </FormField>
             <button
               className="btn btn-primary"
-              disabled={!shareUserId.trim() || addMember.isPending}
+              disabled={!shareEmail.trim() || addMember.isPending}
               onClick={async () => {
                 try {
-                  await addMember.mutateAsync({ userId: Number(shareUserId), role: shareRole })
-                  setShareUserId('')
+                  await addMember.mutateAsync({ email: shareEmail.trim(), role: shareRole })
+                  setShareEmail('')
                   setShareError(null)
                 } catch {
-                  setShareError('User not found — they must sign in once first.')
+                  setShareError('No user with that email — they must sign in once first.')
                 }
               }}
             >

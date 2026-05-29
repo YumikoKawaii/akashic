@@ -117,11 +117,11 @@ export function useListMembers(bankId: string) {
 export function useAddMember(bankId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ userId, role }: { userId: number; role: string }) => {
+    mutationFn: async ({ email, role }: { email: string; role: string }) => {
       const roleMap: Record<string, BankRole> = {
         owner: BankRole.OWNER, editor: BankRole.EDITOR, viewer: BankRole.VIEWER,
       }
-      const res = await bankClient.addBankMember({ bankId: Number(bankId), userId, role: roleMap[role] ?? BankRole.VIEWER })
+      const res = await bankClient.addBankMember({ bankId: Number(bankId), email, role: roleMap[role] ?? BankRole.VIEWER })
       return fromBankMember(res.member!)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: memberKeys.list(bankId) }),

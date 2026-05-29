@@ -125,7 +125,10 @@ func (h *BankServiceHandler) AddBankMember(
 	ctx context.Context,
 	req *connect.Request[pb.AddBankMemberRequest],
 ) (*connect.Response[pb.AddBankMemberResponse], error) {
-	member, err := h.svc.AddMemberByID(int(req.Msg.BankId), userIDFromContext(ctx), int(req.Msg.UserId), bankRoleFromProto(req.Msg.Role))
+	member, err := h.svc.AddMember(int(req.Msg.BankId), userIDFromContext(ctx), service.ShareInput{
+		Email: req.Msg.Email,
+		Role:  bankRoleFromProto(req.Msg.Role),
+	})
 	if err != nil {
 		return nil, toConnectError(err)
 	}
