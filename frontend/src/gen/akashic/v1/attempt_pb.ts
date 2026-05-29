@@ -271,6 +271,11 @@ export class GetAttemptRequest extends Message<GetAttemptRequest> {
    */
   id = 0;
 
+  /**
+   * @generated from field: int32 bank_id = 2;
+   */
+  bankId = 0;
+
   constructor(data?: PartialMessage<GetAttemptRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -280,6 +285,7 @@ export class GetAttemptRequest extends Message<GetAttemptRequest> {
   static readonly typeName = "akashic.v1.GetAttemptRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetAttemptRequest {
@@ -350,6 +356,11 @@ export class SubmitAttemptRequest extends Message<SubmitAttemptRequest> {
    */
   answers: { [key: string]: string } = {};
 
+  /**
+   * @generated from field: int32 bank_id = 3;
+   */
+  bankId = 0;
+
   constructor(data?: PartialMessage<SubmitAttemptRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -360,6 +371,7 @@ export class SubmitAttemptRequest extends Message<SubmitAttemptRequest> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 2, name: "answers", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "scalar", T: 9 /* ScalarType.STRING */} },
+    { no: 3, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SubmitAttemptRequest {

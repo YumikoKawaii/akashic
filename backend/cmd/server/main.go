@@ -20,6 +20,7 @@ import (
 
 	"github.com/yumikokawaii/akashic/gen/akashic/v1/akashicv1connect"
 	"github.com/yumikokawaii/akashic/internal/config"
+	"github.com/yumikokawaii/akashic/internal/membership"
 	"github.com/yumikokawaii/akashic/internal/repository"
 	"github.com/yumikokawaii/akashic/internal/rpchandler"
 	"github.com/yumikokawaii/akashic/internal/service"
@@ -58,15 +59,20 @@ func main() {
 
 	cacheCfg := service.GenerateConfig{UserCooldownAttempts: 3}
 	var generateCache service.GenerateCache
+	var roleCache membership.RoleCache
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		log.Printf("redis unavailable (%v) — using in-memory cache", err)
+		log.Printf("redis unavailable (%v) — using in-memory caches", err)
 		generateCache = service.NewMemCache(cacheCfg)
+		roleCache = membership.NewMemRoleCache()
 	} else {
 		generateCache = service.NewRedisCache(rdb, cacheCfg)
+		roleCache = membership.NewRedisRoleCache(rdb)
 	}
 
+	warmupMembershipCache(memberRepo, roleCache)
+
 	authSvc          := service.NewAuthService(userRepo, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleCallbackURL, cfg.JWTSecret)
-	bankSvc          := service.NewBankService(bankRepo, memberRepo, userRepo)
+	bankSvc          := service.NewBankService(bankRepo, memberRepo, userRepo, roleCache)
 	categorySvc      := service.NewCategoryService(categoryRepo, bankRepo)
 	passageSvc       := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
 	questionGroupSvc := service.NewQuestionGroupService(unitOfWork, questionGroupRepo, bankRepo, categoryRepo)
@@ -77,8 +83,15 @@ func main() {
 
 	warmupPoolCache(bankRepo, questionRepo, generateCache)
 
-	// ── Connect interceptor ────────────────────────────────────────────────────
-	interceptor := connect.WithInterceptors(rpchandler.AuthInterceptor(authSvc))
+	// ── Connect interceptors ───────────────────────────────────────────────────
+	// Authentication runs first (populates claims); authorization runs next and
+	// enforces bank-role requirements using the membership cache.
+	authn := rpchandler.NewAuthenticator(authSvc)
+	authz := rpchandler.NewMembershipAuthorizer(roleCache, memberRepo)
+	interceptor := connect.WithInterceptors(
+		authn.AuthnInterceptor(),
+		authz.PermissionInterceptor(),
+	)
 
 	// ── Connect service handlers ───────────────────────────────────────────────
 	mux := http.NewServeMux()
@@ -117,6 +130,16 @@ func main() {
 	if err := http.ListenAndServe(addr, h2c.NewHandler(mux, &http2.Server{})); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
+}
+
+func warmupMembershipCache(memberRepo repository.MemberRepository, cache membership.RoleCache) {
+	members, err := memberRepo.FindAll()
+	if err != nil {
+		log.Printf("membership warmup: failed to load members: %v", err)
+		return
+	}
+	cache.Warm(members)
+	log.Printf("membership warmup: loaded %d memberships", len(members))
 }
 
 func warmupPoolCache(bankRepo repository.BankRepository, questionRepo repository.QuestionRepository, cache service.GenerateCache) {

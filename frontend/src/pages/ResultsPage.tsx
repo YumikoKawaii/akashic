@@ -30,9 +30,9 @@ function isCorrectAnswer(q: Question, userAns: string | undefined): boolean | nu
 }
 
 export default function ResultsPage() {
-  const { id = '' } = useParams<{ id: string }>()
+  const { bankId = '', id = '' } = useParams<{ bankId: string; id: string }>()
   const navigate    = useNavigate()
-  const { data: attempt } = useAttempt(id)
+  const { data: attempt } = useAttempt(bankId, id)
 
   if (!attempt?.test) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>

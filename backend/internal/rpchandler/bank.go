@@ -89,7 +89,7 @@ func (h *BankServiceHandler) DeleteBank(
 	ctx context.Context,
 	req *connect.Request[pb.DeleteBankRequest],
 ) (*connect.Response[pb.DeleteBankResponse], error) {
-	if err := h.svc.Delete(int(req.Msg.BankId), userIDFromContext(ctx)); err != nil {
+	if err := h.svc.Delete(int(req.Msg.BankId)); err != nil {
 		return nil, toConnectError(err)
 	}
 	return connect.NewResponse(&pb.DeleteBankResponse{}), nil
@@ -110,7 +110,7 @@ func (h *BankServiceHandler) ListBankMembers(
 	ctx context.Context,
 	req *connect.Request[pb.ListBankMembersRequest],
 ) (*connect.Response[pb.ListBankMembersResponse], error) {
-	members, err := h.svc.ListMembers(int(req.Msg.BankId), userIDFromContext(ctx))
+	members, err := h.svc.ListMembers(int(req.Msg.BankId))
 	if err != nil {
 		return nil, toConnectError(err)
 	}
@@ -125,7 +125,7 @@ func (h *BankServiceHandler) AddBankMember(
 	ctx context.Context,
 	req *connect.Request[pb.AddBankMemberRequest],
 ) (*connect.Response[pb.AddBankMemberResponse], error) {
-	member, err := h.svc.AddMember(int(req.Msg.BankId), userIDFromContext(ctx), service.ShareInput{
+	member, err := h.svc.AddMember(int(req.Msg.BankId), service.ShareInput{
 		Email: req.Msg.Email,
 		Role:  bankRoleFromProto(req.Msg.Role),
 	})
@@ -149,7 +149,7 @@ func (h *BankServiceHandler) UpdateBankMemberRole(
 	ctx context.Context,
 	req *connect.Request[pb.UpdateBankMemberRoleRequest],
 ) (*connect.Response[pb.UpdateBankMemberRoleResponse], error) {
-	member, err := h.svc.UpdateMemberRole(int(req.Msg.BankId), userIDFromContext(ctx), int(req.Msg.UserId), bankRoleFromProto(req.Msg.Role))
+	member, err := h.svc.UpdateMemberRole(int(req.Msg.BankId), int(req.Msg.UserId), bankRoleFromProto(req.Msg.Role))
 	if err != nil {
 		return nil, toConnectError(err)
 	}

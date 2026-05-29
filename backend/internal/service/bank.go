@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 
+	"github.com/yumikokawaii/akashic/internal/membership"
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
 )
@@ -12,27 +13,20 @@ var (
 	ErrBadRequest = errors.New("bad request")
 )
 
-func roleLevel(role string) int {
-	switch role {
-	case "owner":
-		return 3
-	case "editor":
-		return 2
-	case "viewer":
-		return 1
-	default:
-		return 0
-	}
-}
-
+// Bank-role authorization (viewer/editor/owner) is enforced centrally by the
+// membership authz interceptor (internal/rpchandler/authz_interceptor.go), so
+// the methods below assume the caller has already cleared the required role.
+// They own only business rules (valid target role, no self-removal) and the
+// dual-write that keeps the authz cache in sync with membership changes.
 type BankService struct {
 	repo       repository.BankRepository
 	memberRepo repository.MemberRepository
 	userRepo   repository.UserRepository
+	cache      membership.RoleCache
 }
 
-func NewBankService(repo repository.BankRepository, memberRepo repository.MemberRepository, userRepo repository.UserRepository) *BankService {
-	return &BankService{repo: repo, memberRepo: memberRepo, userRepo: userRepo}
+func NewBankService(repo repository.BankRepository, memberRepo repository.MemberRepository, userRepo repository.UserRepository, cache membership.RoleCache) *BankService {
+	return &BankService{repo: repo, memberRepo: memberRepo, userRepo: userRepo, cache: cache}
 }
 
 func (s *BankService) List(userID int) ([]model.BankWithRole, error) {
@@ -54,20 +48,6 @@ func (s *BankService) GetByID(bankID, userID int) (*model.BankWithRole, error) {
 	return &model.BankWithRole{Bank: *bank, MyRole: role}, nil
 }
 
-func (s *BankService) requireRole(bankID, userID int, minRole string) error {
-	role, err := s.memberRepo.GetRole(bankID, userID)
-	if err != nil {
-		return err
-	}
-	if role == "" {
-		return ErrForbidden
-	}
-	if roleLevel(role) < roleLevel(minRole) {
-		return ErrForbidden
-	}
-	return nil
-}
-
 type CreateBankInput struct {
 	Name          string           `json:"name" binding:"required"`
 	Description   string           `json:"description"`
@@ -87,11 +67,12 @@ func (s *BankService) Create(input CreateBankInput, userID int) (*model.BankWith
 	if err := s.memberRepo.Create(&model.BankMember{
 		BankID: bank.ID,
 		UserID: userID,
-		Role:   "owner",
+		Role:   membership.RoleOwner,
 	}); err != nil {
 		return nil, err
 	}
-	return &model.BankWithRole{Bank: *bank, MyRole: "owner"}, nil
+	s.cache.Set(bank.ID, userID, membership.RoleOwner)
+	return &model.BankWithRole{Bank: *bank, MyRole: membership.RoleOwner}, nil
 }
 
 type UpdateBankInput struct {
@@ -100,9 +81,6 @@ type UpdateBankInput struct {
 }
 
 func (s *BankService) Update(bankID, userID int, input UpdateBankInput) (*model.BankWithRole, error) {
-	if err := s.requireRole(bankID, userID, "editor"); err != nil {
-		return nil, err
-	}
 	bank, err := s.repo.FindByID(bankID)
 	if err != nil {
 		return nil, err
@@ -118,9 +96,6 @@ func (s *BankService) Update(bankID, userID int, input UpdateBankInput) (*model.
 }
 
 func (s *BankService) UpdateDefaultConfig(bankID, userID int, config model.TestConfig) (*model.BankWithRole, error) {
-	if err := s.requireRole(bankID, userID, "editor"); err != nil {
-		return nil, err
-	}
 	bank, err := s.repo.FindByID(bankID)
 	if err != nil {
 		return nil, err
@@ -132,17 +107,11 @@ func (s *BankService) UpdateDefaultConfig(bankID, userID int, config model.TestC
 	return s.GetByID(bankID, userID)
 }
 
-func (s *BankService) Delete(bankID, userID int) error {
-	if err := s.requireRole(bankID, userID, "owner"); err != nil {
-		return err
-	}
+func (s *BankService) Delete(bankID int) error {
 	return s.repo.SoftDelete(bankID)
 }
 
 func (s *BankService) Restore(bankID, userID int) (*model.BankWithRole, error) {
-	if err := s.requireRole(bankID, userID, "owner"); err != nil {
-		return nil, err
-	}
 	if err := s.repo.Restore(bankID); err != nil {
 		return nil, err
 	}
@@ -151,10 +120,7 @@ func (s *BankService) Restore(bankID, userID int) (*model.BankWithRole, error) {
 
 // ── Members ────────────────────────────────────────────────────────────────────
 
-func (s *BankService) ListMembers(bankID, userID int) ([]model.BankMember, error) {
-	if err := s.requireRole(bankID, userID, "viewer"); err != nil {
-		return nil, err
-	}
+func (s *BankService) ListMembers(bankID int) ([]model.BankMember, error) {
 	return s.memberRepo.FindByBank(bankID)
 }
 
@@ -163,11 +129,8 @@ type ShareInput struct {
 	Role  string `json:"role"  binding:"required"`
 }
 
-func (s *BankService) AddMember(bankID, userID int, input ShareInput) (*model.BankMember, error) {
-	if err := s.requireRole(bankID, userID, "owner"); err != nil {
-		return nil, err
-	}
-	if input.Role != "editor" && input.Role != "viewer" {
+func (s *BankService) AddMember(bankID int, input ShareInput) (*model.BankMember, error) {
+	if input.Role != membership.RoleEditor && input.Role != membership.RoleViewer {
 		return nil, ErrBadRequest
 	}
 	target, err := s.userRepo.FindByEmail(input.Email)
@@ -186,27 +149,30 @@ func (s *BankService) AddMember(bankID, userID int, input ShareInput) (*model.Ba
 		if err := s.memberRepo.Save(existing); err != nil {
 			return nil, err
 		}
+		s.cache.Set(bankID, target.ID, input.Role)
 		return existing, nil
 	}
 	m := &model.BankMember{BankID: bankID, UserID: target.ID, Role: input.Role}
-	return m, s.memberRepo.Create(m)
+	if err := s.memberRepo.Create(m); err != nil {
+		return nil, err
+	}
+	s.cache.Set(bankID, target.ID, input.Role)
+	return m, nil
 }
 
 func (s *BankService) RemoveMember(bankID, requesterID, targetUserID int) error {
-	if err := s.requireRole(bankID, requesterID, "owner"); err != nil {
-		return err
-	}
 	if requesterID == targetUserID {
 		return ErrForbidden
 	}
-	return s.memberRepo.SoftDelete(bankID, targetUserID)
+	if err := s.memberRepo.SoftDelete(bankID, targetUserID); err != nil {
+		return err
+	}
+	s.cache.Delete(bankID, targetUserID)
+	return nil
 }
 
-func (s *BankService) UpdateMemberRole(bankID, requesterID, targetUserID int, role string) (*model.BankMember, error) {
-	if err := s.requireRole(bankID, requesterID, "owner"); err != nil {
-		return nil, err
-	}
-	if role != "editor" && role != "viewer" {
+func (s *BankService) UpdateMemberRole(bankID, targetUserID int, role string) (*model.BankMember, error) {
+	if role != membership.RoleEditor && role != membership.RoleViewer {
 		return nil, ErrBadRequest
 	}
 	m, err := s.memberRepo.FindByBankAndUser(bankID, targetUserID)
@@ -214,5 +180,9 @@ func (s *BankService) UpdateMemberRole(bankID, requesterID, targetUserID int, ro
 		return nil, err
 	}
 	m.Role = role
-	return m, s.memberRepo.Save(m)
+	if err := s.memberRepo.Save(m); err != nil {
+		return nil, err
+	}
+	s.cache.Set(bankID, targetUserID, role)
+	return m, nil
 }
