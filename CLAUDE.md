@@ -67,3 +67,4 @@ backend/
 - Keep handlers thin: decode request → call service → encode response
 - Unit of Work wraps any operation that touches multiple tables
 - Change the proto first, then `buf generate`; never edit generated code in `backend/gen/` or `frontend/src/gen/`
+- Follow OOP best practices, adapted to Go — Go is not Java, so don't force the classical principles (deep inheritance, ceremony, interface-everything). Favor the Go-idiomatic expression of the good ideas: encapsulation via unexported fields + constructor functions, composition over inheritance (struct embedding), program to small interfaces defined at the consumer, depend on abstractions via constructor injection (no global state), and keep types cohesive with a single clear responsibility. Skip the dogma, keep the substance.
