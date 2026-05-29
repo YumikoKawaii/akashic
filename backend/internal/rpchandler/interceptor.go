@@ -9,8 +9,20 @@ import (
 	svc "github.com/yumikokawaii/akashic/internal/service"
 )
 
-// AuthInterceptor validates JWT Bearer tokens for all procedures except ExchangeGoogleCode.
-func AuthInterceptor(authSvc *svc.AuthService) connect.UnaryInterceptorFunc {
+// Authenticator validates JWT Bearer tokens and injects the caller's claims into
+// the request context. Verification is pure HMAC (no DB or network call), so it
+// adds negligible latency per request.
+type Authenticator struct {
+	authSvc *svc.AuthService
+}
+
+func NewAuthenticator(authSvc *svc.AuthService) *Authenticator {
+	return &Authenticator{authSvc: authSvc}
+}
+
+// AuthnInterceptor authenticates every procedure except the two unauthenticated
+// Google-auth ones.
+func (a *Authenticator) AuthnInterceptor() connect.UnaryInterceptorFunc {
 	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
 		return connect.UnaryFunc(func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
 			switch req.Spec().Procedure {
@@ -25,7 +37,7 @@ func AuthInterceptor(authSvc *svc.AuthService) connect.UnaryInterceptorFunc {
 				return nil, connect.NewError(connect.CodeUnauthenticated, nil)
 			}
 
-			claims, err := authSvc.ParseJWT(tokenStr)
+			claims, err := a.authSvc.ParseJWT(tokenStr)
 			if err != nil {
 				return nil, connect.NewError(connect.CodeUnauthenticated, nil)
 			}

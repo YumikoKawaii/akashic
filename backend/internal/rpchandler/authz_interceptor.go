@@ -97,9 +97,11 @@ func NewMembershipAuthorizer(cache membership.RoleCache, members repository.Memb
 	return &MembershipAuthorizer{cache: cache, members: members}
 }
 
-// Interceptor returns the Connect interceptor. It must run after the
-// authentication interceptor so the caller's claims are already in context.
-func (a *MembershipAuthorizer) Interceptor() connect.UnaryInterceptorFunc {
+// PermissionInterceptor returns the Connect interceptor that enforces bank-role
+// permissions. It must run after the authentication interceptor so the caller's
+// claims are already in context. Role lookups hit the in-memory/Redis cache (DB
+// only on a miss), keeping per-request latency low.
+func (a *MembershipAuthorizer) PermissionInterceptor() connect.UnaryInterceptorFunc {
 	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
 		return connect.UnaryFunc(func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
 			if err := a.authorize(ctx, req); err != nil {

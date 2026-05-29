@@ -86,10 +86,11 @@ func main() {
 	// ── Connect interceptors ───────────────────────────────────────────────────
 	// Authentication runs first (populates claims); authorization runs next and
 	// enforces bank-role requirements using the membership cache.
+	authn := rpchandler.NewAuthenticator(authSvc)
 	authz := rpchandler.NewMembershipAuthorizer(roleCache, memberRepo)
 	interceptor := connect.WithInterceptors(
-		rpchandler.AuthInterceptor(authSvc),
-		authz.Interceptor(),
+		authn.AuthnInterceptor(),
+		authz.PermissionInterceptor(),
 	)
 
 	// ── Connect service handlers ───────────────────────────────────────────────
