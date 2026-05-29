@@ -225,7 +225,7 @@ export default function BankPage() {
             <div style={{ position: 'relative' }}>
               <button className="btn btn-ghost" onClick={() => setShareOpen(v => !v)}>⇄ Share</button>
               {shareOpen && (
-                <OrnatePanel style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 'min(460px, 92vw)', zIndex: 40, textAlign: 'left', boxShadow: '0 14px 44px rgba(60, 40, 10, 0.22)' }}>
+                <OrnatePanel className="ornate-panel--float" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 'min(460px, 92vw)', zIndex: 40, textAlign: 'left' }}>
                   <button
                     onClick={() => setShareOpen(false)}
                     aria-label="Close"

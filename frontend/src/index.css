@@ -264,6 +264,17 @@ body {
   pointer-events: none;
 }
 
+/* Floating variant (dropdown/popover): the bg-coloured cover triangle only
+   blends on a --bg surface, so over other content the cut shows as a stray
+   fill. Here we cut the corner for real (transparent) and keep the gold
+   diagonal via the ::after band. drop-shadow (not box-shadow) follows the
+   chamfered silhouette since box-shadow would be clipped away. */
+.ornate-panel--float {
+  clip-path: polygon(17px 0, 100% 0, 100% 100%, 0 100%, 0 17px);
+  filter: drop-shadow(0 14px 30px rgba(60, 40, 10, 0.22));
+}
+.ornate-panel--float::before { display: none; }
+
 /* ─── Ornate divider ──────────────────────────────────────────── */
 .ornate-divider {
   display: flex;
