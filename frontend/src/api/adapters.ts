@@ -128,6 +128,7 @@ export const fromQuestionGroup = (g: PbQuestionGroup): QuestionGroup => {
     bank_id:     g.bankId,
     category_id: g.categoryId,
     passage_id:  g.passageId ?? undefined,
+    passage:     g.passage ? fromPassage(g.passage) : undefined,
     type:        questionType(g.type),
     difficulty:  difficulty(g.difficulty),
     context:     c,
@@ -163,6 +164,7 @@ export const fromQuestion = (q: PbQuestion): Question => {
     position:    q.position ?? undefined,
     item,
     choice,
+    group:       q.group ? fromQuestionGroup(q.group) : undefined,
     created_at:  ts(q.createdAt),
     updated_at:  ts(q.updatedAt),
   }
@@ -201,4 +203,5 @@ export const fromAttempt = (a: PbAttempt): TestAttempt => ({
   total:        a.total !== undefined ? a.total : undefined,
   started_at:   ts(a.startedAt),
   completed_at: a.completedAt ? ts(a.completedAt) : undefined,
+  test:         a.test ? fromTest(a.test) : undefined,
 })

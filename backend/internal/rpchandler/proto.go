@@ -355,7 +355,7 @@ func questionGroupToProto(g *model.QuestionGroup) *pb.QuestionGroup {
 		v := int32(*g.PassageID)
 		passageID = &v
 	}
-	return &pb.QuestionGroup{
+	pg := &pb.QuestionGroup{
 		Id:         int32(g.ID),
 		BankId:     int32(g.BankID),
 		CategoryId: int32(g.CategoryID),
@@ -366,6 +366,10 @@ func questionGroupToProto(g *model.QuestionGroup) *pb.QuestionGroup {
 		CreatedAt:  timestamppb.New(g.CreatedAt),
 		UpdatedAt:  timestamppb.New(g.UpdatedAt),
 	}
+	if g.Passage != nil {
+		pg.Passage = passageToProto(g.Passage)
+	}
+	return pg
 }
 
 // ── Question ───────────────────────────────────────────────────────────────────
@@ -409,6 +413,9 @@ func questionToProto(q *model.Question) *pb.Question {
 		pbq.Content = &pb.Question_Item{
 			Item: &pb.QuestionItem{Content: q.Item.Content, Answer: q.Item.Answer},
 		}
+	}
+	if q.Group != nil {
+		pbq.Group = questionGroupToProto(q.Group)
 	}
 	return pbq
 }
@@ -463,6 +470,9 @@ func attemptToProto(a *model.TestAttempt) *pb.Attempt {
 		pa.CompletedAt = timestamppb.New(*a.CompletedAt)
 	} else {
 		pa.CompletedAt = timestamppb.New(time.Time{})
+	}
+	if a.Test != nil {
+		pa.Test = testToProto(a.Test)
 	}
 	return pa
 }

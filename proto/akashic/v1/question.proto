@@ -3,6 +3,7 @@ package akashic.v1;
 
 import "google/protobuf/timestamp.proto";
 import "akashic/v1/common.proto";
+import "akashic/v1/question_group.proto";
 
 option go_package = "github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1";
 
@@ -46,6 +47,7 @@ message Question {
   }
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
+  optional QuestionGroup    group = 13; // embedded when the question belongs to a group
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────

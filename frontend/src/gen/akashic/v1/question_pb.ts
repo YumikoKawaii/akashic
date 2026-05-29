@@ -6,6 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
 import { Difficulty, MCQOption, PageInfo, QuestionType } from "./common_pb.js";
+import { QuestionGroup } from "./question_group_pb.js";
 
 /**
  * @generated from enum akashic.v1.IngestFormat
@@ -202,6 +203,13 @@ export class Question extends Message<Question> {
    */
   updatedAt?: Timestamp;
 
+  /**
+   * embedded when the question belongs to a group
+   *
+   * @generated from field: optional akashic.v1.QuestionGroup group = 13;
+   */
+  group?: QuestionGroup;
+
   constructor(data?: PartialMessage<Question>) {
     super();
     proto3.util.initPartial(data, this);
@@ -222,6 +230,7 @@ export class Question extends Message<Question> {
     { no: 10, name: "choice", kind: "message", T: MultipleChoice, oneof: "content" },
     { no: 11, name: "created_at", kind: "message", T: Timestamp },
     { no: 12, name: "updated_at", kind: "message", T: Timestamp },
+    { no: 13, name: "group", kind: "message", T: QuestionGroup, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Question {

@@ -432,6 +432,7 @@ type QuestionGroup struct {
 	Context       *GroupContext          `protobuf:"bytes,7,opt,name=context,proto3" json:"context,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Passage       *Passage               `protobuf:"bytes,10,opt,name=passage,proto3,oneof" json:"passage,omitempty"` // embedded when loaded with the group
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -525,6 +526,13 @@ func (x *QuestionGroup) GetCreatedAt() *timestamppb.Timestamp {
 func (x *QuestionGroup) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.UpdatedAt
+	}
+	return nil
+}
+
+func (x *QuestionGroup) GetPassage() *Passage {
+	if x != nil {
+		return x.Passage
 	}
 	return nil
 }
@@ -1166,7 +1174,7 @@ var File_akashic_v1_question_group_proto protoreflect.FileDescriptor
 const file_akashic_v1_question_group_proto_rawDesc = "" +
 	"\n" +
 	"\x1fakashic/v1/question_group.proto\x12\n" +
-	"akashic.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17akashic/v1/common.proto\"\x82\x01\n" +
+	"akashic.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17akashic/v1/common.proto\x1a\x18akashic/v1/passage.proto\"\x82\x01\n" +
 	"\x17MatchingHeadingsContext\x123\n" +
 	"\bsections\x18\x01 \x03(\v2\x17.akashic.v1.SectionItemR\bsections\x122\n" +
 	"\bheadings\x18\x02 \x03(\v2\x16.akashic.v1.OptionItemR\bheadings\"T\n" +
@@ -1194,7 +1202,7 @@ const file_akashic_v1_question_group_proto_rawDesc = "" +
 	"\n" +
 	"word_group\x18\x04 \x01(\v2\x1c.akashic.v1.WordGroupContextH\x00R\twordGroup\x12L\n" +
 	"\x0fform_completion\x18\x05 \x01(\v2!.akashic.v1.FormCompletionContextH\x00R\x0eformCompletionB\t\n" +
-	"\acontext\"\x9c\x03\n" +
+	"\acontext\"\xdc\x03\n" +
 	"\rQuestionGroup\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x17\n" +
 	"\abank_id\x18\x02 \x01(\x05R\x06bankId\x12\x1f\n" +
@@ -1210,8 +1218,12 @@ const file_akashic_v1_question_group_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\r\n" +
-	"\v_passage_id\"4\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x122\n" +
+	"\apassage\x18\n" +
+	" \x01(\v2\x13.akashic.v1.PassageH\x01R\apassage\x88\x01\x01B\r\n" +
+	"\v_passage_idB\n" +
+	"\n" +
+	"\b_passage\"4\n" +
 	"\x19ListQuestionGroupsRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\"O\n" +
 	"\x1aListQuestionGroupsResponse\x121\n" +
@@ -1305,6 +1317,7 @@ var file_akashic_v1_question_group_proto_goTypes = []any{
 	(QuestionType)(0),                    // 21: akashic.v1.QuestionType
 	(Difficulty)(0),                      // 22: akashic.v1.Difficulty
 	(*timestamppb.Timestamp)(nil),        // 23: google.protobuf.Timestamp
+	(*Passage)(nil),                      // 24: akashic.v1.Passage
 }
 var file_akashic_v1_question_group_proto_depIdxs = []int32{
 	19, // 0: akashic.v1.MatchingHeadingsContext.sections:type_name -> akashic.v1.SectionItem
@@ -1321,34 +1334,35 @@ var file_akashic_v1_question_group_proto_depIdxs = []int32{
 	5,  // 11: akashic.v1.QuestionGroup.context:type_name -> akashic.v1.GroupContext
 	23, // 12: akashic.v1.QuestionGroup.created_at:type_name -> google.protobuf.Timestamp
 	23, // 13: akashic.v1.QuestionGroup.updated_at:type_name -> google.protobuf.Timestamp
-	6,  // 14: akashic.v1.ListQuestionGroupsResponse.groups:type_name -> akashic.v1.QuestionGroup
-	21, // 15: akashic.v1.CreateQuestionGroupRequest.type:type_name -> akashic.v1.QuestionType
-	22, // 16: akashic.v1.CreateQuestionGroupRequest.difficulty:type_name -> akashic.v1.Difficulty
-	5,  // 17: akashic.v1.CreateQuestionGroupRequest.context:type_name -> akashic.v1.GroupContext
-	6,  // 18: akashic.v1.CreateQuestionGroupResponse.group:type_name -> akashic.v1.QuestionGroup
-	6,  // 19: akashic.v1.GetQuestionGroupResponse.group:type_name -> akashic.v1.QuestionGroup
-	21, // 20: akashic.v1.UpdateQuestionGroupRequest.type:type_name -> akashic.v1.QuestionType
-	22, // 21: akashic.v1.UpdateQuestionGroupRequest.difficulty:type_name -> akashic.v1.Difficulty
-	5,  // 22: akashic.v1.UpdateQuestionGroupRequest.context:type_name -> akashic.v1.GroupContext
-	6,  // 23: akashic.v1.UpdateQuestionGroupResponse.group:type_name -> akashic.v1.QuestionGroup
-	6,  // 24: akashic.v1.RestoreQuestionGroupResponse.group:type_name -> akashic.v1.QuestionGroup
-	7,  // 25: akashic.v1.QuestionGroupService.ListQuestionGroups:input_type -> akashic.v1.ListQuestionGroupsRequest
-	9,  // 26: akashic.v1.QuestionGroupService.CreateQuestionGroup:input_type -> akashic.v1.CreateQuestionGroupRequest
-	11, // 27: akashic.v1.QuestionGroupService.GetQuestionGroup:input_type -> akashic.v1.GetQuestionGroupRequest
-	13, // 28: akashic.v1.QuestionGroupService.UpdateQuestionGroup:input_type -> akashic.v1.UpdateQuestionGroupRequest
-	15, // 29: akashic.v1.QuestionGroupService.DeleteQuestionGroup:input_type -> akashic.v1.DeleteQuestionGroupRequest
-	17, // 30: akashic.v1.QuestionGroupService.RestoreQuestionGroup:input_type -> akashic.v1.RestoreQuestionGroupRequest
-	8,  // 31: akashic.v1.QuestionGroupService.ListQuestionGroups:output_type -> akashic.v1.ListQuestionGroupsResponse
-	10, // 32: akashic.v1.QuestionGroupService.CreateQuestionGroup:output_type -> akashic.v1.CreateQuestionGroupResponse
-	12, // 33: akashic.v1.QuestionGroupService.GetQuestionGroup:output_type -> akashic.v1.GetQuestionGroupResponse
-	14, // 34: akashic.v1.QuestionGroupService.UpdateQuestionGroup:output_type -> akashic.v1.UpdateQuestionGroupResponse
-	16, // 35: akashic.v1.QuestionGroupService.DeleteQuestionGroup:output_type -> akashic.v1.DeleteQuestionGroupResponse
-	18, // 36: akashic.v1.QuestionGroupService.RestoreQuestionGroup:output_type -> akashic.v1.RestoreQuestionGroupResponse
-	31, // [31:37] is the sub-list for method output_type
-	25, // [25:31] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	24, // 14: akashic.v1.QuestionGroup.passage:type_name -> akashic.v1.Passage
+	6,  // 15: akashic.v1.ListQuestionGroupsResponse.groups:type_name -> akashic.v1.QuestionGroup
+	21, // 16: akashic.v1.CreateQuestionGroupRequest.type:type_name -> akashic.v1.QuestionType
+	22, // 17: akashic.v1.CreateQuestionGroupRequest.difficulty:type_name -> akashic.v1.Difficulty
+	5,  // 18: akashic.v1.CreateQuestionGroupRequest.context:type_name -> akashic.v1.GroupContext
+	6,  // 19: akashic.v1.CreateQuestionGroupResponse.group:type_name -> akashic.v1.QuestionGroup
+	6,  // 20: akashic.v1.GetQuestionGroupResponse.group:type_name -> akashic.v1.QuestionGroup
+	21, // 21: akashic.v1.UpdateQuestionGroupRequest.type:type_name -> akashic.v1.QuestionType
+	22, // 22: akashic.v1.UpdateQuestionGroupRequest.difficulty:type_name -> akashic.v1.Difficulty
+	5,  // 23: akashic.v1.UpdateQuestionGroupRequest.context:type_name -> akashic.v1.GroupContext
+	6,  // 24: akashic.v1.UpdateQuestionGroupResponse.group:type_name -> akashic.v1.QuestionGroup
+	6,  // 25: akashic.v1.RestoreQuestionGroupResponse.group:type_name -> akashic.v1.QuestionGroup
+	7,  // 26: akashic.v1.QuestionGroupService.ListQuestionGroups:input_type -> akashic.v1.ListQuestionGroupsRequest
+	9,  // 27: akashic.v1.QuestionGroupService.CreateQuestionGroup:input_type -> akashic.v1.CreateQuestionGroupRequest
+	11, // 28: akashic.v1.QuestionGroupService.GetQuestionGroup:input_type -> akashic.v1.GetQuestionGroupRequest
+	13, // 29: akashic.v1.QuestionGroupService.UpdateQuestionGroup:input_type -> akashic.v1.UpdateQuestionGroupRequest
+	15, // 30: akashic.v1.QuestionGroupService.DeleteQuestionGroup:input_type -> akashic.v1.DeleteQuestionGroupRequest
+	17, // 31: akashic.v1.QuestionGroupService.RestoreQuestionGroup:input_type -> akashic.v1.RestoreQuestionGroupRequest
+	8,  // 32: akashic.v1.QuestionGroupService.ListQuestionGroups:output_type -> akashic.v1.ListQuestionGroupsResponse
+	10, // 33: akashic.v1.QuestionGroupService.CreateQuestionGroup:output_type -> akashic.v1.CreateQuestionGroupResponse
+	12, // 34: akashic.v1.QuestionGroupService.GetQuestionGroup:output_type -> akashic.v1.GetQuestionGroupResponse
+	14, // 35: akashic.v1.QuestionGroupService.UpdateQuestionGroup:output_type -> akashic.v1.UpdateQuestionGroupResponse
+	16, // 36: akashic.v1.QuestionGroupService.DeleteQuestionGroup:output_type -> akashic.v1.DeleteQuestionGroupResponse
+	18, // 37: akashic.v1.QuestionGroupService.RestoreQuestionGroup:output_type -> akashic.v1.RestoreQuestionGroupResponse
+	32, // [32:38] is the sub-list for method output_type
+	26, // [26:32] is the sub-list for method input_type
+	26, // [26:26] is the sub-list for extension type_name
+	26, // [26:26] is the sub-list for extension extendee
+	0,  // [0:26] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_question_group_proto_init() }
@@ -1357,6 +1371,7 @@ func file_akashic_v1_question_group_proto_init() {
 		return
 	}
 	file_akashic_v1_common_proto_init()
+	file_akashic_v1_passage_proto_init()
 	file_akashic_v1_question_group_proto_msgTypes[5].OneofWrappers = []any{
 		(*GroupContext_MatchingHeadings)(nil),
 		(*GroupContext_MatchingInformation)(nil),

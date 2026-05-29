@@ -3,6 +3,7 @@ package akashic.v1;
 
 import "google/protobuf/timestamp.proto";
 import "akashic/v1/common.proto";
+import "akashic/v1/passage.proto";
 
 option go_package = "github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1";
 
@@ -67,6 +68,7 @@ message QuestionGroup {
   GroupContext              context = 7;
   google.protobuf.Timestamp created_at = 8;
   google.protobuf.Timestamp updated_at = 9;
+  optional Passage          passage = 10; // embedded when loaded with the group
 }
 
 // ── RPCs ──────────────────────────────────────────────────────────────────────

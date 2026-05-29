@@ -33,6 +33,7 @@ type Attempt struct {
 	CompletedAt   *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"` // zero value when not yet completed
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Test          *Test                  `protobuf:"bytes,10,opt,name=test,proto3,oneof" json:"test,omitempty"` // embedded with questions when fetched
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -126,6 +127,13 @@ func (x *Attempt) GetCreatedAt() *timestamppb.Timestamp {
 func (x *Attempt) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.UpdatedAt
+	}
+	return nil
+}
+
+func (x *Attempt) GetTest() *Test {
+	if x != nil {
+		return x.Test
 	}
 	return nil
 }
@@ -511,7 +519,7 @@ var File_akashic_v1_attempt_proto protoreflect.FileDescriptor
 const file_akashic_v1_attempt_proto_rawDesc = "" +
 	"\n" +
 	"\x18akashic/v1/attempt.proto\x12\n" +
-	"akashic.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe4\x03\n" +
+	"akashic.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x15akashic/v1/test.proto\"\x98\x04\n" +
 	"\aAttempt\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x17\n" +
 	"\atest_id\x18\x02 \x01(\x05R\x06testId\x12:\n" +
@@ -524,12 +532,15 @@ const file_akashic_v1_attempt_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a:\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12)\n" +
+	"\x04test\x18\n" +
+	" \x01(\v2\x10.akashic.v1.TestH\x02R\x04test\x88\x01\x01\x1a:\n" +
 	"\fAnswersEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\b\n" +
 	"\x06_scoreB\b\n" +
-	"\x06_total\"M\n" +
+	"\x06_totalB\a\n" +
+	"\x05_test\"M\n" +
 	"\x19ListAttemptsByTestRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x17\n" +
 	"\atest_id\x18\x02 \x01(\x05R\x06testId\"M\n" +
@@ -585,6 +596,7 @@ var file_akashic_v1_attempt_proto_goTypes = []any{
 	nil,                                // 9: akashic.v1.Attempt.AnswersEntry
 	nil,                                // 10: akashic.v1.SubmitAttemptRequest.AnswersEntry
 	(*timestamppb.Timestamp)(nil),      // 11: google.protobuf.Timestamp
+	(*Test)(nil),                       // 12: akashic.v1.Test
 }
 var file_akashic_v1_attempt_proto_depIdxs = []int32{
 	9,  // 0: akashic.v1.Attempt.answers:type_name -> akashic.v1.Attempt.AnswersEntry
@@ -592,24 +604,25 @@ var file_akashic_v1_attempt_proto_depIdxs = []int32{
 	11, // 2: akashic.v1.Attempt.completed_at:type_name -> google.protobuf.Timestamp
 	11, // 3: akashic.v1.Attempt.created_at:type_name -> google.protobuf.Timestamp
 	11, // 4: akashic.v1.Attempt.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 5: akashic.v1.ListAttemptsByTestResponse.attempts:type_name -> akashic.v1.Attempt
-	0,  // 6: akashic.v1.StartAttemptResponse.attempt:type_name -> akashic.v1.Attempt
-	0,  // 7: akashic.v1.GetAttemptResponse.attempt:type_name -> akashic.v1.Attempt
-	10, // 8: akashic.v1.SubmitAttemptRequest.answers:type_name -> akashic.v1.SubmitAttemptRequest.AnswersEntry
-	0,  // 9: akashic.v1.SubmitAttemptResponse.attempt:type_name -> akashic.v1.Attempt
-	1,  // 10: akashic.v1.AttemptService.ListAttemptsByTest:input_type -> akashic.v1.ListAttemptsByTestRequest
-	3,  // 11: akashic.v1.AttemptService.StartAttempt:input_type -> akashic.v1.StartAttemptRequest
-	5,  // 12: akashic.v1.AttemptService.GetAttempt:input_type -> akashic.v1.GetAttemptRequest
-	7,  // 13: akashic.v1.AttemptService.SubmitAttempt:input_type -> akashic.v1.SubmitAttemptRequest
-	2,  // 14: akashic.v1.AttemptService.ListAttemptsByTest:output_type -> akashic.v1.ListAttemptsByTestResponse
-	4,  // 15: akashic.v1.AttemptService.StartAttempt:output_type -> akashic.v1.StartAttemptResponse
-	6,  // 16: akashic.v1.AttemptService.GetAttempt:output_type -> akashic.v1.GetAttemptResponse
-	8,  // 17: akashic.v1.AttemptService.SubmitAttempt:output_type -> akashic.v1.SubmitAttemptResponse
-	14, // [14:18] is the sub-list for method output_type
-	10, // [10:14] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	12, // 5: akashic.v1.Attempt.test:type_name -> akashic.v1.Test
+	0,  // 6: akashic.v1.ListAttemptsByTestResponse.attempts:type_name -> akashic.v1.Attempt
+	0,  // 7: akashic.v1.StartAttemptResponse.attempt:type_name -> akashic.v1.Attempt
+	0,  // 8: akashic.v1.GetAttemptResponse.attempt:type_name -> akashic.v1.Attempt
+	10, // 9: akashic.v1.SubmitAttemptRequest.answers:type_name -> akashic.v1.SubmitAttemptRequest.AnswersEntry
+	0,  // 10: akashic.v1.SubmitAttemptResponse.attempt:type_name -> akashic.v1.Attempt
+	1,  // 11: akashic.v1.AttemptService.ListAttemptsByTest:input_type -> akashic.v1.ListAttemptsByTestRequest
+	3,  // 12: akashic.v1.AttemptService.StartAttempt:input_type -> akashic.v1.StartAttemptRequest
+	5,  // 13: akashic.v1.AttemptService.GetAttempt:input_type -> akashic.v1.GetAttemptRequest
+	7,  // 14: akashic.v1.AttemptService.SubmitAttempt:input_type -> akashic.v1.SubmitAttemptRequest
+	2,  // 15: akashic.v1.AttemptService.ListAttemptsByTest:output_type -> akashic.v1.ListAttemptsByTestResponse
+	4,  // 16: akashic.v1.AttemptService.StartAttempt:output_type -> akashic.v1.StartAttemptResponse
+	6,  // 17: akashic.v1.AttemptService.GetAttempt:output_type -> akashic.v1.GetAttemptResponse
+	8,  // 18: akashic.v1.AttemptService.SubmitAttempt:output_type -> akashic.v1.SubmitAttemptResponse
+	15, // [15:19] is the sub-list for method output_type
+	11, // [11:15] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_attempt_proto_init() }
@@ -617,6 +630,7 @@ func file_akashic_v1_attempt_proto_init() {
 	if File_akashic_v1_attempt_proto != nil {
 		return
 	}
+	file_akashic_v1_test_proto_init()
 	file_akashic_v1_attempt_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
