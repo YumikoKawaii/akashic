@@ -57,21 +57,16 @@ func main() {
 	userRepo          := repository.NewUserRepo(db)
 	memberRepo        := repository.NewMemberRepo(db)
 
-	redisUp := true
-	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		log.Printf("redis unavailable (%v) — using in-memory caches", err)
-		redisUp = false
-	}
-
 	cacheCfg := service.GenerateConfig{UserCooldownAttempts: 3}
 	var generateCache service.GenerateCache
 	var roleCache membership.RoleCache
-	if redisUp {
-		generateCache = service.NewRedisCache(rdb, cacheCfg)
-		roleCache = membership.NewRedisRoleCache(rdb)
-	} else {
+	if err := rdb.Ping(context.Background()).Err(); err != nil {
+		log.Printf("redis unavailable (%v) — using in-memory caches", err)
 		generateCache = service.NewMemCache(cacheCfg)
 		roleCache = membership.NewMemRoleCache()
+	} else {
+		generateCache = service.NewRedisCache(rdb, cacheCfg)
+		roleCache = membership.NewRedisRoleCache(rdb)
 	}
 
 	warmupMembershipCache(memberRepo, roleCache)
