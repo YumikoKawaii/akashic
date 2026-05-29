@@ -1,4 +1,8 @@
+import { useState } from 'react'
 import Starfield from '../components/ui/Starfield'
+import { authClient } from '../api/connect'
+
+const STATE_KEY = 'oauth_state'
 
 function GoogleIcon() {
   return (
@@ -12,6 +16,19 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
+  const [loading, setLoading] = useState(false)
+
+  const handleGoogleLogin = async () => {
+    setLoading(true)
+    try {
+      const res = await authClient.getGoogleAuthURL({})
+      sessionStorage.setItem(STATE_KEY, res.state)
+      window.location.href = res.url
+    } catch {
+      setLoading(false)
+    }
+  }
+
   return (
     <>
       <Starfield />
@@ -28,8 +45,9 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <a
-          href="/api/v1/auth/google"
+        <button
+          onClick={handleGoogleLogin}
+          disabled={loading}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
             padding: '12px 28px',
@@ -40,15 +58,16 @@ export default function LoginPage() {
             fontSize: '0.75rem',
             letterSpacing: '0.15em',
             textDecoration: 'none',
-            cursor: 'pointer',
+            cursor: loading ? 'not-allowed' : 'pointer',
             transition: 'border-color 0.2s',
+            opacity: loading ? 0.6 : 1,
           }}
-          onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--gold-dim)')}
-          onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-dim)')}
+          onMouseEnter={e => { if (!loading) e.currentTarget.style.borderColor = 'var(--gold-dim)' }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-dim)' }}
         >
           <GoogleIcon />
-          SIGN IN WITH GOOGLE
-        </a>
+          {loading ? 'REDIRECTING…' : 'SIGN IN WITH GOOGLE'}
+        </button>
       </div>
     </>
   )

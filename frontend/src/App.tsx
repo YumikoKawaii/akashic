@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Layout from './components/layout/Layout'
 import LoginPage from './pages/LoginPage'
+import OAuthCallbackPage from './pages/OAuthCallbackPage'
 import BankPage from './pages/BankPage'
 import QuestionFormPage from './pages/QuestionFormPage'
 import PassageFormPage from './pages/PassageFormPage'
@@ -55,6 +56,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginWrapper />} />
+            <Route path="/auth/callback" element={<OAuthCallbackPage />} />
             <Route path="/*" element={<ProtectedRoutes />} />
           </Routes>
         </BrowserRouter>

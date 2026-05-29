@@ -1,39 +1,50 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { attemptsApi } from '../api/attempts'
+import { attemptClient } from '../api/connect'
+import { fromAttempt } from '../api/adapters'
 
 export const attemptKeys = {
-  detail:  (id: string)                            => ['attempts', id] as const,
+  detail:  (id: string)                              => ['attempts', id] as const,
   byTest:  (bankId: string, testId: number | string) => ['attempts', 'test', bankId, String(testId)] as const,
 }
 
 export function useAttempt(id: string) {
   return useQuery({
     queryKey: attemptKeys.detail(id),
-    queryFn:  () => attemptsApi.get(id),
-    enabled:  !!id,
+    queryFn:  async () => {
+      const res = await attemptClient.getAttempt({ id: Number(id) })
+      return fromAttempt(res.attempt!)
+    },
+    enabled: !!id,
   })
 }
 
 export function useTestAttempts(bankId: string, testId: number | string) {
   return useQuery({
     queryKey: attemptKeys.byTest(bankId, testId),
-    queryFn:  () => attemptsApi.listByTest(bankId, testId),
-    enabled:  !!bankId && !!testId,
+    queryFn:  async () => {
+      const res = await attemptClient.listAttemptsByTest({ bankId: Number(bankId), testId: Number(testId) })
+      return res.attempts.map(fromAttempt)
+    },
+    enabled: !!bankId && !!testId,
   })
 }
 
 export function useStartAttempt() {
   return useMutation({
-    mutationFn: ({ bankId, testId }: { bankId: string; testId: number | string }) =>
-      attemptsApi.start(bankId, testId),
+    mutationFn: async ({ bankId, testId }: { bankId: string; testId: number | string }) => {
+      const res = await attemptClient.startAttempt({ bankId: Number(bankId), testId: Number(testId) })
+      return fromAttempt(res.attempt!)
+    },
   })
 }
 
 export function useSubmitAttempt() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, answers }: { id: string; answers: Record<string, string> }) =>
-      attemptsApi.submit(id, answers),
+    mutationFn: async ({ id, answers }: { id: string; answers: Record<string, string> }) => {
+      const res = await attemptClient.submitAttempt({ id: Number(id), answers })
+      return fromAttempt(res.attempt!)
+    },
     onSuccess: (_, { id }) => qc.invalidateQueries({ queryKey: attemptKeys.detail(id) }),
   })
 }

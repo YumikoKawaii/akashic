@@ -6,15 +6,24 @@ import "akashic/v1/common.proto";
 option go_package = "github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1";
 
 service AuthService {
+  // Returns the Google OAuth consent URL + a CSRF state token.
+  // The client redirects the browser to url, then handles the callback itself.
+  rpc GetGoogleAuthURL   (GetGoogleAuthURLRequest)   returns (GetGoogleAuthURLResponse);
   // Client sends the OAuth code it received from Google; backend exchanges it for a JWT.
   rpc ExchangeGoogleCode (ExchangeGoogleCodeRequest) returns (ExchangeGoogleCodeResponse);
   rpc GetMe              (GetMeRequest)               returns (GetMeResponse);
   rpc Logout             (LogoutRequest)              returns (LogoutResponse);
 }
 
+message GetGoogleAuthURLRequest  {}
+message GetGoogleAuthURLResponse {
+  string url   = 1; // full Google OAuth consent URL; browser should navigate here
+  string state = 2; // CSRF token; client must store and verify on callback
+}
+
 message ExchangeGoogleCodeRequest {
   string code         = 1;
-  string redirect_uri = 2;
+  string redirect_uri = 2; // must match the redirect_uri used when the auth URL was opened
 }
 
 message ExchangeGoogleCodeResponse {

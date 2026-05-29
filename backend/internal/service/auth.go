@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -50,6 +52,16 @@ func (s *AuthService) LoginURL(state string) string {
 	return s.oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOnline)
 }
 
+// GetAuthURL generates a CSRF state and returns the Google consent URL for
+// the client-initiated OAuth flow. The state must be verified by the caller.
+func (s *AuthService) GetAuthURL() (url, state string) {
+	b := make([]byte, 16)
+	rand.Read(b)
+	state = base64.URLEncoding.EncodeToString(b)
+	url = s.oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOnline)
+	return url, state
+}
+
 type googleUserInfo struct {
 	Sub      string `json:"sub"`
 	Email    string `json:"email"`
@@ -59,7 +71,20 @@ type googleUserInfo struct {
 }
 
 func (s *AuthService) HandleCallback(code string) (*model.User, string, error) {
-	token, err := s.oauthConfig.Exchange(context.Background(), code)
+	return s.ExchangeCode(code, "")
+}
+
+// ExchangeCode exchanges an OAuth authorization code for a JWT.
+// If redirectURI is non-empty it overrides the configured callback URL,
+// which is required for the client-initiated OAuth flow.
+func (s *AuthService) ExchangeCode(code, redirectURI string) (*model.User, string, error) {
+	cfg := s.oauthConfig
+	if redirectURI != "" {
+		cp := *s.oauthConfig
+		cp.RedirectURL = redirectURI
+		cfg = &cp
+	}
+	token, err := cfg.Exchange(context.Background(), code)
 	if err != nil {
 		return nil, "", fmt.Errorf("code exchange: %w", err)
 	}

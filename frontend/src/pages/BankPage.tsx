@@ -8,7 +8,7 @@ import { useCategories } from '../hooks/useCategories'
 import { usePassages, usePassagesPaged, useDeletePassage } from '../hooks/usePassages'
 import { useAuth } from '../contexts/AuthContext'
 import { QuestionFilter } from '../types'
-import { questionsApi } from '../api/questions'
+import { questionClient } from '../api/connect'
 import QuestionCard from '../components/questions/QuestionCard'
 import TestCard from '../components/tests/TestCard'
 import GenerateTab from '../components/tests/GenerateTab'
@@ -125,8 +125,8 @@ export default function BankPage() {
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [pConfirmDel,   setPConfirmDel]   = useState<number | null>(null)
 
-  const [shareOpen,  setShareOpen]  = useState(false)
-  const [shareEmail, setShareEmail] = useState('')
+  const [shareOpen,   setShareOpen]   = useState(false)
+  const [shareUserId, setShareUserId] = useState('')
   const [shareRole,  setShareRole]  = useState<'editor' | 'viewer'>('viewer')
   const [shareError, setShareError] = useState<string | null>(null)
 
@@ -144,13 +144,15 @@ export default function BankPage() {
 
     for (const file of files) {
       try {
-        const result = await questionsApi.ingest(bankId, file)
+        const fileData = new Uint8Array(await file.arrayBuffer())
+        const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+        const fmtMap: Record<string, number> = { json: 1, csv: 2, yaml: 3, yml: 3 }
+        const result = await questionClient.ingestQuestions({
+          bankId: Number(bankId), format: fmtMap[ext] ?? 0, fileData,
+        })
         totalCreated += result.created
       } catch (err: any) {
-        const data = err?.response?.data
-        const detail = data?.errors?.length
-          ? data.errors.map((e: any) => `row ${e.row}: ${e.message}`).join('; ')
-          : data?.error ?? 'invalid format'
+        const detail = err?.message ?? 'invalid format'
         fileErrors.push(`${file.name}: ${detail}`)
       }
     }
@@ -229,12 +231,13 @@ export default function BankPage() {
         <OrnatePanel>
           <div className="section-title" style={{ marginBottom: 14 }}>Share Bank</div>
           <div className="flex gap-3 items-end flex-wrap" style={{ marginBottom: 16 }}>
-            <FormField label="Email">
+            <FormField label="User ID">
               <Input
-                value={shareEmail}
-                onChange={e => { setShareEmail(e.target.value); setShareError(null) }}
-                placeholder="user@example.com"
-                style={{ width: 220 }}
+                value={shareUserId}
+                onChange={e => { setShareUserId(e.target.value); setShareError(null) }}
+                placeholder="User ID"
+                style={{ width: 140 }}
+                type="number"
               />
             </FormField>
             <FormField label="Role">
@@ -254,11 +257,11 @@ export default function BankPage() {
             </FormField>
             <button
               className="btn btn-primary"
-              disabled={!shareEmail.trim() || addMember.isPending}
+              disabled={!shareUserId.trim() || addMember.isPending}
               onClick={async () => {
                 try {
-                  await addMember.mutateAsync({ email: shareEmail.trim(), role: shareRole })
-                  setShareEmail('')
+                  await addMember.mutateAsync({ userId: Number(shareUserId), role: shareRole })
+                  setShareUserId('')
                   setShareError(null)
                 } catch {
                   setShareError('User not found — they must sign in once first.')

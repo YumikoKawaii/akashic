@@ -44,7 +44,7 @@ func Load() *Config {
 
 		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
-		GoogleCallbackURL:  getEnv("GOOGLE_CALLBACK_URL", "http://localhost:8080/api/v1/auth/google/callback"),
+		GoogleCallbackURL:  getEnv("GOOGLE_CALLBACK_URL", "http://localhost:5173/auth/callback"),
 		JWTSecret:          getEnv("JWT_SECRET", "change-me-in-production"),
 		FrontendURL:        getEnv("FRONTEND_URL", "http://localhost:5173"),
 

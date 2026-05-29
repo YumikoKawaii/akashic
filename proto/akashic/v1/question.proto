@@ -20,7 +20,7 @@ service QuestionService {
 
 message QuestionItem {
   string content = 1;
-  string answer  = 2;
+  string answer = 2;
 }
 
 message MultipleChoice {
@@ -32,16 +32,16 @@ message MultipleChoice {
 // ── Entity ────────────────────────────────────────────────────────────────────
 
 message Question {
-  int32                     id          = 1;
-  int32                     bank_id     = 2;
+  int32                     id = 1;
+  int32                     bank_id = 2;
   int32                     category_id = 3;
-  optional int32            group_id    = 4;
-  QuestionType              type        = 5;
-  Difficulty                difficulty  = 6;
-  repeated string           tags        = 7;
-  optional int32            position    = 8;
+  optional int32            group_id = 4;
+  QuestionType              type = 5;
+  Difficulty                difficulty = 6;
+  repeated string           tags = 7;
+  optional int32            position = 8;
   oneof content {
-    QuestionItem   item   = 9;
+    QuestionItem   item = 9;
     MultipleChoice choice = 10;
   }
   google.protobuf.Timestamp created_at = 11;
@@ -51,17 +51,17 @@ message Question {
 // ── List ──────────────────────────────────────────────────────────────────────
 
 message QuestionFilter {
-  repeated int32    category_ids    = 1;
-  Difficulty        difficulty      = 2;
-  QuestionType      type            = 3;
-  repeated string   tags            = 4;
+  repeated int32    category_ids = 1;
+  Difficulty        difficulty = 2;
+  QuestionType      type = 3;
+  repeated string   tags = 4;
   bool              standalone_only = 5;
 }
 
 message ListQuestionsRequest {
-  int32          bank_id   = 1;
-  QuestionFilter filter    = 2;
-  int32          page      = 3;
+  int32          bank_id = 1;
+  QuestionFilter filter = 2;
+  int32          page = 3;
   int32          page_size = 4;
 }
 message ListQuestionsResponse {
@@ -72,70 +72,70 @@ message ListQuestionsResponse {
 // ── Create ────────────────────────────────────────────────────────────────────
 
 message CreateQuestionRequest {
-  int32           bank_id     = 1;
+  int32           bank_id = 1;
   int32           category_id = 2;
-  optional int32  group_id    = 3;
-  QuestionType    type        = 4;
-  Difficulty      difficulty  = 5;
-  repeated string tags        = 6;
+  optional int32  group_id = 3;
+  QuestionType    type = 4;
+  Difficulty      difficulty = 5;
+  repeated string tags = 6;
   oneof content {
-    QuestionItem   item   = 7;
+    QuestionItem   item = 7;
     MultipleChoice choice = 8;
   }
 }
-message CreateQuestionResponse { Question question = 1; }
+message CreateQuestionResponse {Question question = 1;}
 
 // ── Get ───────────────────────────────────────────────────────────────────────
 
-message GetQuestionRequest  { int32 bank_id = 1; int32 id = 2; }
-message GetQuestionResponse { Question question = 1; }
+message GetQuestionRequest  {int32 bank_id = 1; int32 id = 2;}
+message GetQuestionResponse {Question question = 1;}
 
 // ── Update ────────────────────────────────────────────────────────────────────
 
 message UpdateQuestionRequest {
-  int32           bank_id     = 1;
-  int32           id          = 2;
+  int32           bank_id = 1;
+  int32           id = 2;
   int32           category_id = 3;
-  Difficulty      difficulty  = 4;
-  repeated string tags        = 5;
+  Difficulty      difficulty = 4;
+  repeated string tags = 5;
   oneof content {
-    QuestionItem   item   = 6;
+    QuestionItem   item = 6;
     MultipleChoice choice = 7;
   }
 }
-message UpdateQuestionResponse { Question question = 1; }
+message UpdateQuestionResponse {Question question = 1;}
 
 // ── Delete / Restore ──────────────────────────────────────────────────────────
 
-message DeleteQuestionRequest  { int32 bank_id = 1; int32 id = 2; }
+message DeleteQuestionRequest  {int32 bank_id = 1; int32 id = 2;}
 message DeleteQuestionResponse {}
 
-message RestoreQuestionRequest  { int32 bank_id = 1; int32 id = 2; }
-message RestoreQuestionResponse { Question question = 1; }
+message RestoreQuestionRequest  {int32 bank_id = 1; int32 id = 2;}
+message RestoreQuestionResponse {Question question = 1;}
 
 // ── Ingest ────────────────────────────────────────────────────────────────────
 
 enum IngestFormat {
   INGEST_FORMAT_UNSPECIFIED = 0;
-  INGEST_FORMAT_JSON        = 1;
-  INGEST_FORMAT_CSV         = 2;
-  INGEST_FORMAT_YAML        = 3;
+  INGEST_FORMAT_JSON = 1;
+  INGEST_FORMAT_CSV = 2;
+  INGEST_FORMAT_YAML = 3;
 }
 
 message IngestQuestionsRequest {
-  int32         bank_id   = 1;
-  IngestFormat  format    = 2;
+  int32         bank_id = 1;
+  IngestFormat  format = 2;
   bytes         file_data = 3;
 }
 
 message IngestError {
-  int32  row     = 1;
-  string label   = 2;
+  int32  row = 1;
+  string label = 2;
   string message = 3;
 }
 
 message IngestQuestionsResponse {
   int32                created = 1;
-  int32                failed  = 2;
-  repeated IngestError errors  = 3;
+  int32                failed = 2;
+  repeated IngestError errors = 3;
 }

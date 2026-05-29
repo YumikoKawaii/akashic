@@ -6,7 +6,9 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': 'http://localhost:8080',
+      // Connect RPC procedures are mounted at the proto package root
+      // (/akashic.v1.<Service>/<Method>); forward them to the Go server.
+      '/akashic.v1.': 'http://localhost:8080',
     },
   },
 })

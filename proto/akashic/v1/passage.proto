@@ -16,43 +16,43 @@ service PassageService {
 }
 
 message Passage {
-  int32                     id          = 1;
-  int32                     bank_id     = 2;
+  int32                     id = 1;
+  int32                     bank_id = 2;
   int32                     category_id = 3;
-  string                    title       = 4;
-  repeated PassageParagraph paragraphs  = 5;
-  Difficulty                difficulty  = 6;
-  google.protobuf.Timestamp created_at  = 7;
-  google.protobuf.Timestamp updated_at  = 8;
+  string                    title = 4;
+  repeated PassageParagraph paragraphs = 5;
+  Difficulty                difficulty = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
 }
 
-message ListPassagesRequest  { int32 bank_id = 1; }
-message ListPassagesResponse { repeated Passage passages = 1; }
+message ListPassagesRequest  {int32 bank_id = 1;}
+message ListPassagesResponse {repeated Passage passages = 1;}
 
 message CreatePassageRequest {
-  int32                     bank_id     = 1;
+  int32                     bank_id = 1;
   int32                     category_id = 2;
-  string                    title       = 3;
-  repeated PassageParagraph paragraphs  = 4;
-  Difficulty                difficulty  = 5;
+  string                    title = 3;
+  repeated PassageParagraph paragraphs = 4;
+  Difficulty                difficulty = 5;
 }
-message CreatePassageResponse { Passage passage = 1; }
+message CreatePassageResponse {Passage passage = 1;}
 
-message GetPassageRequest  { int32 bank_id = 1; int32 id = 2; }
-message GetPassageResponse { Passage passage = 1; }
+message GetPassageRequest  {int32 bank_id = 1; int32 id = 2;}
+message GetPassageResponse {Passage passage = 1;}
 
 message UpdatePassageRequest {
-  int32                     bank_id     = 1;
-  int32                     id          = 2;
+  int32                     bank_id = 1;
+  int32                     id = 2;
   int32                     category_id = 3;
-  string                    title       = 4;
-  repeated PassageParagraph paragraphs  = 5;
-  Difficulty                difficulty  = 6;
+  string                    title = 4;
+  repeated PassageParagraph paragraphs = 5;
+  Difficulty                difficulty = 6;
 }
-message UpdatePassageResponse { Passage passage = 1; }
+message UpdatePassageResponse {Passage passage = 1;}
 
-message DeletePassageRequest  { int32 bank_id = 1; int32 id = 2; }
+message DeletePassageRequest  {int32 bank_id = 1; int32 id = 2;}
 message DeletePassageResponse {}
 
-message RestorePassageRequest  { int32 bank_id = 1; int32 id = 2; }
-message RestorePassageResponse { Passage passage = 1; }
+message RestorePassageRequest  {int32 bank_id = 1; int32 id = 2;}
+message RestorePassageResponse {Passage passage = 1;}

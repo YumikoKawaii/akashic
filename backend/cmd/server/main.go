@@ -4,20 +4,24 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 
+	"connectrpc.com/connect"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
+	"github.com/yumikokawaii/akashic/gen/akashic/v1/akashicv1connect"
 	"github.com/yumikokawaii/akashic/internal/config"
-	"github.com/yumikokawaii/akashic/internal/handler"
-	"github.com/yumikokawaii/akashic/internal/middleware"
 	"github.com/yumikokawaii/akashic/internal/repository"
+	"github.com/yumikokawaii/akashic/internal/rpchandler"
 	"github.com/yumikokawaii/akashic/internal/service"
 	"github.com/yumikokawaii/akashic/internal/uow"
 )
@@ -61,38 +65,56 @@ func main() {
 		generateCache = service.NewRedisCache(rdb, cacheCfg)
 	}
 
-	authSvc         := service.NewAuthService(userRepo, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleCallbackURL, cfg.JWTSecret)
-	bankSvc         := service.NewBankService(bankRepo, memberRepo, userRepo)
-	categorySvc     := service.NewCategoryService(categoryRepo, bankRepo)
-	passageSvc      := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
+	authSvc          := service.NewAuthService(userRepo, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleCallbackURL, cfg.JWTSecret)
+	bankSvc          := service.NewBankService(bankRepo, memberRepo, userRepo)
+	categorySvc      := service.NewCategoryService(categoryRepo, bankRepo)
+	passageSvc       := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
 	questionGroupSvc := service.NewQuestionGroupService(unitOfWork, questionGroupRepo, bankRepo, categoryRepo)
-	questionSvc     := service.NewQuestionService(unitOfWork, questionRepo, bankRepo, categoryRepo, generateCache)
-	testSvc         := service.NewTestService(unitOfWork, testRepo, questionRepo, questionGroupRepo, bankRepo, generateCache)
-	attemptSvc      := service.NewAttemptService(attemptRepo, testRepo)
-	ingestSvc       := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo)
+	questionSvc      := service.NewQuestionService(unitOfWork, questionRepo, bankRepo, categoryRepo, generateCache)
+	testSvc          := service.NewTestService(unitOfWork, testRepo, questionRepo, questionGroupRepo, bankRepo, generateCache)
+	attemptSvc       := service.NewAttemptService(attemptRepo, testRepo)
+	ingestSvc        := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo)
 
 	warmupPoolCache(bankRepo, questionRepo, generateCache)
 
-	authMW := middleware.Auth(authSvc)
+	// ── Connect interceptor ────────────────────────────────────────────────────
+	interceptor := connect.WithInterceptors(rpchandler.AuthInterceptor(authSvc))
 
-	handlers := handler.Handlers{
-		Auth:          handler.NewAuthHandler(authSvc, cfg.FrontendURL),
-		Bank:          handler.NewBankHandler(bankSvc),
-		Category:      handler.NewCategoryHandler(categorySvc),
-		Passage:       handler.NewPassageHandler(passageSvc),
-		QuestionGroup: handler.NewQuestionGroupHandler(questionGroupSvc),
-		Question:      handler.NewQuestionHandler(questionSvc, ingestSvc),
-		Test:          handler.NewTestHandler(testSvc, bankSvc),
-		Attempt:       handler.NewAttemptHandler(attemptSvc),
-		AuthMW:        authMW,
-		StaticDir:     cfg.StaticDir,
+	// ── Connect service handlers ───────────────────────────────────────────────
+	mux := http.NewServeMux()
+
+	mux.Handle(akashicv1connect.NewAuthServiceHandler(
+		rpchandler.NewAuthServiceHandler(authSvc), interceptor))
+	mux.Handle(akashicv1connect.NewBankServiceHandler(
+		rpchandler.NewBankServiceHandler(bankSvc), interceptor))
+	mux.Handle(akashicv1connect.NewCategoryServiceHandler(
+		rpchandler.NewCategoryServiceHandler(categorySvc), interceptor))
+	mux.Handle(akashicv1connect.NewPassageServiceHandler(
+		rpchandler.NewPassageServiceHandler(passageSvc), interceptor))
+	mux.Handle(akashicv1connect.NewQuestionGroupServiceHandler(
+		rpchandler.NewQuestionGroupServiceHandler(questionGroupSvc), interceptor))
+	mux.Handle(akashicv1connect.NewQuestionServiceHandler(
+		rpchandler.NewQuestionServiceHandler(questionSvc, ingestSvc), interceptor))
+	mux.Handle(akashicv1connect.NewTestServiceHandler(
+		rpchandler.NewTestServiceHandler(testSvc), interceptor))
+	mux.Handle(akashicv1connect.NewAttemptServiceHandler(
+		rpchandler.NewAttemptServiceHandler(attemptSvc), interceptor))
+
+	// ── Static frontend ────────────────────────────────────────────────────────
+	if cfg.StaticDir != "" {
+		mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(cfg.StaticDir+"/assets"))))
+		mux.Handle("/favicon/", http.StripPrefix("/favicon/", http.FileServer(http.Dir(cfg.StaticDir+"/favicon"))))
+		mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, cfg.StaticDir+"/favicon/favicon.ico")
+		})
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, cfg.StaticDir+"/index.html")
+		})
 	}
-
-	router := handler.NewRouter(handlers)
 
 	addr := fmt.Sprintf(":%s", cfg.ServerPort)
 	log.Printf("server listening on %s", addr)
-	if err := router.Run(addr); err != nil {
+	if err := http.ListenAndServe(addr, h2c.NewHandler(mux, &http2.Server{})); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
 }
