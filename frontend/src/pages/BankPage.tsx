@@ -249,9 +249,17 @@ export default function BankPage() {
         ))}
       </nav>
 
-      {/* ── Share panel ─────────────────────────────────────────── */}
+      {/* ── Stats (Share panel pops over them) ──────────────────── */}
+      <div style={{ position: 'relative' }}>
       {shareOpen && isOwner && (
-        <OrnatePanel>
+        <OrnatePanel style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30, boxShadow: '0 14px 44px rgba(60, 40, 10, 0.22)' }}>
+          <button
+            onClick={() => setShareOpen(false)}
+            aria-label="Close"
+            style={{ position: 'absolute', top: 10, right: 14, zIndex: 2, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-dim)', fontSize: '0.95rem', lineHeight: 1 }}
+          >
+            ✕
+          </button>
           <div className="section-title" style={{ marginBottom: 14 }}>Share Bank</div>
           <div className="flex gap-3 items-end flex-wrap" style={{ marginBottom: 16 }}>
             <FormField label="Email">
@@ -316,7 +324,6 @@ export default function BankPage() {
         </OrnatePanel>
       )}
 
-      {/* ── Stats ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {([
           { value: totalQ,             label: 'Questions',  color: 'var(--gold)',     circle: { variant: 'orbit' as const, color: 'var(--gold)',    opacity: 0.90 } },
@@ -335,6 +342,7 @@ export default function BankPage() {
             </div>
           </div>
         ))}
+      </div>
       </div>
 
       {/* ── Import message ──────────────────────────────────────── */}
