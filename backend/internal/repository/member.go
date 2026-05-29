@@ -22,7 +22,10 @@ func NewMemberRepo(db *gorm.DB) MemberRepository { return &memberRepo{db} }
 
 func (r *memberRepo) FindByBank(bankID int) ([]model.BankMember, error) {
 	var ms []model.BankMember
-	err := r.db.Preload("User").Where("bank_id = ?", bankID).Order("created_at ASC").Find(&ms).Error
+	// Joins("User") uses a single LEFT JOIN instead of a separate Preload SELECT,
+	// avoiding a soft-delete scope issue that can silently drop the User association.
+	// Qualify created_at to avoid ambiguity — both bank_members and users have the column.
+	err := r.db.Joins("User").Where("bank_id = ?", bankID).Order("bank_members.created_at ASC").Find(&ms).Error
 	return ms, err
 }
 

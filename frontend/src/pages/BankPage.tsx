@@ -271,20 +271,27 @@ export default function BankPage() {
           {shareError && <div style={{ fontSize: '0.8rem', color: '#b03030', marginBottom: 10 }}>{shareError}</div>}
           {members.length > 0 && (
             <div className="flex flex-col gap-2">
-              {members.map(m => (
+              {members.map(m => {
+              // Fall back to auth-context user for the current user's row in case the
+              // backend omits the nested user object (e.g. Preload scope edge-case).
+              const isSelf      = m.user_id === user?.id
+              const displayName  = m.user?.name  || (isSelf ? user?.name  : '')
+              const displayEmail = m.user?.email || (isSelf ? user?.email : '')
+              return (
                 <div key={m.user_id} className="flex items-center justify-between gap-3" style={{ fontSize: '0.85rem', padding: '6px 0', borderBottom: '1px solid var(--border-dim)' }}>
                   <div>
-                    <span style={{ color: 'var(--ink)' }}>{m.user?.name}</span>
-                    <span style={{ color: 'var(--ink-dim)', marginLeft: 8, fontSize: '0.75rem' }}>{m.user?.email}</span>
+                    <span style={{ color: 'var(--ink)' }}>{displayName}</span>
+                    <span style={{ color: 'var(--ink-dim)', marginLeft: 8, fontSize: '0.75rem' }}>{displayEmail}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.1em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>{m.role}</span>
-                    {m.user_id !== user?.id && (
+                    {!isSelf && (
                       <button className="btn-danger" style={{ fontSize: '0.6rem', padding: '2px 6px' }} onClick={() => removeMember.mutate(m.user_id)}>✕</button>
                     )}
                   </div>
                 </div>
-              ))}
+              )
+            })}
             </div>
           )}
         </OrnatePanel>
