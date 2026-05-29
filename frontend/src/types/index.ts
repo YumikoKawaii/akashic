@@ -28,6 +28,8 @@ export interface TestConfig {
   standalone_only?: boolean
 }
 
+export type BankVisibility = 'private' | 'public'
+
 export interface Bank {
   id: number
   name: string
@@ -35,6 +37,7 @@ export interface Bank {
   owner_id?: number
   default_config: TestConfig
   my_role: BankRole
+  visibility: BankVisibility
   created_at: string
   updated_at: string
 }

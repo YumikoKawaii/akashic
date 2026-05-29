@@ -31,6 +31,7 @@ type Bank struct {
 	DefaultConfig *TestConfig            `protobuf:"bytes,5,opt,name=default_config,json=defaultConfig,proto3" json:"default_config,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Visibility    BankVisibility         `protobuf:"varint,8,opt,name=visibility,proto3,enum=akashic.v1.BankVisibility" json:"visibility,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -112,6 +113,13 @@ func (x *Bank) GetUpdatedAt() *timestamppb.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *Bank) GetVisibility() BankVisibility {
+	if x != nil {
+		return x.Visibility
+	}
+	return BankVisibility_BANK_VISIBILITY_UNSPECIFIED
 }
 
 type BankWithRole struct {
@@ -1282,12 +1290,108 @@ func (x *UpdateBankMemberRoleResponse) GetMember() *BankMember {
 	return nil
 }
 
+type SetBankVisibilityRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BankId        int32                  `protobuf:"varint,1,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
+	Visibility    BankVisibility         `protobuf:"varint,2,opt,name=visibility,proto3,enum=akashic.v1.BankVisibility" json:"visibility,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetBankVisibilityRequest) Reset() {
+	*x = SetBankVisibilityRequest{}
+	mi := &file_akashic_v1_bank_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetBankVisibilityRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetBankVisibilityRequest) ProtoMessage() {}
+
+func (x *SetBankVisibilityRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_bank_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetBankVisibilityRequest.ProtoReflect.Descriptor instead.
+func (*SetBankVisibilityRequest) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *SetBankVisibilityRequest) GetBankId() int32 {
+	if x != nil {
+		return x.BankId
+	}
+	return 0
+}
+
+func (x *SetBankVisibilityRequest) GetVisibility() BankVisibility {
+	if x != nil {
+		return x.Visibility
+	}
+	return BankVisibility_BANK_VISIBILITY_UNSPECIFIED
+}
+
+type SetBankVisibilityResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bank          *Bank                  `protobuf:"bytes,1,opt,name=bank,proto3" json:"bank,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetBankVisibilityResponse) Reset() {
+	*x = SetBankVisibilityResponse{}
+	mi := &file_akashic_v1_bank_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetBankVisibilityResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetBankVisibilityResponse) ProtoMessage() {}
+
+func (x *SetBankVisibilityResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_bank_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetBankVisibilityResponse.ProtoReflect.Descriptor instead.
+func (*SetBankVisibilityResponse) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *SetBankVisibilityResponse) GetBank() *Bank {
+	if x != nil {
+		return x.Bank
+	}
+	return nil
+}
+
 var File_akashic_v1_bank_proto protoreflect.FileDescriptor
 
 const file_akashic_v1_bank_proto_rawDesc = "" +
 	"\n" +
 	"\x15akashic/v1/bank.proto\x12\n" +
-	"akashic.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17akashic/v1/common.proto\"\xae\x02\n" +
+	"akashic.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17akashic/v1/common.proto\"\xea\x02\n" +
 	"\x04Bank\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -1297,7 +1401,10 @@ const file_akashic_v1_bank_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\v\n" +
+	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12:\n" +
+	"\n" +
+	"visibility\x18\b \x01(\x0e2\x1a.akashic.v1.BankVisibilityR\n" +
+	"visibilityB\v\n" +
 	"\t_owner_id\"M\n" +
 	"\fBankWithRole\x12$\n" +
 	"\x04bank\x18\x01 \x01(\v2\x10.akashic.v1.BankR\x04bank\x12\x17\n" +
@@ -1363,7 +1470,14 @@ const file_akashic_v1_bank_proto_rawDesc = "" +
 	"\auser_id\x18\x02 \x01(\x05R\x06userId\x12(\n" +
 	"\x04role\x18\x03 \x01(\x0e2\x14.akashic.v1.BankRoleR\x04role\"N\n" +
 	"\x1cUpdateBankMemberRoleResponse\x12.\n" +
-	"\x06member\x18\x01 \x01(\v2\x16.akashic.v1.BankMemberR\x06member2\xc2\a\n" +
+	"\x06member\x18\x01 \x01(\v2\x16.akashic.v1.BankMemberR\x06member\"o\n" +
+	"\x18SetBankVisibilityRequest\x12\x17\n" +
+	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12:\n" +
+	"\n" +
+	"visibility\x18\x02 \x01(\x0e2\x1a.akashic.v1.BankVisibilityR\n" +
+	"visibility\"A\n" +
+	"\x19SetBankVisibilityResponse\x12$\n" +
+	"\x04bank\x18\x01 \x01(\v2\x10.akashic.v1.BankR\x04bank2\xa4\b\n" +
 	"\vBankService\x12H\n" +
 	"\tListBanks\x12\x1c.akashic.v1.ListBanksRequest\x1a\x1d.akashic.v1.ListBanksResponse\x12K\n" +
 	"\n" +
@@ -1378,7 +1492,8 @@ const file_akashic_v1_bank_proto_rawDesc = "" +
 	"\x0fListBankMembers\x12\".akashic.v1.ListBankMembersRequest\x1a#.akashic.v1.ListBankMembersResponse\x12T\n" +
 	"\rAddBankMember\x12 .akashic.v1.AddBankMemberRequest\x1a!.akashic.v1.AddBankMemberResponse\x12]\n" +
 	"\x10RemoveBankMember\x12#.akashic.v1.RemoveBankMemberRequest\x1a$.akashic.v1.RemoveBankMemberResponse\x12i\n" +
-	"\x14UpdateBankMemberRole\x12'.akashic.v1.UpdateBankMemberRoleRequest\x1a(.akashic.v1.UpdateBankMemberRoleResponseB:Z8github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1b\x06proto3"
+	"\x14UpdateBankMemberRole\x12'.akashic.v1.UpdateBankMemberRoleRequest\x1a(.akashic.v1.UpdateBankMemberRoleResponse\x12`\n" +
+	"\x11SetBankVisibility\x12$.akashic.v1.SetBankVisibilityRequest\x1a%.akashic.v1.SetBankVisibilityResponseB:Z8github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1b\x06proto3"
 
 var (
 	file_akashic_v1_bank_proto_rawDescOnce sync.Once
@@ -1392,7 +1507,7 @@ func file_akashic_v1_bank_proto_rawDescGZIP() []byte {
 	return file_akashic_v1_bank_proto_rawDescData
 }
 
-var file_akashic_v1_bank_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
+var file_akashic_v1_bank_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_akashic_v1_bank_proto_goTypes = []any{
 	(*Bank)(nil),                            // 0: akashic.v1.Bank
 	(*BankWithRole)(nil),                    // 1: akashic.v1.BankWithRole
@@ -1419,60 +1534,68 @@ var file_akashic_v1_bank_proto_goTypes = []any{
 	(*RemoveBankMemberResponse)(nil),        // 22: akashic.v1.RemoveBankMemberResponse
 	(*UpdateBankMemberRoleRequest)(nil),     // 23: akashic.v1.UpdateBankMemberRoleRequest
 	(*UpdateBankMemberRoleResponse)(nil),    // 24: akashic.v1.UpdateBankMemberRoleResponse
-	(*TestConfig)(nil),                      // 25: akashic.v1.TestConfig
-	(*timestamppb.Timestamp)(nil),           // 26: google.protobuf.Timestamp
-	(*User)(nil),                            // 27: akashic.v1.User
-	(BankRole)(0),                           // 28: akashic.v1.BankRole
+	(*SetBankVisibilityRequest)(nil),        // 25: akashic.v1.SetBankVisibilityRequest
+	(*SetBankVisibilityResponse)(nil),       // 26: akashic.v1.SetBankVisibilityResponse
+	(*TestConfig)(nil),                      // 27: akashic.v1.TestConfig
+	(*timestamppb.Timestamp)(nil),           // 28: google.protobuf.Timestamp
+	(BankVisibility)(0),                     // 29: akashic.v1.BankVisibility
+	(*User)(nil),                            // 30: akashic.v1.User
+	(BankRole)(0),                           // 31: akashic.v1.BankRole
 }
 var file_akashic_v1_bank_proto_depIdxs = []int32{
-	25, // 0: akashic.v1.Bank.default_config:type_name -> akashic.v1.TestConfig
-	26, // 1: akashic.v1.Bank.created_at:type_name -> google.protobuf.Timestamp
-	26, // 2: akashic.v1.Bank.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 3: akashic.v1.BankWithRole.bank:type_name -> akashic.v1.Bank
-	27, // 4: akashic.v1.BankMember.user:type_name -> akashic.v1.User
-	28, // 5: akashic.v1.BankMember.role:type_name -> akashic.v1.BankRole
-	26, // 6: akashic.v1.BankMember.created_at:type_name -> google.protobuf.Timestamp
-	26, // 7: akashic.v1.BankMember.updated_at:type_name -> google.protobuf.Timestamp
-	1,  // 8: akashic.v1.ListBanksResponse.banks:type_name -> akashic.v1.BankWithRole
-	25, // 9: akashic.v1.CreateBankRequest.default_config:type_name -> akashic.v1.TestConfig
-	0,  // 10: akashic.v1.CreateBankResponse.bank:type_name -> akashic.v1.Bank
-	1,  // 11: akashic.v1.GetBankResponse.bank:type_name -> akashic.v1.BankWithRole
-	0,  // 12: akashic.v1.UpdateBankResponse.bank:type_name -> akashic.v1.Bank
-	25, // 13: akashic.v1.UpdateBankDefaultConfigRequest.config:type_name -> akashic.v1.TestConfig
-	0,  // 14: akashic.v1.UpdateBankDefaultConfigResponse.bank:type_name -> akashic.v1.Bank
-	0,  // 15: akashic.v1.RestoreBankResponse.bank:type_name -> akashic.v1.Bank
-	2,  // 16: akashic.v1.ListBankMembersResponse.members:type_name -> akashic.v1.BankMember
-	28, // 17: akashic.v1.AddBankMemberRequest.role:type_name -> akashic.v1.BankRole
-	2,  // 18: akashic.v1.AddBankMemberResponse.member:type_name -> akashic.v1.BankMember
-	28, // 19: akashic.v1.UpdateBankMemberRoleRequest.role:type_name -> akashic.v1.BankRole
-	2,  // 20: akashic.v1.UpdateBankMemberRoleResponse.member:type_name -> akashic.v1.BankMember
-	3,  // 21: akashic.v1.BankService.ListBanks:input_type -> akashic.v1.ListBanksRequest
-	5,  // 22: akashic.v1.BankService.CreateBank:input_type -> akashic.v1.CreateBankRequest
-	7,  // 23: akashic.v1.BankService.GetBank:input_type -> akashic.v1.GetBankRequest
-	9,  // 24: akashic.v1.BankService.UpdateBank:input_type -> akashic.v1.UpdateBankRequest
-	11, // 25: akashic.v1.BankService.UpdateBankDefaultConfig:input_type -> akashic.v1.UpdateBankDefaultConfigRequest
-	13, // 26: akashic.v1.BankService.DeleteBank:input_type -> akashic.v1.DeleteBankRequest
-	15, // 27: akashic.v1.BankService.RestoreBank:input_type -> akashic.v1.RestoreBankRequest
-	17, // 28: akashic.v1.BankService.ListBankMembers:input_type -> akashic.v1.ListBankMembersRequest
-	19, // 29: akashic.v1.BankService.AddBankMember:input_type -> akashic.v1.AddBankMemberRequest
-	21, // 30: akashic.v1.BankService.RemoveBankMember:input_type -> akashic.v1.RemoveBankMemberRequest
-	23, // 31: akashic.v1.BankService.UpdateBankMemberRole:input_type -> akashic.v1.UpdateBankMemberRoleRequest
-	4,  // 32: akashic.v1.BankService.ListBanks:output_type -> akashic.v1.ListBanksResponse
-	6,  // 33: akashic.v1.BankService.CreateBank:output_type -> akashic.v1.CreateBankResponse
-	8,  // 34: akashic.v1.BankService.GetBank:output_type -> akashic.v1.GetBankResponse
-	10, // 35: akashic.v1.BankService.UpdateBank:output_type -> akashic.v1.UpdateBankResponse
-	12, // 36: akashic.v1.BankService.UpdateBankDefaultConfig:output_type -> akashic.v1.UpdateBankDefaultConfigResponse
-	14, // 37: akashic.v1.BankService.DeleteBank:output_type -> akashic.v1.DeleteBankResponse
-	16, // 38: akashic.v1.BankService.RestoreBank:output_type -> akashic.v1.RestoreBankResponse
-	18, // 39: akashic.v1.BankService.ListBankMembers:output_type -> akashic.v1.ListBankMembersResponse
-	20, // 40: akashic.v1.BankService.AddBankMember:output_type -> akashic.v1.AddBankMemberResponse
-	22, // 41: akashic.v1.BankService.RemoveBankMember:output_type -> akashic.v1.RemoveBankMemberResponse
-	24, // 42: akashic.v1.BankService.UpdateBankMemberRole:output_type -> akashic.v1.UpdateBankMemberRoleResponse
-	32, // [32:43] is the sub-list for method output_type
-	21, // [21:32] is the sub-list for method input_type
-	21, // [21:21] is the sub-list for extension type_name
-	21, // [21:21] is the sub-list for extension extendee
-	0,  // [0:21] is the sub-list for field type_name
+	27, // 0: akashic.v1.Bank.default_config:type_name -> akashic.v1.TestConfig
+	28, // 1: akashic.v1.Bank.created_at:type_name -> google.protobuf.Timestamp
+	28, // 2: akashic.v1.Bank.updated_at:type_name -> google.protobuf.Timestamp
+	29, // 3: akashic.v1.Bank.visibility:type_name -> akashic.v1.BankVisibility
+	0,  // 4: akashic.v1.BankWithRole.bank:type_name -> akashic.v1.Bank
+	30, // 5: akashic.v1.BankMember.user:type_name -> akashic.v1.User
+	31, // 6: akashic.v1.BankMember.role:type_name -> akashic.v1.BankRole
+	28, // 7: akashic.v1.BankMember.created_at:type_name -> google.protobuf.Timestamp
+	28, // 8: akashic.v1.BankMember.updated_at:type_name -> google.protobuf.Timestamp
+	1,  // 9: akashic.v1.ListBanksResponse.banks:type_name -> akashic.v1.BankWithRole
+	27, // 10: akashic.v1.CreateBankRequest.default_config:type_name -> akashic.v1.TestConfig
+	0,  // 11: akashic.v1.CreateBankResponse.bank:type_name -> akashic.v1.Bank
+	1,  // 12: akashic.v1.GetBankResponse.bank:type_name -> akashic.v1.BankWithRole
+	0,  // 13: akashic.v1.UpdateBankResponse.bank:type_name -> akashic.v1.Bank
+	27, // 14: akashic.v1.UpdateBankDefaultConfigRequest.config:type_name -> akashic.v1.TestConfig
+	0,  // 15: akashic.v1.UpdateBankDefaultConfigResponse.bank:type_name -> akashic.v1.Bank
+	0,  // 16: akashic.v1.RestoreBankResponse.bank:type_name -> akashic.v1.Bank
+	2,  // 17: akashic.v1.ListBankMembersResponse.members:type_name -> akashic.v1.BankMember
+	31, // 18: akashic.v1.AddBankMemberRequest.role:type_name -> akashic.v1.BankRole
+	2,  // 19: akashic.v1.AddBankMemberResponse.member:type_name -> akashic.v1.BankMember
+	31, // 20: akashic.v1.UpdateBankMemberRoleRequest.role:type_name -> akashic.v1.BankRole
+	2,  // 21: akashic.v1.UpdateBankMemberRoleResponse.member:type_name -> akashic.v1.BankMember
+	29, // 22: akashic.v1.SetBankVisibilityRequest.visibility:type_name -> akashic.v1.BankVisibility
+	0,  // 23: akashic.v1.SetBankVisibilityResponse.bank:type_name -> akashic.v1.Bank
+	3,  // 24: akashic.v1.BankService.ListBanks:input_type -> akashic.v1.ListBanksRequest
+	5,  // 25: akashic.v1.BankService.CreateBank:input_type -> akashic.v1.CreateBankRequest
+	7,  // 26: akashic.v1.BankService.GetBank:input_type -> akashic.v1.GetBankRequest
+	9,  // 27: akashic.v1.BankService.UpdateBank:input_type -> akashic.v1.UpdateBankRequest
+	11, // 28: akashic.v1.BankService.UpdateBankDefaultConfig:input_type -> akashic.v1.UpdateBankDefaultConfigRequest
+	13, // 29: akashic.v1.BankService.DeleteBank:input_type -> akashic.v1.DeleteBankRequest
+	15, // 30: akashic.v1.BankService.RestoreBank:input_type -> akashic.v1.RestoreBankRequest
+	17, // 31: akashic.v1.BankService.ListBankMembers:input_type -> akashic.v1.ListBankMembersRequest
+	19, // 32: akashic.v1.BankService.AddBankMember:input_type -> akashic.v1.AddBankMemberRequest
+	21, // 33: akashic.v1.BankService.RemoveBankMember:input_type -> akashic.v1.RemoveBankMemberRequest
+	23, // 34: akashic.v1.BankService.UpdateBankMemberRole:input_type -> akashic.v1.UpdateBankMemberRoleRequest
+	25, // 35: akashic.v1.BankService.SetBankVisibility:input_type -> akashic.v1.SetBankVisibilityRequest
+	4,  // 36: akashic.v1.BankService.ListBanks:output_type -> akashic.v1.ListBanksResponse
+	6,  // 37: akashic.v1.BankService.CreateBank:output_type -> akashic.v1.CreateBankResponse
+	8,  // 38: akashic.v1.BankService.GetBank:output_type -> akashic.v1.GetBankResponse
+	10, // 39: akashic.v1.BankService.UpdateBank:output_type -> akashic.v1.UpdateBankResponse
+	12, // 40: akashic.v1.BankService.UpdateBankDefaultConfig:output_type -> akashic.v1.UpdateBankDefaultConfigResponse
+	14, // 41: akashic.v1.BankService.DeleteBank:output_type -> akashic.v1.DeleteBankResponse
+	16, // 42: akashic.v1.BankService.RestoreBank:output_type -> akashic.v1.RestoreBankResponse
+	18, // 43: akashic.v1.BankService.ListBankMembers:output_type -> akashic.v1.ListBankMembersResponse
+	20, // 44: akashic.v1.BankService.AddBankMember:output_type -> akashic.v1.AddBankMemberResponse
+	22, // 45: akashic.v1.BankService.RemoveBankMember:output_type -> akashic.v1.RemoveBankMemberResponse
+	24, // 46: akashic.v1.BankService.UpdateBankMemberRole:output_type -> akashic.v1.UpdateBankMemberRoleResponse
+	26, // 47: akashic.v1.BankService.SetBankVisibility:output_type -> akashic.v1.SetBankVisibilityResponse
+	36, // [36:48] is the sub-list for method output_type
+	24, // [24:36] is the sub-list for method input_type
+	24, // [24:24] is the sub-list for extension type_name
+	24, // [24:24] is the sub-list for extension extendee
+	0,  // [0:24] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_bank_proto_init() }
@@ -1488,7 +1611,7 @@ func file_akashic_v1_bank_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_akashic_v1_bank_proto_rawDesc), len(file_akashic_v1_bank_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   25,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

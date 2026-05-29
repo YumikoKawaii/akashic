@@ -23,10 +23,11 @@ type BankService struct {
 	memberRepo repository.MemberRepository
 	userRepo   repository.UserRepository
 	cache      membership.RoleCache
+	visibility membership.VisibilityCache
 }
 
-func NewBankService(repo repository.BankRepository, memberRepo repository.MemberRepository, userRepo repository.UserRepository, cache membership.RoleCache) *BankService {
-	return &BankService{repo: repo, memberRepo: memberRepo, userRepo: userRepo, cache: cache}
+func NewBankService(repo repository.BankRepository, memberRepo repository.MemberRepository, userRepo repository.UserRepository, cache membership.RoleCache, visibility membership.VisibilityCache) *BankService {
+	return &BankService{repo: repo, memberRepo: memberRepo, userRepo: userRepo, cache: cache, visibility: visibility}
 }
 
 func (s *BankService) List(userID int) ([]model.BankWithRole, error) {
@@ -43,7 +44,13 @@ func (s *BankService) GetByID(bankID, userID int) (*model.BankWithRole, error) {
 		return nil, err
 	}
 	if role == "" {
-		return nil, ErrForbidden
+		// Non-member: a public bank grants an implicit read-only viewer; a
+		// private bank is forbidden. (Mirrors the interceptor's effective role.)
+		if bank.Visibility == model.VisibilityPublic {
+			role = membership.RoleViewer
+		} else {
+			return nil, ErrForbidden
+		}
 	}
 	return &model.BankWithRole{Bank: *bank, MyRole: role}, nil
 }
@@ -108,7 +115,32 @@ func (s *BankService) UpdateDefaultConfig(bankID, userID int, config model.TestC
 }
 
 func (s *BankService) Delete(bankID int) error {
-	return s.repo.SoftDelete(bankID)
+	if err := s.repo.SoftDelete(bankID); err != nil {
+		return err
+	}
+	// A deleted bank must stop granting public access.
+	s.visibility.SetPrivate(bankID)
+	return nil
+}
+
+func (s *BankService) SetVisibility(bankID, userID int, visibility string) (*model.BankWithRole, error) {
+	if visibility != model.VisibilityPrivate && visibility != model.VisibilityPublic {
+		return nil, ErrBadRequest
+	}
+	bank, err := s.repo.FindByID(bankID)
+	if err != nil {
+		return nil, err
+	}
+	bank.Visibility = visibility
+	if err := s.repo.Save(bank); err != nil {
+		return nil, err
+	}
+	if visibility == model.VisibilityPublic {
+		s.visibility.SetPublic(bankID)
+	} else {
+		s.visibility.SetPrivate(bankID)
+	}
+	return s.GetByID(bankID, userID)
 }
 
 func (s *BankService) Restore(bankID, userID int) (*model.BankWithRole, error) {

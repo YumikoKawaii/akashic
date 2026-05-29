@@ -36,6 +36,7 @@ var procedureMinRole = map[string]string{
 	akashicv1connect.BankServiceAddBankMemberProcedure:           membership.RoleOwner,
 	akashicv1connect.BankServiceRemoveBankMemberProcedure:        membership.RoleOwner,
 	akashicv1connect.BankServiceUpdateBankMemberRoleProcedure:    membership.RoleOwner,
+	akashicv1connect.BankServiceSetBankVisibilityProcedure:       membership.RoleOwner,
 
 	// Categories
 	akashicv1connect.CategoryServiceListCategoriesProcedure:  membership.RoleViewer,
@@ -70,11 +71,13 @@ var procedureMinRole = map[string]string{
 	akashicv1connect.QuestionGroupServiceRestoreQuestionGroupProcedure: membership.RoleEditor,
 
 	// Tests
+	// Tests are creator-scoped consumption artifacts, so generating/listing/
+	// taking them is a viewer capability (a public visitor can make their own).
 	akashicv1connect.TestServiceListTestsProcedure:    membership.RoleViewer,
 	akashicv1connect.TestServiceGetTestProcedure:      membership.RoleViewer,
-	akashicv1connect.TestServiceGenerateTestProcedure: membership.RoleEditor,
-	akashicv1connect.TestServiceDeleteTestProcedure:   membership.RoleEditor,
-	akashicv1connect.TestServiceRestoreTestProcedure:  membership.RoleEditor,
+	akashicv1connect.TestServiceGenerateTestProcedure: membership.RoleViewer,
+	akashicv1connect.TestServiceDeleteTestProcedure:   membership.RoleViewer,
+	akashicv1connect.TestServiceRestoreTestProcedure:  membership.RoleViewer,
 
 	// Attempts — running a test reads bank content, so viewer suffices.
 	akashicv1connect.AttemptServiceListAttemptsByTestProcedure: membership.RoleViewer,
@@ -89,12 +92,13 @@ var errBankIDRequired = errors.New("request is registered as bank-scoped but car
 // the caller's role from an in-memory cache, falling back to the database (and
 // repopulating the cache) on a miss.
 type MembershipAuthorizer struct {
-	cache   membership.RoleCache
-	members repository.MemberRepository
+	cache      membership.RoleCache
+	visibility membership.VisibilityCache
+	members    repository.MemberRepository
 }
 
-func NewMembershipAuthorizer(cache membership.RoleCache, members repository.MemberRepository) *MembershipAuthorizer {
-	return &MembershipAuthorizer{cache: cache, members: members}
+func NewMembershipAuthorizer(cache membership.RoleCache, visibility membership.VisibilityCache, members repository.MemberRepository) *MembershipAuthorizer {
+	return &MembershipAuthorizer{cache: cache, visibility: visibility, members: members}
 }
 
 // PermissionInterceptor returns the Connect interceptor that enforces bank-role
@@ -129,11 +133,22 @@ func (a *MembershipAuthorizer) authorize(ctx context.Context, req connect.AnyReq
 		return connect.NewError(connect.CodeInternal, errBankIDRequired)
 	}
 
-	role, err := a.roleFor(int(scoped.GetBankId()), userIDFromContext(ctx))
+	bankID := int(scoped.GetBankId())
+	role, err := a.roleFor(bankID, userIDFromContext(ctx))
 	if err != nil {
 		return toConnectError(err)
 	}
-	if membership.Level(role) < membership.Level(minRole) {
+
+	// Effective level = membership role, raised to viewer when the bank is
+	// public and only a read (viewer) floor is required. Public never grants
+	// editor/owner, so public banks stay read-only to non-members.
+	level := membership.Level(role)
+	if level < membership.Level(minRole) &&
+		minRole == membership.RoleViewer &&
+		a.visibility.IsPublic(bankID) {
+		level = membership.Level(membership.RoleViewer)
+	}
+	if level < membership.Level(minRole) {
 		return connect.NewError(connect.CodePermissionDenied, svc.ErrForbidden)
 	}
 	return nil

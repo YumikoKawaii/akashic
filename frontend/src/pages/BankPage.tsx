@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { useBank, useMembers, useAddMember, useRemoveMember } from '../hooks/useBanks'
+import { useBank, useMembers, useAddMember, useRemoveMember, useSetBankVisibility } from '../hooks/useBanks'
 import { useQuestions } from '../hooks/useQuestions'
 import { useTestsPaged } from '../hooks/useTests'
 import { useCategories } from '../hooks/useCategories'
@@ -101,6 +101,7 @@ export default function BankPage() {
   const deletePassage              = useDeletePassage(bankId)
   const addMember                  = useAddMember(bankId)
   const removeMember               = useRemoveMember(bankId)
+  const setVisibility              = useSetBankVisibility()
 
   const myRole  = bank?.my_role ?? 'viewer'
   const canEdit = myRole === 'owner' || myRole === 'editor'
@@ -199,6 +200,15 @@ export default function BankPage() {
             }}>
               {myRole}
             </span>
+            <span style={{
+              marginLeft: 8,
+              fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.12em',
+              padding: '2px 7px', border: '1px solid var(--border-dim)',
+              color: bank.visibility === 'public' ? 'var(--gold)' : 'var(--ink-dim)',
+              textTransform: 'uppercase',
+            }}>
+              {bank.visibility}
+            </span>
           </p>
         </div>
         <div className="page-header-actions">
@@ -213,6 +223,15 @@ export default function BankPage() {
           )}
           {isOwner && (
             <button className="btn btn-ghost" onClick={() => setShareOpen(v => !v)}>⇄ Share</button>
+          )}
+          {isOwner && (
+            <button
+              className="btn btn-ghost"
+              disabled={setVisibility.isPending}
+              onClick={() => setVisibility.mutate({ id: bankId, visibility: bank.visibility === 'public' ? 'private' : 'public' })}
+            >
+              {bank.visibility === 'public' ? '🔒 Make Private' : '🌐 Make Public'}
+            </button>
           )}
           {(Object.keys(TAB_LABELS) as Tab[]).map(t => (
             <button

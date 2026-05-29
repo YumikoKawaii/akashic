@@ -196,6 +196,55 @@ func (BankRole) EnumDescriptor() ([]byte, []int) {
 	return file_akashic_v1_common_proto_rawDescGZIP(), []int{2}
 }
 
+type BankVisibility int32
+
+const (
+	BankVisibility_BANK_VISIBILITY_UNSPECIFIED BankVisibility = 0
+	BankVisibility_BANK_VISIBILITY_PRIVATE     BankVisibility = 1
+	BankVisibility_BANK_VISIBILITY_PUBLIC      BankVisibility = 2
+)
+
+// Enum value maps for BankVisibility.
+var (
+	BankVisibility_name = map[int32]string{
+		0: "BANK_VISIBILITY_UNSPECIFIED",
+		1: "BANK_VISIBILITY_PRIVATE",
+		2: "BANK_VISIBILITY_PUBLIC",
+	}
+	BankVisibility_value = map[string]int32{
+		"BANK_VISIBILITY_UNSPECIFIED": 0,
+		"BANK_VISIBILITY_PRIVATE":     1,
+		"BANK_VISIBILITY_PUBLIC":      2,
+	}
+)
+
+func (x BankVisibility) Enum() *BankVisibility {
+	p := new(BankVisibility)
+	*p = x
+	return p
+}
+
+func (x BankVisibility) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (BankVisibility) Descriptor() protoreflect.EnumDescriptor {
+	return file_akashic_v1_common_proto_enumTypes[3].Descriptor()
+}
+
+func (BankVisibility) Type() protoreflect.EnumType {
+	return &file_akashic_v1_common_proto_enumTypes[3]
+}
+
+func (x BankVisibility) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use BankVisibility.Descriptor instead.
+func (BankVisibility) EnumDescriptor() ([]byte, []int) {
+	return file_akashic_v1_common_proto_rawDescGZIP(), []int{3}
+}
+
 type MCQOption struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -725,7 +774,11 @@ const file_akashic_v1_common_proto_rawDesc = "" +
 	"\x15BANK_ROLE_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fBANK_ROLE_OWNER\x10\x01\x12\x14\n" +
 	"\x10BANK_ROLE_EDITOR\x10\x02\x12\x14\n" +
-	"\x10BANK_ROLE_VIEWER\x10\x03B:Z8github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1b\x06proto3"
+	"\x10BANK_ROLE_VIEWER\x10\x03*j\n" +
+	"\x0eBankVisibility\x12\x1f\n" +
+	"\x1bBANK_VISIBILITY_UNSPECIFIED\x10\x00\x12\x1b\n" +
+	"\x17BANK_VISIBILITY_PRIVATE\x10\x01\x12\x1a\n" +
+	"\x16BANK_VISIBILITY_PUBLIC\x10\x02B:Z8github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1b\x06proto3"
 
 var (
 	file_akashic_v1_common_proto_rawDescOnce sync.Once
@@ -739,25 +792,26 @@ func file_akashic_v1_common_proto_rawDescGZIP() []byte {
 	return file_akashic_v1_common_proto_rawDescData
 }
 
-var file_akashic_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_akashic_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
 var file_akashic_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_akashic_v1_common_proto_goTypes = []any{
 	(Difficulty)(0),               // 0: akashic.v1.Difficulty
 	(QuestionType)(0),             // 1: akashic.v1.QuestionType
 	(BankRole)(0),                 // 2: akashic.v1.BankRole
-	(*MCQOption)(nil),             // 3: akashic.v1.MCQOption
-	(*PassageParagraph)(nil),      // 4: akashic.v1.PassageParagraph
-	(*OptionItem)(nil),            // 5: akashic.v1.OptionItem
-	(*SectionItem)(nil),           // 6: akashic.v1.SectionItem
-	(*TestConfig)(nil),            // 7: akashic.v1.TestConfig
-	(*PageInfo)(nil),              // 8: akashic.v1.PageInfo
-	(*User)(nil),                  // 9: akashic.v1.User
-	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
+	(BankVisibility)(0),           // 3: akashic.v1.BankVisibility
+	(*MCQOption)(nil),             // 4: akashic.v1.MCQOption
+	(*PassageParagraph)(nil),      // 5: akashic.v1.PassageParagraph
+	(*OptionItem)(nil),            // 6: akashic.v1.OptionItem
+	(*SectionItem)(nil),           // 7: akashic.v1.SectionItem
+	(*TestConfig)(nil),            // 8: akashic.v1.TestConfig
+	(*PageInfo)(nil),              // 9: akashic.v1.PageInfo
+	(*User)(nil),                  // 10: akashic.v1.User
+	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
 }
 var file_akashic_v1_common_proto_depIdxs = []int32{
 	1,  // 0: akashic.v1.TestConfig.types:type_name -> akashic.v1.QuestionType
-	10, // 1: akashic.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	10, // 2: akashic.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	11, // 1: akashic.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	11, // 2: akashic.v1.User.updated_at:type_name -> google.protobuf.Timestamp
 	3,  // [3:3] is the sub-list for method output_type
 	3,  // [3:3] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
@@ -775,7 +829,7 @@ func file_akashic_v1_common_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_akashic_v1_common_proto_rawDesc), len(file_akashic_v1_common_proto_rawDesc)),
-			NumEnums:      3,
+			NumEnums:      4,
 			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,

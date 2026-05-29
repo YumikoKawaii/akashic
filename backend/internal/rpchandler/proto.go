@@ -105,6 +105,26 @@ func bankRoleFromProto(r pb.BankRole) string {
 	return ""
 }
 
+func bankVisibilityToProto(v string) pb.BankVisibility {
+	switch v {
+	case model.VisibilityPublic:
+		return pb.BankVisibility_BANK_VISIBILITY_PUBLIC
+	case model.VisibilityPrivate:
+		return pb.BankVisibility_BANK_VISIBILITY_PRIVATE
+	}
+	return pb.BankVisibility_BANK_VISIBILITY_UNSPECIFIED
+}
+
+func bankVisibilityFromProto(v pb.BankVisibility) string {
+	switch v {
+	case pb.BankVisibility_BANK_VISIBILITY_PUBLIC:
+		return model.VisibilityPublic
+	case pb.BankVisibility_BANK_VISIBILITY_PRIVATE:
+		return model.VisibilityPrivate
+	}
+	return ""
+}
+
 // ── TestConfig ─────────────────────────────────────────────────────────────────
 
 func testConfigToProto(c model.TestConfig) *pb.TestConfig {
@@ -194,6 +214,7 @@ func bankToProto(b *model.Bank) *pb.Bank {
 		DefaultConfig: testConfigToProto(b.DefaultConfig),
 		CreatedAt:     timestamppb.New(b.CreatedAt),
 		UpdatedAt:     timestamppb.New(b.UpdatedAt),
+		Visibility:    bankVisibilityToProto(b.Visibility),
 	}
 }
 

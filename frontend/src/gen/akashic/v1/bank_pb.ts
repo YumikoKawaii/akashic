@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
-import { BankRole, TestConfig, User } from "./common_pb.js";
+import { BankRole, BankVisibility, TestConfig, User } from "./common_pb.js";
 
 /**
  * @generated from message akashic.v1.Bank
@@ -46,6 +46,11 @@ export class Bank extends Message<Bank> {
    */
   updatedAt?: Timestamp;
 
+  /**
+   * @generated from field: akashic.v1.BankVisibility visibility = 8;
+   */
+  visibility = BankVisibility.UNSPECIFIED;
+
   constructor(data?: PartialMessage<Bank>) {
     super();
     proto3.util.initPartial(data, this);
@@ -61,6 +66,7 @@ export class Bank extends Message<Bank> {
     { no: 5, name: "default_config", kind: "message", T: TestConfig },
     { no: 6, name: "created_at", kind: "message", T: Timestamp },
     { no: 7, name: "updated_at", kind: "message", T: Timestamp },
+    { no: 8, name: "visibility", kind: "enum", T: proto3.getEnumType(BankVisibility) },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Bank {
@@ -1049,6 +1055,86 @@ export class UpdateBankMemberRoleResponse extends Message<UpdateBankMemberRoleRe
 
   static equals(a: UpdateBankMemberRoleResponse | PlainMessage<UpdateBankMemberRoleResponse> | undefined, b: UpdateBankMemberRoleResponse | PlainMessage<UpdateBankMemberRoleResponse> | undefined): boolean {
     return proto3.util.equals(UpdateBankMemberRoleResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.SetBankVisibilityRequest
+ */
+export class SetBankVisibilityRequest extends Message<SetBankVisibilityRequest> {
+  /**
+   * @generated from field: int32 bank_id = 1;
+   */
+  bankId = 0;
+
+  /**
+   * @generated from field: akashic.v1.BankVisibility visibility = 2;
+   */
+  visibility = BankVisibility.UNSPECIFIED;
+
+  constructor(data?: PartialMessage<SetBankVisibilityRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.SetBankVisibilityRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "visibility", kind: "enum", T: proto3.getEnumType(BankVisibility) },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SetBankVisibilityRequest {
+    return new SetBankVisibilityRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SetBankVisibilityRequest {
+    return new SetBankVisibilityRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SetBankVisibilityRequest {
+    return new SetBankVisibilityRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SetBankVisibilityRequest | PlainMessage<SetBankVisibilityRequest> | undefined, b: SetBankVisibilityRequest | PlainMessage<SetBankVisibilityRequest> | undefined): boolean {
+    return proto3.util.equals(SetBankVisibilityRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.SetBankVisibilityResponse
+ */
+export class SetBankVisibilityResponse extends Message<SetBankVisibilityResponse> {
+  /**
+   * @generated from field: akashic.v1.Bank bank = 1;
+   */
+  bank?: Bank;
+
+  constructor(data?: PartialMessage<SetBankVisibilityResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.SetBankVisibilityResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "bank", kind: "message", T: Bank },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SetBankVisibilityResponse {
+    return new SetBankVisibilityResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SetBankVisibilityResponse {
+    return new SetBankVisibilityResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SetBankVisibilityResponse {
+    return new SetBankVisibilityResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SetBankVisibilityResponse | PlainMessage<SetBankVisibilityResponse> | undefined, b: SetBankVisibilityResponse | PlainMessage<SetBankVisibilityResponse> | undefined): boolean {
+    return proto3.util.equals(SetBankVisibilityResponse, a, b);
   }
 }
 

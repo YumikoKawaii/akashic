@@ -155,3 +155,14 @@ func (h *BankServiceHandler) UpdateBankMemberRole(
 	}
 	return connect.NewResponse(&pb.UpdateBankMemberRoleResponse{Member: bankMemberToProto(member)}), nil
 }
+
+func (h *BankServiceHandler) SetBankVisibility(
+	ctx context.Context,
+	req *connect.Request[pb.SetBankVisibilityRequest],
+) (*connect.Response[pb.SetBankVisibilityResponse], error) {
+	bank, err := h.svc.SetVisibility(int(req.Msg.BankId), userIDFromContext(ctx), bankVisibilityFromProto(req.Msg.Visibility))
+	if err != nil {
+		return nil, toConnectError(err)
+	}
+	return connect.NewResponse(&pb.SetBankVisibilityResponse{Bank: bankToProto(&bank.Bank)}), nil
+}

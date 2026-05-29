@@ -60,19 +60,23 @@ func main() {
 	cacheCfg := service.GenerateConfig{UserCooldownAttempts: 3}
 	var generateCache service.GenerateCache
 	var roleCache membership.RoleCache
+	var visibilityCache membership.VisibilityCache
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
 		log.Printf("redis unavailable (%v) — using in-memory caches", err)
 		generateCache = service.NewMemCache(cacheCfg)
 		roleCache = membership.NewMemRoleCache()
+		visibilityCache = membership.NewMemVisibilityCache()
 	} else {
 		generateCache = service.NewRedisCache(rdb, cacheCfg)
 		roleCache = membership.NewRedisRoleCache(rdb)
+		visibilityCache = membership.NewRedisVisibilityCache(rdb)
 	}
 
 	warmupMembershipCache(memberRepo, roleCache)
+	warmupVisibilityCache(bankRepo, visibilityCache)
 
 	authSvc          := service.NewAuthService(userRepo, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleCallbackURL, cfg.JWTSecret)
-	bankSvc          := service.NewBankService(bankRepo, memberRepo, userRepo, roleCache)
+	bankSvc          := service.NewBankService(bankRepo, memberRepo, userRepo, roleCache, visibilityCache)
 	categorySvc      := service.NewCategoryService(categoryRepo, bankRepo)
 	passageSvc       := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
 	questionGroupSvc := service.NewQuestionGroupService(unitOfWork, questionGroupRepo, bankRepo, categoryRepo)
@@ -87,7 +91,7 @@ func main() {
 	// Authentication runs first (populates claims); authorization runs next and
 	// enforces bank-role requirements using the membership cache.
 	authn := rpchandler.NewAuthenticator(authSvc)
-	authz := rpchandler.NewMembershipAuthorizer(roleCache, memberRepo)
+	authz := rpchandler.NewMembershipAuthorizer(roleCache, visibilityCache, memberRepo)
 	interceptor := connect.WithInterceptors(
 		authn.AuthnInterceptor(),
 		authz.PermissionInterceptor(),
@@ -140,6 +144,16 @@ func warmupMembershipCache(memberRepo repository.MemberRepository, cache members
 	}
 	cache.Warm(members)
 	log.Printf("membership warmup: loaded %d memberships", len(members))
+}
+
+func warmupVisibilityCache(bankRepo repository.BankRepository, cache membership.VisibilityCache) {
+	ids, err := bankRepo.FindPublicIDs()
+	if err != nil {
+		log.Printf("visibility warmup: failed to load public banks: %v", err)
+		return
+	}
+	cache.Warm(ids)
+	log.Printf("visibility warmup: loaded %d public banks", len(ids))
 }
 
 func warmupPoolCache(bankRepo repository.BankRepository, questionRepo repository.QuestionRepository, cache service.GenerateCache) {

@@ -32,6 +32,12 @@ enum BankRole {
   BANK_ROLE_VIEWER = 3;
 }
 
+enum BankVisibility {
+  BANK_VISIBILITY_UNSPECIFIED = 0;
+  BANK_VISIBILITY_PRIVATE = 1;
+  BANK_VISIBILITY_PUBLIC = 2;
+}
+
 message MCQOption {
   string key = 1;
   string text = 2;

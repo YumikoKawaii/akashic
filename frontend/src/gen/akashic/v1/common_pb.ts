@@ -139,6 +139,32 @@ proto3.util.setEnumType(BankRole, "akashic.v1.BankRole", [
 ]);
 
 /**
+ * @generated from enum akashic.v1.BankVisibility
+ */
+export enum BankVisibility {
+  /**
+   * @generated from enum value: BANK_VISIBILITY_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: BANK_VISIBILITY_PRIVATE = 1;
+   */
+  PRIVATE = 1,
+
+  /**
+   * @generated from enum value: BANK_VISIBILITY_PUBLIC = 2;
+   */
+  PUBLIC = 2,
+}
+// Retrieve enum metadata with: proto3.getEnumType(BankVisibility)
+proto3.util.setEnumType(BankVisibility, "akashic.v1.BankVisibility", [
+  { no: 0, name: "BANK_VISIBILITY_UNSPECIFIED" },
+  { no: 1, name: "BANK_VISIBILITY_PRIVATE" },
+  { no: 2, name: "BANK_VISIBILITY_PUBLIC" },
+]);
+
+/**
  * @generated from message akashic.v1.MCQOption
  */
 export class MCQOption extends Message<MCQOption> {
