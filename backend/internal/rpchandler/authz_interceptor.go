@@ -141,10 +141,6 @@ func (a *MembershipAuthorizer) authorize(ctx context.Context, req connect.AnyReq
 
 // roleFor resolves a caller's role on a bank: cache first, then the database on
 // a miss, repopulating the cache so subsequent requests stay hot.
-//
-// TODO: coalesce concurrent misses for the same (bankID, userID) to avoid a
-// thundering herd on the DB when a hot key expires — e.g. golang.org/x/sync
-// singleflight, or a per-key lock around the read-through.
 func (a *MembershipAuthorizer) roleFor(bankID, userID int) (string, error) {
 	if role, ok := a.cache.Get(bankID, userID); ok {
 		return role, nil
