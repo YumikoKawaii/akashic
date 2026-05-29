@@ -1,8 +1,6 @@
 package rpchandler
 
 import (
-	"time"
-
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/yumikokawaii/akashic/gen/akashic/v1"
@@ -466,10 +464,11 @@ func attemptToProto(a *model.TestAttempt) *pb.Attempt {
 		v := int32(*a.Total)
 		pa.Total = &v
 	}
+	// Leave CompletedAt unset for in-progress attempts; proto3 omits absent
+	// message fields from JSON so the client sees it as undefined rather than
+	// a zero (year-1) timestamp.
 	if a.CompletedAt != nil {
 		pa.CompletedAt = timestamppb.New(*a.CompletedAt)
-	} else {
-		pa.CompletedAt = timestamppb.New(time.Time{})
 	}
 	if a.Test != nil {
 		pa.Test = testToProto(a.Test)
