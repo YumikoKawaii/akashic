@@ -333,6 +333,7 @@ func (x *StartAttemptResponse) GetAttempt() *Attempt {
 type GetAttemptRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	BankId        int32                  `protobuf:"varint,2,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -370,6 +371,13 @@ func (*GetAttemptRequest) Descriptor() ([]byte, []int) {
 func (x *GetAttemptRequest) GetId() int32 {
 	if x != nil {
 		return x.Id
+	}
+	return 0
+}
+
+func (x *GetAttemptRequest) GetBankId() int32 {
+	if x != nil {
+		return x.BankId
 	}
 	return 0
 }
@@ -422,6 +430,7 @@ type SubmitAttemptRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Answers       map[string]string      `protobuf:"bytes,2,rep,name=answers,proto3" json:"answers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	BankId        int32                  `protobuf:"varint,3,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -468,6 +477,13 @@ func (x *SubmitAttemptRequest) GetAnswers() map[string]string {
 		return x.Answers
 	}
 	return nil
+}
+
+func (x *SubmitAttemptRequest) GetBankId() int32 {
+	if x != nil {
+		return x.BankId
+	}
+	return 0
 }
 
 type SubmitAttemptResponse struct {
@@ -550,14 +566,16 @@ const file_akashic_v1_attempt_proto_rawDesc = "" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x17\n" +
 	"\atest_id\x18\x02 \x01(\x05R\x06testId\"E\n" +
 	"\x14StartAttemptResponse\x12-\n" +
-	"\aattempt\x18\x01 \x01(\v2\x13.akashic.v1.AttemptR\aattempt\"#\n" +
+	"\aattempt\x18\x01 \x01(\v2\x13.akashic.v1.AttemptR\aattempt\"<\n" +
 	"\x11GetAttemptRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\"C\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x17\n" +
+	"\abank_id\x18\x02 \x01(\x05R\x06bankId\"C\n" +
 	"\x12GetAttemptResponse\x12-\n" +
-	"\aattempt\x18\x01 \x01(\v2\x13.akashic.v1.AttemptR\aattempt\"\xab\x01\n" +
+	"\aattempt\x18\x01 \x01(\v2\x13.akashic.v1.AttemptR\aattempt\"\xc4\x01\n" +
 	"\x14SubmitAttemptRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12G\n" +
-	"\aanswers\x18\x02 \x03(\v2-.akashic.v1.SubmitAttemptRequest.AnswersEntryR\aanswers\x1a:\n" +
+	"\aanswers\x18\x02 \x03(\v2-.akashic.v1.SubmitAttemptRequest.AnswersEntryR\aanswers\x12\x17\n" +
+	"\abank_id\x18\x03 \x01(\x05R\x06bankId\x1a:\n" +
 	"\fAnswersEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"F\n" +

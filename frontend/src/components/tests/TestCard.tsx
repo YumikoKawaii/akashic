@@ -23,7 +23,7 @@ export default function TestCard({ test, bankId }: Props) {
 
   const handleStart = async () => {
     const attempt = await start.mutateAsync({ bankId, testId: test.id })
-    navigate(`/attempts/${attempt.id}`)
+    navigate(`/attempts/${bankId}/${attempt.id}`)
   }
 
   const cfg   = test.config
@@ -118,7 +118,7 @@ export default function TestCard({ test, bankId }: Props) {
             return (
               <div
                 key={a.id}
-                onClick={() => navigate(`/attempts/${a.id}/results`)}
+                onClick={() => navigate(`/attempts/${bankId}/${a.id}/results`)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '5px 8px', cursor: 'pointer', borderRadius: 3,

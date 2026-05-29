@@ -79,7 +79,7 @@ export default function GenerateTestForm({ bank, categories, passages }: Props) 
       config,
     })
     const attempt = await start.mutateAsync({ bankId: String(bank.id), testId: test.id })
-    navigate(`/attempts/${attempt.id}`)
+    navigate(`/attempts/${bank.id}/${attempt.id}`)
   }
 
   const isPending = generate.isPending || start.isPending

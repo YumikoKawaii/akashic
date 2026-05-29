@@ -35,8 +35,15 @@ func (s *AttemptService) Start(bankID, testID int) (*model.TestAttempt, error) {
 	return attempt, s.repo.Create(attempt)
 }
 
-func (s *AttemptService) GetByID(id int) (*model.TestAttempt, error) {
-	return s.repo.FindByID(id)
+func (s *AttemptService) GetByID(bankID, id int) (*model.TestAttempt, error) {
+	attempt, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if attempt.Test == nil || attempt.Test.BankID != bankID {
+		return nil, ErrForbidden
+	}
+	return attempt, nil
 }
 
 func (s *AttemptService) ListByTest(bankID, testID int) ([]model.TestAttempt, error) {
@@ -50,10 +57,13 @@ type SubmitAttemptInput struct {
 	Answers map[string]string `json:"answers" binding:"required"`
 }
 
-func (s *AttemptService) Submit(id int, input SubmitAttemptInput) (*model.TestAttempt, error) {
+func (s *AttemptService) Submit(bankID, id int, input SubmitAttemptInput) (*model.TestAttempt, error) {
 	attempt, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
+	}
+	if attempt.Test == nil || attempt.Test.BankID != bankID {
+		return nil, ErrForbidden
 	}
 	if attempt.CompletedAt != nil {
 		return nil, ErrAttemptAlreadyCompleted

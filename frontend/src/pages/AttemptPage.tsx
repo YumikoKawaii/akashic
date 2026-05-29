@@ -597,9 +597,9 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
 // ── Root ───────────────────────────────────────────────────────────────────────
 
 export default function AttemptPage() {
-  const { id = '' }       = useParams<{ id: string }>()
+  const { bankId = '', id = '' } = useParams<{ bankId: string; id: string }>()
   const navigate          = useNavigate()
-  const { data: attempt } = useAttempt(id)
+  const { data: attempt } = useAttempt(bankId, id)
   const submit            = useSubmitAttempt()
   const [answers, setAnswers] = useState<Record<string, string>>({})
 
@@ -628,8 +628,8 @@ export default function AttemptPage() {
   const isPassageTest = questions.some(tq => !!tq.question?.group?.passage_id)
 
   const handleSubmit = async () => {
-    await submit.mutateAsync({ id, answers })
-    navigate(`/attempts/${id}/results`)
+    await submit.mutateAsync({ bankId, id, answers })
+    navigate(`/attempts/${bankId}/${id}/results`)
   }
 
   if (isPassageTest) {

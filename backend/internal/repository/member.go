@@ -8,6 +8,7 @@ import (
 )
 
 type MemberRepository interface {
+	FindAll() ([]model.BankMember, error)
 	FindByBank(bankID int) ([]model.BankMember, error)
 	FindByBankAndUser(bankID, userID int) (*model.BankMember, error)
 	GetRole(bankID, userID int) (string, error)
@@ -19,6 +20,14 @@ type MemberRepository interface {
 type memberRepo struct{ db *gorm.DB }
 
 func NewMemberRepo(db *gorm.DB) MemberRepository { return &memberRepo{db} }
+
+// FindAll returns every active membership across all banks (GORM excludes
+// soft-deleted rows). Used to warm the authorization cache at startup.
+func (r *memberRepo) FindAll() ([]model.BankMember, error) {
+	var ms []model.BankMember
+	err := r.db.Find(&ms).Error
+	return ms, err
+}
 
 func (r *memberRepo) FindByBank(bankID int) ([]model.BankMember, error) {
 	var ms []model.BankMember

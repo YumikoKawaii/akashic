@@ -195,7 +195,7 @@ function StandaloneForm({ bank, categories }: { bank: Bank; categories: Category
       return
     }
     const attempt = await start.mutateAsync({ bankId: String(bank.id), testId: test.id })
-    navigate(`/attempts/${attempt.id}`)
+    navigate(`/attempts/${bank.id}/${attempt.id}`)
   }
 
   return (
@@ -285,7 +285,7 @@ function PassageForm({ bank, passages }: { bank: Bank; passages: Passage[] }) {
       return
     }
     const attempt = await start.mutateAsync({ bankId: String(bank.id), testId: test.id })
-    navigate(`/attempts/${attempt.id}`)
+    navigate(`/attempts/${bank.id}/${attempt.id}`)
   }
 
   return (

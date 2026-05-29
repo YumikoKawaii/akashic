@@ -7,14 +7,14 @@ export const attemptKeys = {
   byTest:  (bankId: string, testId: number | string) => ['attempts', 'test', bankId, String(testId)] as const,
 }
 
-export function useAttempt(id: string) {
+export function useAttempt(bankId: string, id: string) {
   return useQuery({
     queryKey: attemptKeys.detail(id),
     queryFn:  async () => {
-      const res = await attemptClient.getAttempt({ id: Number(id) })
+      const res = await attemptClient.getAttempt({ id: Number(id), bankId: Number(bankId) })
       return fromAttempt(res.attempt!)
     },
-    enabled: !!id,
+    enabled: !!bankId && !!id,
   })
 }
 
@@ -41,8 +41,8 @@ export function useStartAttempt() {
 export function useSubmitAttempt() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, answers }: { id: string; answers: Record<string, string> }) => {
-      const res = await attemptClient.submitAttempt({ id: Number(id), answers })
+    mutationFn: async ({ bankId, id, answers }: { bankId: string; id: string; answers: Record<string, string> }) => {
+      const res = await attemptClient.submitAttempt({ id: Number(id), answers, bankId: Number(bankId) })
       return fromAttempt(res.attempt!)
     },
     onSuccess: (_, { id }) => qc.invalidateQueries({ queryKey: attemptKeys.detail(id) }),

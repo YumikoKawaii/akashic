@@ -18,10 +18,20 @@ akashic/
 - Single contract: `proto/akashic/v1/*.proto`. Regenerate after any change with `buf generate`.
 - Go code generates to `backend/gen/`; TypeScript to `frontend/src/gen/`. Both are committed; never hand-edit generated files.
 - Backend serves Connect over h2c (no plain-HTTP/REST endpoints). Procedures are mounted at the proto package root: `/akashic.v1.<Service>/<Method>`.
-- Auth: JWT Bearer token in `Authorization` header, validated by a Connect unary interceptor (`internal/rpchandler/interceptor.go`). The frontend stores the token in `localStorage` and attaches it via a transport interceptor (`frontend/src/api/connect.ts`).
+- Auth (authentication): JWT Bearer token in `Authorization` header, validated by a Connect unary interceptor (`internal/rpchandler/interceptor.go`). The frontend stores the token in `localStorage` and attaches it via a transport interceptor (`frontend/src/api/connect.ts`).
+- Authorization (bank roles): a second interceptor (`internal/rpchandler/authz_interceptor.go`) runs after authentication and enforces per-procedure bank-role requirements centrally — handlers and services do NOT re-check roles. See [Authorization Model](#authorization-model) below.
 - Google OAuth is client-initiated: SPA calls `GetGoogleAuthURL`, redirects to Google, then the `/auth/callback` page calls `ExchangeGoogleCode` to receive the JWT. `GetGoogleAuthURL` + `ExchangeGoogleCode` are the only unauthenticated procedures (skipped in the interceptor).
 - `GOOGLE_CALLBACK_URL` is the frontend callback page (`<origin>/auth/callback`), and must match both the SPA's exchange `redirect_uri` and the Google Console authorized redirect URI exactly.
 - Frontend bridges generated proto types (camelCase, `Timestamp`) to existing app types (snake_case, ISO strings) in `frontend/src/api/adapters.ts`. protobuf-es is pinned to v1 (enums use the short form, e.g. `Difficulty.EASY`).
+
+## Authorization Model
+All banks are private: a user reaches a bank's data only through a membership. Roles are ordered `viewer < editor < owner` (`internal/membership`). Ownership is also mirrored on `banks.owner_id`, but **authorization reads the `bank_members` row, not `owner_id`** (owner_id is currently decorative).
+
+- **Single enforcement point.** The `MembershipAuthorizer` interceptor (`internal/rpchandler/authz_interceptor.go`) is the *only* place bank roles are checked. Handlers stay thin and services assume the caller is already authorized — do not re-add role checks in the service layer.
+- **Every bank-scoped request carries `bank_id`.** The interceptor reads it generically via the `GetBankId() int32` getter. When adding a bank-scoped RPC, the request message MUST include `int32 bank_id`, and the procedure MUST be registered in `procedureMinRole` with its minimum role. A bank-scoped request whose procedure is unregistered is **denied** (fail-closed) — so forgetting to register a new procedure fails safe, it does not leak.
+- **Role floors:** reads (`List*`/`Get*`, including attempts) → `viewer`; content mutations (`Create`/`Update`/`Delete`/`Restore`/`Ingest`/`GenerateTest`) and `UpdateBank*` → `editor`; bank deletion and all membership management (`AddBankMember`/`RemoveBankMember`/`UpdateBankMemberRole`/`DeleteBank`/`RestoreBank`) → `owner`.
+- **Entity↔bank binding still belongs to services.** The interceptor authorizes the *bank*; services must verify the target entity actually belongs to that `bank_id` (e.g. `attempt.Test.BankID == bankID`) so a member of bank A cannot reach bank B's entity by passing A's id.
+- **Role cache + dual-write.** Roles are served from a `membership.RoleCache` (no DB hit on the hot path), warmed at startup (`warmupMembershipCache` in `cmd/server/main.go`) and kept current by dual-writes in `BankService` on every membership change (`Create`/`AddMember`/`UpdateMemberRole`/`RemoveMember`). On a miss the interceptor reads through to the DB and repopulates. Two backends mirror the `GenerateCache` pattern, selected by the startup Redis ping: **Redis is primary** (`NewRedisRoleCache`) — a shared store, so it also keeps multiple backend instances consistent with no extra invalidation, with a 24h TTL as a staleness backstop — and an **in-memory map is the fallback** (`NewMemRoleCache`) when Redis is down. Any Redis error degrades to a cache miss → DB read-through, so authorization stays correct (just slower) when Redis is degraded.
 
 ## Backend Conventions (Go)
 - Module: `github.com/yumikokawaii/akashic/backend`
@@ -41,10 +51,11 @@ backend/
 ├── cmd/server/main.go
 ├── gen/              # Generated Go proto + Connect handlers (do not edit)
 ├── internal/
-│   ├── rpchandler/   # Connect service handlers, interceptor, error/proto mapping
+│   ├── rpchandler/   # Connect service handlers, auth + authz interceptors, error/proto mapping
 │   ├── service/      # Business logic
 │   ├── repository/   # GORM repositories
 │   ├── uow/          # Unit of Work
+│   ├── membership/   # Bank-role vocabulary + authz role cache (Redis primary, in-memory fallback)
 │   ├── model/        # GORM models + domain types
 │   └── config/       # Config loading
 ├── db/

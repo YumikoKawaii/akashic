@@ -43,8 +43,8 @@ function ProtectedRoutes() {
         <Route path="/banks/:bankId/passages/:passageId/edit" element={<PassageFormPage />} />
       </Route>
 
-      <Route path="/attempts/:id" element={<AttemptPage />} />
-      <Route path="/attempts/:id/results" element={<ResultsPage />} />
+      <Route path="/attempts/:bankId/:id" element={<AttemptPage />} />
+      <Route path="/attempts/:bankId/:id/results" element={<ResultsPage />} />
     </Routes>
   )
 }
