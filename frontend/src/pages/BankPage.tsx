@@ -233,17 +233,21 @@ export default function BankPage() {
               {bank.visibility === 'public' ? '🔒 Make Private' : '🌐 Make Public'}
             </button>
           )}
-          {(Object.keys(TAB_LABELS) as Tab[]).map(t => (
-            <button
-              key={t}
-              className={`btn ${tab === t ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setTab(t)}
-            >
-              {TAB_LABELS[t]}
-            </button>
-          ))}
         </div>
       </div>
+
+      {/* ── Tab navigation ──────────────────────────────────────── */}
+      <nav className="bank-tabs">
+        {(Object.keys(TAB_LABELS) as Tab[]).map(t => (
+          <button
+            key={t}
+            className={`btn ${tab === t ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setTab(t)}
+          >
+            {TAB_LABELS[t]}
+          </button>
+        ))}
+      </nav>
 
       {/* ── Share panel ─────────────────────────────────────────── */}
       {shareOpen && isOwner && (
