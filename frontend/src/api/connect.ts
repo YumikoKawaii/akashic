@@ -25,6 +25,7 @@ export function clearToken(): void {
 
 const transport = createConnectTransport({
   baseUrl: window.location.origin,
+  useBinaryFormat: true,
   interceptors: [
     (next) => async (req) => {
       const token = getToken()
