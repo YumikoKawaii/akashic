@@ -222,7 +222,81 @@ export default function BankPage() {
             </>
           )}
           {isOwner && (
-            <button className="btn btn-ghost" onClick={() => setShareOpen(v => !v)}>⇄ Share</button>
+            <div style={{ position: 'relative' }}>
+              <button className="btn btn-ghost" onClick={() => setShareOpen(v => !v)}>⇄ Share</button>
+              {shareOpen && (
+                <OrnatePanel style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 'min(460px, 92vw)', zIndex: 40, textAlign: 'left', boxShadow: '0 14px 44px rgba(60, 40, 10, 0.22)' }}>
+                  <button
+                    onClick={() => setShareOpen(false)}
+                    aria-label="Close"
+                    style={{ position: 'absolute', top: 10, right: 14, zIndex: 2, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-dim)', fontSize: '0.95rem', lineHeight: 1 }}
+                  >
+                    ✕
+                  </button>
+                  <div className="section-title" style={{ marginBottom: 14 }}>Share Bank</div>
+                  <div className="flex gap-3 items-end flex-wrap" style={{ marginBottom: 16 }}>
+                    <FormField label="Email">
+                      <Input
+                        value={shareEmail}
+                        onChange={e => { setShareEmail(e.target.value); setShareError(null) }}
+                        placeholder="name@example.com"
+                        style={{ width: 220 }}
+                        type="email"
+                      />
+                    </FormField>
+                    <FormField label="Role">
+                      <div className="flex gap-1" style={{ border: '1px solid var(--border-dim)', padding: 3, borderRadius: 4 }}>
+                        {(['viewer', 'editor'] as const).map(r => (
+                          <button key={r} onClick={() => setShareRole(r)} style={{
+                            fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.1em',
+                            padding: '4px 10px', border: 'none', cursor: 'pointer', borderRadius: 2,
+                            background: shareRole === r ? 'var(--gold-dim)' : 'transparent',
+                            color: shareRole === r ? 'var(--bg)' : 'var(--ink-dim)',
+                            textTransform: 'uppercase',
+                          }}>
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                    </FormField>
+                    <button
+                      className="btn btn-primary"
+                      disabled={!shareEmail.trim() || addMember.isPending}
+                      onClick={async () => {
+                        try {
+                          await addMember.mutateAsync({ email: shareEmail.trim(), role: shareRole })
+                          setShareEmail('')
+                          setShareError(null)
+                        } catch {
+                          setShareError('No user with that email — they must sign in once first.')
+                        }
+                      }}
+                    >
+                      {addMember.isPending ? '…' : '＋ Add'}
+                    </button>
+                  </div>
+                  {shareError && <div style={{ fontSize: '0.8rem', color: '#b03030', marginBottom: 10 }}>{shareError}</div>}
+                  {members.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                      {members.map(m => (
+                        <div key={m.user_id} className="flex items-center justify-between gap-3" style={{ fontSize: '0.85rem', padding: '6px 0', borderBottom: '1px solid var(--border-dim)' }}>
+                          <div>
+                            <span style={{ color: 'var(--ink)' }}>{m.user?.name}</span>
+                            <span style={{ color: 'var(--ink-dim)', marginLeft: 8, fontSize: '0.75rem' }}>{m.user?.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.1em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>{m.role}</span>
+                            {m.user_id !== user?.id && (
+                              <button className="btn-danger" style={{ fontSize: '0.6rem', padding: '2px 6px' }} onClick={() => removeMember.mutate(m.user_id)}>✕</button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </OrnatePanel>
+              )}
+            </div>
           )}
           {isOwner && (
             <button
@@ -249,81 +323,7 @@ export default function BankPage() {
         ))}
       </nav>
 
-      {/* ── Stats (Share panel pops over them) ──────────────────── */}
-      <div style={{ position: 'relative' }}>
-      {shareOpen && isOwner && (
-        <OrnatePanel style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30, boxShadow: '0 14px 44px rgba(60, 40, 10, 0.22)' }}>
-          <button
-            onClick={() => setShareOpen(false)}
-            aria-label="Close"
-            style={{ position: 'absolute', top: 10, right: 14, zIndex: 2, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-dim)', fontSize: '0.95rem', lineHeight: 1 }}
-          >
-            ✕
-          </button>
-          <div className="section-title" style={{ marginBottom: 14 }}>Share Bank</div>
-          <div className="flex gap-3 items-end flex-wrap" style={{ marginBottom: 16 }}>
-            <FormField label="Email">
-              <Input
-                value={shareEmail}
-                onChange={e => { setShareEmail(e.target.value); setShareError(null) }}
-                placeholder="name@example.com"
-                style={{ width: 240 }}
-                type="email"
-              />
-            </FormField>
-            <FormField label="Role">
-              <div className="flex gap-1" style={{ border: '1px solid var(--border-dim)', padding: 3, borderRadius: 4 }}>
-                {(['viewer', 'editor'] as const).map(r => (
-                  <button key={r} onClick={() => setShareRole(r)} style={{
-                    fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.1em',
-                    padding: '4px 10px', border: 'none', cursor: 'pointer', borderRadius: 2,
-                    background: shareRole === r ? 'var(--gold-dim)' : 'transparent',
-                    color: shareRole === r ? 'var(--bg)' : 'var(--ink-dim)',
-                    textTransform: 'uppercase',
-                  }}>
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </FormField>
-            <button
-              className="btn btn-primary"
-              disabled={!shareEmail.trim() || addMember.isPending}
-              onClick={async () => {
-                try {
-                  await addMember.mutateAsync({ email: shareEmail.trim(), role: shareRole })
-                  setShareEmail('')
-                  setShareError(null)
-                } catch {
-                  setShareError('No user with that email — they must sign in once first.')
-                }
-              }}
-            >
-              {addMember.isPending ? '…' : '＋ Add'}
-            </button>
-          </div>
-          {shareError && <div style={{ fontSize: '0.8rem', color: '#b03030', marginBottom: 10 }}>{shareError}</div>}
-          {members.length > 0 && (
-            <div className="flex flex-col gap-2">
-              {members.map(m => (
-                <div key={m.user_id} className="flex items-center justify-between gap-3" style={{ fontSize: '0.85rem', padding: '6px 0', borderBottom: '1px solid var(--border-dim)' }}>
-                  <div>
-                    <span style={{ color: 'var(--ink)' }}>{m.user?.name}</span>
-                    <span style={{ color: 'var(--ink-dim)', marginLeft: 8, fontSize: '0.75rem' }}>{m.user?.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.1em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>{m.role}</span>
-                    {m.user_id !== user?.id && (
-                      <button className="btn-danger" style={{ fontSize: '0.6rem', padding: '2px 6px' }} onClick={() => removeMember.mutate(m.user_id)}>✕</button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </OrnatePanel>
-      )}
-
+      {/* ── Stats ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {([
           { value: totalQ,             label: 'Questions',  color: 'var(--gold)',     circle: { variant: 'orbit' as const, color: 'var(--gold)',    opacity: 0.90 } },
@@ -342,7 +342,6 @@ export default function BankPage() {
             </div>
           </div>
         ))}
-      </div>
       </div>
 
       {/* ── Import message ──────────────────────────────────────── */}
