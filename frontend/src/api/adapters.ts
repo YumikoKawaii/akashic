@@ -78,6 +78,7 @@ export const fromBankMember = (m: PbBankMember): BankMember => ({
   id:         m.id,
   bank_id:    m.bankId,
   user_id:    m.userId,
+  user:       m.user ? { id: m.user.id, email: m.user.email, name: m.user.name, avatar_url: m.user.avatarUrl } : undefined,
   role:       bankRole(m.role),
   created_at: ts(m.createdAt),
   updated_at: ts(m.updatedAt),
