@@ -909,6 +909,7 @@ input[type=number].form-input { -moz-appearance: textfield; }
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  justify-content: flex-end;
   margin: 16px 0 4px;
 }
 
