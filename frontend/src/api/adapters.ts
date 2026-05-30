@@ -1,6 +1,12 @@
 // Adapters from proto-generated types (camelCase, Timestamp) to app interface types (snake_case, string).
 import type { Timestamp } from '@bufbuild/protobuf'
 import { Difficulty, QuestionType, BankRole, BankVisibility } from '../gen/akashic/v1/common_pb'
+import { ContributionStatus, ReviewDecision } from '../gen/akashic/v1/contribution_pb'
+import type {
+  Contribution as PbContribution,
+  ContributionReview as PbContributionReview,
+  ProposedQuestion as PbProposedQuestion,
+} from '../gen/akashic/v1/contribution_pb'
 import type { Bank as PbBank, BankWithRole as PbBankWithRole, BankMember as PbBankMember } from '../gen/akashic/v1/bank_pb'
 import type { Category as PbCategory } from '../gen/akashic/v1/category_pb'
 import type { Passage as PbPassage } from '../gen/akashic/v1/passage_pb'
@@ -12,7 +18,9 @@ import type {
   Bank, BankMember, BankRole as AppBankRole, BankVisibility as AppBankVisibility,
   Category, Passage, PassageParagraph,
   QuestionGroup, GroupContext, Question, Test, TestQuestion, TestAttempt,
-  QuestionType as AppQuestionType, QuestionDifficulty, MCQOption, QQuestionItem, QMultipleChoice
+  QuestionType as AppQuestionType, QuestionDifficulty, MCQOption, QQuestionItem, QMultipleChoice,
+  Contribution, ContributionReview, ProposedQuestion, User,
+  ContributionStatus as AppContributionStatus, ReviewDecision as AppReviewDecision
 } from '../types'
 
 const ts = (t?: Timestamp | null): string =>
@@ -202,6 +210,72 @@ export const fromTest = (t: PbTest): Test => ({
   } as TestQuestion)),
   created_at: ts(t.createdAt),
   updated_at: ts(t.updatedAt),
+})
+
+const contributionStatus = (s: ContributionStatus): AppContributionStatus => {
+  switch (s) {
+    case ContributionStatus.PENDING:           return 'pending'
+    case ContributionStatus.CHANGES_REQUESTED: return 'changes_requested'
+    case ContributionStatus.APPROVED:          return 'approved'
+    case ContributionStatus.REJECTED:          return 'rejected'
+    case ContributionStatus.MERGED:            return 'merged'
+    default:                                   return 'pending'
+  }
+}
+
+const reviewDecision = (d: ReviewDecision): AppReviewDecision => {
+  switch (d) {
+    case ReviewDecision.APPROVE:         return 'approve'
+    case ReviewDecision.REJECT:          return 'reject'
+    case ReviewDecision.REQUEST_CHANGES: return 'request_changes'
+    default:                             return 'approve'
+  }
+}
+
+const fromUser = (u?: { id: number; email: string; name: string; avatarUrl: string }): User | undefined =>
+  u ? { id: u.id, email: u.email, name: u.name, avatar_url: u.avatarUrl } : undefined
+
+const fromProposedQuestion = (p: PbProposedQuestion): ProposedQuestion => {
+  const base = {
+    category_id: p.categoryId,
+    type:        questionType(p.type),
+    difficulty:  difficulty(p.difficulty),
+    tags:        p.tags,
+  }
+  if (p.content.case === 'choice') {
+    return {
+      ...base,
+      content: p.content.value.content,
+      options: p.content.value.options.map(o => ({ key: o.key, text: o.text } as MCQOption)),
+      answers: p.content.value.answers,
+    }
+  }
+  if (p.content.case === 'item') {
+    return { ...base, content: p.content.value.content, answer: p.content.value.answer }
+  }
+  return { ...base, content: '' }
+}
+
+export const fromContributionReview = (r: PbContributionReview): ContributionReview => ({
+  id:          r.id,
+  reviewer_id: r.reviewerId,
+  decision:    reviewDecision(r.decision),
+  note:        r.note,
+  created_at:  ts(r.createdAt),
+  reviewer:    fromUser(r.reviewer),
+})
+
+export const fromContribution = (c: PbContribution): Contribution => ({
+  id:                 c.id,
+  bank_id:            c.bankId,
+  contributor_id:     c.contributorId,
+  proposed:           c.proposed ? fromProposedQuestion(c.proposed) : { category_id: 0, type: 'mcq', difficulty: 'medium', tags: [], content: '' },
+  status:             contributionStatus(c.status),
+  merged_question_id: c.mergedQuestionId ?? undefined,
+  reviews:            c.reviews.map(fromContributionReview),
+  created_at:         ts(c.createdAt),
+  updated_at:         ts(c.updatedAt),
+  contributor:        fromUser(c.contributor),
 })
 
 export const fromAttempt = (a: PbAttempt): TestAttempt => ({

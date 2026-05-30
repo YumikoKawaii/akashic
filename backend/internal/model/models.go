@@ -217,3 +217,57 @@ type TestAttempt struct {
 	UpdatedAt   time.Time         `                                json:"updated_at"`
 	DeletedAt   gorm.DeletedAt    `gorm:"index"                    json:"-"`
 }
+
+// ── Contributions ────────────────────────────────────────────────────────────
+
+// Contribution lifecycle: a non-terminal status is one of pending /
+// changes_requested / approved; rejected and merged are terminal.
+const (
+	ContributionPending          = "pending"
+	ContributionChangesRequested = "changes_requested"
+	ContributionApproved         = "approved" // >=1 approve, awaiting contributor merge
+	ContributionRejected         = "rejected" // terminal
+	ContributionMerged           = "merged"   // terminal — question created
+
+	ReviewApprove        = "approve"
+	ReviewReject         = "reject"
+	ReviewRequestChanges = "request_changes"
+)
+
+// ContributionPayload is the proposed new question, snapshotted as JSONB. Mirrors
+// service.CreateQuestionInput so the merge path can build a question directly.
+type ContributionPayload struct {
+	CategoryID int         `json:"category_id"`
+	Type       string      `json:"type"`
+	Difficulty string      `json:"difficulty"`
+	Tags       []string    `json:"tags"`
+	Content    string      `json:"content"`
+	Answer     string      `json:"answer,omitempty"`  // non-mcq
+	Options    []MCQOption `json:"options,omitempty"` // mcq
+	Answers    []string    `json:"answers,omitempty"` // mcq
+}
+
+type Contribution struct {
+	ID               int                  `gorm:"primaryKey;autoIncrement" json:"id"`
+	BankID           int                  `gorm:"not null;index"           json:"bank_id"`
+	ContributorID    int                  `gorm:"not null;index"           json:"contributor_id"`
+	Contributor      *User                `gorm:"foreignKey:ContributorID" json:"contributor,omitempty"`
+	Payload          ContributionPayload  `gorm:"serializer:json"          json:"payload"`
+	Status           string               `gorm:"not null;default:'pending'" json:"status"`
+	MergedQuestionID *int                 `                                json:"merged_question_id,omitempty"`
+	Reviews          []ContributionReview `gorm:"foreignKey:ContributionID" json:"reviews,omitempty"`
+	CreatedAt        time.Time            `                                json:"created_at"`
+	UpdatedAt        time.Time            `                                json:"updated_at"`
+	DeletedAt        gorm.DeletedAt       `gorm:"index"                    json:"-"`
+}
+
+type ContributionReview struct {
+	ID             int            `gorm:"primaryKey;autoIncrement" json:"id"`
+	ContributionID int            `gorm:"not null;index"           json:"contribution_id"`
+	ReviewerID     int            `gorm:"not null"                 json:"reviewer_id"`
+	Reviewer       *User          `gorm:"foreignKey:ReviewerID"    json:"reviewer,omitempty"`
+	Decision       string         `gorm:"not null"                 json:"decision"`
+	Note           string         `gorm:"not null;default:''"      json:"note"`
+	CreatedAt      time.Time      `                                json:"created_at"`
+	DeletedAt      gorm.DeletedAt `gorm:"index"                    json:"-"`
+}

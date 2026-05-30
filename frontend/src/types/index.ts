@@ -199,3 +199,39 @@ export interface TestPage {
   page:      number
   page_size: number
 }
+
+export type ContributionStatus = 'pending' | 'changes_requested' | 'approved' | 'rejected' | 'merged'
+export type ReviewDecision = 'approve' | 'reject' | 'request_changes'
+
+export interface ProposedQuestion {
+  category_id: number
+  type: QuestionType
+  difficulty: QuestionDifficulty
+  tags: string[]
+  content: string
+  answer?: string
+  options?: MCQOption[]
+  answers?: string[]
+}
+
+export interface ContributionReview {
+  id: number
+  reviewer_id: number
+  decision: ReviewDecision
+  note: string
+  created_at: string
+  reviewer?: User
+}
+
+export interface Contribution {
+  id: number
+  bank_id: number
+  contributor_id: number
+  proposed: ProposedQuestion
+  status: ContributionStatus
+  merged_question_id?: number
+  reviews: ContributionReview[]
+  created_at: string
+  updated_at: string
+  contributor?: User
+}
