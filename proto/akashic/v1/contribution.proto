@@ -1,0 +1,106 @@
+syntax = "proto3";
+package akashic.v1;
+
+import "google/protobuf/timestamp.proto";
+import "akashic/v1/common.proto";
+import "akashic/v1/question.proto";
+
+option go_package = "github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1";
+
+service ContributionService {
+  rpc SubmitContribution   (SubmitContributionRequest)   returns (SubmitContributionResponse);
+  rpc UpdateContribution   (UpdateContributionRequest)   returns (UpdateContributionResponse);
+  rpc ListMyContributions  (ListMyContributionsRequest)  returns (ListMyContributionsResponse);
+  rpc WithdrawContribution (WithdrawContributionRequest) returns (WithdrawContributionResponse);
+  rpc MergeContribution    (MergeContributionRequest)    returns (MergeContributionResponse);
+  rpc ListContributions    (ListContributionsRequest)    returns (ListContributionsResponse);
+  rpc ReviewContribution   (ReviewContributionRequest)   returns (ReviewContributionResponse);
+}
+
+enum ContributionStatus {
+  CONTRIBUTION_STATUS_UNSPECIFIED       = 0;
+  CONTRIBUTION_STATUS_PENDING           = 1;
+  CONTRIBUTION_STATUS_CHANGES_REQUESTED = 2;
+  CONTRIBUTION_STATUS_APPROVED          = 3; // >=1 approve, awaiting contributor merge
+  CONTRIBUTION_STATUS_REJECTED          = 4; // terminal
+  CONTRIBUTION_STATUS_MERGED            = 5; // terminal — question created
+}
+
+enum ReviewDecision {
+  REVIEW_DECISION_UNSPECIFIED     = 0;
+  REVIEW_DECISION_APPROVE         = 1; // -> approved (does NOT create a question; contributor merges)
+  REVIEW_DECISION_REJECT          = 2; // -> rejected (terminal)
+  REVIEW_DECISION_REQUEST_CHANGES = 3; // -> changes_requested (bounces back to contributor)
+}
+
+// ── Entities ────────────────────────────────────────────────────────────────
+
+// ProposedQuestion is the proposed new question — mirrors CreateQuestionRequest content.
+message ProposedQuestion {
+  int32           category_id = 1;
+  QuestionType    type = 2;
+  Difficulty      difficulty = 3;
+  repeated string tags = 4;
+  oneof content {
+    QuestionItem   item = 5;
+    MultipleChoice choice = 6;
+  }
+}
+
+message ContributionReview {
+  int32                     id = 1;
+  int32                     reviewer_id = 2;
+  ReviewDecision            decision = 3;
+  string                    note = 4;
+  google.protobuf.Timestamp created_at = 5;
+  optional User             reviewer = 6;
+}
+
+message Contribution {
+  int32                       id = 1;
+  int32                       bank_id = 2;
+  int32                       contributor_id = 3;
+  ProposedQuestion            proposed = 4;
+  ContributionStatus          status = 5;
+  optional int32              question_id = 6; // the question created on merge
+  repeated ContributionReview reviews = 7;            // 1-n history, oldest -> newest
+  google.protobuf.Timestamp   created_at = 8;
+  google.protobuf.Timestamp   updated_at = 9;
+  optional User               contributor = 10;
+}
+
+// ── Submit / Update ───────────────────────────────────────────────────────────
+
+message SubmitContributionRequest  { int32 bank_id = 1; ProposedQuestion proposed = 2; }
+message SubmitContributionResponse { Contribution contribution = 1; }
+
+// Contributor revises a non-terminal contribution -> reopens to pending.
+message UpdateContributionRequest  { int32 bank_id = 1; int32 id = 2; ProposedQuestion proposed = 3; }
+message UpdateContributionResponse { Contribution contribution = 1; }
+
+// ── List (mine) / Withdraw / Merge ──────────────────────────────────────────────
+
+message ListMyContributionsRequest  { int32 bank_id = 1; } // caller's own, this bank
+message ListMyContributionsResponse { repeated Contribution contributions = 1; }
+
+message WithdrawContributionRequest  { int32 bank_id = 1; int32 id = 2; }
+message WithdrawContributionResponse {}
+
+// Contributor-only; allowed only when status == approved. Creates the question.
+message MergeContributionRequest  { int32 bank_id = 1; int32 id = 2; }
+message MergeContributionResponse { Contribution contribution = 1; }
+
+// ── Review queue (editor+) ──────────────────────────────────────────────────────
+
+message ListContributionsRequest  { int32 bank_id = 1; ContributionStatus status = 2; } // status optional filter
+message ListContributionsResponse { repeated Contribution contributions = 1; }
+
+// Adds one review round. APPROVE moves to approved (no question yet — contributor
+// merges); REQUEST_CHANGES reopens for revision; REJECT is terminal.
+message ReviewContributionRequest {
+  int32          bank_id = 1;
+  int32          id = 2;
+  ReviewDecision decision = 3;
+  string         note = 4;
+}
+message ReviewContributionResponse { Contribution contribution = 1; }

@@ -56,6 +56,7 @@ func main() {
 	attemptRepo       := repository.NewAttemptRepo(db)
 	userRepo          := repository.NewUserRepo(db)
 	memberRepo        := repository.NewMemberRepo(db)
+	contributionRepo  := repository.NewContributionRepo(db)
 
 	cacheCfg := service.GenerateConfig{UserCooldownAttempts: 3}
 	var generateCache service.GenerateCache
@@ -84,6 +85,7 @@ func main() {
 	testSvc          := service.NewTestService(unitOfWork, testRepo, questionRepo, questionGroupRepo, bankRepo, generateCache)
 	attemptSvc       := service.NewAttemptService(attemptRepo, testRepo)
 	ingestSvc        := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo)
+	contributionSvc  := service.NewContributionService(unitOfWork, contributionRepo, bankRepo, categoryRepo, generateCache)
 
 	warmupPoolCache(bankRepo, questionRepo, generateCache)
 
@@ -116,6 +118,8 @@ func main() {
 		rpchandler.NewTestServiceHandler(testSvc), interceptor))
 	mux.Handle(akashicv1connect.NewAttemptServiceHandler(
 		rpchandler.NewAttemptServiceHandler(attemptSvc), interceptor))
+	mux.Handle(akashicv1connect.NewContributionServiceHandler(
+		rpchandler.NewContributionServiceHandler(contributionSvc), interceptor))
 
 	// ── Static frontend ────────────────────────────────────────────────────────
 	if cfg.StaticDir != "" {

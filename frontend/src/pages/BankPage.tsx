@@ -12,6 +12,8 @@ import { questionClient } from '../api/connect'
 import QuestionCard from '../components/questions/QuestionCard'
 import TestCard from '../components/tests/TestCard'
 import GenerateTab from '../components/tests/GenerateTab'
+import ContributeTab from '../components/contributions/ContributeTab'
+import ReviewTab from '../components/contributions/ReviewTab'
 import OrnateDivider from '../components/ui/OrnateDivider'
 import OrnatePanel from '../components/ui/OrnatePanel'
 import { FormField, Input } from '../components/ui/FormField'
@@ -20,13 +22,15 @@ import MagicCircle from '../components/ui/MagicCircle'
 import RuneCorners from '../components/ui/RuneCorners'
 import Select from '../components/ui/Select'
 
-type Tab = 'questions' | 'passages' | 'generate' | 'tests'
+type Tab = 'questions' | 'passages' | 'generate' | 'tests' | 'contribute' | 'review'
 
 const TAB_LABELS: Record<Tab, string> = {
-  questions: 'Questions',
-  passages:  'Passages',
-  generate:  'Generate',
-  tests:     'Tests',
+  questions:  'Questions',
+  passages:   'Passages',
+  generate:   'Generate',
+  tests:      'Tests',
+  contribute: 'Contribute',
+  review:     'Review',
 }
 
 const QUESTION_TYPES = [
@@ -106,6 +110,13 @@ export default function BankPage() {
   const myRole  = bank?.my_role ?? 'viewer'
   const canEdit = myRole === 'owner' || myRole === 'editor'
   const isOwner = myRole === 'owner'
+
+  // Editors review the contribution queue; pure viewers (incl. public visitors)
+  // get a Contribute tab to propose questions.
+  const visibleTabs: Tab[] = [
+    'questions', 'passages', 'generate', 'tests',
+    ...(canEdit ? (['review'] as Tab[]) : (['contribute'] as Tab[])),
+  ]
 
   const [tab,           setTab]           = useState<Tab>((searchParams.get('tab') as Tab) ?? 'questions')
   const [filter,        setFilter]        = useState<QuestionFilter>({})
@@ -312,7 +323,7 @@ export default function BankPage() {
 
       {/* ── Tab navigation ──────────────────────────────────────── */}
       <nav className="bank-tabs">
-        {(Object.keys(TAB_LABELS) as Tab[]).map(t => (
+        {visibleTabs.map(t => (
           <button
             key={t}
             className={`btn ${tab === t ? 'btn-primary' : 'btn-ghost'}`}
@@ -546,6 +557,22 @@ export default function BankPage() {
           )}
 
           {totalTestPages > 1 && <PageInput page={testPage} totalPages={totalTestPages} onChange={setTestPage} />}
+        </>
+      )}
+
+      {/* ── Contribute tab (viewers) ────────────────────────────── */}
+      {tab === 'contribute' && !canEdit && (
+        <>
+          <OrnateDivider />
+          <ContributeTab bankId={bankId} categories={categories} />
+        </>
+      )}
+
+      {/* ── Review tab (editors+) ───────────────────────────────── */}
+      {tab === 'review' && canEdit && (
+        <>
+          <OrnateDivider />
+          <ReviewTab bankId={bankId} categories={categories} />
         </>
       )}
 

@@ -21,6 +21,7 @@ type Transaction struct {
 	Questions     repository.QuestionRepository
 	Tests         repository.TestRepository
 	Attempts      repository.AttemptRepository
+	Contributions repository.ContributionRepository
 }
 
 func (u *UnitOfWork) Begin() *Transaction {
@@ -35,6 +36,7 @@ func (u *UnitOfWork) Begin() *Transaction {
 		Questions:     repository.NewQuestionRepo(tx),
 		Tests:         repository.NewTestRepo(tx),
 		Attempts:      repository.NewAttemptRepo(tx),
+		Contributions: repository.NewContributionRepo(tx),
 	}
 }
 

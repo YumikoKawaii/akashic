@@ -84,6 +84,19 @@ var procedureMinRole = map[string]string{
 	akashicv1connect.AttemptServiceStartAttemptProcedure:       membership.RoleViewer,
 	akashicv1connect.AttemptServiceGetAttemptProcedure:         membership.RoleViewer,
 	akashicv1connect.AttemptServiceSubmitAttemptProcedure:      membership.RoleViewer,
+
+	// Contributions — proposing, revising, withdrawing and merging are viewer
+	// capabilities (public visitors may contribute). Merge is viewer-floor but
+	// creates a question; that is safe because the service gates it on
+	// status==approved, which only an editor's review can produce. Reviewing the
+	// queue (list/approve/reject/request_changes) is an editor capability.
+	akashicv1connect.ContributionServiceSubmitContributionProcedure:   membership.RoleViewer,
+	akashicv1connect.ContributionServiceUpdateContributionProcedure:   membership.RoleViewer,
+	akashicv1connect.ContributionServiceListMyContributionsProcedure:  membership.RoleViewer,
+	akashicv1connect.ContributionServiceWithdrawContributionProcedure: membership.RoleViewer,
+	akashicv1connect.ContributionServiceMergeContributionProcedure:    membership.RoleViewer,
+	akashicv1connect.ContributionServiceListContributionsProcedure:    membership.RoleEditor,
+	akashicv1connect.ContributionServiceReviewContributionProcedure:   membership.RoleEditor,
 }
 
 var errBankIDRequired = errors.New("request is registered as bank-scoped but carries no bank_id")

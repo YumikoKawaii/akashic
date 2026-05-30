@@ -8,6 +8,7 @@ import { QuestionGroupService } from '../gen/akashic/v1/question_group_connect'
 import { QuestionService }      from '../gen/akashic/v1/question_connect'
 import { TestService }          from '../gen/akashic/v1/test_connect'
 import { AttemptService }       from '../gen/akashic/v1/attempt_connect'
+import { ContributionService }  from '../gen/akashic/v1/contribution_connect'
 
 const TOKEN_KEY = 'akashic_token'
 
@@ -43,3 +44,4 @@ export const questionGroupClient = createClient(QuestionGroupService, transport)
 export const questionClient      = createClient(QuestionService,      transport)
 export const testClient          = createClient(TestService,          transport)
 export const attemptClient       = createClient(AttemptService,       transport)
+export const contributionClient  = createClient(ContributionService,  transport)
