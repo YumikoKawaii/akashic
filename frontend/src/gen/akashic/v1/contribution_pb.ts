@@ -269,11 +269,11 @@ export class Contribution extends Message<Contribution> {
   status = ContributionStatus.UNSPECIFIED;
 
   /**
-   * set when contributor merges
+   * the question created on merge
    *
-   * @generated from field: optional int32 merged_question_id = 6;
+   * @generated from field: optional int32 question_id = 6;
    */
-  mergedQuestionId?: number;
+  questionId?: number;
 
   /**
    * 1-n history, oldest -> newest
@@ -310,7 +310,7 @@ export class Contribution extends Message<Contribution> {
     { no: 3, name: "contributor_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 4, name: "proposed", kind: "message", T: ProposedQuestion },
     { no: 5, name: "status", kind: "enum", T: proto3.getEnumType(ContributionStatus) },
-    { no: 6, name: "merged_question_id", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
+    { no: 6, name: "question_id", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
     { no: 7, name: "reviews", kind: "message", T: ContributionReview, repeated: true },
     { no: 8, name: "created_at", kind: "message", T: Timestamp },
     { no: 9, name: "updated_at", kind: "message", T: Timestamp },

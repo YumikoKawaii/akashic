@@ -224,7 +224,7 @@ func (s *ContributionService) Merge(bankID, userID, id int) (*model.Contribution
 		}
 	}
 	c.Status = model.ContributionMerged
-	c.MergedQuestionID = &q.ID
+	c.QuestionID = &q.ID
 	if err := tx.Contributions.Save(c); err != nil {
 		return nil, err
 	}

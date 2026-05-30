@@ -229,7 +229,7 @@ export interface Contribution {
   contributor_id: number
   proposed: ProposedQuestion
   status: ContributionStatus
-  merged_question_id?: number
+  question_id?: number
   reviews: ContributionReview[]
   created_at: string
   updated_at: string

@@ -254,7 +254,7 @@ type Contribution struct {
 	Contributor      *User                `gorm:"foreignKey:ContributorID" json:"contributor,omitempty"`
 	Payload          ContributionPayload  `gorm:"serializer:json"          json:"payload"`
 	Status           string               `gorm:"not null;default:'pending'" json:"status"`
-	MergedQuestionID *int                 `                                json:"merged_question_id,omitempty"`
+	QuestionID       *int                 `                                json:"question_id,omitempty"`
 	Reviews          []ContributionReview `gorm:"foreignKey:ContributionID" json:"reviews,omitempty"`
 	CreatedAt        time.Time            `                                json:"created_at"`
 	UpdatedAt        time.Time            `                                json:"updated_at"`

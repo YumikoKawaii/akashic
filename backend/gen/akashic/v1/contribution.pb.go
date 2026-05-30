@@ -332,19 +332,19 @@ func (x *ContributionReview) GetReviewer() *User {
 }
 
 type Contribution struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	Id               int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	BankId           int32                  `protobuf:"varint,2,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
-	ContributorId    int32                  `protobuf:"varint,3,opt,name=contributor_id,json=contributorId,proto3" json:"contributor_id,omitempty"`
-	Proposed         *ProposedQuestion      `protobuf:"bytes,4,opt,name=proposed,proto3" json:"proposed,omitempty"`
-	Status           ContributionStatus     `protobuf:"varint,5,opt,name=status,proto3,enum=akashic.v1.ContributionStatus" json:"status,omitempty"`
-	MergedQuestionId *int32                 `protobuf:"varint,6,opt,name=merged_question_id,json=mergedQuestionId,proto3,oneof" json:"merged_question_id,omitempty"` // set when contributor merges
-	Reviews          []*ContributionReview  `protobuf:"bytes,7,rep,name=reviews,proto3" json:"reviews,omitempty"`                                                    // 1-n history, oldest -> newest
-	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt        *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Contributor      *User                  `protobuf:"bytes,10,opt,name=contributor,proto3,oneof" json:"contributor,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	BankId        int32                  `protobuf:"varint,2,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
+	ContributorId int32                  `protobuf:"varint,3,opt,name=contributor_id,json=contributorId,proto3" json:"contributor_id,omitempty"`
+	Proposed      *ProposedQuestion      `protobuf:"bytes,4,opt,name=proposed,proto3" json:"proposed,omitempty"`
+	Status        ContributionStatus     `protobuf:"varint,5,opt,name=status,proto3,enum=akashic.v1.ContributionStatus" json:"status,omitempty"`
+	QuestionId    *int32                 `protobuf:"varint,6,opt,name=question_id,json=questionId,proto3,oneof" json:"question_id,omitempty"` // the question created on merge
+	Reviews       []*ContributionReview  `protobuf:"bytes,7,rep,name=reviews,proto3" json:"reviews,omitempty"`                                // 1-n history, oldest -> newest
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Contributor   *User                  `protobuf:"bytes,10,opt,name=contributor,proto3,oneof" json:"contributor,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Contribution) Reset() {
@@ -412,9 +412,9 @@ func (x *Contribution) GetStatus() ContributionStatus {
 	return ContributionStatus_CONTRIBUTION_STATUS_UNSPECIFIED
 }
 
-func (x *Contribution) GetMergedQuestionId() int32 {
-	if x != nil && x.MergedQuestionId != nil {
-		return *x.MergedQuestionId
+func (x *Contribution) GetQuestionId() int32 {
+	if x != nil && x.QuestionId != nil {
+		return *x.QuestionId
 	}
 	return 0
 }
@@ -1157,22 +1157,23 @@ const file_akashic_v1_contribution_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x121\n" +
 	"\breviewer\x18\x06 \x01(\v2\x10.akashic.v1.UserH\x00R\breviewer\x88\x01\x01B\v\n" +
-	"\t_reviewer\"\x93\x04\n" +
+	"\t_reviewer\"\xff\x03\n" +
 	"\fContribution\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x17\n" +
 	"\abank_id\x18\x02 \x01(\x05R\x06bankId\x12%\n" +
 	"\x0econtributor_id\x18\x03 \x01(\x05R\rcontributorId\x128\n" +
 	"\bproposed\x18\x04 \x01(\v2\x1c.akashic.v1.ProposedQuestionR\bproposed\x126\n" +
-	"\x06status\x18\x05 \x01(\x0e2\x1e.akashic.v1.ContributionStatusR\x06status\x121\n" +
-	"\x12merged_question_id\x18\x06 \x01(\x05H\x00R\x10mergedQuestionId\x88\x01\x01\x128\n" +
+	"\x06status\x18\x05 \x01(\x0e2\x1e.akashic.v1.ContributionStatusR\x06status\x12$\n" +
+	"\vquestion_id\x18\x06 \x01(\x05H\x00R\n" +
+	"questionId\x88\x01\x01\x128\n" +
 	"\areviews\x18\a \x03(\v2\x1e.akashic.v1.ContributionReviewR\areviews\x129\n" +
 	"\n" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x127\n" +
 	"\vcontributor\x18\n" +
-	" \x01(\v2\x10.akashic.v1.UserH\x01R\vcontributor\x88\x01\x01B\x15\n" +
-	"\x13_merged_question_idB\x0e\n" +
+	" \x01(\v2\x10.akashic.v1.UserH\x01R\vcontributor\x88\x01\x01B\x0e\n" +
+	"\f_question_idB\x0e\n" +
 	"\f_contributor\"n\n" +
 	"\x19SubmitContributionRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x128\n" +

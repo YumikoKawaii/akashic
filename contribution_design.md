@@ -65,7 +65,7 @@ CREATE TABLE contributions (
     contributor_id       INTEGER NOT NULL REFERENCES users(id),
     payload              JSONB   NOT NULL,                  -- proposed question snapshot
     status               TEXT    NOT NULL DEFAULT 'pending', -- pending|changes_requested|approved|rejected|merged
-    merged_question_id   INTEGER REFERENCES questions(id),  -- set when the contributor merges
+    question_id          INTEGER REFERENCES questions(id),  -- the question created on merge
     created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
     deleted_at           TIMESTAMPTZ
@@ -110,7 +110,7 @@ type Contribution struct {
     Contributor        *User                `gorm:"foreignKey:ContributorID"`
     Payload            ContributionPayload  `gorm:"serializer:json"`
     Status             string               `gorm:"not null;default:'pending'"`
-    MergedQuestionID   *int                 // set when the contributor merges
+    QuestionID         *int                 // the question created on merge
     Reviews            []ContributionReview `gorm:"foreignKey:ContributionID"` // 1-n history
     CreatedAt          time.Time
     UpdatedAt          time.Time
@@ -214,7 +214,7 @@ message Contribution {
   int32                       contributor_id = 3;
   ProposedQuestion            proposed = 4;
   ContributionStatus          status = 5;
-  optional int32              merged_question_id = 6;   // set when contributor merges
+  optional int32              question_id = 6;          // the question created on merge
   repeated ContributionReview reviews = 7;              // 1-n history, oldest→newest
   google.protobuf.Timestamp   created_at = 8;
   google.protobuf.Timestamp   updated_at = 9;
@@ -306,7 +306,7 @@ WithdrawContribution (viewer)             find; verify BankID==bankID && contrib
 MergeContribution (viewer)                UoW (questions + contributions)
   find; verify BankID==bankID && contributor==caller && status==approved
   create Question from payload (reuse CreateQuestion logic)
-  set merged_question_id, status=merged
+  set question_id, status=merged
 
 ListContributions (editor)                repo.FindByBank(bankID, statusFilter), reviews preloaded
 ReviewContribution (editor)               UoW (contribution_reviews + contributions)

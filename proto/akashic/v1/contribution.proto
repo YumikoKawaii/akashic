@@ -62,7 +62,7 @@ message Contribution {
   int32                       contributor_id = 3;
   ProposedQuestion            proposed = 4;
   ContributionStatus          status = 5;
-  optional int32              merged_question_id = 6; // set when contributor merges
+  optional int32              question_id = 6; // the question created on merge
   repeated ContributionReview reviews = 7;            // 1-n history, oldest -> newest
   google.protobuf.Timestamp   created_at = 8;
   google.protobuf.Timestamp   updated_at = 9;

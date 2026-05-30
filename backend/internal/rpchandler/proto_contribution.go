@@ -127,10 +127,10 @@ func contributionReviewToProto(r *model.ContributionReview) *pb.ContributionRevi
 }
 
 func contributionToProto(c *model.Contribution) *pb.Contribution {
-	var mergedQuestionID *int32
-	if c.MergedQuestionID != nil {
-		v := int32(*c.MergedQuestionID)
-		mergedQuestionID = &v
+	var questionID *int32
+	if c.QuestionID != nil {
+		v := int32(*c.QuestionID)
+		questionID = &v
 	}
 	reviews := make([]*pb.ContributionReview, len(c.Reviews))
 	for i := range c.Reviews {
@@ -142,7 +142,7 @@ func contributionToProto(c *model.Contribution) *pb.Contribution {
 		ContributorId:    int32(c.ContributorID),
 		Proposed:         proposedQuestionToProto(c.Payload),
 		Status:           contributionStatusToProto(c.Status),
-		MergedQuestionId: mergedQuestionID,
+		QuestionId:       questionID,
 		Reviews:          reviews,
 		CreatedAt:        timestamppb.New(c.CreatedAt),
 		UpdatedAt:        timestamppb.New(c.UpdatedAt),

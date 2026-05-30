@@ -271,7 +271,7 @@ export const fromContribution = (c: PbContribution): Contribution => ({
   contributor_id:     c.contributorId,
   proposed:           c.proposed ? fromProposedQuestion(c.proposed) : { category_id: 0, type: 'mcq', difficulty: 'medium', tags: [], content: '' },
   status:             contributionStatus(c.status),
-  merged_question_id: c.mergedQuestionId ?? undefined,
+  question_id:        c.questionId ?? undefined,
   reviews:            c.reviews.map(fromContributionReview),
   created_at:         ts(c.createdAt),
   updated_at:         ts(c.updatedAt),

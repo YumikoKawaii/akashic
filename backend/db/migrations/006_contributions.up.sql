@@ -8,7 +8,7 @@ CREATE TABLE contributions (
     contributor_id     INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     payload            JSONB       NOT NULL,                  -- proposed question snapshot
     status             TEXT        NOT NULL DEFAULT 'pending', -- pending|changes_requested|approved|rejected|merged
-    merged_question_id INTEGER     REFERENCES questions(id) ON DELETE SET NULL,
+    question_id        INTEGER     REFERENCES questions(id) ON DELETE SET NULL, -- the question created on merge
     created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at         TIMESTAMPTZ
