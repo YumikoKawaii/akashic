@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
-import type { Category, Contribution } from '../../types'
+import type { Category, Contribution, ContributionEvent, ContributionComment } from '../../types'
 import { Input } from '../ui/FormField'
-import { STATUS_META, DECISION_META } from './status'
+import { STATUS_META, EVENT_META } from './status'
 
 const TYPE_LABELS: Record<string, string> = {
   mcq: 'MCQ', tf_ng: 'T/F/NG', yn_ng: 'Y/N/NG',
@@ -32,9 +32,15 @@ export default function ContributionView({ contribution, categories, actions, on
   const catName = categories.find(c => c.id === p.category_id)?.name ?? `#${p.category_id}`
   const [draft, setDraft] = useState('')
 
-  // Decisions and comments interleaved on one timeline, oldest → newest.
-  const timeline = [
-    ...contribution.reviews.map(r => ({ type: 'review' as const, at: r.created_at, review: r })),
+  // State-change events and comments interleaved on one timeline, oldest → newest,
+  // led by a synthetic "opened" entry derived from the contribution itself.
+  type Entry =
+    | { type: 'opened'; at: string }
+    | { type: 'event'; at: string; event: ContributionEvent }
+    | { type: 'comment'; at: string; comment: ContributionComment }
+  const timeline: Entry[] = [
+    { type: 'opened' as const, at: contribution.created_at },
+    ...contribution.events.map(e => ({ type: 'event' as const, at: e.created_at, event: e })),
     ...contribution.comments.map(c => ({ type: 'comment' as const, at: c.created_at, comment: c })),
   ].sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0))
 
@@ -86,27 +92,37 @@ export default function ContributionView({ contribution, categories, actions, on
         </div>
       )}
 
-      {/* Timeline: review decisions + comments, chronological */}
-      {timeline.length > 0 && (
-        <div style={{ borderTop: '1px solid var(--border-dim)', paddingTop: 10, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 7 }}>
-          {timeline.map(ev => ev.type === 'review' ? (
-            <div key={`r${ev.review.id}`} style={{ fontSize: '0.78rem' }}>
-              <span style={{ color: DECISION_META[ev.review.decision].color, fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                {DECISION_META[ev.review.decision].label}
-              </span>
-              {ev.review.reviewer && <span style={{ color: 'var(--ink-dim)', marginLeft: 8 }}>{ev.review.reviewer.name}</span>}
-              {ev.review.note && <span style={{ color: 'var(--ink)', marginLeft: 8 }}>— {ev.review.note}</span>}
-            </div>
-          ) : (
+      {/* Timeline: state-change events + comments, chronological. Events carry no
+          prose (that's what comments are for); decisions show actor + label only. */}
+      <div style={{ borderTop: '1px solid var(--border-dim)', paddingTop: 10, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 7 }}>
+        {timeline.map(ev => {
+          if (ev.type === 'opened') {
+            return (
+              <div key="opened" style={{ fontSize: '0.78rem' }}>
+                <span style={{ color: 'var(--gold-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Opened</span>
+                {contribution.contributor && <span style={{ color: 'var(--ink-dim)', marginLeft: 8 }}>{contribution.contributor.name}</span>}
+              </div>
+            )
+          }
+          if (ev.type === 'event') {
+            const m = EVENT_META[ev.event.event]
+            return (
+              <div key={`e${ev.event.id}`} style={{ fontSize: '0.78rem' }}>
+                <span style={{ color: m.color, fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{m.label}</span>
+                {ev.event.actor && <span style={{ color: 'var(--ink-dim)', marginLeft: 8 }}>{ev.event.actor.name}</span>}
+              </div>
+            )
+          }
+          return (
             <div key={`c${ev.comment.id}`} style={{ fontSize: '0.82rem' }}>
               <span style={{ color: 'var(--gold-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.62rem', letterSpacing: '0.04em' }}>
                 {ev.comment.author?.name ?? 'User'}
               </span>
               <span style={{ color: 'var(--ink)', marginLeft: 8 }}>{ev.comment.body}</span>
             </div>
-          ))}
-        </div>
-      )}
+          )
+        })}
+      </div>
 
       {/* Comment composer */}
       {onComment && (

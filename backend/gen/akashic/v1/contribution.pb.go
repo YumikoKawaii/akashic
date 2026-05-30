@@ -80,55 +80,65 @@ func (ContributionStatus) EnumDescriptor() ([]byte, []int) {
 	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{0}
 }
 
-type ReviewDecision int32
+// ContributionEventType is every state transition recorded on a contribution's
+// event log. APPROVE/REJECT/REQUEST_CHANGES are reviewer (editor) actions;
+// REVISE/MERGE are contributor actions. The log carries no prose — explanations
+// are comments.
+type ContributionEventType int32
 
 const (
-	ReviewDecision_REVIEW_DECISION_UNSPECIFIED     ReviewDecision = 0
-	ReviewDecision_REVIEW_DECISION_APPROVE         ReviewDecision = 1 // -> approved (does NOT create a question; contributor merges)
-	ReviewDecision_REVIEW_DECISION_REJECT          ReviewDecision = 2 // -> rejected (terminal)
-	ReviewDecision_REVIEW_DECISION_REQUEST_CHANGES ReviewDecision = 3 // -> changes_requested (bounces back to contributor)
+	ContributionEventType_CONTRIBUTION_EVENT_TYPE_UNSPECIFIED     ContributionEventType = 0
+	ContributionEventType_CONTRIBUTION_EVENT_TYPE_APPROVE         ContributionEventType = 1 // -> approved (does NOT create a question; contributor merges)
+	ContributionEventType_CONTRIBUTION_EVENT_TYPE_REJECT          ContributionEventType = 2 // -> rejected (terminal)
+	ContributionEventType_CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES ContributionEventType = 3 // -> changes_requested (bounces back to contributor)
+	ContributionEventType_CONTRIBUTION_EVENT_TYPE_REVISE          ContributionEventType = 4 // contributor edited -> pending
+	ContributionEventType_CONTRIBUTION_EVENT_TYPE_MERGE           ContributionEventType = 5 // contributor landed -> merged
 )
 
-// Enum value maps for ReviewDecision.
+// Enum value maps for ContributionEventType.
 var (
-	ReviewDecision_name = map[int32]string{
-		0: "REVIEW_DECISION_UNSPECIFIED",
-		1: "REVIEW_DECISION_APPROVE",
-		2: "REVIEW_DECISION_REJECT",
-		3: "REVIEW_DECISION_REQUEST_CHANGES",
+	ContributionEventType_name = map[int32]string{
+		0: "CONTRIBUTION_EVENT_TYPE_UNSPECIFIED",
+		1: "CONTRIBUTION_EVENT_TYPE_APPROVE",
+		2: "CONTRIBUTION_EVENT_TYPE_REJECT",
+		3: "CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES",
+		4: "CONTRIBUTION_EVENT_TYPE_REVISE",
+		5: "CONTRIBUTION_EVENT_TYPE_MERGE",
 	}
-	ReviewDecision_value = map[string]int32{
-		"REVIEW_DECISION_UNSPECIFIED":     0,
-		"REVIEW_DECISION_APPROVE":         1,
-		"REVIEW_DECISION_REJECT":          2,
-		"REVIEW_DECISION_REQUEST_CHANGES": 3,
+	ContributionEventType_value = map[string]int32{
+		"CONTRIBUTION_EVENT_TYPE_UNSPECIFIED":     0,
+		"CONTRIBUTION_EVENT_TYPE_APPROVE":         1,
+		"CONTRIBUTION_EVENT_TYPE_REJECT":          2,
+		"CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES": 3,
+		"CONTRIBUTION_EVENT_TYPE_REVISE":          4,
+		"CONTRIBUTION_EVENT_TYPE_MERGE":           5,
 	}
 )
 
-func (x ReviewDecision) Enum() *ReviewDecision {
-	p := new(ReviewDecision)
+func (x ContributionEventType) Enum() *ContributionEventType {
+	p := new(ContributionEventType)
 	*p = x
 	return p
 }
 
-func (x ReviewDecision) String() string {
+func (x ContributionEventType) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (ReviewDecision) Descriptor() protoreflect.EnumDescriptor {
+func (ContributionEventType) Descriptor() protoreflect.EnumDescriptor {
 	return file_akashic_v1_contribution_proto_enumTypes[1].Descriptor()
 }
 
-func (ReviewDecision) Type() protoreflect.EnumType {
+func (ContributionEventType) Type() protoreflect.EnumType {
 	return &file_akashic_v1_contribution_proto_enumTypes[1]
 }
 
-func (x ReviewDecision) Number() protoreflect.EnumNumber {
+func (x ContributionEventType) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use ReviewDecision.Descriptor instead.
-func (ReviewDecision) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use ContributionEventType.Descriptor instead.
+func (ContributionEventType) EnumDescriptor() ([]byte, []int) {
 	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{1}
 }
 
@@ -247,32 +257,32 @@ func (*ProposedQuestion_Item) isProposedQuestion_Content() {}
 
 func (*ProposedQuestion_Choice) isProposedQuestion_Content() {}
 
-type ContributionReview struct {
+// ContributionEvent is one state transition on a contribution — prose-free.
+type ContributionEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	ReviewerId    int32                  `protobuf:"varint,2,opt,name=reviewer_id,json=reviewerId,proto3" json:"reviewer_id,omitempty"`
-	Decision      ReviewDecision         `protobuf:"varint,3,opt,name=decision,proto3,enum=akashic.v1.ReviewDecision" json:"decision,omitempty"`
-	Note          string                 `protobuf:"bytes,4,opt,name=note,proto3" json:"note,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	Reviewer      *User                  `protobuf:"bytes,6,opt,name=reviewer,proto3,oneof" json:"reviewer,omitempty"`
+	ActorId       int32                  `protobuf:"varint,2,opt,name=actor_id,json=actorId,proto3" json:"actor_id,omitempty"`
+	Event         ContributionEventType  `protobuf:"varint,3,opt,name=event,proto3,enum=akashic.v1.ContributionEventType" json:"event,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	Actor         *User                  `protobuf:"bytes,5,opt,name=actor,proto3,oneof" json:"actor,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ContributionReview) Reset() {
-	*x = ContributionReview{}
+func (x *ContributionEvent) Reset() {
+	*x = ContributionEvent{}
 	mi := &file_akashic_v1_contribution_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ContributionReview) String() string {
+func (x *ContributionEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ContributionReview) ProtoMessage() {}
+func (*ContributionEvent) ProtoMessage() {}
 
-func (x *ContributionReview) ProtoReflect() protoreflect.Message {
+func (x *ContributionEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_akashic_v1_contribution_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -284,49 +294,42 @@ func (x *ContributionReview) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ContributionReview.ProtoReflect.Descriptor instead.
-func (*ContributionReview) Descriptor() ([]byte, []int) {
+// Deprecated: Use ContributionEvent.ProtoReflect.Descriptor instead.
+func (*ContributionEvent) Descriptor() ([]byte, []int) {
 	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *ContributionReview) GetId() int32 {
+func (x *ContributionEvent) GetId() int32 {
 	if x != nil {
 		return x.Id
 	}
 	return 0
 }
 
-func (x *ContributionReview) GetReviewerId() int32 {
+func (x *ContributionEvent) GetActorId() int32 {
 	if x != nil {
-		return x.ReviewerId
+		return x.ActorId
 	}
 	return 0
 }
 
-func (x *ContributionReview) GetDecision() ReviewDecision {
+func (x *ContributionEvent) GetEvent() ContributionEventType {
 	if x != nil {
-		return x.Decision
+		return x.Event
 	}
-	return ReviewDecision_REVIEW_DECISION_UNSPECIFIED
+	return ContributionEventType_CONTRIBUTION_EVENT_TYPE_UNSPECIFIED
 }
 
-func (x *ContributionReview) GetNote() string {
-	if x != nil {
-		return x.Note
-	}
-	return ""
-}
-
-func (x *ContributionReview) GetCreatedAt() *timestamppb.Timestamp {
+func (x *ContributionEvent) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
 	}
 	return nil
 }
 
-func (x *ContributionReview) GetReviewer() *User {
+func (x *ContributionEvent) GetActor() *User {
 	if x != nil {
-		return x.Reviewer
+		return x.Actor
 	}
 	return nil
 }
@@ -417,7 +420,7 @@ type Contribution struct {
 	Proposed      *ProposedQuestion      `protobuf:"bytes,4,opt,name=proposed,proto3" json:"proposed,omitempty"`
 	Status        ContributionStatus     `protobuf:"varint,5,opt,name=status,proto3,enum=akashic.v1.ContributionStatus" json:"status,omitempty"`
 	QuestionId    *int32                 `protobuf:"varint,6,opt,name=question_id,json=questionId,proto3,oneof" json:"question_id,omitempty"` // the question created on merge
-	Reviews       []*ContributionReview  `protobuf:"bytes,7,rep,name=reviews,proto3" json:"reviews,omitempty"`                                // 1-n decision history, oldest -> newest
+	Events        []*ContributionEvent   `protobuf:"bytes,7,rep,name=events,proto3" json:"events,omitempty"`                                  // 1-n state-change log, oldest -> newest
 	Comments      []*ContributionComment `protobuf:"bytes,11,rep,name=comments,proto3" json:"comments,omitempty"`                             // 1-n discussion, oldest -> newest
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
@@ -498,9 +501,9 @@ func (x *Contribution) GetQuestionId() int32 {
 	return 0
 }
 
-func (x *Contribution) GetReviews() []*ContributionReview {
+func (x *Contribution) GetEvents() []*ContributionEvent {
 	if x != nil {
-		return x.Reviews
+		return x.Events
 	}
 	return nil
 }
@@ -1103,14 +1106,13 @@ func (x *ListContributionsResponse) GetContributions() []*Contribution {
 	return nil
 }
 
-// Adds one review round. APPROVE moves to approved (no question yet — contributor
-// merges); REQUEST_CHANGES reopens for revision; REJECT is terminal.
+// Records one reviewer decision (APPROVE / REJECT / REQUEST_CHANGES only). Carries
+// no prose — a reviewer who wants to explain posts a comment.
 type ReviewContributionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BankId        int32                  `protobuf:"varint,1,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
 	Id            int32                  `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
-	Decision      ReviewDecision         `protobuf:"varint,3,opt,name=decision,proto3,enum=akashic.v1.ReviewDecision" json:"decision,omitempty"`
-	Note          string                 `protobuf:"bytes,4,opt,name=note,proto3" json:"note,omitempty"`
+	Decision      ContributionEventType  `protobuf:"varint,3,opt,name=decision,proto3,enum=akashic.v1.ContributionEventType" json:"decision,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1159,18 +1161,11 @@ func (x *ReviewContributionRequest) GetId() int32 {
 	return 0
 }
 
-func (x *ReviewContributionRequest) GetDecision() ReviewDecision {
+func (x *ReviewContributionRequest) GetDecision() ContributionEventType {
 	if x != nil {
 		return x.Decision
 	}
-	return ReviewDecision_REVIEW_DECISION_UNSPECIFIED
-}
-
-func (x *ReviewContributionRequest) GetNote() string {
-	if x != nil {
-		return x.Note
-	}
-	return ""
+	return ContributionEventType_CONTRIBUTION_EVENT_TYPE_UNSPECIFIED
 }
 
 type ReviewContributionResponse struct {
@@ -1338,17 +1333,15 @@ const file_akashic_v1_contribution_proto_rawDesc = "" +
 	"\x04tags\x18\x04 \x03(\tR\x04tags\x12.\n" +
 	"\x04item\x18\x05 \x01(\v2\x18.akashic.v1.QuestionItemH\x00R\x04item\x124\n" +
 	"\x06choice\x18\x06 \x01(\v2\x1a.akashic.v1.MultipleChoiceH\x00R\x06choiceB\t\n" +
-	"\acontent\"\x8c\x02\n" +
-	"\x12ContributionReview\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x1f\n" +
-	"\vreviewer_id\x18\x02 \x01(\x05R\n" +
-	"reviewerId\x126\n" +
-	"\bdecision\x18\x03 \x01(\x0e2\x1a.akashic.v1.ReviewDecisionR\bdecision\x12\x12\n" +
-	"\x04note\x18\x04 \x01(\tR\x04note\x129\n" +
+	"\acontent\"\xe9\x01\n" +
+	"\x11ContributionEvent\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x19\n" +
+	"\bactor_id\x18\x02 \x01(\x05R\aactorId\x127\n" +
+	"\x05event\x18\x03 \x01(\x0e2!.akashic.v1.ContributionEventTypeR\x05event\x129\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x121\n" +
-	"\breviewer\x18\x06 \x01(\v2\x10.akashic.v1.UserH\x00R\breviewer\x88\x01\x01B\v\n" +
-	"\t_reviewer\"\xcb\x01\n" +
+	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12+\n" +
+	"\x05actor\x18\x05 \x01(\v2\x10.akashic.v1.UserH\x00R\x05actor\x88\x01\x01B\b\n" +
+	"\x06_actor\"\xcb\x01\n" +
 	"\x13ContributionComment\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x1b\n" +
 	"\tauthor_id\x18\x02 \x01(\x05R\bauthorId\x12\x12\n" +
@@ -1356,7 +1349,7 @@ const file_akashic_v1_contribution_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12-\n" +
 	"\x06author\x18\x05 \x01(\v2\x10.akashic.v1.UserH\x00R\x06author\x88\x01\x01B\t\n" +
-	"\a_author\"\xbc\x04\n" +
+	"\a_author\"\xb9\x04\n" +
 	"\fContribution\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x17\n" +
 	"\abank_id\x18\x02 \x01(\x05R\x06bankId\x12%\n" +
@@ -1364,8 +1357,8 @@ const file_akashic_v1_contribution_proto_rawDesc = "" +
 	"\bproposed\x18\x04 \x01(\v2\x1c.akashic.v1.ProposedQuestionR\bproposed\x126\n" +
 	"\x06status\x18\x05 \x01(\x0e2\x1e.akashic.v1.ContributionStatusR\x06status\x12$\n" +
 	"\vquestion_id\x18\x06 \x01(\x05H\x00R\n" +
-	"questionId\x88\x01\x01\x128\n" +
-	"\areviews\x18\a \x03(\v2\x1e.akashic.v1.ContributionReviewR\areviews\x12;\n" +
+	"questionId\x88\x01\x01\x125\n" +
+	"\x06events\x18\a \x03(\v2\x1d.akashic.v1.ContributionEventR\x06events\x12;\n" +
 	"\bcomments\x18\v \x03(\v2\x1f.akashic.v1.ContributionCommentR\bcomments\x129\n" +
 	"\n" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
@@ -1403,12 +1396,11 @@ const file_akashic_v1_contribution_proto_rawDesc = "" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x126\n" +
 	"\x06status\x18\x02 \x01(\x0e2\x1e.akashic.v1.ContributionStatusR\x06status\"[\n" +
 	"\x19ListContributionsResponse\x12>\n" +
-	"\rcontributions\x18\x01 \x03(\v2\x18.akashic.v1.ContributionR\rcontributions\"\x90\x01\n" +
+	"\rcontributions\x18\x01 \x03(\v2\x18.akashic.v1.ContributionR\rcontributions\"\x83\x01\n" +
 	"\x19ReviewContributionRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x0e\n" +
-	"\x02id\x18\x02 \x01(\x05R\x02id\x126\n" +
-	"\bdecision\x18\x03 \x01(\x0e2\x1a.akashic.v1.ReviewDecisionR\bdecision\x12\x12\n" +
-	"\x04note\x18\x04 \x01(\tR\x04note\"Z\n" +
+	"\x02id\x18\x02 \x01(\x05R\x02id\x12=\n" +
+	"\bdecision\x18\x03 \x01(\x0e2!.akashic.v1.ContributionEventTypeR\bdecision\"Z\n" +
 	"\x1aReviewContributionResponse\x12<\n" +
 	"\fcontribution\x18\x01 \x01(\v2\x18.akashic.v1.ContributionR\fcontribution\"\\\n" +
 	"\x1dAddContributionCommentRequest\x12\x17\n" +
@@ -1423,12 +1415,14 @@ const file_akashic_v1_contribution_proto_rawDesc = "" +
 	"%CONTRIBUTION_STATUS_CHANGES_REQUESTED\x10\x02\x12 \n" +
 	"\x1cCONTRIBUTION_STATUS_APPROVED\x10\x03\x12 \n" +
 	"\x1cCONTRIBUTION_STATUS_REJECTED\x10\x04\x12\x1e\n" +
-	"\x1aCONTRIBUTION_STATUS_MERGED\x10\x05*\x8f\x01\n" +
-	"\x0eReviewDecision\x12\x1f\n" +
-	"\x1bREVIEW_DECISION_UNSPECIFIED\x10\x00\x12\x1b\n" +
-	"\x17REVIEW_DECISION_APPROVE\x10\x01\x12\x1a\n" +
-	"\x16REVIEW_DECISION_REJECT\x10\x02\x12#\n" +
-	"\x1fREVIEW_DECISION_REQUEST_CHANGES\x10\x032\xcc\x06\n" +
+	"\x1aCONTRIBUTION_STATUS_MERGED\x10\x05*\xfd\x01\n" +
+	"\x15ContributionEventType\x12'\n" +
+	"#CONTRIBUTION_EVENT_TYPE_UNSPECIFIED\x10\x00\x12#\n" +
+	"\x1fCONTRIBUTION_EVENT_TYPE_APPROVE\x10\x01\x12\"\n" +
+	"\x1eCONTRIBUTION_EVENT_TYPE_REJECT\x10\x02\x12+\n" +
+	"'CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES\x10\x03\x12\"\n" +
+	"\x1eCONTRIBUTION_EVENT_TYPE_REVISE\x10\x04\x12!\n" +
+	"\x1dCONTRIBUTION_EVENT_TYPE_MERGE\x10\x052\xcc\x06\n" +
 	"\x13ContributionService\x12c\n" +
 	"\x12SubmitContribution\x12%.akashic.v1.SubmitContributionRequest\x1a&.akashic.v1.SubmitContributionResponse\x12c\n" +
 	"\x12UpdateContribution\x12%.akashic.v1.UpdateContributionRequest\x1a&.akashic.v1.UpdateContributionResponse\x12f\n" +
@@ -1455,9 +1449,9 @@ var file_akashic_v1_contribution_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_akashic_v1_contribution_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_akashic_v1_contribution_proto_goTypes = []any{
 	(ContributionStatus)(0),                // 0: akashic.v1.ContributionStatus
-	(ReviewDecision)(0),                    // 1: akashic.v1.ReviewDecision
+	(ContributionEventType)(0),             // 1: akashic.v1.ContributionEventType
 	(*ProposedQuestion)(nil),               // 2: akashic.v1.ProposedQuestion
-	(*ContributionReview)(nil),             // 3: akashic.v1.ContributionReview
+	(*ContributionEvent)(nil),              // 3: akashic.v1.ContributionEvent
 	(*ContributionComment)(nil),            // 4: akashic.v1.ContributionComment
 	(*Contribution)(nil),                   // 5: akashic.v1.Contribution
 	(*SubmitContributionRequest)(nil),      // 6: akashic.v1.SubmitContributionRequest
@@ -1488,14 +1482,14 @@ var file_akashic_v1_contribution_proto_depIdxs = []int32{
 	23, // 1: akashic.v1.ProposedQuestion.difficulty:type_name -> akashic.v1.Difficulty
 	24, // 2: akashic.v1.ProposedQuestion.item:type_name -> akashic.v1.QuestionItem
 	25, // 3: akashic.v1.ProposedQuestion.choice:type_name -> akashic.v1.MultipleChoice
-	1,  // 4: akashic.v1.ContributionReview.decision:type_name -> akashic.v1.ReviewDecision
-	26, // 5: akashic.v1.ContributionReview.created_at:type_name -> google.protobuf.Timestamp
-	27, // 6: akashic.v1.ContributionReview.reviewer:type_name -> akashic.v1.User
+	1,  // 4: akashic.v1.ContributionEvent.event:type_name -> akashic.v1.ContributionEventType
+	26, // 5: akashic.v1.ContributionEvent.created_at:type_name -> google.protobuf.Timestamp
+	27, // 6: akashic.v1.ContributionEvent.actor:type_name -> akashic.v1.User
 	26, // 7: akashic.v1.ContributionComment.created_at:type_name -> google.protobuf.Timestamp
 	27, // 8: akashic.v1.ContributionComment.author:type_name -> akashic.v1.User
 	2,  // 9: akashic.v1.Contribution.proposed:type_name -> akashic.v1.ProposedQuestion
 	0,  // 10: akashic.v1.Contribution.status:type_name -> akashic.v1.ContributionStatus
-	3,  // 11: akashic.v1.Contribution.reviews:type_name -> akashic.v1.ContributionReview
+	3,  // 11: akashic.v1.Contribution.events:type_name -> akashic.v1.ContributionEvent
 	4,  // 12: akashic.v1.Contribution.comments:type_name -> akashic.v1.ContributionComment
 	26, // 13: akashic.v1.Contribution.created_at:type_name -> google.protobuf.Timestamp
 	26, // 14: akashic.v1.Contribution.updated_at:type_name -> google.protobuf.Timestamp
@@ -1508,7 +1502,7 @@ var file_akashic_v1_contribution_proto_depIdxs = []int32{
 	5,  // 21: akashic.v1.MergeContributionResponse.contribution:type_name -> akashic.v1.Contribution
 	0,  // 22: akashic.v1.ListContributionsRequest.status:type_name -> akashic.v1.ContributionStatus
 	5,  // 23: akashic.v1.ListContributionsResponse.contributions:type_name -> akashic.v1.Contribution
-	1,  // 24: akashic.v1.ReviewContributionRequest.decision:type_name -> akashic.v1.ReviewDecision
+	1,  // 24: akashic.v1.ReviewContributionRequest.decision:type_name -> akashic.v1.ContributionEventType
 	5,  // 25: akashic.v1.ReviewContributionResponse.contribution:type_name -> akashic.v1.Contribution
 	5,  // 26: akashic.v1.AddContributionCommentResponse.contribution:type_name -> akashic.v1.Contribution
 	6,  // 27: akashic.v1.ContributionService.SubmitContribution:input_type -> akashic.v1.SubmitContributionRequest

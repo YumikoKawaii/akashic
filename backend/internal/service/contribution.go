@@ -69,7 +69,7 @@ func (s *ContributionService) Submit(bankID, userID int, p model.ContributionPay
 
 // Update lets the contributor revise their own non-terminal contribution. Any
 // prior approval is dismissed — the contribution reopens to pending.
-func (s *ContributionService) Update(bankID, userID, id int, p model.ContributionPayload) (*model.Contribution, error) {
+func (s *ContributionService) Update(ctx context.Context, bankID, userID, id int, p model.ContributionPayload) (*model.Contribution, error) {
 	c, err := s.uow.Store().Contributions.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -83,9 +83,18 @@ func (s *ContributionService) Update(bankID, userID, id int, p model.Contributio
 	if err := s.validatePayload(bankID, p); err != nil {
 		return nil, err
 	}
-	c.Payload = p
-	c.Status = model.ContributionPending
-	if err := s.uow.Store().Contributions.Save(c); err != nil {
+	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
+		c.Payload = p
+		c.Status = model.ContributionPending
+		if err := tx.Contributions.Save(c); err != nil {
+			return err
+		}
+		return tx.Contributions.AddEvent(&model.ContributionEvent{
+			ContributionID: c.ID,
+			ActorID:        userID,
+			Event:          model.EventRevise,
+		})
+	}); err != nil {
 		return nil, err
 	}
 	return s.uow.Store().Contributions.FindByID(c.ID)
@@ -122,10 +131,11 @@ func (s *ContributionService) List(bankID int, status string) ([]model.Contribut
 	return s.uow.Store().Contributions.FindByBank(bankID, status)
 }
 
-// Review appends a review round (editor+). approve → approved (no question is
-// created — the contributor merges); reject → rejected; request_changes →
-// changes_requested. Touches two tables, so it runs in a Unit of Work.
-func (s *ContributionService) Review(ctx context.Context, bankID, reviewerID, id int, decision, note string) (*model.Contribution, error) {
+// Review records a reviewer decision (editor+) as a state-change event. approve
+// → approved (no question is created — the contributor merges); reject → rejected;
+// request_changes → changes_requested. Reviewer explanations are separate comments.
+// Touches two tables, so it runs in a Unit of Work.
+func (s *ContributionService) Review(ctx context.Context, bankID, reviewerID, id int, decision string) (*model.Contribution, error) {
 	c, err := s.uow.Store().Contributions.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -139,22 +149,21 @@ func (s *ContributionService) Review(ctx context.Context, bankID, reviewerID, id
 
 	var newStatus string
 	switch decision {
-	case model.ReviewApprove:
+	case model.EventApprove:
 		newStatus = model.ContributionApproved
-	case model.ReviewReject:
+	case model.EventReject:
 		newStatus = model.ContributionRejected
-	case model.ReviewRequestChanges:
+	case model.EventRequestChanges:
 		newStatus = model.ContributionChangesRequested
 	default:
 		return nil, ErrBadRequest
 	}
 
 	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
-		if err := tx.Contributions.AddReview(&model.ContributionReview{
+		if err := tx.Contributions.AddEvent(&model.ContributionEvent{
 			ContributionID: c.ID,
-			ReviewerID:     reviewerID,
-			Decision:       decision,
-			Note:           note,
+			ActorID:        reviewerID,
+			Event:          decision,
 		}); err != nil {
 			return err
 		}
@@ -214,7 +223,14 @@ func (s *ContributionService) Merge(ctx context.Context, bankID, userID, id int)
 		}
 		c.Status = model.ContributionMerged
 		c.QuestionID = &q.ID
-		return tx.Contributions.Save(c)
+		if err := tx.Contributions.Save(c); err != nil {
+			return err
+		}
+		return tx.Contributions.AddEvent(&model.ContributionEvent{
+			ContributionID: c.ID,
+			ActorID:        userID,
+			Event:          model.EventMerge,
+		})
 	}); err != nil {
 		return nil, err
 	}

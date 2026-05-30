@@ -35,7 +35,7 @@ func (h *ContributionServiceHandler) UpdateContribution(
 	ctx context.Context,
 	req *connect.Request[pb.UpdateContributionRequest],
 ) (*connect.Response[pb.UpdateContributionResponse], error) {
-	c, err := h.svc.Update(int(req.Msg.BankId), userIDFromContext(ctx), int(req.Msg.Id), proposedQuestionFromProto(req.Msg.Proposed))
+	c, err := h.svc.Update(ctx, int(req.Msg.BankId), userIDFromContext(ctx), int(req.Msg.Id), proposedQuestionFromProto(req.Msg.Proposed))
 	if err != nil {
 		return nil, toConnectError(err)
 	}
@@ -89,11 +89,11 @@ func (h *ContributionServiceHandler) ReviewContribution(
 	ctx context.Context,
 	req *connect.Request[pb.ReviewContributionRequest],
 ) (*connect.Response[pb.ReviewContributionResponse], error) {
-	decision := reviewDecisionFromProto(req.Msg.Decision)
+	decision := eventTypeFromProto(req.Msg.Decision)
 	if decision == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, nil)
 	}
-	c, err := h.svc.Review(ctx, int(req.Msg.BankId), userIDFromContext(ctx), int(req.Msg.Id), decision, req.Msg.Note)
+	c, err := h.svc.Review(ctx, int(req.Msg.BankId), userIDFromContext(ctx), int(req.Msg.Id), decision)
 	if err != nil {
 		return nil, toConnectError(err)
 	}

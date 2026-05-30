@@ -1,10 +1,10 @@
 // Adapters from proto-generated types (camelCase, Timestamp) to app interface types (snake_case, string).
 import type { Timestamp } from '@bufbuild/protobuf'
 import { Difficulty, QuestionType, BankRole, BankVisibility } from '../gen/akashic/v1/common_pb'
-import { ContributionStatus, ReviewDecision } from '../gen/akashic/v1/contribution_pb'
+import { ContributionStatus, ContributionEventType } from '../gen/akashic/v1/contribution_pb'
 import type {
   Contribution as PbContribution,
-  ContributionReview as PbContributionReview,
+  ContributionEvent as PbContributionEvent,
   ContributionComment as PbContributionComment,
   ProposedQuestion as PbProposedQuestion,
 } from '../gen/akashic/v1/contribution_pb'
@@ -20,8 +20,8 @@ import type {
   Category, Passage, PassageParagraph,
   QuestionGroup, GroupContext, Question, Test, TestQuestion, TestAttempt,
   QuestionType as AppQuestionType, QuestionDifficulty, MCQOption, QQuestionItem, QMultipleChoice,
-  Contribution, ContributionReview, ContributionComment, ProposedQuestion, User,
-  ContributionStatus as AppContributionStatus, ReviewDecision as AppReviewDecision
+  Contribution, ContributionEvent, ContributionComment, ProposedQuestion, User,
+  ContributionStatus as AppContributionStatus, ContributionEventType as AppEventType
 } from '../types'
 
 const ts = (t?: Timestamp | null): string =>
@@ -224,12 +224,14 @@ const contributionStatus = (s: ContributionStatus): AppContributionStatus => {
   }
 }
 
-const reviewDecision = (d: ReviewDecision): AppReviewDecision => {
-  switch (d) {
-    case ReviewDecision.APPROVE:         return 'approve'
-    case ReviewDecision.REJECT:          return 'reject'
-    case ReviewDecision.REQUEST_CHANGES: return 'request_changes'
-    default:                             return 'approve'
+const eventType = (e: ContributionEventType): AppEventType => {
+  switch (e) {
+    case ContributionEventType.APPROVE:         return 'approve'
+    case ContributionEventType.REJECT:          return 'reject'
+    case ContributionEventType.REQUEST_CHANGES: return 'request_changes'
+    case ContributionEventType.REVISE:          return 'revise'
+    case ContributionEventType.MERGE:           return 'merge'
+    default:                                    return 'revise'
   }
 }
 
@@ -257,13 +259,12 @@ const fromProposedQuestion = (p: PbProposedQuestion): ProposedQuestion => {
   return { ...base, content: '' }
 }
 
-export const fromContributionReview = (r: PbContributionReview): ContributionReview => ({
-  id:          r.id,
-  reviewer_id: r.reviewerId,
-  decision:    reviewDecision(r.decision),
-  note:        r.note,
-  created_at:  ts(r.createdAt),
-  reviewer:    fromUser(r.reviewer),
+export const fromContributionEvent = (e: PbContributionEvent): ContributionEvent => ({
+  id:         e.id,
+  actor_id:   e.actorId,
+  event:      eventType(e.event),
+  created_at: ts(e.createdAt),
+  actor:      fromUser(e.actor),
 })
 
 export const fromContributionComment = (c: PbContributionComment): ContributionComment => ({
@@ -281,7 +282,7 @@ export const fromContribution = (c: PbContribution): Contribution => ({
   proposed:           c.proposed ? fromProposedQuestion(c.proposed) : { category_id: 0, type: 'mcq', difficulty: 'medium', tags: [], content: '' },
   status:             contributionStatus(c.status),
   question_id:        c.questionId ?? undefined,
-  reviews:            c.reviews.map(fromContributionReview),
+  events:             c.events.map(fromContributionEvent),
   comments:           c.comments.map(fromContributionComment),
   created_at:         ts(c.createdAt),
   updated_at:         ts(c.updatedAt),

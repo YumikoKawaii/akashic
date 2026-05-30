@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Difficulty, QuestionType } from '../gen/akashic/v1/common_pb'
-import { ContributionStatus, ReviewDecision } from '../gen/akashic/v1/contribution_pb'
+import { ContributionStatus, ContributionEventType } from '../gen/akashic/v1/contribution_pb'
 import { contributionClient } from '../api/connect'
 import { fromContribution } from '../api/adapters'
 import type { ProposedQuestion, ReviewDecision as AppReviewDecision } from '../types'
@@ -34,12 +34,12 @@ function toQuestionType(s: string): QuestionType {
   return map[s] ?? QuestionType.UNSPECIFIED
 }
 
-function toReviewDecision(d: AppReviewDecision): ReviewDecision {
+function toEventType(d: AppReviewDecision): ContributionEventType {
   switch (d) {
-    case 'approve':         return ReviewDecision.APPROVE
-    case 'reject':          return ReviewDecision.REJECT
-    case 'request_changes': return ReviewDecision.REQUEST_CHANGES
-    default:                return ReviewDecision.UNSPECIFIED
+    case 'approve':         return ContributionEventType.APPROVE
+    case 'reject':          return ContributionEventType.REJECT
+    case 'request_changes': return ContributionEventType.REQUEST_CHANGES
+    default:                return ContributionEventType.UNSPECIFIED
   }
 }
 
@@ -126,8 +126,8 @@ export function useMergeContribution(bankId: string) {
 export function useReviewContribution(bankId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, decision, note }: { id: number; decision: AppReviewDecision; note: string }) => {
-      const res = await contributionClient.reviewContribution({ bankId: Number(bankId), id, decision: toReviewDecision(decision), note })
+    mutationFn: async ({ id, decision }: { id: number; decision: AppReviewDecision }) => {
+      const res = await contributionClient.reviewContribution({ bankId: Number(bankId), id, decision: toEventType(decision) })
       return fromContribution(res.contribution!)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: contributionKeys.queue(bankId) }),

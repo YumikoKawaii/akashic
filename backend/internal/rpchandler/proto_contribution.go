@@ -41,26 +41,34 @@ func contributionStatusFromProto(s pb.ContributionStatus) string {
 	return ""
 }
 
-func reviewDecisionToProto(d string) pb.ReviewDecision {
-	switch d {
-	case model.ReviewApprove:
-		return pb.ReviewDecision_REVIEW_DECISION_APPROVE
-	case model.ReviewReject:
-		return pb.ReviewDecision_REVIEW_DECISION_REJECT
-	case model.ReviewRequestChanges:
-		return pb.ReviewDecision_REVIEW_DECISION_REQUEST_CHANGES
+func eventTypeToProto(e string) pb.ContributionEventType {
+	switch e {
+	case model.EventApprove:
+		return pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_APPROVE
+	case model.EventReject:
+		return pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_REJECT
+	case model.EventRequestChanges:
+		return pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES
+	case model.EventRevise:
+		return pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_REVISE
+	case model.EventMerge:
+		return pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_MERGE
 	}
-	return pb.ReviewDecision_REVIEW_DECISION_UNSPECIFIED
+	return pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_UNSPECIFIED
 }
 
-func reviewDecisionFromProto(d pb.ReviewDecision) string {
-	switch d {
-	case pb.ReviewDecision_REVIEW_DECISION_APPROVE:
-		return model.ReviewApprove
-	case pb.ReviewDecision_REVIEW_DECISION_REJECT:
-		return model.ReviewReject
-	case pb.ReviewDecision_REVIEW_DECISION_REQUEST_CHANGES:
-		return model.ReviewRequestChanges
+func eventTypeFromProto(e pb.ContributionEventType) string {
+	switch e {
+	case pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_APPROVE:
+		return model.EventApprove
+	case pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_REJECT:
+		return model.EventReject
+	case pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES:
+		return model.EventRequestChanges
+	case pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_REVISE:
+		return model.EventRevise
+	case pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_MERGE:
+		return model.EventMerge
 	}
 	return ""
 }
@@ -115,14 +123,13 @@ func proposedQuestionToProto(p model.ContributionPayload) *pb.ProposedQuestion {
 
 // ── Entities ──────────────────────────────────────────────────────────────────
 
-func contributionReviewToProto(r *model.ContributionReview) *pb.ContributionReview {
-	return &pb.ContributionReview{
-		Id:         int32(r.ID),
-		ReviewerId: int32(r.ReviewerID),
-		Decision:   reviewDecisionToProto(r.Decision),
-		Note:       r.Note,
-		CreatedAt:  timestamppb.New(r.CreatedAt),
-		Reviewer:   userToProto(r.Reviewer),
+func contributionEventToProto(e *model.ContributionEvent) *pb.ContributionEvent {
+	return &pb.ContributionEvent{
+		Id:        int32(e.ID),
+		ActorId:   int32(e.ActorID),
+		Event:     eventTypeToProto(e.Event),
+		CreatedAt: timestamppb.New(e.CreatedAt),
+		Actor:     userToProto(e.Actor),
 	}
 }
 
@@ -142,9 +149,9 @@ func contributionToProto(c *model.Contribution) *pb.Contribution {
 		v := int32(*c.QuestionID)
 		questionID = &v
 	}
-	reviews := make([]*pb.ContributionReview, len(c.Reviews))
-	for i := range c.Reviews {
-		reviews[i] = contributionReviewToProto(&c.Reviews[i])
+	events := make([]*pb.ContributionEvent, len(c.Events))
+	for i := range c.Events {
+		events[i] = contributionEventToProto(&c.Events[i])
 	}
 	comments := make([]*pb.ContributionComment, len(c.Comments))
 	for i := range c.Comments {
@@ -157,7 +164,7 @@ func contributionToProto(c *model.Contribution) *pb.Contribution {
 		Proposed:      proposedQuestionToProto(c.Payload),
 		Status:        contributionStatusToProto(c.Status),
 		QuestionId:    questionID,
-		Reviews:       reviews,
+		Events:        events,
 		Comments:      comments,
 		CreatedAt:     timestamppb.New(c.CreatedAt),
 		UpdatedAt:     timestamppb.New(c.UpdatedAt),

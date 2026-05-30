@@ -201,7 +201,10 @@ export interface TestPage {
 }
 
 export type ContributionStatus = 'pending' | 'changes_requested' | 'approved' | 'rejected' | 'merged'
+// Reviewer decisions (the input to ReviewContribution)…
 export type ReviewDecision = 'approve' | 'reject' | 'request_changes'
+// …plus the contributor transitions, together forming the full event log.
+export type ContributionEventType = ReviewDecision | 'revise' | 'merge'
 
 export interface ProposedQuestion {
   category_id: number
@@ -214,13 +217,12 @@ export interface ProposedQuestion {
   answers?: string[]
 }
 
-export interface ContributionReview {
+export interface ContributionEvent {
   id: number
-  reviewer_id: number
-  decision: ReviewDecision
-  note: string
+  actor_id: number
+  event: ContributionEventType
   created_at: string
-  reviewer?: User
+  actor?: User
 }
 
 export interface ContributionComment {
@@ -238,7 +240,7 @@ export interface Contribution {
   proposed: ProposedQuestion
   status: ContributionStatus
   question_id?: number
-  reviews: ContributionReview[]
+  events: ContributionEvent[]
   comments: ContributionComment[]
   created_at: string
   updated_at: string

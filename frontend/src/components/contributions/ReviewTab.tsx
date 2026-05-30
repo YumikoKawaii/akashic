@@ -2,7 +2,6 @@ import { useState } from 'react'
 import type { Category, Contribution, ContributionStatus, ReviewDecision } from '../../types'
 import { useContributionQueue, useReviewContribution, useAddContributionComment } from '../../hooks/useContributions'
 import { Spinner } from '../ui/MagicCircle'
-import { Input } from '../ui/FormField'
 import Select from '../ui/Select'
 import ContributionView from './ContributionView'
 import { STATUS_META } from './status'
@@ -25,16 +24,10 @@ export default function ReviewTab({ bankId, categories }: { bankId: string; cate
   const comment = useAddContributionComment(bankId)
 
   const [filter, setFilter] = useState<ContributionStatus | ''>('')
-  const [noteFor, setNoteFor] = useState<number | null>(null)
-  const [note, setNote] = useState('')
 
   const shown = filter ? queue.filter(c => c.status === filter) : queue
 
-  const act = async (id: number, decision: ReviewDecision) => {
-    await review.mutateAsync({ id, decision, note: note.trim() })
-    setNoteFor(null)
-    setNote('')
-  }
+  const act = (id: number, decision: ReviewDecision) => review.mutate({ id, decision })
 
   const actionsFor = (c: Contribution) => {
     if (!isReviewable(c.status)) {
@@ -42,24 +35,12 @@ export default function ReviewTab({ bankId, categories }: { bankId: string; cate
     }
     return (
       <>
-        {noteFor === c.id ? (
-          <div className="flex flex-col gap-2" style={{ width: '100%' }}>
-            <Input value={note} onChange={e => setNote(e.target.value)} placeholder="Optional note to the contributor…" />
-            <div className="flex gap-2 flex-wrap">
-              <button className="btn btn-primary" style={{ fontSize: '0.62rem', padding: '4px 12px' }}
-                disabled={review.isPending} onClick={() => act(c.id, 'approve')}>✓ Approve</button>
-              <button className="btn btn-ghost" style={{ fontSize: '0.62rem', padding: '4px 12px', color: '#b06a18', borderColor: 'rgba(176,106,24,0.4)' }}
-                disabled={review.isPending} onClick={() => act(c.id, 'request_changes')}>↩ Request Changes</button>
-              <button className="btn-danger" style={{ fontSize: '0.62rem', padding: '4px 10px' }}
-                disabled={review.isPending} onClick={() => act(c.id, 'reject')}>✕ Reject</button>
-              <button className="btn btn-ghost" style={{ fontSize: '0.62rem', padding: '4px 12px' }}
-                onClick={() => { setNoteFor(null); setNote('') }}>Cancel</button>
-            </div>
-          </div>
-        ) : (
-          <button className="btn btn-ghost" style={{ fontSize: '0.62rem', padding: '4px 12px' }}
-            onClick={() => { setNoteFor(c.id); setNote('') }}>Review</button>
-        )}
+        <button className="btn btn-primary" style={{ fontSize: '0.62rem', padding: '4px 12px' }}
+          disabled={review.isPending} onClick={() => act(c.id, 'approve')}>✓ Approve</button>
+        <button className="btn btn-ghost" style={{ fontSize: '0.62rem', padding: '4px 12px', color: '#b06a18', borderColor: 'rgba(176,106,24,0.4)' }}
+          disabled={review.isPending} onClick={() => act(c.id, 'request_changes')}>↩ Request Changes</button>
+        <button className="btn-danger" style={{ fontSize: '0.62rem', padding: '4px 10px' }}
+          disabled={review.isPending} onClick={() => act(c.id, 'reject')}>✕ Reject</button>
       </>
     )
   }
@@ -75,6 +56,7 @@ export default function ReviewTab({ bankId, categories }: { bankId: string; cate
 
       <p style={{ fontSize: '0.8rem', color: 'var(--ink-dim)' }}>
         Approving lets the contributor merge their question into the bank — it isn’t added until they do.
+        Use the comment box to explain a decision or discuss with the contributor.
       </p>
 
       {isLoading ? (
