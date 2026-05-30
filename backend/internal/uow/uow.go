@@ -7,8 +7,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// Store exposes every repository bound to one transaction. All repos share the
-// same *gorm.DB tx, so writes through them commit or roll back atomically.
+// Store exposes every repository bound to one gorm session — either a
+// transaction (the Store passed to Do) or the base connection (UnitOfWork.Store).
 type Store struct {
 	Banks          repository.BankRepository
 	Members        repository.MemberRepository
@@ -21,35 +21,46 @@ type Store struct {
 	Contributions  repository.ContributionRepository
 }
 
-func newStore(tx *gorm.DB) *Store {
+func newStore(db *gorm.DB) *Store {
 	return &Store{
-		Banks:          repository.NewBankRepo(tx),
-		Members:        repository.NewMemberRepo(tx),
-		Categories:     repository.NewCategoryRepo(tx),
-		Passages:       repository.NewPassageRepo(tx),
-		QuestionGroups: repository.NewQuestionGroupRepo(tx),
-		Questions:      repository.NewQuestionRepo(tx),
-		Tests:          repository.NewTestRepo(tx),
-		Attempts:       repository.NewAttemptRepo(tx),
-		Contributions:  repository.NewContributionRepo(tx),
+		Banks:          repository.NewBankRepo(db),
+		Members:        repository.NewMemberRepo(db),
+		Categories:     repository.NewCategoryRepo(db),
+		Passages:       repository.NewPassageRepo(db),
+		QuestionGroups: repository.NewQuestionGroupRepo(db),
+		Questions:      repository.NewQuestionRepo(db),
+		Tests:          repository.NewTestRepo(db),
+		Attempts:       repository.NewAttemptRepo(db),
+		Contributions:  repository.NewContributionRepo(db),
 	}
 }
 
-// UnitOfWork runs a unit of work inside a single database transaction.
-type UnitOfWork struct {
-	db *gorm.DB
+// UnitOfWork hands out repositories, either directly for single-statement work
+// (Store, bound to the base connection) or atomically within a transaction (Do).
+type UnitOfWork interface {
+	// Store returns repositories bound to the base connection — no transaction.
+	// Use for reads and single-table writes that don't need atomicity.
+	Store() *Store
+	// Do runs fn inside a transaction, committing on nil and rolling back on
+	// error or panic. The Store passed to fn is bound to that transaction.
+	// Nested Do calls use savepoints. Keep side effects that must not be undone
+	// (cache writes, post-commit re-reads) AFTER Do returns nil.
+	Do(ctx context.Context, fn func(s *Store) error) error
 }
 
-func New(db *gorm.DB) *UnitOfWork { return &UnitOfWork{db: db} }
+type unitOfWork struct {
+	db    *gorm.DB
+	store *Store
+}
 
-// Do runs fn inside a transaction and commits if fn returns nil. If fn returns
-// an error the tx is rolled back and the error is returned; if fn panics the tx
-// is rolled back and the panic re-raised. Every repository in the Store is bound
-// to that tx, so all writes are atomic. Nested Do calls use savepoints.
-//
-// Keep side effects that must not be undone (cache writes, events) AFTER Do
-// returns nil — anything inside the closure is rolled back on failure.
-func (u *UnitOfWork) Do(ctx context.Context, fn func(s *Store) error) error {
+// New returns a UnitOfWork backed by db.
+func New(db *gorm.DB) UnitOfWork {
+	return &unitOfWork{db: db, store: newStore(db)}
+}
+
+func (u *unitOfWork) Store() *Store { return u.store }
+
+func (u *unitOfWork) Do(ctx context.Context, fn func(s *Store) error) error {
 	return u.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(newStore(tx))
 	})

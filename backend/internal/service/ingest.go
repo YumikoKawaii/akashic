@@ -108,23 +108,15 @@ type ingestItem struct {
 }
 
 type IngestService struct {
-	uow          *uow.UnitOfWork
-	bankRepo     repository.BankRepository
-	categoryRepo repository.CategoryRepository
-	questionRepo repository.QuestionRepository
+	uow uow.UnitOfWork
 }
 
-func NewIngestService(
-	u *uow.UnitOfWork,
-	bankRepo repository.BankRepository,
-	categoryRepo repository.CategoryRepository,
-	questionRepo repository.QuestionRepository,
-) *IngestService {
-	return &IngestService{uow: u, bankRepo: bankRepo, categoryRepo: categoryRepo, questionRepo: questionRepo}
+func NewIngestService(u uow.UnitOfWork) *IngestService {
+	return &IngestService{uow: u}
 }
 
 func (s *IngestService) Ingest(ctx context.Context, bankID int, r io.Reader, ext string) (*IngestResult, error) {
-	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
 
@@ -394,7 +386,7 @@ func (s *IngestService) resolveCategory(tx *uow.Store, bankID int, name string, 
 	if id, ok := cache[name]; ok {
 		return id, nil
 	}
-	cat, err := s.categoryRepo.FindByBankAndName(bankID, name)
+	cat, err := s.uow.Store().Categories.FindByBankAndName(bankID, name)
 	if err == nil {
 		cache[name] = cat.ID
 		return cat.ID, nil
