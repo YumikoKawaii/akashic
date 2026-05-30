@@ -59,41 +59,62 @@ proto3.util.setEnumType(ContributionStatus, "akashic.v1.ContributionStatus", [
 ]);
 
 /**
- * @generated from enum akashic.v1.ReviewDecision
+ * ContributionEventType is every state transition recorded on a contribution's
+ * event log. APPROVE/REJECT/REQUEST_CHANGES are reviewer (editor) actions;
+ * REVISE/MERGE are contributor actions. The log carries no prose — explanations
+ * are comments.
+ *
+ * @generated from enum akashic.v1.ContributionEventType
  */
-export enum ReviewDecision {
+export enum ContributionEventType {
   /**
-   * @generated from enum value: REVIEW_DECISION_UNSPECIFIED = 0;
+   * @generated from enum value: CONTRIBUTION_EVENT_TYPE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
    * -> approved (does NOT create a question; contributor merges)
    *
-   * @generated from enum value: REVIEW_DECISION_APPROVE = 1;
+   * @generated from enum value: CONTRIBUTION_EVENT_TYPE_APPROVE = 1;
    */
   APPROVE = 1,
 
   /**
    * -> rejected (terminal)
    *
-   * @generated from enum value: REVIEW_DECISION_REJECT = 2;
+   * @generated from enum value: CONTRIBUTION_EVENT_TYPE_REJECT = 2;
    */
   REJECT = 2,
 
   /**
    * -> changes_requested (bounces back to contributor)
    *
-   * @generated from enum value: REVIEW_DECISION_REQUEST_CHANGES = 3;
+   * @generated from enum value: CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES = 3;
    */
   REQUEST_CHANGES = 3,
+
+  /**
+   * contributor edited -> pending
+   *
+   * @generated from enum value: CONTRIBUTION_EVENT_TYPE_REVISE = 4;
+   */
+  REVISE = 4,
+
+  /**
+   * contributor landed -> merged
+   *
+   * @generated from enum value: CONTRIBUTION_EVENT_TYPE_MERGE = 5;
+   */
+  MERGE = 5,
 }
-// Retrieve enum metadata with: proto3.getEnumType(ReviewDecision)
-proto3.util.setEnumType(ReviewDecision, "akashic.v1.ReviewDecision", [
-  { no: 0, name: "REVIEW_DECISION_UNSPECIFIED" },
-  { no: 1, name: "REVIEW_DECISION_APPROVE" },
-  { no: 2, name: "REVIEW_DECISION_REJECT" },
-  { no: 3, name: "REVIEW_DECISION_REQUEST_CHANGES" },
+// Retrieve enum metadata with: proto3.getEnumType(ContributionEventType)
+proto3.util.setEnumType(ContributionEventType, "akashic.v1.ContributionEventType", [
+  { no: 0, name: "CONTRIBUTION_EVENT_TYPE_UNSPECIFIED" },
+  { no: 1, name: "CONTRIBUTION_EVENT_TYPE_APPROVE" },
+  { no: 2, name: "CONTRIBUTION_EVENT_TYPE_REJECT" },
+  { no: 3, name: "CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES" },
+  { no: 4, name: "CONTRIBUTION_EVENT_TYPE_REVISE" },
+  { no: 5, name: "CONTRIBUTION_EVENT_TYPE_MERGE" },
 ]);
 
 /**
@@ -173,69 +194,65 @@ export class ProposedQuestion extends Message<ProposedQuestion> {
 }
 
 /**
- * @generated from message akashic.v1.ContributionReview
+ * ContributionEvent is one state transition on a contribution — prose-free.
+ *
+ * @generated from message akashic.v1.ContributionEvent
  */
-export class ContributionReview extends Message<ContributionReview> {
+export class ContributionEvent extends Message<ContributionEvent> {
   /**
    * @generated from field: int32 id = 1;
    */
   id = 0;
 
   /**
-   * @generated from field: int32 reviewer_id = 2;
+   * @generated from field: int32 actor_id = 2;
    */
-  reviewerId = 0;
+  actorId = 0;
 
   /**
-   * @generated from field: akashic.v1.ReviewDecision decision = 3;
+   * @generated from field: akashic.v1.ContributionEventType event = 3;
    */
-  decision = ReviewDecision.UNSPECIFIED;
+  event = ContributionEventType.UNSPECIFIED;
 
   /**
-   * @generated from field: string note = 4;
-   */
-  note = "";
-
-  /**
-   * @generated from field: google.protobuf.Timestamp created_at = 5;
+   * @generated from field: google.protobuf.Timestamp created_at = 4;
    */
   createdAt?: Timestamp;
 
   /**
-   * @generated from field: optional akashic.v1.User reviewer = 6;
+   * @generated from field: optional akashic.v1.User actor = 5;
    */
-  reviewer?: User;
+  actor?: User;
 
-  constructor(data?: PartialMessage<ContributionReview>) {
+  constructor(data?: PartialMessage<ContributionEvent>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "akashic.v1.ContributionReview";
+  static readonly typeName = "akashic.v1.ContributionEvent";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 2, name: "reviewer_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 3, name: "decision", kind: "enum", T: proto3.getEnumType(ReviewDecision) },
-    { no: 4, name: "note", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "created_at", kind: "message", T: Timestamp },
-    { no: 6, name: "reviewer", kind: "message", T: User, opt: true },
+    { no: 2, name: "actor_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "event", kind: "enum", T: proto3.getEnumType(ContributionEventType) },
+    { no: 4, name: "created_at", kind: "message", T: Timestamp },
+    { no: 5, name: "actor", kind: "message", T: User, opt: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ContributionReview {
-    return new ContributionReview().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ContributionEvent {
+    return new ContributionEvent().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ContributionReview {
-    return new ContributionReview().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ContributionEvent {
+    return new ContributionEvent().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ContributionReview {
-    return new ContributionReview().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ContributionEvent {
+    return new ContributionEvent().fromJsonString(jsonString, options);
   }
 
-  static equals(a: ContributionReview | PlainMessage<ContributionReview> | undefined, b: ContributionReview | PlainMessage<ContributionReview> | undefined): boolean {
-    return proto3.util.equals(ContributionReview, a, b);
+  static equals(a: ContributionEvent | PlainMessage<ContributionEvent> | undefined, b: ContributionEvent | PlainMessage<ContributionEvent> | undefined): boolean {
+    return proto3.util.equals(ContributionEvent, a, b);
   }
 }
 
@@ -340,11 +357,11 @@ export class Contribution extends Message<Contribution> {
   questionId?: number;
 
   /**
-   * 1-n decision history, oldest -> newest
+   * 1-n state-change log, oldest -> newest
    *
-   * @generated from field: repeated akashic.v1.ContributionReview reviews = 7;
+   * @generated from field: repeated akashic.v1.ContributionEvent events = 7;
    */
-  reviews: ContributionReview[] = [];
+  events: ContributionEvent[] = [];
 
   /**
    * 1-n discussion, oldest -> newest
@@ -382,7 +399,7 @@ export class Contribution extends Message<Contribution> {
     { no: 4, name: "proposed", kind: "message", T: ProposedQuestion },
     { no: 5, name: "status", kind: "enum", T: proto3.getEnumType(ContributionStatus) },
     { no: 6, name: "question_id", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
-    { no: 7, name: "reviews", kind: "message", T: ContributionReview, repeated: true },
+    { no: 7, name: "events", kind: "message", T: ContributionEvent, repeated: true },
     { no: 11, name: "comments", kind: "message", T: ContributionComment, repeated: true },
     { no: 8, name: "created_at", kind: "message", T: Timestamp },
     { no: 9, name: "updated_at", kind: "message", T: Timestamp },
@@ -885,8 +902,8 @@ export class ListContributionsResponse extends Message<ListContributionsResponse
 }
 
 /**
- * Adds one review round. APPROVE moves to approved (no question yet — contributor
- * merges); REQUEST_CHANGES reopens for revision; REJECT is terminal.
+ * Records one reviewer decision (APPROVE / REJECT / REQUEST_CHANGES only). Carries
+ * no prose — a reviewer who wants to explain posts a comment.
  *
  * @generated from message akashic.v1.ReviewContributionRequest
  */
@@ -902,14 +919,9 @@ export class ReviewContributionRequest extends Message<ReviewContributionRequest
   id = 0;
 
   /**
-   * @generated from field: akashic.v1.ReviewDecision decision = 3;
+   * @generated from field: akashic.v1.ContributionEventType decision = 3;
    */
-  decision = ReviewDecision.UNSPECIFIED;
-
-  /**
-   * @generated from field: string note = 4;
-   */
-  note = "";
+  decision = ContributionEventType.UNSPECIFIED;
 
   constructor(data?: PartialMessage<ReviewContributionRequest>) {
     super();
@@ -921,8 +933,7 @@ export class ReviewContributionRequest extends Message<ReviewContributionRequest
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 2, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 3, name: "decision", kind: "enum", T: proto3.getEnumType(ReviewDecision) },
-    { no: 4, name: "note", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "decision", kind: "enum", T: proto3.getEnumType(ContributionEventType) },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ReviewContributionRequest {

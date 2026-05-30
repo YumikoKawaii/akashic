@@ -1,4 +1,4 @@
-import type { ContributionStatus, ReviewDecision } from '../../types'
+import type { ContributionStatus, ContributionEventType } from '../../types'
 
 export const STATUS_META: Record<ContributionStatus, { label: string; color: string; bg: string; border: string }> = {
   pending:           { label: 'Pending Review', color: '#9a7018', bg: 'rgba(154,112,24,0.08)', border: 'rgba(154,112,24,0.45)' },
@@ -8,10 +8,13 @@ export const STATUS_META: Record<ContributionStatus, { label: string; color: str
   merged:            { label: 'Merged', color: '#6b4c8a', bg: 'rgba(107,76,138,0.08)', border: 'rgba(107,76,138,0.45)' },
 }
 
-export const DECISION_META: Record<ReviewDecision, { label: string; color: string }> = {
+// Labels for the prose-free state-change log (reviewer + contributor events).
+export const EVENT_META: Record<ContributionEventType, { label: string; color: string }> = {
   approve:         { label: 'Approved', color: '#2a8a3a' },
   reject:          { label: 'Rejected', color: '#b03030' },
   request_changes: { label: 'Requested changes', color: '#b06a18' },
+  revise:          { label: 'Revised', color: '#9a7018' },
+  merge:           { label: 'Merged', color: '#6b4c8a' },
 }
 
 // A non-terminal contribution can still be revised/withdrawn by its contributor.

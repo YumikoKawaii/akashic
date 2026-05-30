@@ -27,11 +27,17 @@ enum ContributionStatus {
   CONTRIBUTION_STATUS_MERGED            = 5; // terminal — question created
 }
 
-enum ReviewDecision {
-  REVIEW_DECISION_UNSPECIFIED     = 0;
-  REVIEW_DECISION_APPROVE         = 1; // -> approved (does NOT create a question; contributor merges)
-  REVIEW_DECISION_REJECT          = 2; // -> rejected (terminal)
-  REVIEW_DECISION_REQUEST_CHANGES = 3; // -> changes_requested (bounces back to contributor)
+// ContributionEventType is every state transition recorded on a contribution's
+// event log. APPROVE/REJECT/REQUEST_CHANGES are reviewer (editor) actions;
+// REVISE/MERGE are contributor actions. The log carries no prose — explanations
+// are comments.
+enum ContributionEventType {
+  CONTRIBUTION_EVENT_TYPE_UNSPECIFIED     = 0;
+  CONTRIBUTION_EVENT_TYPE_APPROVE         = 1; // -> approved (does NOT create a question; contributor merges)
+  CONTRIBUTION_EVENT_TYPE_REJECT          = 2; // -> rejected (terminal)
+  CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES = 3; // -> changes_requested (bounces back to contributor)
+  CONTRIBUTION_EVENT_TYPE_REVISE          = 4; // contributor edited -> pending
+  CONTRIBUTION_EVENT_TYPE_MERGE           = 5; // contributor landed -> merged
 }
 
 // ── Entities ────────────────────────────────────────────────────────────────
@@ -48,13 +54,13 @@ message ProposedQuestion {
   }
 }
 
-message ContributionReview {
+// ContributionEvent is one state transition on a contribution — prose-free.
+message ContributionEvent {
   int32                     id = 1;
-  int32                     reviewer_id = 2;
-  ReviewDecision            decision = 3;
-  string                    note = 4;
-  google.protobuf.Timestamp created_at = 5;
-  optional User             reviewer = 6;
+  int32                     actor_id = 2;
+  ContributionEventType     event = 3;
+  google.protobuf.Timestamp created_at = 4;
+  optional User             actor = 5;
 }
 
 // ContributionComment is free-form discussion on a contribution (no decision).
@@ -74,7 +80,7 @@ message Contribution {
   ProposedQuestion             proposed = 4;
   ContributionStatus           status = 5;
   optional int32               question_id = 6; // the question created on merge
-  repeated ContributionReview  reviews = 7;      // 1-n decision history, oldest -> newest
+  repeated ContributionEvent   events = 7;       // 1-n state-change log, oldest -> newest
   repeated ContributionComment comments = 11;    // 1-n discussion, oldest -> newest
   google.protobuf.Timestamp    created_at = 8;
   google.protobuf.Timestamp    updated_at = 9;
@@ -107,13 +113,12 @@ message MergeContributionResponse { Contribution contribution = 1; }
 message ListContributionsRequest  { int32 bank_id = 1; ContributionStatus status = 2; } // status optional filter
 message ListContributionsResponse { repeated Contribution contributions = 1; }
 
-// Adds one review round. APPROVE moves to approved (no question yet — contributor
-// merges); REQUEST_CHANGES reopens for revision; REJECT is terminal.
+// Records one reviewer decision (APPROVE / REJECT / REQUEST_CHANGES only). Carries
+// no prose — a reviewer who wants to explain posts a comment.
 message ReviewContributionRequest {
-  int32          bank_id = 1;
-  int32          id = 2;
-  ReviewDecision decision = 3;
-  string         note = 4;
+  int32                 bank_id = 1;
+  int32                 id = 2;
+  ContributionEventType decision = 3;
 }
 message ReviewContributionResponse { Contribution contribution = 1; }
 

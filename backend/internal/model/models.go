@@ -177,9 +177,9 @@ type QQuestionItem struct {
 
 // QMultipleChoice covers mcq only. No audit columns — lifecycle owned by Question.
 type QMultipleChoice struct {
-	QuestionID int          `gorm:"primaryKey"        json:"question_id"`
-	Content    string       `gorm:"not null"          json:"content"`
-	Options    []MCQOption  `gorm:"serializer:json"   json:"options"`
+	QuestionID int            `gorm:"primaryKey"        json:"question_id"`
+	Content    string         `gorm:"not null"          json:"content"`
+	Options    []MCQOption    `gorm:"serializer:json"   json:"options"`
 	Answers    pq.StringArray `gorm:"type:text[]"     json:"answers"`
 }
 
@@ -229,9 +229,13 @@ const (
 	ContributionRejected         = "rejected" // terminal
 	ContributionMerged           = "merged"   // terminal — question created
 
-	ReviewApprove        = "approve"
-	ReviewReject         = "reject"
-	ReviewRequestChanges = "request_changes"
+	// Contribution event log — every state transition. Approve/Reject/RequestChanges
+	// are reviewer actions; Revise/Merge are contributor actions.
+	EventApprove        = "approve"
+	EventReject         = "reject"
+	EventRequestChanges = "request_changes"
+	EventRevise         = "revise"
+	EventMerge          = "merge"
 )
 
 // ContributionPayload is the proposed new question, snapshotted as JSONB. Mirrors
@@ -248,27 +252,27 @@ type ContributionPayload struct {
 }
 
 type Contribution struct {
-	ID               int                  `gorm:"primaryKey;autoIncrement" json:"id"`
-	BankID           int                  `gorm:"not null;index"           json:"bank_id"`
-	ContributorID    int                  `gorm:"not null;index"           json:"contributor_id"`
-	Contributor      *User                `gorm:"foreignKey:ContributorID" json:"contributor,omitempty"`
-	Payload          ContributionPayload  `gorm:"serializer:json"          json:"payload"`
-	Status           string               `gorm:"not null;default:'pending'" json:"status"`
-	QuestionID       *int                  `                                json:"question_id,omitempty"`
-	Reviews          []ContributionReview  `gorm:"foreignKey:ContributionID" json:"reviews,omitempty"`
-	Comments         []ContributionComment `gorm:"foreignKey:ContributionID" json:"comments,omitempty"`
-	CreatedAt        time.Time             `                                json:"created_at"`
-	UpdatedAt        time.Time             `                                json:"updated_at"`
-	DeletedAt        gorm.DeletedAt        `gorm:"index"                    json:"-"`
+	ID            int                   `gorm:"primaryKey;autoIncrement" json:"id"`
+	BankID        int                   `gorm:"not null;index"           json:"bank_id"`
+	ContributorID int                   `gorm:"not null;index"           json:"contributor_id"`
+	Contributor   *User                 `gorm:"foreignKey:ContributorID" json:"contributor,omitempty"`
+	Payload       ContributionPayload   `gorm:"serializer:json"          json:"payload"`
+	Status        string                `gorm:"not null;default:'pending'" json:"status"`
+	QuestionID    *int                  `                                json:"question_id,omitempty"`
+	Events        []ContributionEvent   `gorm:"foreignKey:ContributionID" json:"events,omitempty"`
+	Comments      []ContributionComment `gorm:"foreignKey:ContributionID" json:"comments,omitempty"`
+	CreatedAt     time.Time             `                                json:"created_at"`
+	UpdatedAt     time.Time             `                                json:"updated_at"`
+	DeletedAt     gorm.DeletedAt        `gorm:"index"                    json:"-"`
 }
 
-type ContributionReview struct {
+// ContributionEvent is one state transition on a contribution (prose-free).
+type ContributionEvent struct {
 	ID             int            `gorm:"primaryKey;autoIncrement" json:"id"`
 	ContributionID int            `gorm:"not null;index"           json:"contribution_id"`
-	ReviewerID     int            `gorm:"not null"                 json:"reviewer_id"`
-	Reviewer       *User          `gorm:"foreignKey:ReviewerID"    json:"reviewer,omitempty"`
-	Decision       string         `gorm:"not null"                 json:"decision"`
-	Note           string         `gorm:"not null;default:''"      json:"note"`
+	ActorID        int            `gorm:"not null"                 json:"actor_id"`
+	Actor          *User          `gorm:"foreignKey:ActorID"       json:"actor,omitempty"`
+	Event          string         `gorm:"not null"                 json:"event"`
 	CreatedAt      time.Time      `                                json:"created_at"`
 	DeletedAt      gorm.DeletedAt `gorm:"index"                    json:"-"`
 }
