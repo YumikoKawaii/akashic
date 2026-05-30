@@ -223,6 +223,14 @@ export interface ContributionReview {
   reviewer?: User
 }
 
+export interface ContributionComment {
+  id: number
+  author_id: number
+  body: string
+  created_at: string
+  author?: User
+}
+
 export interface Contribution {
   id: number
   bank_id: number
@@ -231,6 +239,7 @@ export interface Contribution {
   status: ContributionStatus
   question_id?: number
   reviews: ContributionReview[]
+  comments: ContributionComment[]
   created_at: string
   updated_at: string
   contributor?: User

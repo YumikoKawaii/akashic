@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { Category, Contribution } from '../../types'
+import { Input } from '../ui/FormField'
 import { STATUS_META, DECISION_META } from './status'
 
 const TYPE_LABELS: Record<string, string> = {
@@ -20,13 +21,29 @@ function StatusBadge({ status }: { status: Contribution['status'] }) {
   )
 }
 
-export default function ContributionView({ contribution, categories, actions }: {
+export default function ContributionView({ contribution, categories, actions, onComment, commenting }: {
   contribution: Contribution
   categories: Category[]
   actions?: ReactNode
+  onComment?: (body: string) => void
+  commenting?: boolean
 }) {
   const p = contribution.proposed
   const catName = categories.find(c => c.id === p.category_id)?.name ?? `#${p.category_id}`
+  const [draft, setDraft] = useState('')
+
+  // Decisions and comments interleaved on one timeline, oldest → newest.
+  const timeline = [
+    ...contribution.reviews.map(r => ({ type: 'review' as const, at: r.created_at, review: r })),
+    ...contribution.comments.map(c => ({ type: 'comment' as const, at: c.created_at, comment: c })),
+  ].sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0))
+
+  const submit = () => {
+    const body = draft.trim()
+    if (!body || !onComment) return
+    onComment(body)
+    setDraft('')
+  }
 
   return (
     <div style={{ position: 'relative', border: '1px solid var(--border-dim)', padding: '16px 20px', background: 'var(--bg-card)' }}>
@@ -69,19 +86,41 @@ export default function ContributionView({ contribution, categories, actions }: 
         </div>
       )}
 
-      {/* Review history */}
-      {contribution.reviews.length > 0 && (
-        <div style={{ borderTop: '1px solid var(--border-dim)', paddingTop: 8, marginTop: 4 }}>
-          {contribution.reviews.map(r => {
-            const dm = DECISION_META[r.decision]
-            return (
-              <div key={r.id} style={{ fontSize: '0.78rem', marginBottom: 4 }}>
-                <span style={{ color: dm.color, fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{dm.label}</span>
-                {r.reviewer && <span style={{ color: 'var(--ink-dim)', marginLeft: 8 }}>{r.reviewer.name}</span>}
-                {r.note && <span style={{ color: 'var(--ink)', marginLeft: 8 }}>— {r.note}</span>}
-              </div>
-            )
-          })}
+      {/* Timeline: review decisions + comments, chronological */}
+      {timeline.length > 0 && (
+        <div style={{ borderTop: '1px solid var(--border-dim)', paddingTop: 10, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 7 }}>
+          {timeline.map(ev => ev.type === 'review' ? (
+            <div key={`r${ev.review.id}`} style={{ fontSize: '0.78rem' }}>
+              <span style={{ color: DECISION_META[ev.review.decision].color, fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                {DECISION_META[ev.review.decision].label}
+              </span>
+              {ev.review.reviewer && <span style={{ color: 'var(--ink-dim)', marginLeft: 8 }}>{ev.review.reviewer.name}</span>}
+              {ev.review.note && <span style={{ color: 'var(--ink)', marginLeft: 8 }}>— {ev.review.note}</span>}
+            </div>
+          ) : (
+            <div key={`c${ev.comment.id}`} style={{ fontSize: '0.82rem' }}>
+              <span style={{ color: 'var(--gold-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.62rem', letterSpacing: '0.04em' }}>
+                {ev.comment.author?.name ?? 'User'}
+              </span>
+              <span style={{ color: 'var(--ink)', marginLeft: 8 }}>{ev.comment.body}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Comment composer */}
+      {onComment && (
+        <div className="flex gap-2 items-center" style={{ marginTop: 10 }}>
+          <Input
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            placeholder="Add a comment…"
+            onKeyDown={e => { if (e.key === 'Enter') submit() }}
+          />
+          <button className="btn btn-ghost" style={{ fontSize: '0.62rem', padding: '4px 12px' }}
+            disabled={commenting || !draft.trim()} onClick={submit}>
+            {commenting ? '…' : 'Comment'}
+          </button>
         </div>
       )}
 

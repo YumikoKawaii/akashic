@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Category, Contribution, ProposedQuestion } from '../../types'
 import {
   useMyContributions, useSubmitContribution, useUpdateContribution,
-  useWithdrawContribution, useMergeContribution,
+  useWithdrawContribution, useMergeContribution, useAddContributionComment,
 } from '../../hooks/useContributions'
 import OrnatePanel from '../ui/OrnatePanel'
 import { Spinner } from '../ui/MagicCircle'
@@ -16,6 +16,7 @@ export default function ContributeTab({ bankId, categories }: { bankId: string; 
   const update   = useUpdateContribution(bankId)
   const withdraw = useWithdrawContribution(bankId)
   const merge    = useMergeContribution(bankId)
+  const comment  = useAddContributionComment(bankId)
 
   const [composing, setComposing] = useState(false)
   const [editing,   setEditing]   = useState<number | null>(null)
@@ -111,7 +112,14 @@ export default function ContributeTab({ bankId, categories }: { bankId: string; 
               />
             </OrnatePanel>
           ) : (
-            <ContributionView key={c.id} contribution={c} categories={categories} actions={actionsFor(c)} />
+            <ContributionView
+              key={c.id}
+              contribution={c}
+              categories={categories}
+              actions={actionsFor(c)}
+              onComment={body => comment.mutate({ id: c.id, body })}
+              commenting={comment.isPending}
+            />
           ))}
         </div>
       )}

@@ -100,6 +100,17 @@ func (h *ContributionServiceHandler) ReviewContribution(
 	return connect.NewResponse(&pb.ReviewContributionResponse{Contribution: contributionToProto(c)}), nil
 }
 
+func (h *ContributionServiceHandler) AddContributionComment(
+	ctx context.Context,
+	req *connect.Request[pb.AddContributionCommentRequest],
+) (*connect.Response[pb.AddContributionCommentResponse], error) {
+	c, err := h.svc.AddComment(int(req.Msg.BankId), userIDFromContext(ctx), int(req.Msg.Id), req.Msg.Body)
+	if err != nil {
+		return nil, toConnectError(err)
+	}
+	return connect.NewResponse(&pb.AddContributionCommentResponse{Contribution: contributionToProto(c)}), nil
+}
+
 func contributionsToProto(cs []model.Contribution) []*pb.Contribution {
 	out := make([]*pb.Contribution, len(cs))
 	for i := range cs {

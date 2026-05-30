@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Category, Contribution, ContributionStatus, ReviewDecision } from '../../types'
-import { useContributionQueue, useReviewContribution } from '../../hooks/useContributions'
+import { useContributionQueue, useReviewContribution, useAddContributionComment } from '../../hooks/useContributions'
 import { Spinner } from '../ui/MagicCircle'
 import { Input } from '../ui/FormField'
 import Select from '../ui/Select'
@@ -22,6 +22,7 @@ const isReviewable = (s: ContributionStatus) => s === 'pending' || s === 'change
 export default function ReviewTab({ bankId, categories }: { bankId: string; categories: Category[] }) {
   const { data: queue = [], isLoading } = useContributionQueue(bankId)
   const review = useReviewContribution(bankId)
+  const comment = useAddContributionComment(bankId)
 
   const [filter, setFilter] = useState<ContributionStatus | ''>('')
   const [noteFor, setNoteFor] = useState<number | null>(null)
@@ -85,7 +86,14 @@ export default function ReviewTab({ bankId, categories }: { bankId: string; cate
       ) : (
         <div className="flex flex-col gap-3" style={{ maxWidth: 760 }}>
           {shown.map(c => (
-            <ContributionView key={c.id} contribution={c} categories={categories} actions={actionsFor(c)} />
+            <ContributionView
+              key={c.id}
+              contribution={c}
+              categories={categories}
+              actions={actionsFor(c)}
+              onComment={body => comment.mutate({ id: c.id, body })}
+              commenting={comment.isPending}
+            />
           ))}
         </div>
       )}

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/lib/pq"
 	"github.com/yumikokawaii/akashic/internal/model"
@@ -219,5 +220,30 @@ func (s *ContributionService) Merge(ctx context.Context, bankID, userID, id int)
 	}
 
 	s.pool.AddToPool(bankID, toCachedQuestion(q))
+	return s.uow.Store().Contributions.FindByID(c.ID)
+}
+
+// AddComment posts a free-form comment on a contribution. Any viewer with access
+// to the bank may comment (the viewer floor is enforced by the interceptor); the
+// service only binds the contribution to the bank.
+func (s *ContributionService) AddComment(bankID, authorID, id int, body string) (*model.Contribution, error) {
+	body = strings.TrimSpace(body)
+	if body == "" {
+		return nil, ErrBadRequest
+	}
+	c, err := s.uow.Store().Contributions.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if c.BankID != bankID {
+		return nil, ErrForbidden
+	}
+	if err := s.uow.Store().Contributions.AddComment(&model.ContributionComment{
+		ContributionID: c.ID,
+		AuthorID:       authorID,
+		Body:           body,
+	}); err != nil {
+		return nil, err
+	}
 	return s.uow.Store().Contributions.FindByID(c.ID)
 }

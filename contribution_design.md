@@ -29,6 +29,12 @@ viewer **propose a new question**; the bank's editors/owners review it.
   the GitHub model and gives merge a clean safety property (see §5).
 - **Discovery:** still deferred — no Explore list. Contributions target a bank
   the contributor already reached (direct link / public).
+- **Comments (added):** a contribution carries a 1-n **comment** thread
+  (`contribution_comments`) — free-form discussion, distinct from reviews (which
+  carry a decision). Any **viewer** with access may post (`AddContributionComment`,
+  viewer floor); the contributor uses it to defend or clarify a proposal. The
+  frontend interleaves comments and review decisions on one chronological
+  timeline. (Migration `007`.)
 
 ### Deferred
 - Edit/delete proposals (PR-style diffs against existing questions).
@@ -36,7 +42,7 @@ viewer **propose a new question**; the bank's editors/owners review it.
 - **Per-round payload snapshots** — v1 edits the payload *in place* on revise, so
   the review history shows decisions + notes but not a versioned diff of the
   question across rounds.
-- Notifications, contributor reputation, comment threads on a proposal.
+- Notifications, contributor reputation.
 
 ---
 

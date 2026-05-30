@@ -240,6 +240,70 @@ export class ContributionReview extends Message<ContributionReview> {
 }
 
 /**
+ * ContributionComment is free-form discussion on a contribution (no decision).
+ * Any viewer can post; the contributor uses it to defend or clarify a proposal.
+ *
+ * @generated from message akashic.v1.ContributionComment
+ */
+export class ContributionComment extends Message<ContributionComment> {
+  /**
+   * @generated from field: int32 id = 1;
+   */
+  id = 0;
+
+  /**
+   * @generated from field: int32 author_id = 2;
+   */
+  authorId = 0;
+
+  /**
+   * @generated from field: string body = 3;
+   */
+  body = "";
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 4;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * @generated from field: optional akashic.v1.User author = 5;
+   */
+  author?: User;
+
+  constructor(data?: PartialMessage<ContributionComment>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.ContributionComment";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "author_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "body", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "created_at", kind: "message", T: Timestamp },
+    { no: 5, name: "author", kind: "message", T: User, opt: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ContributionComment {
+    return new ContributionComment().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ContributionComment {
+    return new ContributionComment().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ContributionComment {
+    return new ContributionComment().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ContributionComment | PlainMessage<ContributionComment> | undefined, b: ContributionComment | PlainMessage<ContributionComment> | undefined): boolean {
+    return proto3.util.equals(ContributionComment, a, b);
+  }
+}
+
+/**
  * @generated from message akashic.v1.Contribution
  */
 export class Contribution extends Message<Contribution> {
@@ -276,11 +340,18 @@ export class Contribution extends Message<Contribution> {
   questionId?: number;
 
   /**
-   * 1-n history, oldest -> newest
+   * 1-n decision history, oldest -> newest
    *
    * @generated from field: repeated akashic.v1.ContributionReview reviews = 7;
    */
   reviews: ContributionReview[] = [];
+
+  /**
+   * 1-n discussion, oldest -> newest
+   *
+   * @generated from field: repeated akashic.v1.ContributionComment comments = 11;
+   */
+  comments: ContributionComment[] = [];
 
   /**
    * @generated from field: google.protobuf.Timestamp created_at = 8;
@@ -312,6 +383,7 @@ export class Contribution extends Message<Contribution> {
     { no: 5, name: "status", kind: "enum", T: proto3.getEnumType(ContributionStatus) },
     { no: 6, name: "question_id", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
     { no: 7, name: "reviews", kind: "message", T: ContributionReview, repeated: true },
+    { no: 11, name: "comments", kind: "message", T: ContributionComment, repeated: true },
     { no: 8, name: "created_at", kind: "message", T: Timestamp },
     { no: 9, name: "updated_at", kind: "message", T: Timestamp },
     { no: 10, name: "contributor", kind: "message", T: User, opt: true },
@@ -904,6 +976,94 @@ export class ReviewContributionResponse extends Message<ReviewContributionRespon
 
   static equals(a: ReviewContributionResponse | PlainMessage<ReviewContributionResponse> | undefined, b: ReviewContributionResponse | PlainMessage<ReviewContributionResponse> | undefined): boolean {
     return proto3.util.equals(ReviewContributionResponse, a, b);
+  }
+}
+
+/**
+ * Posts a free-form comment on a contribution. id is the contribution id.
+ *
+ * @generated from message akashic.v1.AddContributionCommentRequest
+ */
+export class AddContributionCommentRequest extends Message<AddContributionCommentRequest> {
+  /**
+   * @generated from field: int32 bank_id = 1;
+   */
+  bankId = 0;
+
+  /**
+   * @generated from field: int32 id = 2;
+   */
+  id = 0;
+
+  /**
+   * @generated from field: string body = 3;
+   */
+  body = "";
+
+  constructor(data?: PartialMessage<AddContributionCommentRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.AddContributionCommentRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "body", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AddContributionCommentRequest {
+    return new AddContributionCommentRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AddContributionCommentRequest {
+    return new AddContributionCommentRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AddContributionCommentRequest {
+    return new AddContributionCommentRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: AddContributionCommentRequest | PlainMessage<AddContributionCommentRequest> | undefined, b: AddContributionCommentRequest | PlainMessage<AddContributionCommentRequest> | undefined): boolean {
+    return proto3.util.equals(AddContributionCommentRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.AddContributionCommentResponse
+ */
+export class AddContributionCommentResponse extends Message<AddContributionCommentResponse> {
+  /**
+   * @generated from field: akashic.v1.Contribution contribution = 1;
+   */
+  contribution?: Contribution;
+
+  constructor(data?: PartialMessage<AddContributionCommentResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.AddContributionCommentResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "contribution", kind: "message", T: Contribution },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AddContributionCommentResponse {
+    return new AddContributionCommentResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AddContributionCommentResponse {
+    return new AddContributionCommentResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AddContributionCommentResponse {
+    return new AddContributionCommentResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: AddContributionCommentResponse | PlainMessage<AddContributionCommentResponse> | undefined, b: AddContributionCommentResponse | PlainMessage<AddContributionCommentResponse> | undefined): boolean {
+    return proto3.util.equals(AddContributionCommentResponse, a, b);
   }
 }
 

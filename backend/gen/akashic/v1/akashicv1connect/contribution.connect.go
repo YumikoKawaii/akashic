@@ -54,6 +54,9 @@ const (
 	// ContributionServiceReviewContributionProcedure is the fully-qualified name of the
 	// ContributionService's ReviewContribution RPC.
 	ContributionServiceReviewContributionProcedure = "/akashic.v1.ContributionService/ReviewContribution"
+	// ContributionServiceAddContributionCommentProcedure is the fully-qualified name of the
+	// ContributionService's AddContributionComment RPC.
+	ContributionServiceAddContributionCommentProcedure = "/akashic.v1.ContributionService/AddContributionComment"
 )
 
 // ContributionServiceClient is a client for the akashic.v1.ContributionService service.
@@ -65,6 +68,7 @@ type ContributionServiceClient interface {
 	MergeContribution(context.Context, *connect.Request[v1.MergeContributionRequest]) (*connect.Response[v1.MergeContributionResponse], error)
 	ListContributions(context.Context, *connect.Request[v1.ListContributionsRequest]) (*connect.Response[v1.ListContributionsResponse], error)
 	ReviewContribution(context.Context, *connect.Request[v1.ReviewContributionRequest]) (*connect.Response[v1.ReviewContributionResponse], error)
+	AddContributionComment(context.Context, *connect.Request[v1.AddContributionCommentRequest]) (*connect.Response[v1.AddContributionCommentResponse], error)
 }
 
 // NewContributionServiceClient constructs a client for the akashic.v1.ContributionService service.
@@ -120,18 +124,25 @@ func NewContributionServiceClient(httpClient connect.HTTPClient, baseURL string,
 			connect.WithSchema(contributionServiceMethods.ByName("ReviewContribution")),
 			connect.WithClientOptions(opts...),
 		),
+		addContributionComment: connect.NewClient[v1.AddContributionCommentRequest, v1.AddContributionCommentResponse](
+			httpClient,
+			baseURL+ContributionServiceAddContributionCommentProcedure,
+			connect.WithSchema(contributionServiceMethods.ByName("AddContributionComment")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // contributionServiceClient implements ContributionServiceClient.
 type contributionServiceClient struct {
-	submitContribution   *connect.Client[v1.SubmitContributionRequest, v1.SubmitContributionResponse]
-	updateContribution   *connect.Client[v1.UpdateContributionRequest, v1.UpdateContributionResponse]
-	listMyContributions  *connect.Client[v1.ListMyContributionsRequest, v1.ListMyContributionsResponse]
-	withdrawContribution *connect.Client[v1.WithdrawContributionRequest, v1.WithdrawContributionResponse]
-	mergeContribution    *connect.Client[v1.MergeContributionRequest, v1.MergeContributionResponse]
-	listContributions    *connect.Client[v1.ListContributionsRequest, v1.ListContributionsResponse]
-	reviewContribution   *connect.Client[v1.ReviewContributionRequest, v1.ReviewContributionResponse]
+	submitContribution     *connect.Client[v1.SubmitContributionRequest, v1.SubmitContributionResponse]
+	updateContribution     *connect.Client[v1.UpdateContributionRequest, v1.UpdateContributionResponse]
+	listMyContributions    *connect.Client[v1.ListMyContributionsRequest, v1.ListMyContributionsResponse]
+	withdrawContribution   *connect.Client[v1.WithdrawContributionRequest, v1.WithdrawContributionResponse]
+	mergeContribution      *connect.Client[v1.MergeContributionRequest, v1.MergeContributionResponse]
+	listContributions      *connect.Client[v1.ListContributionsRequest, v1.ListContributionsResponse]
+	reviewContribution     *connect.Client[v1.ReviewContributionRequest, v1.ReviewContributionResponse]
+	addContributionComment *connect.Client[v1.AddContributionCommentRequest, v1.AddContributionCommentResponse]
 }
 
 // SubmitContribution calls akashic.v1.ContributionService.SubmitContribution.
@@ -169,6 +180,11 @@ func (c *contributionServiceClient) ReviewContribution(ctx context.Context, req 
 	return c.reviewContribution.CallUnary(ctx, req)
 }
 
+// AddContributionComment calls akashic.v1.ContributionService.AddContributionComment.
+func (c *contributionServiceClient) AddContributionComment(ctx context.Context, req *connect.Request[v1.AddContributionCommentRequest]) (*connect.Response[v1.AddContributionCommentResponse], error) {
+	return c.addContributionComment.CallUnary(ctx, req)
+}
+
 // ContributionServiceHandler is an implementation of the akashic.v1.ContributionService service.
 type ContributionServiceHandler interface {
 	SubmitContribution(context.Context, *connect.Request[v1.SubmitContributionRequest]) (*connect.Response[v1.SubmitContributionResponse], error)
@@ -178,6 +194,7 @@ type ContributionServiceHandler interface {
 	MergeContribution(context.Context, *connect.Request[v1.MergeContributionRequest]) (*connect.Response[v1.MergeContributionResponse], error)
 	ListContributions(context.Context, *connect.Request[v1.ListContributionsRequest]) (*connect.Response[v1.ListContributionsResponse], error)
 	ReviewContribution(context.Context, *connect.Request[v1.ReviewContributionRequest]) (*connect.Response[v1.ReviewContributionResponse], error)
+	AddContributionComment(context.Context, *connect.Request[v1.AddContributionCommentRequest]) (*connect.Response[v1.AddContributionCommentResponse], error)
 }
 
 // NewContributionServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -229,6 +246,12 @@ func NewContributionServiceHandler(svc ContributionServiceHandler, opts ...conne
 		connect.WithSchema(contributionServiceMethods.ByName("ReviewContribution")),
 		connect.WithHandlerOptions(opts...),
 	)
+	contributionServiceAddContributionCommentHandler := connect.NewUnaryHandler(
+		ContributionServiceAddContributionCommentProcedure,
+		svc.AddContributionComment,
+		connect.WithSchema(contributionServiceMethods.ByName("AddContributionComment")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/akashic.v1.ContributionService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ContributionServiceSubmitContributionProcedure:
@@ -245,6 +268,8 @@ func NewContributionServiceHandler(svc ContributionServiceHandler, opts ...conne
 			contributionServiceListContributionsHandler.ServeHTTP(w, r)
 		case ContributionServiceReviewContributionProcedure:
 			contributionServiceReviewContributionHandler.ServeHTTP(w, r)
+		case ContributionServiceAddContributionCommentProcedure:
+			contributionServiceAddContributionCommentHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -280,4 +305,8 @@ func (UnimplementedContributionServiceHandler) ListContributions(context.Context
 
 func (UnimplementedContributionServiceHandler) ReviewContribution(context.Context, *connect.Request[v1.ReviewContributionRequest]) (*connect.Response[v1.ReviewContributionResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.ContributionService.ReviewContribution is not implemented"))
+}
+
+func (UnimplementedContributionServiceHandler) AddContributionComment(context.Context, *connect.Request[v1.AddContributionCommentRequest]) (*connect.Response[v1.AddContributionCommentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.ContributionService.AddContributionComment is not implemented"))
 }

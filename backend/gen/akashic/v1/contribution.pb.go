@@ -331,6 +331,84 @@ func (x *ContributionReview) GetReviewer() *User {
 	return nil
 }
 
+// ContributionComment is free-form discussion on a contribution (no decision).
+// Any viewer can post; the contributor uses it to defend or clarify a proposal.
+type ContributionComment struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	AuthorId      int32                  `protobuf:"varint,2,opt,name=author_id,json=authorId,proto3" json:"author_id,omitempty"`
+	Body          string                 `protobuf:"bytes,3,opt,name=body,proto3" json:"body,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	Author        *User                  `protobuf:"bytes,5,opt,name=author,proto3,oneof" json:"author,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ContributionComment) Reset() {
+	*x = ContributionComment{}
+	mi := &file_akashic_v1_contribution_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ContributionComment) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ContributionComment) ProtoMessage() {}
+
+func (x *ContributionComment) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_contribution_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ContributionComment.ProtoReflect.Descriptor instead.
+func (*ContributionComment) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ContributionComment) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *ContributionComment) GetAuthorId() int32 {
+	if x != nil {
+		return x.AuthorId
+	}
+	return 0
+}
+
+func (x *ContributionComment) GetBody() string {
+	if x != nil {
+		return x.Body
+	}
+	return ""
+}
+
+func (x *ContributionComment) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *ContributionComment) GetAuthor() *User {
+	if x != nil {
+		return x.Author
+	}
+	return nil
+}
+
 type Contribution struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -339,7 +417,8 @@ type Contribution struct {
 	Proposed      *ProposedQuestion      `protobuf:"bytes,4,opt,name=proposed,proto3" json:"proposed,omitempty"`
 	Status        ContributionStatus     `protobuf:"varint,5,opt,name=status,proto3,enum=akashic.v1.ContributionStatus" json:"status,omitempty"`
 	QuestionId    *int32                 `protobuf:"varint,6,opt,name=question_id,json=questionId,proto3,oneof" json:"question_id,omitempty"` // the question created on merge
-	Reviews       []*ContributionReview  `protobuf:"bytes,7,rep,name=reviews,proto3" json:"reviews,omitempty"`                                // 1-n history, oldest -> newest
+	Reviews       []*ContributionReview  `protobuf:"bytes,7,rep,name=reviews,proto3" json:"reviews,omitempty"`                                // 1-n decision history, oldest -> newest
+	Comments      []*ContributionComment `protobuf:"bytes,11,rep,name=comments,proto3" json:"comments,omitempty"`                             // 1-n discussion, oldest -> newest
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	Contributor   *User                  `protobuf:"bytes,10,opt,name=contributor,proto3,oneof" json:"contributor,omitempty"`
@@ -349,7 +428,7 @@ type Contribution struct {
 
 func (x *Contribution) Reset() {
 	*x = Contribution{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[2]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -361,7 +440,7 @@ func (x *Contribution) String() string {
 func (*Contribution) ProtoMessage() {}
 
 func (x *Contribution) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[2]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -374,7 +453,7 @@ func (x *Contribution) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Contribution.ProtoReflect.Descriptor instead.
 func (*Contribution) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{2}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Contribution) GetId() int32 {
@@ -426,6 +505,13 @@ func (x *Contribution) GetReviews() []*ContributionReview {
 	return nil
 }
 
+func (x *Contribution) GetComments() []*ContributionComment {
+	if x != nil {
+		return x.Comments
+	}
+	return nil
+}
+
 func (x *Contribution) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
@@ -457,7 +543,7 @@ type SubmitContributionRequest struct {
 
 func (x *SubmitContributionRequest) Reset() {
 	*x = SubmitContributionRequest{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[3]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -469,7 +555,7 @@ func (x *SubmitContributionRequest) String() string {
 func (*SubmitContributionRequest) ProtoMessage() {}
 
 func (x *SubmitContributionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[3]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -482,7 +568,7 @@ func (x *SubmitContributionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitContributionRequest.ProtoReflect.Descriptor instead.
 func (*SubmitContributionRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{3}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *SubmitContributionRequest) GetBankId() int32 {
@@ -508,7 +594,7 @@ type SubmitContributionResponse struct {
 
 func (x *SubmitContributionResponse) Reset() {
 	*x = SubmitContributionResponse{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[4]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -520,7 +606,7 @@ func (x *SubmitContributionResponse) String() string {
 func (*SubmitContributionResponse) ProtoMessage() {}
 
 func (x *SubmitContributionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[4]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -533,7 +619,7 @@ func (x *SubmitContributionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitContributionResponse.ProtoReflect.Descriptor instead.
 func (*SubmitContributionResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{4}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *SubmitContributionResponse) GetContribution() *Contribution {
@@ -555,7 +641,7 @@ type UpdateContributionRequest struct {
 
 func (x *UpdateContributionRequest) Reset() {
 	*x = UpdateContributionRequest{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[5]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -567,7 +653,7 @@ func (x *UpdateContributionRequest) String() string {
 func (*UpdateContributionRequest) ProtoMessage() {}
 
 func (x *UpdateContributionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[5]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -580,7 +666,7 @@ func (x *UpdateContributionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateContributionRequest.ProtoReflect.Descriptor instead.
 func (*UpdateContributionRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{5}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *UpdateContributionRequest) GetBankId() int32 {
@@ -613,7 +699,7 @@ type UpdateContributionResponse struct {
 
 func (x *UpdateContributionResponse) Reset() {
 	*x = UpdateContributionResponse{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[6]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -625,7 +711,7 @@ func (x *UpdateContributionResponse) String() string {
 func (*UpdateContributionResponse) ProtoMessage() {}
 
 func (x *UpdateContributionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[6]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -638,7 +724,7 @@ func (x *UpdateContributionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateContributionResponse.ProtoReflect.Descriptor instead.
 func (*UpdateContributionResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{6}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *UpdateContributionResponse) GetContribution() *Contribution {
@@ -657,7 +743,7 @@ type ListMyContributionsRequest struct {
 
 func (x *ListMyContributionsRequest) Reset() {
 	*x = ListMyContributionsRequest{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[7]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -669,7 +755,7 @@ func (x *ListMyContributionsRequest) String() string {
 func (*ListMyContributionsRequest) ProtoMessage() {}
 
 func (x *ListMyContributionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[7]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -682,7 +768,7 @@ func (x *ListMyContributionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMyContributionsRequest.ProtoReflect.Descriptor instead.
 func (*ListMyContributionsRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{7}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ListMyContributionsRequest) GetBankId() int32 {
@@ -701,7 +787,7 @@ type ListMyContributionsResponse struct {
 
 func (x *ListMyContributionsResponse) Reset() {
 	*x = ListMyContributionsResponse{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[8]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -713,7 +799,7 @@ func (x *ListMyContributionsResponse) String() string {
 func (*ListMyContributionsResponse) ProtoMessage() {}
 
 func (x *ListMyContributionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[8]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -726,7 +812,7 @@ func (x *ListMyContributionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMyContributionsResponse.ProtoReflect.Descriptor instead.
 func (*ListMyContributionsResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{8}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ListMyContributionsResponse) GetContributions() []*Contribution {
@@ -746,7 +832,7 @@ type WithdrawContributionRequest struct {
 
 func (x *WithdrawContributionRequest) Reset() {
 	*x = WithdrawContributionRequest{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[9]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -758,7 +844,7 @@ func (x *WithdrawContributionRequest) String() string {
 func (*WithdrawContributionRequest) ProtoMessage() {}
 
 func (x *WithdrawContributionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[9]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -771,7 +857,7 @@ func (x *WithdrawContributionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WithdrawContributionRequest.ProtoReflect.Descriptor instead.
 func (*WithdrawContributionRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{9}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *WithdrawContributionRequest) GetBankId() int32 {
@@ -796,7 +882,7 @@ type WithdrawContributionResponse struct {
 
 func (x *WithdrawContributionResponse) Reset() {
 	*x = WithdrawContributionResponse{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[10]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -808,7 +894,7 @@ func (x *WithdrawContributionResponse) String() string {
 func (*WithdrawContributionResponse) ProtoMessage() {}
 
 func (x *WithdrawContributionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[10]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -821,7 +907,7 @@ func (x *WithdrawContributionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WithdrawContributionResponse.ProtoReflect.Descriptor instead.
 func (*WithdrawContributionResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{10}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{11}
 }
 
 // Contributor-only; allowed only when status == approved. Creates the question.
@@ -835,7 +921,7 @@ type MergeContributionRequest struct {
 
 func (x *MergeContributionRequest) Reset() {
 	*x = MergeContributionRequest{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[11]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -847,7 +933,7 @@ func (x *MergeContributionRequest) String() string {
 func (*MergeContributionRequest) ProtoMessage() {}
 
 func (x *MergeContributionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[11]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -860,7 +946,7 @@ func (x *MergeContributionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MergeContributionRequest.ProtoReflect.Descriptor instead.
 func (*MergeContributionRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{11}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *MergeContributionRequest) GetBankId() int32 {
@@ -886,7 +972,7 @@ type MergeContributionResponse struct {
 
 func (x *MergeContributionResponse) Reset() {
 	*x = MergeContributionResponse{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[12]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -898,7 +984,7 @@ func (x *MergeContributionResponse) String() string {
 func (*MergeContributionResponse) ProtoMessage() {}
 
 func (x *MergeContributionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[12]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -911,7 +997,7 @@ func (x *MergeContributionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MergeContributionResponse.ProtoReflect.Descriptor instead.
 func (*MergeContributionResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{12}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *MergeContributionResponse) GetContribution() *Contribution {
@@ -931,7 +1017,7 @@ type ListContributionsRequest struct {
 
 func (x *ListContributionsRequest) Reset() {
 	*x = ListContributionsRequest{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[13]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -943,7 +1029,7 @@ func (x *ListContributionsRequest) String() string {
 func (*ListContributionsRequest) ProtoMessage() {}
 
 func (x *ListContributionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[13]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -956,7 +1042,7 @@ func (x *ListContributionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListContributionsRequest.ProtoReflect.Descriptor instead.
 func (*ListContributionsRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{13}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ListContributionsRequest) GetBankId() int32 {
@@ -982,7 +1068,7 @@ type ListContributionsResponse struct {
 
 func (x *ListContributionsResponse) Reset() {
 	*x = ListContributionsResponse{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[14]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -994,7 +1080,7 @@ func (x *ListContributionsResponse) String() string {
 func (*ListContributionsResponse) ProtoMessage() {}
 
 func (x *ListContributionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[14]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1007,7 +1093,7 @@ func (x *ListContributionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListContributionsResponse.ProtoReflect.Descriptor instead.
 func (*ListContributionsResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{14}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListContributionsResponse) GetContributions() []*Contribution {
@@ -1031,7 +1117,7 @@ type ReviewContributionRequest struct {
 
 func (x *ReviewContributionRequest) Reset() {
 	*x = ReviewContributionRequest{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[15]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1043,7 +1129,7 @@ func (x *ReviewContributionRequest) String() string {
 func (*ReviewContributionRequest) ProtoMessage() {}
 
 func (x *ReviewContributionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[15]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1056,7 +1142,7 @@ func (x *ReviewContributionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReviewContributionRequest.ProtoReflect.Descriptor instead.
 func (*ReviewContributionRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{15}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ReviewContributionRequest) GetBankId() int32 {
@@ -1096,7 +1182,7 @@ type ReviewContributionResponse struct {
 
 func (x *ReviewContributionResponse) Reset() {
 	*x = ReviewContributionResponse{}
-	mi := &file_akashic_v1_contribution_proto_msgTypes[16]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1108,7 +1194,7 @@ func (x *ReviewContributionResponse) String() string {
 func (*ReviewContributionResponse) ProtoMessage() {}
 
 func (x *ReviewContributionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_contribution_proto_msgTypes[16]
+	mi := &file_akashic_v1_contribution_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1121,10 +1207,115 @@ func (x *ReviewContributionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReviewContributionResponse.ProtoReflect.Descriptor instead.
 func (*ReviewContributionResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{16}
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ReviewContributionResponse) GetContribution() *Contribution {
+	if x != nil {
+		return x.Contribution
+	}
+	return nil
+}
+
+// Posts a free-form comment on a contribution. id is the contribution id.
+type AddContributionCommentRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BankId        int32                  `protobuf:"varint,1,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
+	Id            int32                  `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	Body          string                 `protobuf:"bytes,3,opt,name=body,proto3" json:"body,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddContributionCommentRequest) Reset() {
+	*x = AddContributionCommentRequest{}
+	mi := &file_akashic_v1_contribution_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddContributionCommentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddContributionCommentRequest) ProtoMessage() {}
+
+func (x *AddContributionCommentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_contribution_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddContributionCommentRequest.ProtoReflect.Descriptor instead.
+func (*AddContributionCommentRequest) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *AddContributionCommentRequest) GetBankId() int32 {
+	if x != nil {
+		return x.BankId
+	}
+	return 0
+}
+
+func (x *AddContributionCommentRequest) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *AddContributionCommentRequest) GetBody() string {
+	if x != nil {
+		return x.Body
+	}
+	return ""
+}
+
+type AddContributionCommentResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Contribution  *Contribution          `protobuf:"bytes,1,opt,name=contribution,proto3" json:"contribution,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddContributionCommentResponse) Reset() {
+	*x = AddContributionCommentResponse{}
+	mi := &file_akashic_v1_contribution_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddContributionCommentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddContributionCommentResponse) ProtoMessage() {}
+
+func (x *AddContributionCommentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_contribution_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddContributionCommentResponse.ProtoReflect.Descriptor instead.
+func (*AddContributionCommentResponse) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *AddContributionCommentResponse) GetContribution() *Contribution {
 	if x != nil {
 		return x.Contribution
 	}
@@ -1157,7 +1348,15 @@ const file_akashic_v1_contribution_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x121\n" +
 	"\breviewer\x18\x06 \x01(\v2\x10.akashic.v1.UserH\x00R\breviewer\x88\x01\x01B\v\n" +
-	"\t_reviewer\"\xff\x03\n" +
+	"\t_reviewer\"\xcb\x01\n" +
+	"\x13ContributionComment\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x1b\n" +
+	"\tauthor_id\x18\x02 \x01(\x05R\bauthorId\x12\x12\n" +
+	"\x04body\x18\x03 \x01(\tR\x04body\x129\n" +
+	"\n" +
+	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12-\n" +
+	"\x06author\x18\x05 \x01(\v2\x10.akashic.v1.UserH\x00R\x06author\x88\x01\x01B\t\n" +
+	"\a_author\"\xbc\x04\n" +
 	"\fContribution\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x17\n" +
 	"\abank_id\x18\x02 \x01(\x05R\x06bankId\x12%\n" +
@@ -1166,7 +1365,8 @@ const file_akashic_v1_contribution_proto_rawDesc = "" +
 	"\x06status\x18\x05 \x01(\x0e2\x1e.akashic.v1.ContributionStatusR\x06status\x12$\n" +
 	"\vquestion_id\x18\x06 \x01(\x05H\x00R\n" +
 	"questionId\x88\x01\x01\x128\n" +
-	"\areviews\x18\a \x03(\v2\x1e.akashic.v1.ContributionReviewR\areviews\x129\n" +
+	"\areviews\x18\a \x03(\v2\x1e.akashic.v1.ContributionReviewR\areviews\x12;\n" +
+	"\bcomments\x18\v \x03(\v2\x1f.akashic.v1.ContributionCommentR\bcomments\x129\n" +
 	"\n" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
@@ -1210,6 +1410,12 @@ const file_akashic_v1_contribution_proto_rawDesc = "" +
 	"\bdecision\x18\x03 \x01(\x0e2\x1a.akashic.v1.ReviewDecisionR\bdecision\x12\x12\n" +
 	"\x04note\x18\x04 \x01(\tR\x04note\"Z\n" +
 	"\x1aReviewContributionResponse\x12<\n" +
+	"\fcontribution\x18\x01 \x01(\v2\x18.akashic.v1.ContributionR\fcontribution\"\\\n" +
+	"\x1dAddContributionCommentRequest\x12\x17\n" +
+	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x0e\n" +
+	"\x02id\x18\x02 \x01(\x05R\x02id\x12\x12\n" +
+	"\x04body\x18\x03 \x01(\tR\x04body\"^\n" +
+	"\x1eAddContributionCommentResponse\x12<\n" +
 	"\fcontribution\x18\x01 \x01(\v2\x18.akashic.v1.ContributionR\fcontribution*\xe9\x01\n" +
 	"\x12ContributionStatus\x12#\n" +
 	"\x1fCONTRIBUTION_STATUS_UNSPECIFIED\x10\x00\x12\x1f\n" +
@@ -1222,7 +1428,7 @@ const file_akashic_v1_contribution_proto_rawDesc = "" +
 	"\x1bREVIEW_DECISION_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17REVIEW_DECISION_APPROVE\x10\x01\x12\x1a\n" +
 	"\x16REVIEW_DECISION_REJECT\x10\x02\x12#\n" +
-	"\x1fREVIEW_DECISION_REQUEST_CHANGES\x10\x032\xdb\x05\n" +
+	"\x1fREVIEW_DECISION_REQUEST_CHANGES\x10\x032\xcc\x06\n" +
 	"\x13ContributionService\x12c\n" +
 	"\x12SubmitContribution\x12%.akashic.v1.SubmitContributionRequest\x1a&.akashic.v1.SubmitContributionResponse\x12c\n" +
 	"\x12UpdateContribution\x12%.akashic.v1.UpdateContributionRequest\x1a&.akashic.v1.UpdateContributionResponse\x12f\n" +
@@ -1230,7 +1436,8 @@ const file_akashic_v1_contribution_proto_rawDesc = "" +
 	"\x14WithdrawContribution\x12'.akashic.v1.WithdrawContributionRequest\x1a(.akashic.v1.WithdrawContributionResponse\x12`\n" +
 	"\x11MergeContribution\x12$.akashic.v1.MergeContributionRequest\x1a%.akashic.v1.MergeContributionResponse\x12`\n" +
 	"\x11ListContributions\x12$.akashic.v1.ListContributionsRequest\x1a%.akashic.v1.ListContributionsResponse\x12c\n" +
-	"\x12ReviewContribution\x12%.akashic.v1.ReviewContributionRequest\x1a&.akashic.v1.ReviewContributionResponseB:Z8github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1b\x06proto3"
+	"\x12ReviewContribution\x12%.akashic.v1.ReviewContributionRequest\x1a&.akashic.v1.ReviewContributionResponse\x12o\n" +
+	"\x16AddContributionComment\x12).akashic.v1.AddContributionCommentRequest\x1a*.akashic.v1.AddContributionCommentResponseB:Z8github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1b\x06proto3"
 
 var (
 	file_akashic_v1_contribution_proto_rawDescOnce sync.Once
@@ -1245,77 +1452,86 @@ func file_akashic_v1_contribution_proto_rawDescGZIP() []byte {
 }
 
 var file_akashic_v1_contribution_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_akashic_v1_contribution_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_akashic_v1_contribution_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_akashic_v1_contribution_proto_goTypes = []any{
-	(ContributionStatus)(0),              // 0: akashic.v1.ContributionStatus
-	(ReviewDecision)(0),                  // 1: akashic.v1.ReviewDecision
-	(*ProposedQuestion)(nil),             // 2: akashic.v1.ProposedQuestion
-	(*ContributionReview)(nil),           // 3: akashic.v1.ContributionReview
-	(*Contribution)(nil),                 // 4: akashic.v1.Contribution
-	(*SubmitContributionRequest)(nil),    // 5: akashic.v1.SubmitContributionRequest
-	(*SubmitContributionResponse)(nil),   // 6: akashic.v1.SubmitContributionResponse
-	(*UpdateContributionRequest)(nil),    // 7: akashic.v1.UpdateContributionRequest
-	(*UpdateContributionResponse)(nil),   // 8: akashic.v1.UpdateContributionResponse
-	(*ListMyContributionsRequest)(nil),   // 9: akashic.v1.ListMyContributionsRequest
-	(*ListMyContributionsResponse)(nil),  // 10: akashic.v1.ListMyContributionsResponse
-	(*WithdrawContributionRequest)(nil),  // 11: akashic.v1.WithdrawContributionRequest
-	(*WithdrawContributionResponse)(nil), // 12: akashic.v1.WithdrawContributionResponse
-	(*MergeContributionRequest)(nil),     // 13: akashic.v1.MergeContributionRequest
-	(*MergeContributionResponse)(nil),    // 14: akashic.v1.MergeContributionResponse
-	(*ListContributionsRequest)(nil),     // 15: akashic.v1.ListContributionsRequest
-	(*ListContributionsResponse)(nil),    // 16: akashic.v1.ListContributionsResponse
-	(*ReviewContributionRequest)(nil),    // 17: akashic.v1.ReviewContributionRequest
-	(*ReviewContributionResponse)(nil),   // 18: akashic.v1.ReviewContributionResponse
-	(QuestionType)(0),                    // 19: akashic.v1.QuestionType
-	(Difficulty)(0),                      // 20: akashic.v1.Difficulty
-	(*QuestionItem)(nil),                 // 21: akashic.v1.QuestionItem
-	(*MultipleChoice)(nil),               // 22: akashic.v1.MultipleChoice
-	(*timestamppb.Timestamp)(nil),        // 23: google.protobuf.Timestamp
-	(*User)(nil),                         // 24: akashic.v1.User
+	(ContributionStatus)(0),                // 0: akashic.v1.ContributionStatus
+	(ReviewDecision)(0),                    // 1: akashic.v1.ReviewDecision
+	(*ProposedQuestion)(nil),               // 2: akashic.v1.ProposedQuestion
+	(*ContributionReview)(nil),             // 3: akashic.v1.ContributionReview
+	(*ContributionComment)(nil),            // 4: akashic.v1.ContributionComment
+	(*Contribution)(nil),                   // 5: akashic.v1.Contribution
+	(*SubmitContributionRequest)(nil),      // 6: akashic.v1.SubmitContributionRequest
+	(*SubmitContributionResponse)(nil),     // 7: akashic.v1.SubmitContributionResponse
+	(*UpdateContributionRequest)(nil),      // 8: akashic.v1.UpdateContributionRequest
+	(*UpdateContributionResponse)(nil),     // 9: akashic.v1.UpdateContributionResponse
+	(*ListMyContributionsRequest)(nil),     // 10: akashic.v1.ListMyContributionsRequest
+	(*ListMyContributionsResponse)(nil),    // 11: akashic.v1.ListMyContributionsResponse
+	(*WithdrawContributionRequest)(nil),    // 12: akashic.v1.WithdrawContributionRequest
+	(*WithdrawContributionResponse)(nil),   // 13: akashic.v1.WithdrawContributionResponse
+	(*MergeContributionRequest)(nil),       // 14: akashic.v1.MergeContributionRequest
+	(*MergeContributionResponse)(nil),      // 15: akashic.v1.MergeContributionResponse
+	(*ListContributionsRequest)(nil),       // 16: akashic.v1.ListContributionsRequest
+	(*ListContributionsResponse)(nil),      // 17: akashic.v1.ListContributionsResponse
+	(*ReviewContributionRequest)(nil),      // 18: akashic.v1.ReviewContributionRequest
+	(*ReviewContributionResponse)(nil),     // 19: akashic.v1.ReviewContributionResponse
+	(*AddContributionCommentRequest)(nil),  // 20: akashic.v1.AddContributionCommentRequest
+	(*AddContributionCommentResponse)(nil), // 21: akashic.v1.AddContributionCommentResponse
+	(QuestionType)(0),                      // 22: akashic.v1.QuestionType
+	(Difficulty)(0),                        // 23: akashic.v1.Difficulty
+	(*QuestionItem)(nil),                   // 24: akashic.v1.QuestionItem
+	(*MultipleChoice)(nil),                 // 25: akashic.v1.MultipleChoice
+	(*timestamppb.Timestamp)(nil),          // 26: google.protobuf.Timestamp
+	(*User)(nil),                           // 27: akashic.v1.User
 }
 var file_akashic_v1_contribution_proto_depIdxs = []int32{
-	19, // 0: akashic.v1.ProposedQuestion.type:type_name -> akashic.v1.QuestionType
-	20, // 1: akashic.v1.ProposedQuestion.difficulty:type_name -> akashic.v1.Difficulty
-	21, // 2: akashic.v1.ProposedQuestion.item:type_name -> akashic.v1.QuestionItem
-	22, // 3: akashic.v1.ProposedQuestion.choice:type_name -> akashic.v1.MultipleChoice
+	22, // 0: akashic.v1.ProposedQuestion.type:type_name -> akashic.v1.QuestionType
+	23, // 1: akashic.v1.ProposedQuestion.difficulty:type_name -> akashic.v1.Difficulty
+	24, // 2: akashic.v1.ProposedQuestion.item:type_name -> akashic.v1.QuestionItem
+	25, // 3: akashic.v1.ProposedQuestion.choice:type_name -> akashic.v1.MultipleChoice
 	1,  // 4: akashic.v1.ContributionReview.decision:type_name -> akashic.v1.ReviewDecision
-	23, // 5: akashic.v1.ContributionReview.created_at:type_name -> google.protobuf.Timestamp
-	24, // 6: akashic.v1.ContributionReview.reviewer:type_name -> akashic.v1.User
-	2,  // 7: akashic.v1.Contribution.proposed:type_name -> akashic.v1.ProposedQuestion
-	0,  // 8: akashic.v1.Contribution.status:type_name -> akashic.v1.ContributionStatus
-	3,  // 9: akashic.v1.Contribution.reviews:type_name -> akashic.v1.ContributionReview
-	23, // 10: akashic.v1.Contribution.created_at:type_name -> google.protobuf.Timestamp
-	23, // 11: akashic.v1.Contribution.updated_at:type_name -> google.protobuf.Timestamp
-	24, // 12: akashic.v1.Contribution.contributor:type_name -> akashic.v1.User
-	2,  // 13: akashic.v1.SubmitContributionRequest.proposed:type_name -> akashic.v1.ProposedQuestion
-	4,  // 14: akashic.v1.SubmitContributionResponse.contribution:type_name -> akashic.v1.Contribution
-	2,  // 15: akashic.v1.UpdateContributionRequest.proposed:type_name -> akashic.v1.ProposedQuestion
-	4,  // 16: akashic.v1.UpdateContributionResponse.contribution:type_name -> akashic.v1.Contribution
-	4,  // 17: akashic.v1.ListMyContributionsResponse.contributions:type_name -> akashic.v1.Contribution
-	4,  // 18: akashic.v1.MergeContributionResponse.contribution:type_name -> akashic.v1.Contribution
-	0,  // 19: akashic.v1.ListContributionsRequest.status:type_name -> akashic.v1.ContributionStatus
-	4,  // 20: akashic.v1.ListContributionsResponse.contributions:type_name -> akashic.v1.Contribution
-	1,  // 21: akashic.v1.ReviewContributionRequest.decision:type_name -> akashic.v1.ReviewDecision
-	4,  // 22: akashic.v1.ReviewContributionResponse.contribution:type_name -> akashic.v1.Contribution
-	5,  // 23: akashic.v1.ContributionService.SubmitContribution:input_type -> akashic.v1.SubmitContributionRequest
-	7,  // 24: akashic.v1.ContributionService.UpdateContribution:input_type -> akashic.v1.UpdateContributionRequest
-	9,  // 25: akashic.v1.ContributionService.ListMyContributions:input_type -> akashic.v1.ListMyContributionsRequest
-	11, // 26: akashic.v1.ContributionService.WithdrawContribution:input_type -> akashic.v1.WithdrawContributionRequest
-	13, // 27: akashic.v1.ContributionService.MergeContribution:input_type -> akashic.v1.MergeContributionRequest
-	15, // 28: akashic.v1.ContributionService.ListContributions:input_type -> akashic.v1.ListContributionsRequest
-	17, // 29: akashic.v1.ContributionService.ReviewContribution:input_type -> akashic.v1.ReviewContributionRequest
-	6,  // 30: akashic.v1.ContributionService.SubmitContribution:output_type -> akashic.v1.SubmitContributionResponse
-	8,  // 31: akashic.v1.ContributionService.UpdateContribution:output_type -> akashic.v1.UpdateContributionResponse
-	10, // 32: akashic.v1.ContributionService.ListMyContributions:output_type -> akashic.v1.ListMyContributionsResponse
-	12, // 33: akashic.v1.ContributionService.WithdrawContribution:output_type -> akashic.v1.WithdrawContributionResponse
-	14, // 34: akashic.v1.ContributionService.MergeContribution:output_type -> akashic.v1.MergeContributionResponse
-	16, // 35: akashic.v1.ContributionService.ListContributions:output_type -> akashic.v1.ListContributionsResponse
-	18, // 36: akashic.v1.ContributionService.ReviewContribution:output_type -> akashic.v1.ReviewContributionResponse
-	30, // [30:37] is the sub-list for method output_type
-	23, // [23:30] is the sub-list for method input_type
-	23, // [23:23] is the sub-list for extension type_name
-	23, // [23:23] is the sub-list for extension extendee
-	0,  // [0:23] is the sub-list for field type_name
+	26, // 5: akashic.v1.ContributionReview.created_at:type_name -> google.protobuf.Timestamp
+	27, // 6: akashic.v1.ContributionReview.reviewer:type_name -> akashic.v1.User
+	26, // 7: akashic.v1.ContributionComment.created_at:type_name -> google.protobuf.Timestamp
+	27, // 8: akashic.v1.ContributionComment.author:type_name -> akashic.v1.User
+	2,  // 9: akashic.v1.Contribution.proposed:type_name -> akashic.v1.ProposedQuestion
+	0,  // 10: akashic.v1.Contribution.status:type_name -> akashic.v1.ContributionStatus
+	3,  // 11: akashic.v1.Contribution.reviews:type_name -> akashic.v1.ContributionReview
+	4,  // 12: akashic.v1.Contribution.comments:type_name -> akashic.v1.ContributionComment
+	26, // 13: akashic.v1.Contribution.created_at:type_name -> google.protobuf.Timestamp
+	26, // 14: akashic.v1.Contribution.updated_at:type_name -> google.protobuf.Timestamp
+	27, // 15: akashic.v1.Contribution.contributor:type_name -> akashic.v1.User
+	2,  // 16: akashic.v1.SubmitContributionRequest.proposed:type_name -> akashic.v1.ProposedQuestion
+	5,  // 17: akashic.v1.SubmitContributionResponse.contribution:type_name -> akashic.v1.Contribution
+	2,  // 18: akashic.v1.UpdateContributionRequest.proposed:type_name -> akashic.v1.ProposedQuestion
+	5,  // 19: akashic.v1.UpdateContributionResponse.contribution:type_name -> akashic.v1.Contribution
+	5,  // 20: akashic.v1.ListMyContributionsResponse.contributions:type_name -> akashic.v1.Contribution
+	5,  // 21: akashic.v1.MergeContributionResponse.contribution:type_name -> akashic.v1.Contribution
+	0,  // 22: akashic.v1.ListContributionsRequest.status:type_name -> akashic.v1.ContributionStatus
+	5,  // 23: akashic.v1.ListContributionsResponse.contributions:type_name -> akashic.v1.Contribution
+	1,  // 24: akashic.v1.ReviewContributionRequest.decision:type_name -> akashic.v1.ReviewDecision
+	5,  // 25: akashic.v1.ReviewContributionResponse.contribution:type_name -> akashic.v1.Contribution
+	5,  // 26: akashic.v1.AddContributionCommentResponse.contribution:type_name -> akashic.v1.Contribution
+	6,  // 27: akashic.v1.ContributionService.SubmitContribution:input_type -> akashic.v1.SubmitContributionRequest
+	8,  // 28: akashic.v1.ContributionService.UpdateContribution:input_type -> akashic.v1.UpdateContributionRequest
+	10, // 29: akashic.v1.ContributionService.ListMyContributions:input_type -> akashic.v1.ListMyContributionsRequest
+	12, // 30: akashic.v1.ContributionService.WithdrawContribution:input_type -> akashic.v1.WithdrawContributionRequest
+	14, // 31: akashic.v1.ContributionService.MergeContribution:input_type -> akashic.v1.MergeContributionRequest
+	16, // 32: akashic.v1.ContributionService.ListContributions:input_type -> akashic.v1.ListContributionsRequest
+	18, // 33: akashic.v1.ContributionService.ReviewContribution:input_type -> akashic.v1.ReviewContributionRequest
+	20, // 34: akashic.v1.ContributionService.AddContributionComment:input_type -> akashic.v1.AddContributionCommentRequest
+	7,  // 35: akashic.v1.ContributionService.SubmitContribution:output_type -> akashic.v1.SubmitContributionResponse
+	9,  // 36: akashic.v1.ContributionService.UpdateContribution:output_type -> akashic.v1.UpdateContributionResponse
+	11, // 37: akashic.v1.ContributionService.ListMyContributions:output_type -> akashic.v1.ListMyContributionsResponse
+	13, // 38: akashic.v1.ContributionService.WithdrawContribution:output_type -> akashic.v1.WithdrawContributionResponse
+	15, // 39: akashic.v1.ContributionService.MergeContribution:output_type -> akashic.v1.MergeContributionResponse
+	17, // 40: akashic.v1.ContributionService.ListContributions:output_type -> akashic.v1.ListContributionsResponse
+	19, // 41: akashic.v1.ContributionService.ReviewContribution:output_type -> akashic.v1.ReviewContributionResponse
+	21, // 42: akashic.v1.ContributionService.AddContributionComment:output_type -> akashic.v1.AddContributionCommentResponse
+	35, // [35:43] is the sub-list for method output_type
+	27, // [27:35] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_contribution_proto_init() }
@@ -1331,13 +1547,14 @@ func file_akashic_v1_contribution_proto_init() {
 	}
 	file_akashic_v1_contribution_proto_msgTypes[1].OneofWrappers = []any{}
 	file_akashic_v1_contribution_proto_msgTypes[2].OneofWrappers = []any{}
+	file_akashic_v1_contribution_proto_msgTypes[3].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_akashic_v1_contribution_proto_rawDesc), len(file_akashic_v1_contribution_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   17,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -97,6 +97,9 @@ var procedureMinRole = map[string]string{
 	akashicv1connect.ContributionServiceMergeContributionProcedure:    membership.RoleViewer,
 	akashicv1connect.ContributionServiceListContributionsProcedure:    membership.RoleEditor,
 	akashicv1connect.ContributionServiceReviewContributionProcedure:   membership.RoleEditor,
+	// Commenting is open to any viewer (the contributor defends their idea; the
+	// thread is shared discussion). Service binds the comment to the bank.
+	akashicv1connect.ContributionServiceAddContributionCommentProcedure: membership.RoleViewer,
 }
 
 var errBankIDRequired = errors.New("request is registered as bank-scoped but carries no bank_id")

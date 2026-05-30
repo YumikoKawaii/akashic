@@ -5,6 +5,7 @@ import { ContributionStatus, ReviewDecision } from '../gen/akashic/v1/contributi
 import type {
   Contribution as PbContribution,
   ContributionReview as PbContributionReview,
+  ContributionComment as PbContributionComment,
   ProposedQuestion as PbProposedQuestion,
 } from '../gen/akashic/v1/contribution_pb'
 import type { Bank as PbBank, BankWithRole as PbBankWithRole, BankMember as PbBankMember } from '../gen/akashic/v1/bank_pb'
@@ -19,7 +20,7 @@ import type {
   Category, Passage, PassageParagraph,
   QuestionGroup, GroupContext, Question, Test, TestQuestion, TestAttempt,
   QuestionType as AppQuestionType, QuestionDifficulty, MCQOption, QQuestionItem, QMultipleChoice,
-  Contribution, ContributionReview, ProposedQuestion, User,
+  Contribution, ContributionReview, ContributionComment, ProposedQuestion, User,
   ContributionStatus as AppContributionStatus, ReviewDecision as AppReviewDecision
 } from '../types'
 
@@ -265,6 +266,14 @@ export const fromContributionReview = (r: PbContributionReview): ContributionRev
   reviewer:    fromUser(r.reviewer),
 })
 
+export const fromContributionComment = (c: PbContributionComment): ContributionComment => ({
+  id:         c.id,
+  author_id:  c.authorId,
+  body:       c.body,
+  created_at: ts(c.createdAt),
+  author:     fromUser(c.author),
+})
+
 export const fromContribution = (c: PbContribution): Contribution => ({
   id:                 c.id,
   bank_id:            c.bankId,
@@ -273,6 +282,7 @@ export const fromContribution = (c: PbContribution): Contribution => ({
   status:             contributionStatus(c.status),
   question_id:        c.questionId ?? undefined,
   reviews:            c.reviews.map(fromContributionReview),
+  comments:           c.comments.map(fromContributionComment),
   created_at:         ts(c.createdAt),
   updated_at:         ts(c.updatedAt),
   contributor:        fromUser(c.contributor),
