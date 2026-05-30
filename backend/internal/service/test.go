@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
 	"github.com/yumikokawaii/akashic/internal/uow"
@@ -89,7 +91,7 @@ type selUnit struct {
 	groupID int
 }
 
-func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test, error) {
+func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTestInput) (*model.Test, error) {
 	bank, err := s.bankRepo.FindByID(bankID)
 	if err != nil {
 		return nil, err
@@ -100,7 +102,7 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 		config = *input.Config
 	}
 
-	skipGroups     := config.StandaloneOnly
+	skipGroups := config.StandaloneOnly
 	skipStandalone := len(config.PassageIDs) > 0 && !config.StandaloneOnly
 
 	var picked []model.Question
@@ -201,7 +203,10 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 		var groupUnits []selUnit
 		shortage := map[string]int{}
 
-		for _, b := range []struct{ diff string; count int }{
+		for _, b := range []struct {
+			diff  string
+			count int
+		}{
 			{"easy", config.EasyCount},
 			{"medium", config.MediumCount},
 			{"hard", config.HardCount},
@@ -215,7 +220,10 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 			groupPools[b.diff] = pool[n:]
 			shortage[b.diff] = b.count - n
 		}
-		for _, b := range []struct{ diff string; count int }{
+		for _, b := range []struct {
+			diff  string
+			count int
+		}{
 			{"easy", config.EasyCount},
 			{"medium", config.MediumCount},
 			{"hard", config.HardCount},
@@ -251,22 +259,21 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 		Config:      config,
 	}
 
-	tx := s.uow.Begin()
-	defer tx.Rollback()
-
-	if err := tx.Tests.Create(test); err != nil {
-		return nil, err
-	}
-	for i, q := range picked {
-		if err := tx.Tests.CreateTestQuestion(&model.TestQuestion{
-			TestID:     test.ID,
-			QuestionID: q.ID,
-			Position:   i + 1,
-		}); err != nil {
-			return nil, err
+	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
+		if err := tx.Tests.Create(test); err != nil {
+			return err
 		}
-	}
-	if err := tx.Commit(); err != nil {
+		for i, q := range picked {
+			if err := tx.Tests.CreateTestQuestion(&model.TestQuestion{
+				TestID:     test.ID,
+				QuestionID: q.ID,
+				Position:   i + 1,
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 

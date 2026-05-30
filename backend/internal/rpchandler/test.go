@@ -54,7 +54,7 @@ func (h *TestServiceHandler) GenerateTest(
 	req *connect.Request[pb.GenerateTestRequest],
 ) (*connect.Response[pb.GenerateTestResponse], error) {
 	cfg := testConfigFromProto(req.Msg.Config)
-	test, err := h.svc.Generate(int(req.Msg.BankId), service.GenerateTestInput{
+	test, err := h.svc.Generate(ctx, int(req.Msg.BankId), service.GenerateTestInput{
 		Name:        req.Msg.Name,
 		Description: req.Msg.Description,
 		Config:      &cfg,

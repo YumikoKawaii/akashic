@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 
 	"github.com/lib/pq"
@@ -132,7 +133,7 @@ func (s *ContributionService) List(bankID int, status string) ([]model.Contribut
 // Review appends a review round (editor+). approve → approved (no question is
 // created — the contributor merges); reject → rejected; request_changes →
 // changes_requested. Touches two tables, so it runs in a Unit of Work.
-func (s *ContributionService) Review(bankID, reviewerID, id int, decision, note string) (*model.Contribution, error) {
+func (s *ContributionService) Review(ctx context.Context, bankID, reviewerID, id int, decision, note string) (*model.Contribution, error) {
 	c, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -156,21 +157,18 @@ func (s *ContributionService) Review(bankID, reviewerID, id int, decision, note 
 		return nil, ErrBadRequest
 	}
 
-	tx := s.uow.Begin()
-	defer tx.Rollback()
-	if err := tx.Contributions.AddReview(&model.ContributionReview{
-		ContributionID: c.ID,
-		ReviewerID:     reviewerID,
-		Decision:       decision,
-		Note:           note,
+	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
+		if err := tx.Contributions.AddReview(&model.ContributionReview{
+			ContributionID: c.ID,
+			ReviewerID:     reviewerID,
+			Decision:       decision,
+			Note:           note,
+		}); err != nil {
+			return err
+		}
+		c.Status = newStatus
+		return tx.Contributions.Save(c)
 	}); err != nil {
-		return nil, err
-	}
-	c.Status = newStatus
-	if err := tx.Contributions.Save(c); err != nil {
-		return nil, err
-	}
-	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 	return s.repo.FindByID(c.ID)
@@ -179,7 +177,7 @@ func (s *ContributionService) Review(bankID, reviewerID, id int, decision, note 
 // Merge is performed by the contributor on an approved contribution. It creates
 // the question in the bank and marks the contribution merged. The approval (an
 // editor capability) is what authorizes the content; this just lands it.
-func (s *ContributionService) Merge(bankID, userID, id int) (*model.Contribution, error) {
+func (s *ContributionService) Merge(ctx context.Context, bankID, userID, id int) (*model.Contribution, error) {
 	c, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -200,35 +198,32 @@ func (s *ContributionService) Merge(bankID, userID, id int) (*model.Contribution
 		Tags:       pq.StringArray(p.Tags),
 	}
 
-	tx := s.uow.Begin()
-	defer tx.Rollback()
-	if err := tx.Questions.Create(q); err != nil {
-		return nil, err
-	}
-	if p.Type == "mcq" {
-		if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
-			QuestionID: q.ID,
-			Content:    p.Content,
-			Options:    p.Options,
-			Answers:    pq.StringArray(p.Answers),
-		}); err != nil {
-			return nil, err
+	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
+		if err := tx.Questions.Create(q); err != nil {
+			return err
 		}
-	} else {
-		if err := tx.Questions.CreateItem(&model.QQuestionItem{
-			QuestionID: q.ID,
-			Content:    p.Content,
-			Answer:     p.Answer,
-		}); err != nil {
-			return nil, err
+		if p.Type == "mcq" {
+			if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
+				QuestionID: q.ID,
+				Content:    p.Content,
+				Options:    p.Options,
+				Answers:    pq.StringArray(p.Answers),
+			}); err != nil {
+				return err
+			}
+		} else {
+			if err := tx.Questions.CreateItem(&model.QQuestionItem{
+				QuestionID: q.ID,
+				Content:    p.Content,
+				Answer:     p.Answer,
+			}); err != nil {
+				return err
+			}
 		}
-	}
-	c.Status = model.ContributionMerged
-	c.QuestionID = &q.ID
-	if err := tx.Contributions.Save(c); err != nil {
-		return nil, err
-	}
-	if err := tx.Commit(); err != nil {
+		c.Status = model.ContributionMerged
+		c.QuestionID = &q.ID
+		return tx.Contributions.Save(c)
+	}); err != nil {
 		return nil, err
 	}
 

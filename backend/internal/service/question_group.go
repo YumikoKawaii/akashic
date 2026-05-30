@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/lib/pq"
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
@@ -58,7 +60,7 @@ type CreateGroupInput struct {
 	Questions  []GroupQuestionInput `json:"questions"   binding:"required,min=1"`
 }
 
-func (s *QuestionGroupService) Create(bankID int, input CreateGroupInput) (*model.QuestionGroup, error) {
+func (s *QuestionGroupService) Create(ctx context.Context, bankID int, input CreateGroupInput) (*model.QuestionGroup, error) {
 	if _, err := s.bankRepo.FindByID(bankID); err != nil {
 		return nil, err
 	}
@@ -79,56 +81,53 @@ func (s *QuestionGroupService) Create(bankID int, input CreateGroupInput) (*mode
 		Context:    input.Context,
 	}
 
-	tx := s.uow.Begin()
-	defer tx.Rollback()
-
-	if err := tx.QuestionGroups.Create(group); err != nil {
-		return nil, err
-	}
-
-	isMCQ := input.Type == "mcq"
-	for i, qi := range input.Questions {
-		pos := int16(i + 1)
-		q := &model.Question{
-			BankID:     bankID,
-			CategoryID: input.CategoryID,
-			GroupID:    &group.ID,
-			Type:       input.Type,
-			Difficulty: input.Difficulty,
-			Tags:       pq.StringArray(qi.Tags),
-			Position:   &pos,
+	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
+		if err := tx.QuestionGroups.Create(group); err != nil {
+			return err
 		}
-		if err := tx.Questions.Create(q); err != nil {
-			return nil, err
-		}
-		if isMCQ {
-			if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
-				QuestionID: q.ID,
-				Content:    qi.Content,
-				Options:    qi.Options,
-				Answers:    pq.StringArray(qi.Answers),
-			}); err != nil {
-				return nil, err
+		isMCQ := input.Type == "mcq"
+		for i, qi := range input.Questions {
+			pos := int16(i + 1)
+			q := &model.Question{
+				BankID:     bankID,
+				CategoryID: input.CategoryID,
+				GroupID:    &group.ID,
+				Type:       input.Type,
+				Difficulty: input.Difficulty,
+				Tags:       pq.StringArray(qi.Tags),
+				Position:   &pos,
 			}
-		} else {
-			if err := tx.Questions.CreateItem(&model.QQuestionItem{
-				QuestionID: q.ID,
-				Content:    qi.Content,
-				Answer:     qi.Answer,
-			}); err != nil {
-				return nil, err
+			if err := tx.Questions.Create(q); err != nil {
+				return err
+			}
+			if isMCQ {
+				if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
+					QuestionID: q.ID,
+					Content:    qi.Content,
+					Options:    qi.Options,
+					Answers:    pq.StringArray(qi.Answers),
+				}); err != nil {
+					return err
+				}
+			} else {
+				if err := tx.Questions.CreateItem(&model.QQuestionItem{
+					QuestionID: q.ID,
+					Content:    qi.Content,
+					Answer:     qi.Answer,
+				}); err != nil {
+					return err
+				}
 			}
 		}
-	}
-
-	if err := tx.Commit(); err != nil {
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 	return s.groupRepo.FindByID(group.ID)
 }
 
 type UpdateGroupInput struct {
-	Difficulty string             `json:"difficulty"`
+	Difficulty string              `json:"difficulty"`
 	Context    *model.GroupContext `json:"context"`
 }
 

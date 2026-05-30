@@ -88,7 +88,7 @@ func (h *QuestionServiceHandler) CreateQuestion(
 		input.Options = opts
 	}
 
-	question, err := h.svc.Create(int(req.Msg.BankId), input)
+	question, err := h.svc.Create(ctx, int(req.Msg.BankId), input)
 	if err != nil {
 		return nil, toConnectError(err)
 	}
@@ -166,7 +166,7 @@ func (h *QuestionServiceHandler) IngestQuestions(
 	if ext == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, nil)
 	}
-	result, err := h.ingestSvc.Ingest(int(req.Msg.BankId), bytes.NewReader(req.Msg.FileData), ext)
+	result, err := h.ingestSvc.Ingest(ctx, int(req.Msg.BankId), bytes.NewReader(req.Msg.FileData), ext)
 	if err != nil {
 		return nil, toConnectError(err)
 	}

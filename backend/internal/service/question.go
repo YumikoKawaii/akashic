@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/lib/pq"
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
@@ -83,7 +85,7 @@ type CreateQuestionInput struct {
 	Answers    []string          `json:"answers"`
 }
 
-func (s *QuestionService) Create(bankID int, input CreateQuestionInput) (*model.Question, error) {
+func (s *QuestionService) Create(ctx context.Context, bankID int, input CreateQuestionInput) (*model.Question, error) {
 	if _, err := s.bankRepo.FindByID(bankID); err != nil {
 		return nil, err
 	}
@@ -103,35 +105,27 @@ func (s *QuestionService) Create(bankID int, input CreateQuestionInput) (*model.
 		Tags:       pq.StringArray(input.Tags),
 	}
 
-	tx := s.uow.Begin()
-	defer tx.Rollback()
-
-	if err := tx.Questions.Create(q); err != nil {
-		return nil, err
-	}
-
-	if input.Type == "mcq" {
-		if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
-			QuestionID: q.ID,
-			Content:    input.Content,
-			Options:    input.Options,
-			Answers:    pq.StringArray(input.Answers),
-		}); err != nil {
-			return nil, err
+	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
+		if err := tx.Questions.Create(q); err != nil {
+			return err
 		}
-	} else {
-		if err := tx.Questions.CreateItem(&model.QQuestionItem{
+		if input.Type == "mcq" {
+			return tx.Questions.CreateChoice(&model.QMultipleChoice{
+				QuestionID: q.ID,
+				Content:    input.Content,
+				Options:    input.Options,
+				Answers:    pq.StringArray(input.Answers),
+			})
+		}
+		return tx.Questions.CreateItem(&model.QQuestionItem{
 			QuestionID: q.ID,
 			Content:    input.Content,
 			Answer:     input.Answer,
-		}); err != nil {
-			return nil, err
-		}
-	}
-
-	if err := tx.Commit(); err != nil {
+		})
+	}); err != nil {
 		return nil, err
 	}
+
 	created, err := s.repo.FindByID(q.ID)
 	if err != nil {
 		return nil, err

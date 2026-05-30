@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -56,14 +57,14 @@ type IngestPassageGroup struct {
 // IngestPassageRow is a passage with its questions embedded.
 // Detected by "type": "passage" in JSON/YAML.
 type IngestPassageRow struct {
-	Type         string                     `json:"type"          yaml:"type"`
-	Title        string                     `json:"title"         yaml:"title"`
-	Paragraphs   []model.PassageParagraph   `json:"paragraphs"    yaml:"paragraphs"`
-	Difficulty   string                     `json:"difficulty"    yaml:"difficulty"`
-	CategoryName string                     `json:"category_name" yaml:"category_name"`
-	Tags         []string                   `json:"tags"          yaml:"tags"`
-	Questions    []IngestPassageQuestion    `json:"questions"     yaml:"questions"`
-	Groups       []IngestPassageGroup       `json:"groups"        yaml:"groups"`
+	Type         string                   `json:"type"          yaml:"type"`
+	Title        string                   `json:"title"         yaml:"title"`
+	Paragraphs   []model.PassageParagraph `json:"paragraphs"    yaml:"paragraphs"`
+	Difficulty   string                   `json:"difficulty"    yaml:"difficulty"`
+	CategoryName string                   `json:"category_name" yaml:"category_name"`
+	Tags         []string                 `json:"tags"          yaml:"tags"`
+	Questions    []IngestPassageQuestion  `json:"questions"     yaml:"questions"`
+	Groups       []IngestPassageGroup     `json:"groups"        yaml:"groups"`
 }
 
 // IngestGroupQuestion is a question within a group.
@@ -122,7 +123,7 @@ func NewIngestService(
 	return &IngestService{uow: u, bankRepo: bankRepo, categoryRepo: categoryRepo, questionRepo: questionRepo}
 }
 
-func (s *IngestService) Ingest(bankID int, r io.Reader, ext string) (*IngestResult, error) {
+func (s *IngestService) Ingest(ctx context.Context, bankID int, r io.Reader, ext string) (*IngestResult, error) {
 	if _, err := s.bankRepo.FindByID(bankID); err != nil {
 		return nil, err
 	}
@@ -157,146 +158,76 @@ func (s *IngestService) Ingest(bankID int, r io.Reader, ext string) (*IngestResu
 		return &IngestResult{Failed: len(validationErrors), Errors: validationErrors}, nil
 	}
 
-	tx := s.uow.Begin()
-	defer tx.Rollback()
-
 	catCache := map[string]int{}
 	created := 0
 
-	for _, item := range items {
-		if item.standalone != nil {
-			row := item.standalone
-			catID, err := s.resolveCategory(tx, bankID, row.CategoryName, catCache)
-			if err != nil {
-				return nil, fmt.Errorf("row %d: category %q: %w", item.rowNum, row.CategoryName, err)
-			}
-			q := &model.Question{
-				BankID:     bankID,
-				CategoryID: catID,
-				Type:       row.Type,
-				Difficulty: row.Difficulty,
-				Tags:       pq.StringArray(nonNilSlice(row.Tags)),
-			}
-			if err := tx.Questions.Create(q); err != nil {
-				return nil, fmt.Errorf("row %d: %w", item.rowNum, err)
-			}
-			if row.Type == "mcq" {
-				if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
-					QuestionID: q.ID,
-					Content:    row.Content,
-					Options:    row.Options,
-					Answers:    pq.StringArray(nonNilSlice(row.Answers)),
-				}); err != nil {
-					return nil, fmt.Errorf("row %d: choice: %w", item.rowNum, err)
+	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
+		for _, item := range items {
+			if item.standalone != nil {
+				row := item.standalone
+				catID, err := s.resolveCategory(tx, bankID, row.CategoryName, catCache)
+				if err != nil {
+					return fmt.Errorf("row %d: category %q: %w", item.rowNum, row.CategoryName, err)
 				}
-			} else {
-				if err := tx.Questions.CreateItem(&model.QQuestionItem{
-					QuestionID: q.ID,
-					Content:    row.Content,
-					Answer:     row.Answer,
-				}); err != nil {
-					return nil, fmt.Errorf("row %d: item: %w", item.rowNum, err)
-				}
-			}
-			created++
-		} else if item.group != nil {
-			row := item.group
-			catID, err := s.resolveCategory(tx, bankID, row.CategoryName, catCache)
-			if err != nil {
-				return nil, fmt.Errorf("row %d: category %q: %w", item.rowNum, row.CategoryName, err)
-			}
-			g := &model.QuestionGroup{
-				BankID:     bankID,
-				CategoryID: catID,
-				Type:       row.Type,
-				Difficulty: row.Difficulty,
-				Context:    row.Context,
-			}
-			if err := tx.QuestionGroups.Create(g); err != nil {
-				return nil, fmt.Errorf("row %d: group: %w", item.rowNum, err)
-			}
-			isMCQ := row.Type == "mcq"
-			for i, gq := range row.Questions {
-				pos := int16(i + 1)
 				q := &model.Question{
 					BankID:     bankID,
 					CategoryID: catID,
-					GroupID:    &g.ID,
 					Type:       row.Type,
 					Difficulty: row.Difficulty,
-					Tags:       pq.StringArray(nonNilSlice(gq.Tags)),
-					Position:   &pos,
+					Tags:       pq.StringArray(nonNilSlice(row.Tags)),
 				}
 				if err := tx.Questions.Create(q); err != nil {
-					return nil, fmt.Errorf("row %d group q%d: %w", item.rowNum, i+1, err)
+					return fmt.Errorf("row %d: %w", item.rowNum, err)
 				}
-				if isMCQ {
+				if row.Type == "mcq" {
 					if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
 						QuestionID: q.ID,
-						Content:    gq.Content,
-						Options:    gq.Options,
-						Answers:    pq.StringArray(nonNilSlice(gq.Answers)),
+						Content:    row.Content,
+						Options:    row.Options,
+						Answers:    pq.StringArray(nonNilSlice(row.Answers)),
 					}); err != nil {
-						return nil, fmt.Errorf("row %d group q%d choice: %w", item.rowNum, i+1, err)
+						return fmt.Errorf("row %d: choice: %w", item.rowNum, err)
 					}
 				} else {
 					if err := tx.Questions.CreateItem(&model.QQuestionItem{
 						QuestionID: q.ID,
-						Content:    gq.Content,
-						Answer:     gq.Answer,
+						Content:    row.Content,
+						Answer:     row.Answer,
 					}); err != nil {
-						return nil, fmt.Errorf("row %d group q%d item: %w", item.rowNum, i+1, err)
+						return fmt.Errorf("row %d: item: %w", item.rowNum, err)
 					}
 				}
-			}
-			created++
-		} else if item.passage != nil {
-			row := item.passage
-			catID, err := s.resolveCategory(tx, bankID, row.CategoryName, catCache)
-			if err != nil {
-				return nil, fmt.Errorf("row %d: category %q: %w", item.rowNum, row.CategoryName, err)
-			}
-			p := &model.Passage{
-				BankID:     bankID,
-				CategoryID: catID,
-				Title:      row.Title,
-				Paragraphs: row.Paragraphs,
-				Difficulty: row.Difficulty,
-			}
-			if err := tx.Passages.Create(p); err != nil {
-				return nil, fmt.Errorf("row %d: passage: %w", item.rowNum, err)
-			}
-
-			for gi, ig := range row.Groups {
-				groupDifficulty := row.Difficulty
-				if ig.Difficulty != "" {
-					groupDifficulty = ig.Difficulty
+				created++
+			} else if item.group != nil {
+				row := item.group
+				catID, err := s.resolveCategory(tx, bankID, row.CategoryName, catCache)
+				if err != nil {
+					return fmt.Errorf("row %d: category %q: %w", item.rowNum, row.CategoryName, err)
 				}
 				g := &model.QuestionGroup{
 					BankID:     bankID,
 					CategoryID: catID,
-					PassageID:  &p.ID,
-					Type:       ig.Type,
-					Difficulty: groupDifficulty,
-					Context:    ig.Context,
+					Type:       row.Type,
+					Difficulty: row.Difficulty,
+					Context:    row.Context,
 				}
 				if err := tx.QuestionGroups.Create(g); err != nil {
-					return nil, fmt.Errorf("row %d passage group %d: %w", item.rowNum, gi+1, err)
+					return fmt.Errorf("row %d: group: %w", item.rowNum, err)
 				}
-				isMCQ := ig.Type == "mcq"
-				for qi, gq := range ig.Questions {
-					pos := int16(qi + 1)
+				isMCQ := row.Type == "mcq"
+				for i, gq := range row.Questions {
+					pos := int16(i + 1)
 					q := &model.Question{
 						BankID:     bankID,
 						CategoryID: catID,
 						GroupID:    &g.ID,
-						Type:       ig.Type,
-						Difficulty: groupDifficulty,
-						Tags:       pq.StringArray(mergeTags(row.Tags, gq.Tags)),
+						Type:       row.Type,
+						Difficulty: row.Difficulty,
+						Tags:       pq.StringArray(nonNilSlice(gq.Tags)),
 						Position:   &pos,
 					}
 					if err := tx.Questions.Create(q); err != nil {
-						return nil, fmt.Errorf("row %d passage group %d q%d: %w", item.rowNum, gi+1, qi+1, err)
+						return fmt.Errorf("row %d group q%d: %w", item.rowNum, i+1, err)
 					}
 					if isMCQ {
 						if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
@@ -305,7 +236,7 @@ func (s *IngestService) Ingest(bankID int, r io.Reader, ext string) (*IngestResu
 							Options:    gq.Options,
 							Answers:    pq.StringArray(nonNilSlice(gq.Answers)),
 						}); err != nil {
-							return nil, fmt.Errorf("row %d passage group %d q%d choice: %w", item.rowNum, gi+1, qi+1, err)
+							return fmt.Errorf("row %d group q%d choice: %w", item.rowNum, i+1, err)
 						}
 					} else {
 						if err := tx.Questions.CreateItem(&model.QQuestionItem{
@@ -313,85 +244,153 @@ func (s *IngestService) Ingest(bankID int, r io.Reader, ext string) (*IngestResu
 							Content:    gq.Content,
 							Answer:     gq.Answer,
 						}); err != nil {
-							return nil, fmt.Errorf("row %d passage group %d q%d item: %w", item.rowNum, gi+1, qi+1, err)
+							return fmt.Errorf("row %d group q%d item: %w", item.rowNum, i+1, err)
 						}
 					}
 				}
-			}
-
-			// Flat passage questions are grouped by type + difficulty, preserving order within each bucket.
-			type groupKey struct {
-				typ        string
-				difficulty string
-			}
-			groupIDByKey := map[groupKey]int{}
-			positionByKey := map[groupKey]int16{}
-			for qi, iq := range row.Questions {
-				questionDifficulty := row.Difficulty
-				if iq.Difficulty != "" {
-					questionDifficulty = iq.Difficulty
+				created++
+			} else if item.passage != nil {
+				row := item.passage
+				catID, err := s.resolveCategory(tx, bankID, row.CategoryName, catCache)
+				if err != nil {
+					return fmt.Errorf("row %d: category %q: %w", item.rowNum, row.CategoryName, err)
 				}
-				key := groupKey{typ: iq.Type, difficulty: questionDifficulty}
-				gID, exists := groupIDByKey[key]
-				if !exists {
+				p := &model.Passage{
+					BankID:     bankID,
+					CategoryID: catID,
+					Title:      row.Title,
+					Paragraphs: row.Paragraphs,
+					Difficulty: row.Difficulty,
+				}
+				if err := tx.Passages.Create(p); err != nil {
+					return fmt.Errorf("row %d: passage: %w", item.rowNum, err)
+				}
+
+				for gi, ig := range row.Groups {
+					groupDifficulty := row.Difficulty
+					if ig.Difficulty != "" {
+						groupDifficulty = ig.Difficulty
+					}
 					g := &model.QuestionGroup{
 						BankID:     bankID,
 						CategoryID: catID,
 						PassageID:  &p.ID,
-						Type:       iq.Type,
-						Difficulty: questionDifficulty,
+						Type:       ig.Type,
+						Difficulty: groupDifficulty,
+						Context:    ig.Context,
 					}
 					if err := tx.QuestionGroups.Create(g); err != nil {
-						return nil, fmt.Errorf("row %d passage q%d: group: %w", item.rowNum, qi+1, err)
+						return fmt.Errorf("row %d passage group %d: %w", item.rowNum, gi+1, err)
 					}
-					gID = g.ID
-					groupIDByKey[key] = gID
-					positionByKey[key] = 1
-				}
-				pos := positionByKey[key]
-				positionByKey[key]++
-				q := &model.Question{
-					BankID:     bankID,
-					CategoryID: catID,
-					GroupID:    &gID,
-					Type:       iq.Type,
-					Difficulty: questionDifficulty,
-					Tags:       pq.StringArray(mergeTags(row.Tags, iq.Tags)),
-					Position:   &pos,
-				}
-				if err := tx.Questions.Create(q); err != nil {
-					return nil, fmt.Errorf("row %d passage q%d: %w", item.rowNum, qi+1, err)
-				}
-				if iq.Type == "mcq" {
-					if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
-						QuestionID: q.ID,
-						Content:    iq.Content,
-						Options:    iq.Options,
-						Answers:    pq.StringArray(nonNilSlice(iq.Answers)),
-					}); err != nil {
-						return nil, fmt.Errorf("row %d passage q%d: choice: %w", item.rowNum, qi+1, err)
+					isMCQ := ig.Type == "mcq"
+					for qi, gq := range ig.Questions {
+						pos := int16(qi + 1)
+						q := &model.Question{
+							BankID:     bankID,
+							CategoryID: catID,
+							GroupID:    &g.ID,
+							Type:       ig.Type,
+							Difficulty: groupDifficulty,
+							Tags:       pq.StringArray(mergeTags(row.Tags, gq.Tags)),
+							Position:   &pos,
+						}
+						if err := tx.Questions.Create(q); err != nil {
+							return fmt.Errorf("row %d passage group %d q%d: %w", item.rowNum, gi+1, qi+1, err)
+						}
+						if isMCQ {
+							if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
+								QuestionID: q.ID,
+								Content:    gq.Content,
+								Options:    gq.Options,
+								Answers:    pq.StringArray(nonNilSlice(gq.Answers)),
+							}); err != nil {
+								return fmt.Errorf("row %d passage group %d q%d choice: %w", item.rowNum, gi+1, qi+1, err)
+							}
+						} else {
+							if err := tx.Questions.CreateItem(&model.QQuestionItem{
+								QuestionID: q.ID,
+								Content:    gq.Content,
+								Answer:     gq.Answer,
+							}); err != nil {
+								return fmt.Errorf("row %d passage group %d q%d item: %w", item.rowNum, gi+1, qi+1, err)
+							}
+						}
 					}
-				} else {
-					if err := tx.Questions.CreateItem(&model.QQuestionItem{
-						QuestionID: q.ID,
-						Content:    iq.Content,
-						Answer:     iq.Answer,
-					}); err != nil {
-						return nil, fmt.Errorf("row %d passage q%d: item: %w", item.rowNum, qi+1, err)
-					}
 				}
-			}
-			created++
-		}
-	}
 
-	if err := tx.Commit(); err != nil {
+				// Flat passage questions are grouped by type + difficulty, preserving order within each bucket.
+				type groupKey struct {
+					typ        string
+					difficulty string
+				}
+				groupIDByKey := map[groupKey]int{}
+				positionByKey := map[groupKey]int16{}
+				for qi, iq := range row.Questions {
+					questionDifficulty := row.Difficulty
+					if iq.Difficulty != "" {
+						questionDifficulty = iq.Difficulty
+					}
+					key := groupKey{typ: iq.Type, difficulty: questionDifficulty}
+					gID, exists := groupIDByKey[key]
+					if !exists {
+						g := &model.QuestionGroup{
+							BankID:     bankID,
+							CategoryID: catID,
+							PassageID:  &p.ID,
+							Type:       iq.Type,
+							Difficulty: questionDifficulty,
+						}
+						if err := tx.QuestionGroups.Create(g); err != nil {
+							return fmt.Errorf("row %d passage q%d: group: %w", item.rowNum, qi+1, err)
+						}
+						gID = g.ID
+						groupIDByKey[key] = gID
+						positionByKey[key] = 1
+					}
+					pos := positionByKey[key]
+					positionByKey[key]++
+					q := &model.Question{
+						BankID:     bankID,
+						CategoryID: catID,
+						GroupID:    &gID,
+						Type:       iq.Type,
+						Difficulty: questionDifficulty,
+						Tags:       pq.StringArray(mergeTags(row.Tags, iq.Tags)),
+						Position:   &pos,
+					}
+					if err := tx.Questions.Create(q); err != nil {
+						return fmt.Errorf("row %d passage q%d: %w", item.rowNum, qi+1, err)
+					}
+					if iq.Type == "mcq" {
+						if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
+							QuestionID: q.ID,
+							Content:    iq.Content,
+							Options:    iq.Options,
+							Answers:    pq.StringArray(nonNilSlice(iq.Answers)),
+						}); err != nil {
+							return fmt.Errorf("row %d passage q%d: choice: %w", item.rowNum, qi+1, err)
+						}
+					} else {
+						if err := tx.Questions.CreateItem(&model.QQuestionItem{
+							QuestionID: q.ID,
+							Content:    iq.Content,
+							Answer:     iq.Answer,
+						}); err != nil {
+							return fmt.Errorf("row %d passage q%d: item: %w", item.rowNum, qi+1, err)
+						}
+					}
+				}
+				created++
+			}
+		}
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 	return &IngestResult{Created: created}, nil
 }
 
-func (s *IngestService) resolveCategory(tx *uow.Transaction, bankID int, name string, cache map[string]int) (int, error) {
+func (s *IngestService) resolveCategory(tx *uow.Store, bankID int, name string, cache map[string]int) (int, error) {
 	if id, ok := cache[name]; ok {
 		return id, nil
 	}
