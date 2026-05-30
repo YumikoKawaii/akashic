@@ -133,3 +133,18 @@ export function useReviewContribution(bankId: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: contributionKeys.queue(bankId) }),
   })
 }
+
+// A comment can come from either side (contributor or reviewer), so refresh both views.
+export function useAddContributionComment(bankId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, body }: { id: number; body: string }) => {
+      const res = await contributionClient.addContributionComment({ bankId: Number(bankId), id, body })
+      return fromContribution(res.contribution!)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: contributionKeys.mine(bankId) })
+      qc.invalidateQueries({ queryKey: contributionKeys.queue(bankId) })
+    },
+  })
+}

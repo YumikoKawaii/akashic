@@ -254,11 +254,12 @@ type Contribution struct {
 	Contributor      *User                `gorm:"foreignKey:ContributorID" json:"contributor,omitempty"`
 	Payload          ContributionPayload  `gorm:"serializer:json"          json:"payload"`
 	Status           string               `gorm:"not null;default:'pending'" json:"status"`
-	QuestionID       *int                 `                                json:"question_id,omitempty"`
-	Reviews          []ContributionReview `gorm:"foreignKey:ContributionID" json:"reviews,omitempty"`
-	CreatedAt        time.Time            `                                json:"created_at"`
-	UpdatedAt        time.Time            `                                json:"updated_at"`
-	DeletedAt        gorm.DeletedAt       `gorm:"index"                    json:"-"`
+	QuestionID       *int                  `                                json:"question_id,omitempty"`
+	Reviews          []ContributionReview  `gorm:"foreignKey:ContributionID" json:"reviews,omitempty"`
+	Comments         []ContributionComment `gorm:"foreignKey:ContributionID" json:"comments,omitempty"`
+	CreatedAt        time.Time             `                                json:"created_at"`
+	UpdatedAt        time.Time             `                                json:"updated_at"`
+	DeletedAt        gorm.DeletedAt        `gorm:"index"                    json:"-"`
 }
 
 type ContributionReview struct {
@@ -268,6 +269,16 @@ type ContributionReview struct {
 	Reviewer       *User          `gorm:"foreignKey:ReviewerID"    json:"reviewer,omitempty"`
 	Decision       string         `gorm:"not null"                 json:"decision"`
 	Note           string         `gorm:"not null;default:''"      json:"note"`
+	CreatedAt      time.Time      `                                json:"created_at"`
+	DeletedAt      gorm.DeletedAt `gorm:"index"                    json:"-"`
+}
+
+type ContributionComment struct {
+	ID             int            `gorm:"primaryKey;autoIncrement" json:"id"`
+	ContributionID int            `gorm:"not null;index"           json:"contribution_id"`
+	AuthorID       int            `gorm:"not null"                 json:"author_id"`
+	Author         *User          `gorm:"foreignKey:AuthorID"      json:"author,omitempty"`
+	Body           string         `gorm:"not null"                 json:"body"`
 	CreatedAt      time.Time      `                                json:"created_at"`
 	DeletedAt      gorm.DeletedAt `gorm:"index"                    json:"-"`
 }

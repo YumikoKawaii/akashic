@@ -15,6 +15,7 @@ type ContributionRepository interface {
 	FindByBank(bankID int, status string) ([]model.Contribution, error)
 	FindByBankAndContributor(bankID, contributorID int) ([]model.Contribution, error)
 	AddReview(r *model.ContributionReview) error
+	AddComment(c *model.ContributionComment) error
 	SoftDelete(id int) error
 }
 
@@ -28,7 +29,9 @@ func (r *contributionRepo) withAssociations(db *gorm.DB) *gorm.DB {
 	return db.
 		Preload("Contributor").
 		Preload("Reviews", func(db *gorm.DB) *gorm.DB { return db.Order("created_at ASC") }).
-		Preload("Reviews.Reviewer")
+		Preload("Reviews.Reviewer").
+		Preload("Comments", func(db *gorm.DB) *gorm.DB { return db.Order("created_at ASC") }).
+		Preload("Comments.Author")
 }
 
 func (r *contributionRepo) Create(c *model.Contribution) error { return r.db.Create(c).Error }
@@ -68,6 +71,10 @@ func (r *contributionRepo) FindByBankAndContributor(bankID, contributorID int) (
 
 func (r *contributionRepo) AddReview(rev *model.ContributionReview) error {
 	return r.db.Create(rev).Error
+}
+
+func (r *contributionRepo) AddComment(c *model.ContributionComment) error {
+	return r.db.Create(c).Error
 }
 
 func (r *contributionRepo) SoftDelete(id int) error {

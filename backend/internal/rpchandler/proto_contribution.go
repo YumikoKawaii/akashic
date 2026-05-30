@@ -126,6 +126,16 @@ func contributionReviewToProto(r *model.ContributionReview) *pb.ContributionRevi
 	}
 }
 
+func contributionCommentToProto(c *model.ContributionComment) *pb.ContributionComment {
+	return &pb.ContributionComment{
+		Id:        int32(c.ID),
+		AuthorId:  int32(c.AuthorID),
+		Body:      c.Body,
+		CreatedAt: timestamppb.New(c.CreatedAt),
+		Author:    userToProto(c.Author),
+	}
+}
+
 func contributionToProto(c *model.Contribution) *pb.Contribution {
 	var questionID *int32
 	if c.QuestionID != nil {
@@ -136,16 +146,21 @@ func contributionToProto(c *model.Contribution) *pb.Contribution {
 	for i := range c.Reviews {
 		reviews[i] = contributionReviewToProto(&c.Reviews[i])
 	}
+	comments := make([]*pb.ContributionComment, len(c.Comments))
+	for i := range c.Comments {
+		comments[i] = contributionCommentToProto(&c.Comments[i])
+	}
 	return &pb.Contribution{
-		Id:               int32(c.ID),
-		BankId:           int32(c.BankID),
-		ContributorId:    int32(c.ContributorID),
-		Proposed:         proposedQuestionToProto(c.Payload),
-		Status:           contributionStatusToProto(c.Status),
-		QuestionId:       questionID,
-		Reviews:          reviews,
-		CreatedAt:        timestamppb.New(c.CreatedAt),
-		UpdatedAt:        timestamppb.New(c.UpdatedAt),
-		Contributor:      userToProto(c.Contributor),
+		Id:            int32(c.ID),
+		BankId:        int32(c.BankID),
+		ContributorId: int32(c.ContributorID),
+		Proposed:      proposedQuestionToProto(c.Payload),
+		Status:        contributionStatusToProto(c.Status),
+		QuestionId:    questionID,
+		Reviews:       reviews,
+		Comments:      comments,
+		CreatedAt:     timestamppb.New(c.CreatedAt),
+		UpdatedAt:     timestamppb.New(c.UpdatedAt),
+		Contributor:   userToProto(c.Contributor),
 	}
 }
