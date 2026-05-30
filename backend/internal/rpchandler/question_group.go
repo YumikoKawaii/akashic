@@ -45,7 +45,7 @@ func (h *QuestionGroupServiceHandler) CreateQuestionGroup(
 		passageID = &v
 	}
 	ctx2 := groupContextFromProto(req.Msg.Context)
-	group, err := h.svc.Create(int(req.Msg.BankId), service.CreateGroupInput{
+	group, err := h.svc.Create(ctx, int(req.Msg.BankId), service.CreateGroupInput{
 		CategoryID: int(req.Msg.CategoryId),
 		PassageID:  passageID,
 		Type:       questionTypeFromProto(req.Msg.Type),

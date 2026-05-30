@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/lib/pq"
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
@@ -8,21 +10,12 @@ import (
 )
 
 type QuestionService struct {
-	uow          *uow.UnitOfWork
-	repo         repository.QuestionRepository
-	bankRepo     repository.BankRepository
-	categoryRepo repository.CategoryRepository
-	pool         GenerateCache
+	uow  uow.UnitOfWork
+	pool GenerateCache
 }
 
-func NewQuestionService(
-	u *uow.UnitOfWork,
-	repo repository.QuestionRepository,
-	bankRepo repository.BankRepository,
-	categoryRepo repository.CategoryRepository,
-	pool GenerateCache,
-) *QuestionService {
-	return &QuestionService{uow: u, repo: repo, bankRepo: bankRepo, categoryRepo: categoryRepo, pool: pool}
+func NewQuestionService(u uow.UnitOfWork, pool GenerateCache) *QuestionService {
+	return &QuestionService{uow: u, pool: pool}
 }
 
 func toCachedQuestion(q *model.Question) CachedQuestion {
@@ -37,10 +30,10 @@ func toCachedQuestion(q *model.Question) CachedQuestion {
 }
 
 func (s *QuestionService) List(bankID int, f repository.QuestionFilter) ([]model.Question, error) {
-	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	return s.repo.FindByBank(bankID, f)
+	return s.uow.Store().Questions.FindByBank(bankID, f)
 }
 
 type QuestionPage struct {
@@ -51,10 +44,10 @@ type QuestionPage struct {
 }
 
 func (s *QuestionService) ListPaged(bankID int, f repository.QuestionFilter, page, pageSize int) (*QuestionPage, error) {
-	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	qs, total, err := s.repo.FindByBankPaged(bankID, f, page, pageSize)
+	qs, total, err := s.uow.Store().Questions.FindByBankPaged(bankID, f, page, pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +55,7 @@ func (s *QuestionService) ListPaged(bankID int, f repository.QuestionFilter, pag
 }
 
 func (s *QuestionService) GetByID(bankID, id int) (*model.Question, error) {
-	q, err := s.repo.FindByID(id)
+	q, err := s.uow.Store().Questions.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -83,11 +76,11 @@ type CreateQuestionInput struct {
 	Answers    []string          `json:"answers"`
 }
 
-func (s *QuestionService) Create(bankID int, input CreateQuestionInput) (*model.Question, error) {
-	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+func (s *QuestionService) Create(ctx context.Context, bankID int, input CreateQuestionInput) (*model.Question, error) {
+	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	cat, err := s.categoryRepo.FindByID(input.CategoryID)
+	cat, err := s.uow.Store().Categories.FindByID(input.CategoryID)
 	if err != nil {
 		return nil, err
 	}
@@ -103,36 +96,28 @@ func (s *QuestionService) Create(bankID int, input CreateQuestionInput) (*model.
 		Tags:       pq.StringArray(input.Tags),
 	}
 
-	tx := s.uow.Begin()
-	defer tx.Rollback()
-
-	if err := tx.Questions.Create(q); err != nil {
-		return nil, err
-	}
-
-	if input.Type == "mcq" {
-		if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
-			QuestionID: q.ID,
-			Content:    input.Content,
-			Options:    input.Options,
-			Answers:    pq.StringArray(input.Answers),
-		}); err != nil {
-			return nil, err
+	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
+		if err := tx.Questions.Create(q); err != nil {
+			return err
 		}
-	} else {
-		if err := tx.Questions.CreateItem(&model.QQuestionItem{
+		if input.Type == "mcq" {
+			return tx.Questions.CreateChoice(&model.QMultipleChoice{
+				QuestionID: q.ID,
+				Content:    input.Content,
+				Options:    input.Options,
+				Answers:    pq.StringArray(input.Answers),
+			})
+		}
+		return tx.Questions.CreateItem(&model.QQuestionItem{
 			QuestionID: q.ID,
 			Content:    input.Content,
 			Answer:     input.Answer,
-		}); err != nil {
-			return nil, err
-		}
-	}
-
-	if err := tx.Commit(); err != nil {
+		})
+	}); err != nil {
 		return nil, err
 	}
-	created, err := s.repo.FindByID(q.ID)
+
+	created, err := s.uow.Store().Questions.FindByID(q.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +136,7 @@ type UpdateQuestionInput struct {
 }
 
 func (s *QuestionService) Update(bankID, id int, input UpdateQuestionInput) (*model.Question, error) {
-	q, err := s.repo.FindByID(id)
+	q, err := s.uow.Store().Questions.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +144,7 @@ func (s *QuestionService) Update(bankID, id int, input UpdateQuestionInput) (*mo
 		return nil, ErrForbidden
 	}
 	if input.CategoryID != nil {
-		cat, err := s.categoryRepo.FindByID(*input.CategoryID)
+		cat, err := s.uow.Store().Categories.FindByID(*input.CategoryID)
 		if err != nil {
 			return nil, err
 		}
@@ -174,7 +159,7 @@ func (s *QuestionService) Update(bankID, id int, input UpdateQuestionInput) (*mo
 	if input.Tags != nil {
 		q.Tags = pq.StringArray(input.Tags)
 	}
-	if err := s.repo.Save(q); err != nil {
+	if err := s.uow.Store().Questions.Save(q); err != nil {
 		return nil, err
 	}
 
@@ -186,7 +171,7 @@ func (s *QuestionService) Update(bankID, id int, input UpdateQuestionInput) (*mo
 		if input.Answers != nil {
 			q.Choice.Answers = pq.StringArray(input.Answers)
 		}
-		if err := s.repo.SaveChoice(q.Choice); err != nil {
+		if err := s.uow.Store().Questions.SaveChoice(q.Choice); err != nil {
 			return nil, err
 		}
 	} else if q.Item != nil && input.Content != "" {
@@ -194,12 +179,12 @@ func (s *QuestionService) Update(bankID, id int, input UpdateQuestionInput) (*mo
 		if input.Answer != "" {
 			q.Item.Answer = input.Answer
 		}
-		if err := s.repo.SaveItem(q.Item); err != nil {
+		if err := s.uow.Store().Questions.SaveItem(q.Item); err != nil {
 			return nil, err
 		}
 	}
 
-	updated, err := s.repo.FindByID(q.ID)
+	updated, err := s.uow.Store().Questions.FindByID(q.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -208,14 +193,14 @@ func (s *QuestionService) Update(bankID, id int, input UpdateQuestionInput) (*mo
 }
 
 func (s *QuestionService) Delete(bankID, id int) error {
-	q, err := s.repo.FindByID(id)
+	q, err := s.uow.Store().Questions.FindByID(id)
 	if err != nil {
 		return err
 	}
 	if q.BankID != bankID {
 		return ErrForbidden
 	}
-	if err := s.repo.SoftDelete(id); err != nil {
+	if err := s.uow.Store().Questions.SoftDelete(id); err != nil {
 		return err
 	}
 	s.pool.RemoveFromPool(bankID, id)
@@ -223,12 +208,12 @@ func (s *QuestionService) Delete(bankID, id int) error {
 }
 
 func (s *QuestionService) Restore(bankID, id int) (*model.Question, error) {
-	q, err := s.repo.FindByID(id)
+	q, err := s.uow.Store().Questions.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
 	if q.BankID != bankID {
 		return nil, ErrForbidden
 	}
-	return q, s.repo.Restore(id)
+	return q, s.uow.Store().Questions.Restore(id)
 }

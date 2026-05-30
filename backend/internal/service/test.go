@@ -1,43 +1,27 @@
 package service
 
 import (
+	"context"
+
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
 	"github.com/yumikokawaii/akashic/internal/uow"
 )
 
 type TestService struct {
-	uow          *uow.UnitOfWork
-	testRepo     repository.TestRepository
-	questionRepo repository.QuestionRepository
-	groupRepo    repository.QuestionGroupRepository
-	bankRepo     repository.BankRepository
-	cache        GenerateCache
+	uow   uow.UnitOfWork
+	cache GenerateCache
 }
 
-func NewTestService(
-	u *uow.UnitOfWork,
-	testRepo repository.TestRepository,
-	questionRepo repository.QuestionRepository,
-	groupRepo repository.QuestionGroupRepository,
-	bankRepo repository.BankRepository,
-	cache GenerateCache,
-) *TestService {
-	return &TestService{
-		uow:          u,
-		testRepo:     testRepo,
-		questionRepo: questionRepo,
-		groupRepo:    groupRepo,
-		bankRepo:     bankRepo,
-		cache:        cache,
-	}
+func NewTestService(u uow.UnitOfWork, cache GenerateCache) *TestService {
+	return &TestService{uow: u, cache: cache}
 }
 
 func (s *TestService) ListByBank(bankID int) ([]model.Test, error) {
-	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	return s.testRepo.FindByBank(bankID)
+	return s.uow.Store().Tests.FindByBank(bankID)
 }
 
 type TestPage struct {
@@ -51,10 +35,10 @@ type TestPage struct {
 // calling user, so public-bank visitors can generate and manage their own
 // practice tests without seeing or touching anyone else's.
 func (s *TestService) ListByBankPaged(bankID, userID, page, pageSize int) (*TestPage, error) {
-	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	ts, total, err := s.testRepo.FindByBankAndCreatorPaged(bankID, userID, page, pageSize)
+	ts, total, err := s.uow.Store().Tests.FindByBankAndCreatorPaged(bankID, userID, page, pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +46,7 @@ func (s *TestService) ListByBankPaged(bankID, userID, page, pageSize int) (*Test
 }
 
 func (s *TestService) GetByID(bankID, id, userID int) (*model.Test, error) {
-	test, err := s.testRepo.FindByBankAndID(bankID, id)
+	test, err := s.uow.Store().Tests.FindByBankAndID(bankID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -89,8 +73,8 @@ type selUnit struct {
 	groupID int
 }
 
-func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test, error) {
-	bank, err := s.bankRepo.FindByID(bankID)
+func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTestInput) (*model.Test, error) {
+	bank, err := s.uow.Store().Banks.FindByID(bankID)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +84,7 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 		config = *input.Config
 	}
 
-	skipGroups     := config.StandaloneOnly
+	skipGroups := config.StandaloneOnly
 	skipStandalone := len(config.PassageIDs) > 0 && !config.StandaloneOnly
 
 	var picked []model.Question
@@ -169,7 +153,7 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 		}
 
 		if len(standaloneIDs) > 0 {
-			qs, err := s.questionRepo.FindByIDs(standaloneIDs)
+			qs, err := s.uow.Store().Questions.FindByIDs(standaloneIDs)
 			if err != nil {
 				return nil, err
 			}
@@ -201,7 +185,10 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 		var groupUnits []selUnit
 		shortage := map[string]int{}
 
-		for _, b := range []struct{ diff string; count int }{
+		for _, b := range []struct {
+			diff  string
+			count int
+		}{
 			{"easy", config.EasyCount},
 			{"medium", config.MediumCount},
 			{"hard", config.HardCount},
@@ -215,7 +202,10 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 			groupPools[b.diff] = pool[n:]
 			shortage[b.diff] = b.count - n
 		}
-		for _, b := range []struct{ diff string; count int }{
+		for _, b := range []struct {
+			diff  string
+			count int
+		}{
 			{"easy", config.EasyCount},
 			{"medium", config.MediumCount},
 			{"hard", config.HardCount},
@@ -234,7 +224,7 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 		}
 
 		for _, u := range groupUnits {
-			qs, err := s.questionRepo.FindByGroup(u.groupID)
+			qs, err := s.uow.Store().Questions.FindByGroup(u.groupID)
 			if err != nil {
 				return nil, err
 			}
@@ -251,34 +241,33 @@ func (s *TestService) Generate(bankID int, input GenerateTestInput) (*model.Test
 		Config:      config,
 	}
 
-	tx := s.uow.Begin()
-	defer tx.Rollback()
-
-	if err := tx.Tests.Create(test); err != nil {
-		return nil, err
-	}
-	for i, q := range picked {
-		if err := tx.Tests.CreateTestQuestion(&model.TestQuestion{
-			TestID:     test.ID,
-			QuestionID: q.ID,
-			Position:   i + 1,
-		}); err != nil {
-			return nil, err
+	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
+		if err := tx.Tests.Create(test); err != nil {
+			return err
 		}
-	}
-	if err := tx.Commit(); err != nil {
+		for i, q := range picked {
+			if err := tx.Tests.CreateTestQuestion(&model.TestQuestion{
+				TestID:     test.ID,
+				QuestionID: q.ID,
+				Position:   i + 1,
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 
 	// ── Record standalone question history for future exclusion ──────────
 	s.cache.RecordGeneration(input.UserID, bankID, seq, standaloneIDs)
 
-	return s.testRepo.FindByID(test.ID)
+	return s.uow.Store().Tests.FindByID(test.ID)
 }
 
 // loadPool loads question metadata from the DB for pool filtering and selection.
 func (s *TestService) loadPool(bankID int) ([]CachedQuestion, error) {
-	metas, err := s.questionRepo.FindAllMeta(bankID)
+	metas, err := s.uow.Store().Questions.FindAllMeta(bankID)
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +290,7 @@ func (s *TestService) loadPool(bankID int) ([]CachedQuestion, error) {
 // buildGroupPool fetches question groups from the DB for the passage path.
 func (s *TestService) buildGroupPool(bankID int, diff string, gf repository.GroupFilter) ([]selUnit, error) {
 	gf.Difficulty = diff
-	groups, err := s.groupRepo.FindByBank(bankID, gf)
+	groups, err := s.uow.Store().QuestionGroups.FindByBank(bankID, gf)
 	if err != nil {
 		return nil, err
 	}
@@ -313,26 +302,26 @@ func (s *TestService) buildGroupPool(bankID int, diff string, gf repository.Grou
 }
 
 func (s *TestService) Delete(bankID, id, userID int) error {
-	test, err := s.testRepo.FindByBankAndID(bankID, id)
+	test, err := s.uow.Store().Tests.FindByBankAndID(bankID, id)
 	if err != nil {
 		return err
 	}
 	if !ownsTest(test, userID) {
 		return ErrForbidden
 	}
-	return s.testRepo.SoftDelete(id)
+	return s.uow.Store().Tests.SoftDelete(id)
 }
 
 func (s *TestService) Restore(bankID, id, userID int) (*model.Test, error) {
-	test, err := s.testRepo.FindByBankAndID(bankID, id)
+	test, err := s.uow.Store().Tests.FindByBankAndID(bankID, id)
 	if err != nil {
 		return nil, err
 	}
 	if !ownsTest(test, userID) {
 		return nil, ErrForbidden
 	}
-	if err := s.testRepo.Restore(id); err != nil {
+	if err := s.uow.Store().Tests.Restore(id); err != nil {
 		return nil, err
 	}
-	return s.testRepo.FindByBankAndID(bankID, id)
+	return s.uow.Store().Tests.FindByBankAndID(bankID, id)
 }

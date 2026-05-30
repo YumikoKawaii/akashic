@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/lib/pq"
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
@@ -8,30 +10,22 @@ import (
 )
 
 type QuestionGroupService struct {
-	uow          *uow.UnitOfWork
-	groupRepo    repository.QuestionGroupRepository
-	bankRepo     repository.BankRepository
-	categoryRepo repository.CategoryRepository
+	uow uow.UnitOfWork
 }
 
-func NewQuestionGroupService(
-	u *uow.UnitOfWork,
-	groupRepo repository.QuestionGroupRepository,
-	bankRepo repository.BankRepository,
-	categoryRepo repository.CategoryRepository,
-) *QuestionGroupService {
-	return &QuestionGroupService{uow: u, groupRepo: groupRepo, bankRepo: bankRepo, categoryRepo: categoryRepo}
+func NewQuestionGroupService(u uow.UnitOfWork) *QuestionGroupService {
+	return &QuestionGroupService{uow: u}
 }
 
 func (s *QuestionGroupService) List(bankID int, f repository.GroupFilter) ([]model.QuestionGroup, error) {
-	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	return s.groupRepo.FindByBank(bankID, f)
+	return s.uow.Store().QuestionGroups.FindByBank(bankID, f)
 }
 
 func (s *QuestionGroupService) GetByID(bankID, id int) (*model.QuestionGroup, error) {
-	g, err := s.groupRepo.FindByID(id)
+	g, err := s.uow.Store().QuestionGroups.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -58,11 +52,11 @@ type CreateGroupInput struct {
 	Questions  []GroupQuestionInput `json:"questions"   binding:"required,min=1"`
 }
 
-func (s *QuestionGroupService) Create(bankID int, input CreateGroupInput) (*model.QuestionGroup, error) {
-	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+func (s *QuestionGroupService) Create(ctx context.Context, bankID int, input CreateGroupInput) (*model.QuestionGroup, error) {
+	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	cat, err := s.categoryRepo.FindByID(input.CategoryID)
+	cat, err := s.uow.Store().Categories.FindByID(input.CategoryID)
 	if err != nil {
 		return nil, err
 	}
@@ -79,61 +73,58 @@ func (s *QuestionGroupService) Create(bankID int, input CreateGroupInput) (*mode
 		Context:    input.Context,
 	}
 
-	tx := s.uow.Begin()
-	defer tx.Rollback()
-
-	if err := tx.QuestionGroups.Create(group); err != nil {
-		return nil, err
-	}
-
-	isMCQ := input.Type == "mcq"
-	for i, qi := range input.Questions {
-		pos := int16(i + 1)
-		q := &model.Question{
-			BankID:     bankID,
-			CategoryID: input.CategoryID,
-			GroupID:    &group.ID,
-			Type:       input.Type,
-			Difficulty: input.Difficulty,
-			Tags:       pq.StringArray(qi.Tags),
-			Position:   &pos,
+	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
+		if err := tx.QuestionGroups.Create(group); err != nil {
+			return err
 		}
-		if err := tx.Questions.Create(q); err != nil {
-			return nil, err
-		}
-		if isMCQ {
-			if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
-				QuestionID: q.ID,
-				Content:    qi.Content,
-				Options:    qi.Options,
-				Answers:    pq.StringArray(qi.Answers),
-			}); err != nil {
-				return nil, err
+		isMCQ := input.Type == "mcq"
+		for i, qi := range input.Questions {
+			pos := int16(i + 1)
+			q := &model.Question{
+				BankID:     bankID,
+				CategoryID: input.CategoryID,
+				GroupID:    &group.ID,
+				Type:       input.Type,
+				Difficulty: input.Difficulty,
+				Tags:       pq.StringArray(qi.Tags),
+				Position:   &pos,
 			}
-		} else {
-			if err := tx.Questions.CreateItem(&model.QQuestionItem{
-				QuestionID: q.ID,
-				Content:    qi.Content,
-				Answer:     qi.Answer,
-			}); err != nil {
-				return nil, err
+			if err := tx.Questions.Create(q); err != nil {
+				return err
+			}
+			if isMCQ {
+				if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
+					QuestionID: q.ID,
+					Content:    qi.Content,
+					Options:    qi.Options,
+					Answers:    pq.StringArray(qi.Answers),
+				}); err != nil {
+					return err
+				}
+			} else {
+				if err := tx.Questions.CreateItem(&model.QQuestionItem{
+					QuestionID: q.ID,
+					Content:    qi.Content,
+					Answer:     qi.Answer,
+				}); err != nil {
+					return err
+				}
 			}
 		}
-	}
-
-	if err := tx.Commit(); err != nil {
+		return nil
+	}); err != nil {
 		return nil, err
 	}
-	return s.groupRepo.FindByID(group.ID)
+	return s.uow.Store().QuestionGroups.FindByID(group.ID)
 }
 
 type UpdateGroupInput struct {
-	Difficulty string             `json:"difficulty"`
+	Difficulty string              `json:"difficulty"`
 	Context    *model.GroupContext `json:"context"`
 }
 
 func (s *QuestionGroupService) Update(bankID, id int, input UpdateGroupInput) (*model.QuestionGroup, error) {
-	g, err := s.groupRepo.FindByID(id)
+	g, err := s.uow.Store().QuestionGroups.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -146,27 +137,27 @@ func (s *QuestionGroupService) Update(bankID, id int, input UpdateGroupInput) (*
 	if input.Context != nil {
 		g.Context = *input.Context
 	}
-	return g, s.groupRepo.Save(g)
+	return g, s.uow.Store().QuestionGroups.Save(g)
 }
 
 func (s *QuestionGroupService) Delete(bankID, id int) error {
-	g, err := s.groupRepo.FindByID(id)
+	g, err := s.uow.Store().QuestionGroups.FindByID(id)
 	if err != nil {
 		return err
 	}
 	if g.BankID != bankID {
 		return ErrForbidden
 	}
-	return s.groupRepo.SoftDelete(id)
+	return s.uow.Store().QuestionGroups.SoftDelete(id)
 }
 
 func (s *QuestionGroupService) Restore(bankID, id int) (*model.QuestionGroup, error) {
-	g, err := s.groupRepo.FindByID(id)
+	g, err := s.uow.Store().QuestionGroups.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
 	if g.BankID != bankID {
 		return nil, ErrForbidden
 	}
-	return g, s.groupRepo.Restore(id)
+	return g, s.uow.Store().QuestionGroups.Restore(id)
 }

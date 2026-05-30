@@ -19,8 +19,8 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-var ErrEmailTaken    = errors.New("email already registered")
-var ErrInvalidCreds  = errors.New("invalid email or password")
+var ErrEmailTaken = errors.New("email already registered")
+var ErrInvalidCreds = errors.New("invalid email or password")
 var ErrPasswordLogin = errors.New("account uses Google login")
 
 type JWTClaims struct {

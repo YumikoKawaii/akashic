@@ -47,16 +47,17 @@ func main() {
 
 	unitOfWork := uow.New(db)
 
-	bankRepo          := repository.NewBankRepo(db)
-	categoryRepo      := repository.NewCategoryRepo(db)
-	questionRepo      := repository.NewQuestionRepo(db)
-	questionGroupRepo := repository.NewQuestionGroupRepo(db)
-	passageRepo       := repository.NewPassageRepo(db)
-	testRepo          := repository.NewTestRepo(db)
-	attemptRepo       := repository.NewAttemptRepo(db)
-	userRepo          := repository.NewUserRepo(db)
-	memberRepo        := repository.NewMemberRepo(db)
-	contributionRepo  := repository.NewContributionRepo(db)
+	// Services that run transactions take the UnitOfWork and reach repositories
+	// through it (uow.Store() for reads, uow.Do() for writes). The repos below
+	// are only for the non-transactional services and the startup cache warmers.
+	bankRepo := repository.NewBankRepo(db)
+	categoryRepo := repository.NewCategoryRepo(db)
+	questionRepo := repository.NewQuestionRepo(db)
+	passageRepo := repository.NewPassageRepo(db)
+	testRepo := repository.NewTestRepo(db)
+	attemptRepo := repository.NewAttemptRepo(db)
+	userRepo := repository.NewUserRepo(db)
+	memberRepo := repository.NewMemberRepo(db)
 
 	cacheCfg := service.GenerateConfig{UserCooldownAttempts: 3}
 	var generateCache service.GenerateCache
@@ -76,16 +77,16 @@ func main() {
 	warmupMembershipCache(memberRepo, roleCache)
 	warmupVisibilityCache(bankRepo, visibilityCache)
 
-	authSvc          := service.NewAuthService(userRepo, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleCallbackURL, cfg.JWTSecret)
-	bankSvc          := service.NewBankService(bankRepo, memberRepo, userRepo, roleCache, visibilityCache)
-	categorySvc      := service.NewCategoryService(categoryRepo, bankRepo)
-	passageSvc       := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
-	questionGroupSvc := service.NewQuestionGroupService(unitOfWork, questionGroupRepo, bankRepo, categoryRepo)
-	questionSvc      := service.NewQuestionService(unitOfWork, questionRepo, bankRepo, categoryRepo, generateCache)
-	testSvc          := service.NewTestService(unitOfWork, testRepo, questionRepo, questionGroupRepo, bankRepo, generateCache)
-	attemptSvc       := service.NewAttemptService(attemptRepo, testRepo)
-	ingestSvc        := service.NewIngestService(unitOfWork, bankRepo, categoryRepo, questionRepo)
-	contributionSvc  := service.NewContributionService(unitOfWork, contributionRepo, bankRepo, categoryRepo, generateCache)
+	authSvc := service.NewAuthService(userRepo, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleCallbackURL, cfg.JWTSecret)
+	bankSvc := service.NewBankService(bankRepo, memberRepo, userRepo, roleCache, visibilityCache)
+	categorySvc := service.NewCategoryService(categoryRepo, bankRepo)
+	passageSvc := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
+	questionGroupSvc := service.NewQuestionGroupService(unitOfWork)
+	questionSvc := service.NewQuestionService(unitOfWork, generateCache)
+	testSvc := service.NewTestService(unitOfWork, generateCache)
+	attemptSvc := service.NewAttemptService(attemptRepo, testRepo)
+	ingestSvc := service.NewIngestService(unitOfWork)
+	contributionSvc := service.NewContributionService(unitOfWork, generateCache)
 
 	warmupPoolCache(bankRepo, questionRepo, generateCache)
 

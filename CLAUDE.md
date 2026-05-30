@@ -39,8 +39,8 @@ All banks are private: a user reaches a bank's data only through a membership. R
 - Transport: Connect RPC (`connectrpc.com/connect`) over h2c
 - DB: PostgreSQL via GORM + golang-migrate for migrations
 - Layered architecture: `rpchandler → service → unit of work → repository`
-- Unit of Work pattern for all multi-table operations
-- Single-table reads can bypass UoW and use repositories directly
+- Unit of Work: `uow.UnitOfWork` is an **interface** with two methods. `Store() *uow.Store` returns repositories bound to the base connection (non-transactional) — use for reads and single-table writes. `Do(ctx, func(tx *uow.Store) error)` runs the closure in one transaction, committing on `nil` and rolling back on error or panic; the `tx *uow.Store` it passes is bound to that transaction. `uow.Store` is a struct of all repository interfaces. Keep non-transactional side effects (cache writes, the post-commit re-read) **after** `Do` returns — anything inside the closure is rolled back on failure. Do NOT hand-manage `Begin/Commit/Rollback`.
+- Transactional services depend on `uow.UnitOfWork` alone and reach every repository through it (`s.uow.Store().Banks…` for reads, the `tx *uow.Store` inside `Do` for writes) rather than injecting individual repositories. Purely single-table services (category, passage, attempt, bank, auth) still inject the specific repository(ies) they need.
 - Errors: return domain errors from service, translate to Connect codes in `internal/rpchandler/errors.go`
 - Proto ↔ domain mapping lives in `internal/rpchandler/proto.go`; keep RPC handlers thin (decode → call service → encode)
 - No global state; inject dependencies via constructor functions

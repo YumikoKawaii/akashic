@@ -56,9 +56,9 @@ func (s *PassageService) GetByID(bankID, id int) (*model.Passage, error) {
 }
 
 type CreatePassageInput struct {
-	CategoryID int                    `json:"category_id" binding:"required"`
-	Title      string                 `json:"title"       binding:"required"`
-	Difficulty string                 `json:"difficulty"  binding:"required"`
+	CategoryID int                      `json:"category_id" binding:"required"`
+	Title      string                   `json:"title"       binding:"required"`
+	Difficulty string                   `json:"difficulty"  binding:"required"`
 	Paragraphs []model.PassageParagraph `json:"paragraphs"`
 }
 
@@ -84,9 +84,9 @@ func (s *PassageService) Create(bankID int, input CreatePassageInput) (*model.Pa
 }
 
 type UpdatePassageInput struct {
-	CategoryID *int                   `json:"category_id"`
-	Title      string                 `json:"title"`
-	Difficulty string                 `json:"difficulty"`
+	CategoryID *int                     `json:"category_id"`
+	Title      string                   `json:"title"`
+	Difficulty string                   `json:"difficulty"`
 	Paragraphs []model.PassageParagraph `json:"paragraphs"`
 }
 

@@ -67,7 +67,7 @@ func (h *ContributionServiceHandler) MergeContribution(
 	ctx context.Context,
 	req *connect.Request[pb.MergeContributionRequest],
 ) (*connect.Response[pb.MergeContributionResponse], error) {
-	c, err := h.svc.Merge(int(req.Msg.BankId), userIDFromContext(ctx), int(req.Msg.Id))
+	c, err := h.svc.Merge(ctx, int(req.Msg.BankId), userIDFromContext(ctx), int(req.Msg.Id))
 	if err != nil {
 		return nil, toConnectError(err)
 	}
@@ -93,7 +93,7 @@ func (h *ContributionServiceHandler) ReviewContribution(
 	if decision == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, nil)
 	}
-	c, err := h.svc.Review(int(req.Msg.BankId), userIDFromContext(ctx), int(req.Msg.Id), decision, req.Msg.Note)
+	c, err := h.svc.Review(ctx, int(req.Msg.BankId), userIDFromContext(ctx), int(req.Msg.Id), decision, req.Msg.Note)
 	if err != nil {
 		return nil, toConnectError(err)
 	}

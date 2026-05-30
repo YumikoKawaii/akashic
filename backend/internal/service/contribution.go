@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 
 	"github.com/lib/pq"
@@ -10,21 +11,12 @@ import (
 )
 
 type ContributionService struct {
-	uow          *uow.UnitOfWork
-	repo         repository.ContributionRepository
-	bankRepo     repository.BankRepository
-	categoryRepo repository.CategoryRepository
-	pool         GenerateCache
+	uow  uow.UnitOfWork
+	pool GenerateCache
 }
 
-func NewContributionService(
-	u *uow.UnitOfWork,
-	repo repository.ContributionRepository,
-	bankRepo repository.BankRepository,
-	categoryRepo repository.CategoryRepository,
-	pool GenerateCache,
-) *ContributionService {
-	return &ContributionService{uow: u, repo: repo, bankRepo: bankRepo, categoryRepo: categoryRepo, pool: pool}
+func NewContributionService(u uow.UnitOfWork, pool GenerateCache) *ContributionService {
+	return &ContributionService{uow: u, pool: pool}
 }
 
 // isTerminal reports whether a contribution can no longer be acted on.
@@ -41,7 +33,7 @@ func (s *ContributionService) validatePayload(bankID int, p model.ContributionPa
 	if p.Type == "mcq" && len(p.Options) == 0 {
 		return ErrBadRequest
 	}
-	cat, err := s.categoryRepo.FindByID(p.CategoryID)
+	cat, err := s.uow.Store().Categories.FindByID(p.CategoryID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrBadRequest
@@ -56,7 +48,7 @@ func (s *ContributionService) validatePayload(bankID int, p model.ContributionPa
 
 // Submit records a new pending contribution proposed by userID.
 func (s *ContributionService) Submit(bankID, userID int, p model.ContributionPayload) (*model.Contribution, error) {
-	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
 	if err := s.validatePayload(bankID, p); err != nil {
@@ -68,16 +60,16 @@ func (s *ContributionService) Submit(bankID, userID int, p model.ContributionPay
 		Payload:       p,
 		Status:        model.ContributionPending,
 	}
-	if err := s.repo.Create(c); err != nil {
+	if err := s.uow.Store().Contributions.Create(c); err != nil {
 		return nil, err
 	}
-	return s.repo.FindByID(c.ID)
+	return s.uow.Store().Contributions.FindByID(c.ID)
 }
 
 // Update lets the contributor revise their own non-terminal contribution. Any
 // prior approval is dismissed — the contribution reopens to pending.
 func (s *ContributionService) Update(bankID, userID, id int, p model.ContributionPayload) (*model.Contribution, error) {
-	c, err := s.repo.FindByID(id)
+	c, err := s.uow.Store().Contributions.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -92,23 +84,23 @@ func (s *ContributionService) Update(bankID, userID, id int, p model.Contributio
 	}
 	c.Payload = p
 	c.Status = model.ContributionPending
-	if err := s.repo.Save(c); err != nil {
+	if err := s.uow.Store().Contributions.Save(c); err != nil {
 		return nil, err
 	}
-	return s.repo.FindByID(c.ID)
+	return s.uow.Store().Contributions.FindByID(c.ID)
 }
 
 // ListMine returns the caller's own contributions in a bank.
 func (s *ContributionService) ListMine(bankID, userID int) ([]model.Contribution, error) {
-	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	return s.repo.FindByBankAndContributor(bankID, userID)
+	return s.uow.Store().Contributions.FindByBankAndContributor(bankID, userID)
 }
 
 // Withdraw soft-deletes the caller's own non-terminal contribution.
 func (s *ContributionService) Withdraw(bankID, userID, id int) error {
-	c, err := s.repo.FindByID(id)
+	c, err := s.uow.Store().Contributions.FindByID(id)
 	if err != nil {
 		return err
 	}
@@ -118,22 +110,22 @@ func (s *ContributionService) Withdraw(bankID, userID, id int) error {
 	if isTerminal(c.Status) {
 		return ErrBadRequest
 	}
-	return s.repo.SoftDelete(id)
+	return s.uow.Store().Contributions.SoftDelete(id)
 }
 
 // List returns the review queue for a bank, optionally filtered by status.
 func (s *ContributionService) List(bankID int, status string) ([]model.Contribution, error) {
-	if _, err := s.bankRepo.FindByID(bankID); err != nil {
+	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	return s.repo.FindByBank(bankID, status)
+	return s.uow.Store().Contributions.FindByBank(bankID, status)
 }
 
 // Review appends a review round (editor+). approve → approved (no question is
 // created — the contributor merges); reject → rejected; request_changes →
 // changes_requested. Touches two tables, so it runs in a Unit of Work.
-func (s *ContributionService) Review(bankID, reviewerID, id int, decision, note string) (*model.Contribution, error) {
-	c, err := s.repo.FindByID(id)
+func (s *ContributionService) Review(ctx context.Context, bankID, reviewerID, id int, decision, note string) (*model.Contribution, error) {
+	c, err := s.uow.Store().Contributions.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -156,31 +148,28 @@ func (s *ContributionService) Review(bankID, reviewerID, id int, decision, note 
 		return nil, ErrBadRequest
 	}
 
-	tx := s.uow.Begin()
-	defer tx.Rollback()
-	if err := tx.Contributions.AddReview(&model.ContributionReview{
-		ContributionID: c.ID,
-		ReviewerID:     reviewerID,
-		Decision:       decision,
-		Note:           note,
+	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
+		if err := tx.Contributions.AddReview(&model.ContributionReview{
+			ContributionID: c.ID,
+			ReviewerID:     reviewerID,
+			Decision:       decision,
+			Note:           note,
+		}); err != nil {
+			return err
+		}
+		c.Status = newStatus
+		return tx.Contributions.Save(c)
 	}); err != nil {
 		return nil, err
 	}
-	c.Status = newStatus
-	if err := tx.Contributions.Save(c); err != nil {
-		return nil, err
-	}
-	if err := tx.Commit(); err != nil {
-		return nil, err
-	}
-	return s.repo.FindByID(c.ID)
+	return s.uow.Store().Contributions.FindByID(c.ID)
 }
 
 // Merge is performed by the contributor on an approved contribution. It creates
 // the question in the bank and marks the contribution merged. The approval (an
 // editor capability) is what authorizes the content; this just lands it.
-func (s *ContributionService) Merge(bankID, userID, id int) (*model.Contribution, error) {
-	c, err := s.repo.FindByID(id)
+func (s *ContributionService) Merge(ctx context.Context, bankID, userID, id int) (*model.Contribution, error) {
+	c, err := s.uow.Store().Contributions.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -200,38 +189,35 @@ func (s *ContributionService) Merge(bankID, userID, id int) (*model.Contribution
 		Tags:       pq.StringArray(p.Tags),
 	}
 
-	tx := s.uow.Begin()
-	defer tx.Rollback()
-	if err := tx.Questions.Create(q); err != nil {
-		return nil, err
-	}
-	if p.Type == "mcq" {
-		if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
-			QuestionID: q.ID,
-			Content:    p.Content,
-			Options:    p.Options,
-			Answers:    pq.StringArray(p.Answers),
-		}); err != nil {
-			return nil, err
+	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
+		if err := tx.Questions.Create(q); err != nil {
+			return err
 		}
-	} else {
-		if err := tx.Questions.CreateItem(&model.QQuestionItem{
-			QuestionID: q.ID,
-			Content:    p.Content,
-			Answer:     p.Answer,
-		}); err != nil {
-			return nil, err
+		if p.Type == "mcq" {
+			if err := tx.Questions.CreateChoice(&model.QMultipleChoice{
+				QuestionID: q.ID,
+				Content:    p.Content,
+				Options:    p.Options,
+				Answers:    pq.StringArray(p.Answers),
+			}); err != nil {
+				return err
+			}
+		} else {
+			if err := tx.Questions.CreateItem(&model.QQuestionItem{
+				QuestionID: q.ID,
+				Content:    p.Content,
+				Answer:     p.Answer,
+			}); err != nil {
+				return err
+			}
 		}
-	}
-	c.Status = model.ContributionMerged
-	c.QuestionID = &q.ID
-	if err := tx.Contributions.Save(c); err != nil {
-		return nil, err
-	}
-	if err := tx.Commit(); err != nil {
+		c.Status = model.ContributionMerged
+		c.QuestionID = &q.ID
+		return tx.Contributions.Save(c)
+	}); err != nil {
 		return nil, err
 	}
 
 	s.pool.AddToPool(bankID, toCachedQuestion(q))
-	return s.repo.FindByID(c.ID)
+	return s.uow.Store().Contributions.FindByID(c.ID)
 }
