@@ -304,37 +304,40 @@ function PassageForm({ bank, passages }: { bank: Bank; passages: Passage[] }) {
         </FormField>
       </div>
 
-      {/* Difficulty — only shown when no explicit passages selected */}
-      {!passageIds.length && (
-        <div className="flex items-center gap-3" style={{ marginBottom: 14 }}>
-          <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.14em', color: 'var(--ink-dim)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-            Difficulty
-          </span>
-          <SegToggle
-            value={passDiff}
-            onChange={(d: PassageDiff) => { setPassDiff(d); setGenError(null) }}
-            options={[
-              { value: 'any',    label: 'Any' },
-              { value: 'easy',   label: 'Easy' },
-              { value: 'medium', label: 'Medium' },
-              { value: 'hard',   label: 'Hard' },
-            ]}
-          />
-          <span style={{ fontSize: '0.78rem', color: 'var(--ink-dim)', fontFamily: 'EB Garamond, serif' }}>
-            {matchCount} passage{matchCount !== 1 ? 's' : ''}
-          </span>
-        </div>
-      )}
+      {/* Difficulty (when no explicit passages) + Generate share one row,
+          matching the standalone form's DifficultyRow layout. */}
+      <div style={{ paddingTop: 4 }}>
+        <div className="flex flex-wrap gap-3 items-center">
+          {!passageIds.length && (
+            <>
+              <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.14em', color: 'var(--ink-dim)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                Difficulty
+              </span>
+              <SegToggle
+                value={passDiff}
+                onChange={(d: PassageDiff) => { setPassDiff(d); setGenError(null) }}
+                options={[
+                  { value: 'any',    label: 'Any' },
+                  { value: 'easy',   label: 'Easy' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'hard',   label: 'Hard' },
+                ]}
+              />
+              <span style={{ fontSize: '0.78rem', color: 'var(--ink-dim)', fontFamily: 'EB Garamond, serif' }}>
+                {matchCount} passage{matchCount !== 1 ? 's' : ''}
+              </span>
+            </>
+          )}
 
-      <div className="flex justify-end">
-        <div style={{ position: 'relative' }}>
-          <div style={{ position: 'absolute', top: -22, right: -22, width: 82, height: 82, color: 'var(--gold)', opacity: 0.55, pointerEvents: 'none', zIndex: 0 }}>
-            <MagicCircle variant="halo" speed={2} />
+          <div style={{ marginLeft: 'auto', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: -22, right: -22, width: 82, height: 82, color: 'var(--gold)', opacity: 0.55, pointerEvents: 'none', zIndex: 0 }}>
+              <MagicCircle variant="halo" speed={2} />
+            </div>
+            <button className="btn btn-primary" onClick={handleGenerate} disabled={generate.isPending || start.isPending}
+              style={{ height: 38, padding: '0 24px', position: 'relative', zIndex: 1 }}>
+              {generate.isPending || start.isPending ? '…' : '▶ Generate'}
+            </button>
           </div>
-          <button className="btn btn-primary" onClick={handleGenerate} disabled={generate.isPending || start.isPending}
-            style={{ height: 38, padding: '0 24px', position: 'relative', zIndex: 1 }}>
-            {generate.isPending || start.isPending ? '…' : '▶ Generate'}
-          </button>
         </div>
       </div>
 
