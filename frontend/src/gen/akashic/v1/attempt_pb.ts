@@ -6,6 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
 import { Test } from "./test_pb.js";
+import { User } from "./common_pb.js";
 
 /**
  * @generated from message akashic.v1.Attempt
@@ -65,6 +66,20 @@ export class Attempt extends Message<Attempt> {
    */
   test?: Test;
 
+  /**
+   * the taker's user id
+   *
+   * @generated from field: optional int32 user_id = 11;
+   */
+  userId?: number;
+
+  /**
+   * embedded taker
+   *
+   * @generated from field: optional akashic.v1.User taker = 12;
+   */
+  taker?: User;
+
   constructor(data?: PartialMessage<Attempt>) {
     super();
     proto3.util.initPartial(data, this);
@@ -83,6 +98,8 @@ export class Attempt extends Message<Attempt> {
     { no: 8, name: "created_at", kind: "message", T: Timestamp },
     { no: 9, name: "updated_at", kind: "message", T: Timestamp },
     { no: 10, name: "test", kind: "message", T: Test, opt: true },
+    { no: 11, name: "user_id", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
+    { no: 12, name: "taker", kind: "message", T: User, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Attempt {

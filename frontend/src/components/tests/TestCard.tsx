@@ -11,9 +11,9 @@ const DIFF_COLOR: Record<string, string> = {
   easy: '#2a8a3a', medium: '#9a7018', hard: '#b03030',
 }
 
-interface Props { test: Test; bankId: string }
+interface Props { test: Test; bankId: string; canDelete?: boolean }
 
-export default function TestCard({ test, bankId }: Props) {
+export default function TestCard({ test, bankId, canDelete }: Props) {
   const navigate    = useNavigate()
   const del         = useDeleteTest(bankId)
   const start       = useStartAttempt()
@@ -52,6 +52,7 @@ export default function TestCard({ test, bankId }: Props) {
       <div className="test-card-meta">
         {total} questions<br />
         {new Date(test.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+        {test.creator && <> · by {test.creator.name}</>}
       </div>
 
       <DifficultyBar
@@ -97,11 +98,13 @@ export default function TestCard({ test, bankId }: Props) {
                 {showHistory ? '▴ History' : `▾ History (${completed.length})`}
               </button>
             )}
-            <button
-              className="btn-danger"
-              style={{ marginLeft: 'auto' }}
-              onClick={() => setConfirmDelete(true)}
-            >✕</button>
+            {canDelete && (
+              <button
+                className="btn-danger"
+                style={{ marginLeft: 'auto' }}
+                onClick={() => setConfirmDelete(true)}
+              >✕</button>
+            )}
           </>
         )}
       </div>
@@ -128,7 +131,7 @@ export default function TestCard({ test, bankId }: Props) {
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(154,112,24,0.06)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                <span>{date}</span>
+                <span>{a.taker?.name ? `${a.taker.name} · ` : ''}{date}</span>
                 <span style={{ fontFamily: 'Cinzel, serif', color, fontSize: '0.7rem' }}>
                   {a.score}/{a.total} · {grade}
                 </span>

@@ -552,7 +552,9 @@ export default function BankPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pagedTests.map(t => <TestCard key={t.id} test={t} bankId={bankId} />)}
+              {pagedTests.map(t => (
+                <TestCard key={t.id} test={t} bankId={bankId} canDelete={canEdit || t.created_by === user?.id} />
+              ))}
             </div>
           )}
 

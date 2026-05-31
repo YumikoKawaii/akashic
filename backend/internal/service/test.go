@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/yumikokawaii/akashic/internal/membership"
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
 	"github.com/yumikokawaii/akashic/internal/uow"
@@ -34,31 +35,30 @@ type TestPage struct {
 // Tests are personal to their creator: every list/get/delete is scoped to the
 // calling user, so public-bank visitors can generate and manage their own
 // practice tests without seeing or touching anyone else's.
-func (s *TestService) ListByBankPaged(bankID, userID, page, pageSize int) (*TestPage, error) {
+// ListByBankPaged returns every test in the bank — tests are shared, so all
+// members (and public visitors) see them all.
+func (s *TestService) ListByBankPaged(bankID, page, pageSize int) (*TestPage, error) {
 	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	ts, total, err := s.uow.Store().Tests.FindByBankAndCreatorPaged(bankID, userID, page, pageSize)
+	ts, total, err := s.uow.Store().Tests.FindByBankPaged(bankID, page, pageSize)
 	if err != nil {
 		return nil, err
 	}
 	return &TestPage{Data: ts, Total: total, Page: page, PageSize: pageSize}, nil
 }
 
-func (s *TestService) GetByID(bankID, id, userID int) (*model.Test, error) {
-	test, err := s.uow.Store().Tests.FindByBankAndID(bankID, id)
-	if err != nil {
-		return nil, err
-	}
-	if !ownsTest(test, userID) {
-		return nil, ErrForbidden
-	}
-	return test, nil
+func (s *TestService) GetByID(bankID, id int) (*model.Test, error) {
+	return s.uow.Store().Tests.FindByBankAndID(bankID, id)
 }
 
-// ownsTest reports whether the test was created by the given user.
-func ownsTest(test *model.Test, userID int) bool {
-	return test.CreatedBy != nil && *test.CreatedBy == userID
+// canManageTest reports whether userID (with bank role callerRole) may delete or
+// restore a test: its creator, or any editor+.
+func canManageTest(test *model.Test, userID int, callerRole string) bool {
+	if test.CreatedBy != nil && *test.CreatedBy == userID {
+		return true
+	}
+	return membership.Level(callerRole) >= membership.Level(membership.RoleEditor)
 }
 
 type GenerateTestInput struct {
@@ -301,23 +301,23 @@ func (s *TestService) buildGroupPool(bankID int, diff string, gf repository.Grou
 	return pool, nil
 }
 
-func (s *TestService) Delete(bankID, id, userID int) error {
+func (s *TestService) Delete(bankID, id, userID int, callerRole string) error {
 	test, err := s.uow.Store().Tests.FindByBankAndID(bankID, id)
 	if err != nil {
 		return err
 	}
-	if !ownsTest(test, userID) {
+	if !canManageTest(test, userID, callerRole) {
 		return ErrForbidden
 	}
 	return s.uow.Store().Tests.SoftDelete(id)
 }
 
-func (s *TestService) Restore(bankID, id, userID int) (*model.Test, error) {
+func (s *TestService) Restore(bankID, id, userID int, callerRole string) (*model.Test, error) {
 	test, err := s.uow.Store().Tests.FindByBankAndID(bankID, id)
 	if err != nil {
 		return nil, err
 	}
-	if !ownsTest(test, userID) {
+	if !canManageTest(test, userID, callerRole) {
 		return nil, ErrForbidden
 	}
 	if err := s.uow.Store().Tests.Restore(id); err != nil {

@@ -71,8 +71,9 @@ var procedureMinRole = map[string]string{
 	akashicv1connect.QuestionGroupServiceRestoreQuestionGroupProcedure: membership.RoleEditor,
 
 	// Tests
-	// Tests are creator-scoped consumption artifacts, so generating/listing/
-	// taking them is a viewer capability (a public visitor can make their own).
+	// Tests are bank-wide shared, so generating/listing/taking them is a viewer
+	// capability (a public visitor can generate + take any test). Delete/restore
+	// is creator-or-editor, enforced in the service via the role from context.
 	akashicv1connect.TestServiceListTestsProcedure:    membership.RoleViewer,
 	akashicv1connect.TestServiceGetTestProcedure:      membership.RoleViewer,
 	akashicv1connect.TestServiceGenerateTestProcedure: membership.RoleViewer,
@@ -126,7 +127,8 @@ func NewMembershipAuthorizer(cache membership.RoleCache, visibility membership.V
 func (a *MembershipAuthorizer) PermissionInterceptor() connect.UnaryInterceptorFunc {
 	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
 		return connect.UnaryFunc(func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
-			if err := a.authorize(ctx, req); err != nil {
+			ctx, err := a.authorize(ctx, req)
+			if err != nil {
 				return nil, err
 			}
 			return next(ctx, req)
@@ -134,7 +136,10 @@ func (a *MembershipAuthorizer) PermissionInterceptor() connect.UnaryInterceptorF
 	})
 }
 
-func (a *MembershipAuthorizer) authorize(ctx context.Context, req connect.AnyRequest) error {
+// authorize enforces the per-procedure role floor and, on success for a
+// bank-scoped procedure, returns a context carrying the caller's membership role
+// (see withRole) for downstream fine-grained checks.
+func (a *MembershipAuthorizer) authorize(ctx context.Context, req connect.AnyRequest) (context.Context, error) {
 	scoped, hasBankID := req.Any().(bankScoped)
 	minRole, registered := procedureMinRole[req.Spec().Procedure]
 
@@ -143,18 +148,18 @@ func (a *MembershipAuthorizer) authorize(ctx context.Context, req connect.AnyReq
 		// nonetheless carries a bank_id — a new bank-scoped procedure must be
 		// added to procedureMinRole rather than slip through unchecked.
 		if hasBankID {
-			return connect.NewError(connect.CodePermissionDenied, svc.ErrForbidden)
+			return ctx, connect.NewError(connect.CodePermissionDenied, svc.ErrForbidden)
 		}
-		return nil
+		return ctx, nil
 	}
 	if !hasBankID {
-		return connect.NewError(connect.CodeInternal, errBankIDRequired)
+		return ctx, connect.NewError(connect.CodeInternal, errBankIDRequired)
 	}
 
 	bankID := int(scoped.GetBankId())
 	role, err := a.roleFor(bankID, userIDFromContext(ctx))
 	if err != nil {
-		return toConnectError(err)
+		return ctx, toConnectError(err)
 	}
 
 	// Effective level = membership role, raised to viewer when the bank is
@@ -167,9 +172,9 @@ func (a *MembershipAuthorizer) authorize(ctx context.Context, req connect.AnyReq
 		level = membership.Level(membership.RoleViewer)
 	}
 	if level < membership.Level(minRole) {
-		return connect.NewError(connect.CodePermissionDenied, svc.ErrForbidden)
+		return ctx, connect.NewError(connect.CodePermissionDenied, svc.ErrForbidden)
 	}
-	return nil
+	return withRole(ctx, role), nil
 }
 
 // roleFor resolves a caller's role on a bank: cache first, then the database on

@@ -23,12 +23,13 @@ func NewAttemptService(repo repository.AttemptRepository, testRepo repository.Te
 	return &AttemptService{repo: repo, testRepo: testRepo}
 }
 
-func (s *AttemptService) Start(bankID, testID int) (*model.TestAttempt, error) {
+func (s *AttemptService) Start(bankID, testID, userID int) (*model.TestAttempt, error) {
 	if _, err := s.testRepo.FindByBankAndID(bankID, testID); err != nil {
 		return nil, err
 	}
 	attempt := &model.TestAttempt{
 		TestID:    testID,
+		UserID:    &userID,
 		Answers:   map[string]string{},
 		StartedAt: time.Now(),
 	}
@@ -57,12 +58,16 @@ type SubmitAttemptInput struct {
 	Answers map[string]string `json:"answers" binding:"required"`
 }
 
-func (s *AttemptService) Submit(bankID, id int, input SubmitAttemptInput) (*model.TestAttempt, error) {
+func (s *AttemptService) Submit(bankID, id, userID int, input SubmitAttemptInput) (*model.TestAttempt, error) {
 	attempt, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
 	if attempt.Test == nil || attempt.Test.BankID != bankID {
+		return nil, ErrForbidden
+	}
+	// Only the taker may submit their own attempt.
+	if attempt.UserID == nil || *attempt.UserID != userID {
 		return nil, ErrForbidden
 	}
 	if attempt.CompletedAt != nil {

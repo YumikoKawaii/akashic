@@ -209,6 +209,8 @@ export const fromTest = (t: PbTest): Test => ({
     position:    tq.position,
     question:    tq.question ? fromQuestion(tq.question) : undefined,
   } as TestQuestion)),
+  created_by: t.createdBy ?? undefined,
+  creator:    fromUser(t.creator),
   created_at: ts(t.createdAt),
   updated_at: ts(t.updatedAt),
 })
@@ -298,6 +300,8 @@ export const fromContribution = (c: PbContribution): Contribution => ({
 export const fromAttempt = (a: PbAttempt): TestAttempt => ({
   id:           a.id,
   test_id:      a.testId,
+  user_id:      a.userId ?? undefined,
+  taker:        fromUser(a.taker),
   answers:      a.answers,
   score:        a.score !== undefined ? a.score : undefined,
   total:        a.total !== undefined ? a.total : undefined,

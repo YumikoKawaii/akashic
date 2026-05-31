@@ -69,8 +69,8 @@ backend/
 - **Category**: groups questions within a bank.
 - **Question**: belongs to bank + category. Types: mcq / true_false / open. Difficulties: easy / medium / hard.
 - **TestConfig**: JSONB value type — specifies per-difficulty counts + optional filters (category, type, tags). Stored as `banks.default_config` and snapshotted into `tests.config` at generation time.
-- **Test**: generated from one bank using a TestConfig. Contains ordered questions.
-- **TestSession**: a run-through of a test. Stores answers and score.
+- **Test**: generated from one bank using a TestConfig. Contains ordered questions. Records its **generator** (`created_by` + `Creator`). Tests are **bank-wide shared** — every viewer (incl. public visitors) sees and can take all tests in the bank (`ListTests` is not creator-scoped). Delete/restore is allowed for the **creator or any editor+** (the service reads the caller's role via `roleFromContext`, which the authz interceptor stashes).
+- **TestAttempt**: a run-through of a test. Stores answers, score, and the **taker** (`user_id` + `Taker`, migration `009`). Anyone may take any test; only the taker may submit their own attempt, but the attempt history (`ListAttemptsByTest`) is shared and shows each taker.
 
 ## Coding Rules
 - No unused dependencies — add packages only when needed

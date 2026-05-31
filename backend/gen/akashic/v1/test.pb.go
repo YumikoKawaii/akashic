@@ -100,6 +100,8 @@ type Test struct {
 	Questions     []*TestQuestion        `protobuf:"bytes,6,rep,name=questions,proto3" json:"questions,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	CreatedBy     *int32                 `protobuf:"varint,9,opt,name=created_by,json=createdBy,proto3,oneof" json:"created_by,omitempty"` // the generator's user id
+	Creator       *User                  `protobuf:"bytes,10,opt,name=creator,proto3,oneof" json:"creator,omitempty"`                      // embedded generator
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -186,6 +188,20 @@ func (x *Test) GetCreatedAt() *timestamppb.Timestamp {
 func (x *Test) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.UpdatedAt
+	}
+	return nil
+}
+
+func (x *Test) GetCreatedBy() int32 {
+	if x != nil && x.CreatedBy != nil {
+		return *x.CreatedBy
+	}
+	return 0
+}
+
+func (x *Test) GetCreator() *User {
+	if x != nil {
+		return x.Creator
 	}
 	return nil
 }
@@ -705,7 +721,7 @@ const file_akashic_v1_test_proto_rawDesc = "" +
 	"\vquestion_id\x18\x02 \x01(\x05R\n" +
 	"questionId\x12\x1a\n" +
 	"\bposition\x18\x03 \x01(\x05R\bposition\x120\n" +
-	"\bquestion\x18\x04 \x01(\v2\x14.akashic.v1.QuestionR\bquestion\"\xc3\x02\n" +
+	"\bquestion\x18\x04 \x01(\v2\x14.akashic.v1.QuestionR\bquestion\"\xb3\x03\n" +
 	"\x04Test\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x17\n" +
 	"\abank_id\x18\x02 \x01(\x05R\x06bankId\x12\x12\n" +
@@ -716,7 +732,14 @@ const file_akashic_v1_test_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\\\n" +
+	"updated_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\"\n" +
+	"\n" +
+	"created_by\x18\t \x01(\x05H\x00R\tcreatedBy\x88\x01\x01\x12/\n" +
+	"\acreator\x18\n" +
+	" \x01(\v2\x10.akashic.v1.UserH\x01R\acreator\x88\x01\x01B\r\n" +
+	"\v_created_byB\n" +
+	"\n" +
+	"\b_creator\"\\\n" +
 	"\x10ListTestsRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
@@ -782,7 +805,8 @@ var file_akashic_v1_test_proto_goTypes = []any{
 	(*Question)(nil),              // 12: akashic.v1.Question
 	(*TestConfig)(nil),            // 13: akashic.v1.TestConfig
 	(*timestamppb.Timestamp)(nil), // 14: google.protobuf.Timestamp
-	(*PageInfo)(nil),              // 15: akashic.v1.PageInfo
+	(*User)(nil),                  // 15: akashic.v1.User
+	(*PageInfo)(nil),              // 16: akashic.v1.PageInfo
 }
 var file_akashic_v1_test_proto_depIdxs = []int32{
 	12, // 0: akashic.v1.TestQuestion.question:type_name -> akashic.v1.Question
@@ -790,27 +814,28 @@ var file_akashic_v1_test_proto_depIdxs = []int32{
 	0,  // 2: akashic.v1.Test.questions:type_name -> akashic.v1.TestQuestion
 	14, // 3: akashic.v1.Test.created_at:type_name -> google.protobuf.Timestamp
 	14, // 4: akashic.v1.Test.updated_at:type_name -> google.protobuf.Timestamp
-	1,  // 5: akashic.v1.ListTestsResponse.tests:type_name -> akashic.v1.Test
-	15, // 6: akashic.v1.ListTestsResponse.page_info:type_name -> akashic.v1.PageInfo
-	13, // 7: akashic.v1.GenerateTestRequest.config:type_name -> akashic.v1.TestConfig
-	1,  // 8: akashic.v1.GenerateTestResponse.test:type_name -> akashic.v1.Test
-	1,  // 9: akashic.v1.GetTestResponse.test:type_name -> akashic.v1.Test
-	1,  // 10: akashic.v1.RestoreTestResponse.test:type_name -> akashic.v1.Test
-	2,  // 11: akashic.v1.TestService.ListTests:input_type -> akashic.v1.ListTestsRequest
-	4,  // 12: akashic.v1.TestService.GenerateTest:input_type -> akashic.v1.GenerateTestRequest
-	6,  // 13: akashic.v1.TestService.GetTest:input_type -> akashic.v1.GetTestRequest
-	8,  // 14: akashic.v1.TestService.DeleteTest:input_type -> akashic.v1.DeleteTestRequest
-	10, // 15: akashic.v1.TestService.RestoreTest:input_type -> akashic.v1.RestoreTestRequest
-	3,  // 16: akashic.v1.TestService.ListTests:output_type -> akashic.v1.ListTestsResponse
-	5,  // 17: akashic.v1.TestService.GenerateTest:output_type -> akashic.v1.GenerateTestResponse
-	7,  // 18: akashic.v1.TestService.GetTest:output_type -> akashic.v1.GetTestResponse
-	9,  // 19: akashic.v1.TestService.DeleteTest:output_type -> akashic.v1.DeleteTestResponse
-	11, // 20: akashic.v1.TestService.RestoreTest:output_type -> akashic.v1.RestoreTestResponse
-	16, // [16:21] is the sub-list for method output_type
-	11, // [11:16] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	15, // 5: akashic.v1.Test.creator:type_name -> akashic.v1.User
+	1,  // 6: akashic.v1.ListTestsResponse.tests:type_name -> akashic.v1.Test
+	16, // 7: akashic.v1.ListTestsResponse.page_info:type_name -> akashic.v1.PageInfo
+	13, // 8: akashic.v1.GenerateTestRequest.config:type_name -> akashic.v1.TestConfig
+	1,  // 9: akashic.v1.GenerateTestResponse.test:type_name -> akashic.v1.Test
+	1,  // 10: akashic.v1.GetTestResponse.test:type_name -> akashic.v1.Test
+	1,  // 11: akashic.v1.RestoreTestResponse.test:type_name -> akashic.v1.Test
+	2,  // 12: akashic.v1.TestService.ListTests:input_type -> akashic.v1.ListTestsRequest
+	4,  // 13: akashic.v1.TestService.GenerateTest:input_type -> akashic.v1.GenerateTestRequest
+	6,  // 14: akashic.v1.TestService.GetTest:input_type -> akashic.v1.GetTestRequest
+	8,  // 15: akashic.v1.TestService.DeleteTest:input_type -> akashic.v1.DeleteTestRequest
+	10, // 16: akashic.v1.TestService.RestoreTest:input_type -> akashic.v1.RestoreTestRequest
+	3,  // 17: akashic.v1.TestService.ListTests:output_type -> akashic.v1.ListTestsResponse
+	5,  // 18: akashic.v1.TestService.GenerateTest:output_type -> akashic.v1.GenerateTestResponse
+	7,  // 19: akashic.v1.TestService.GetTest:output_type -> akashic.v1.GetTestResponse
+	9,  // 20: akashic.v1.TestService.DeleteTest:output_type -> akashic.v1.DeleteTestResponse
+	11, // 21: akashic.v1.TestService.RestoreTest:output_type -> akashic.v1.RestoreTestResponse
+	17, // [17:22] is the sub-list for method output_type
+	12, // [12:17] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_test_proto_init() }
@@ -820,6 +845,7 @@ func file_akashic_v1_test_proto_init() {
 	}
 	file_akashic_v1_common_proto_init()
 	file_akashic_v1_question_proto_init()
+	file_akashic_v1_test_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

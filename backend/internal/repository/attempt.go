@@ -22,6 +22,7 @@ func NewAttemptRepo(db *gorm.DB) AttemptRepository { return &attemptRepo{db} }
 func (r *attemptRepo) FindByID(id int) (*model.TestAttempt, error) {
 	var a model.TestAttempt
 	err := r.db.
+		Preload("Taker").
 		Preload("Test.TestQuestions", func(db *gorm.DB) *gorm.DB { return db.Order("position ASC") }).
 		Preload("Test.TestQuestions.Question.Item").
 		Preload("Test.TestQuestions.Question.Choice").
@@ -36,7 +37,7 @@ func (r *attemptRepo) FindByID(id int) (*model.TestAttempt, error) {
 
 func (r *attemptRepo) FindByTest(testID int) ([]model.TestAttempt, error) {
 	var as []model.TestAttempt
-	err := r.db.Where("test_id = ?", testID).Order("started_at DESC").Find(&as).Error
+	err := r.db.Preload("Taker").Where("test_id = ?", testID).Order("started_at DESC").Find(&as).Error
 	return as, err
 }
 

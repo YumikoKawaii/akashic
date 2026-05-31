@@ -187,6 +187,7 @@ type Test struct {
 	ID            int            `gorm:"primaryKey;autoIncrement" json:"id"`
 	BankID        int            `gorm:"not null;index"           json:"bank_id"`
 	CreatedBy     *int           `                                json:"created_by,omitempty"`
+	Creator       *User          `gorm:"foreignKey:CreatedBy"     json:"creator,omitempty"`
 	Name          string         `gorm:"not null"                 json:"name"`
 	Description   string         `gorm:"not null;default:''"      json:"description"`
 	Config        TestConfig     `gorm:"serializer:json"          json:"config"`
@@ -208,6 +209,8 @@ type TestAttempt struct {
 	ID          int               `gorm:"primaryKey;autoIncrement" json:"id"`
 	TestID      int               `gorm:"not null;index"           json:"test_id"`
 	Test        *Test             `gorm:"foreignKey:TestID"        json:"test,omitempty"`
+	UserID      *int              `gorm:"index"                    json:"user_id,omitempty"`
+	Taker       *User             `gorm:"foreignKey:UserID"        json:"taker,omitempty"`
 	Answers     map[string]string `gorm:"serializer:json"          json:"answers"`
 	Score       *int              `                                json:"score"`
 	Total       *int              `                                json:"total"`
