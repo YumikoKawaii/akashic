@@ -1,40 +1,20 @@
-import { Outlet, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
+import { Outlet } from 'react-router-dom'
 import TopBar from './TopBar'
-import Sidebar from './Sidebar'
 import Starfield from '../ui/Starfield'
 import { MagicCircleBackground } from '../ui/MagicCircle'
-import { LayoutProvider, useLayout } from '../../context/LayoutContext'
-
-function LayoutInner() {
-  const { sidebarOpen, closeSidebar } = useLayout()
-  const location = useLocation()
-
-  // Close sidebar on navigation
-  useEffect(() => { closeSidebar() }, [location.pathname, closeSidebar])
-
-  return (
-    <>
-      <Starfield />
-      <MagicCircleBackground leftOffset={240} />
-      <div className="app-layout">
-        <TopBar />
-        <Sidebar />
-        {sidebarOpen && (
-          <div className="sidebar-overlay" onClick={closeSidebar} />
-        )}
-        <main className="main-content">
-          <Outlet />
-        </main>
-      </div>
-    </>
-  )
-}
+import { LayoutProvider } from '../../context/LayoutContext'
 
 export default function Layout() {
   return (
     <LayoutProvider>
-      <LayoutInner />
+      <Starfield />
+      <MagicCircleBackground leftOffset={0} />
+      <div className="app-layout">
+        <TopBar />
+        <main className="main-content">
+          <Outlet />
+        </main>
+      </div>
     </LayoutProvider>
   )
 }

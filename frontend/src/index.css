@@ -61,7 +61,7 @@ body {
 /* ─── Layout ─────────────────────────────────────────────────── */
 .app-layout {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 1fr;
   grid-template-rows: 56px 1fr;
   height: 100vh;
   height: 100dvh;

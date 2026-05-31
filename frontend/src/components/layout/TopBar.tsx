@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCreateBank } from '../../hooks/useBanks'
-import { useLayout } from '../../context/LayoutContext'
 import { useAuth } from '../../contexts/AuthContext'
+import RecordSwitcher from './RecordSwitcher'
 
 export default function TopBar() {
   const navigate   = useNavigate()
   const createBank = useCreateBank()
-  const { sidebarOpen, toggleSidebar } = useLayout()
   const { user, logout } = useAuth()
   const [creating, setCreating] = useState(false)
   const [name, setName]         = useState('')
@@ -22,14 +21,6 @@ export default function TopBar() {
 
   return (
     <header className="topbar">
-      <button
-        className={`hamburger ${sidebarOpen ? 'open' : ''}`}
-        onClick={toggleSidebar}
-        aria-label="Toggle sidebar"
-      >
-        <span /><span /><span />
-      </button>
-
       <span
         className="topbar-logo"
         onClick={() => navigate('/')}
@@ -42,6 +33,8 @@ export default function TopBar() {
       </span>
       <div className="topbar-divider" />
       <span className="topbar-subtitle">Knowledge Archive</span>
+      <div className="topbar-divider" />
+      <RecordSwitcher />
 
       <div className="ml-auto flex items-center gap-3">
         {creating ? (
