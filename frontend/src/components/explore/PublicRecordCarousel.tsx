@@ -166,17 +166,6 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
           )
         })}
       </div>
-
-      {/* Counter + dots */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '4px 10px' }} onClick={() => setActiveIndex(i => mod(i - 1, n))}>‹</button>
-          <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.22em', color: 'var(--gold-dim)' }}>
-            {String(activeIndex + 1).padStart(2, '0')} / {String(n).padStart(2, '0')}
-          </span>
-          <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '4px 10px' }} onClick={() => setActiveIndex(i => mod(i + 1, n))}>›</button>
-        </div>
-      </div>
     </div>
   )
 }
