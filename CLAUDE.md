@@ -65,7 +65,7 @@ backend/
 ```
 
 ## Key Domain Concepts
-- **Bank**: top-level question bank (e.g. "English", "Japanese"). Holds categories, questions, and a default TestConfig.
+- **Bank**: top-level question bank (e.g. "English", "Japanese"). Holds categories, questions, and a default TestConfig. **Displayed in the UI as a "Record"** (Akashic records) — display-text only; all code/proto/routes/identifiers stay `bank`. Public banks are discoverable on the **community home** (`/`, `HomePage` with no sidebar) via `ListPublicBanks` — authenticated, **not** bank-scoped (returns only public banks), backed by `bankRepo.FindPublicPaged` (name/description `ILIKE` + per-bank counts). The home shows them in an auto-rotating coverflow (`PublicRecordCarousel`).
 - **Category**: groups questions within a bank.
 - **Question**: belongs to bank + category. Types: mcq / true_false / open. Difficulties: easy / medium / hard.
 - **TestConfig**: JSONB value type — specifies per-difficulty counts + optional filters (category, type, tags). Stored as `banks.default_config` and snapshotted into `tests.config` at generation time.

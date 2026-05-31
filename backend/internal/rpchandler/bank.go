@@ -34,6 +34,36 @@ func (h *BankServiceHandler) ListBanks(
 	return connect.NewResponse(&pb.ListBanksResponse{Banks: pbBanks}), nil
 }
 
+func (h *BankServiceHandler) ListPublicBanks(
+	ctx context.Context,
+	req *connect.Request[pb.ListPublicBanksRequest],
+) (*connect.Response[pb.ListPublicBanksResponse], error) {
+	page, pageSize := int(req.Msg.Page), int(req.Msg.PageSize)
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 || pageSize > 50 {
+		pageSize = 50
+	}
+	result, err := h.svc.ListPublic(req.Msg.Query, page, pageSize)
+	if err != nil {
+		return nil, toConnectError(err)
+	}
+	cards := make([]*pb.PublicBankCard, len(result.Data))
+	for i := range result.Data {
+		cards[i] = publicBankCardToProto(&result.Data[i])
+	}
+	return connect.NewResponse(&pb.ListPublicBanksResponse{
+		Banks: cards,
+		PageInfo: &pb.PageInfo{
+			Page:       int32(result.Page),
+			PageSize:   int32(result.PageSize),
+			Total:      int32(result.Total),
+			TotalPages: int32((result.Total + int64(result.PageSize) - 1) / int64(result.PageSize)),
+		},
+	}), nil
+}
+
 func (h *BankServiceHandler) CreateBank(
 	ctx context.Context,
 	req *connect.Request[pb.CreateBankRequest],

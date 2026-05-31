@@ -7,9 +7,23 @@ import (
 	"gorm.io/gorm"
 )
 
+// PublicBankCard is a lightweight public-bank projection for the community home.
+type PublicBankCard struct {
+	ID            int
+	Name          string
+	Description   string
+	OwnerID       *int
+	OwnerName     string
+	OwnerEmail    string
+	OwnerAvatar   string
+	QuestionCount int
+	CategoryCount int
+}
+
 type BankRepository interface {
 	FindAllIDs() ([]int, error)
 	FindPublicIDs() ([]int, error)
+	FindPublicPaged(query string, page, pageSize int) ([]PublicBankCard, int64, error)
 	FindAllForUser(userID int) ([]model.BankWithRole, error)
 	FindByID(id int) (*model.Bank, error)
 	Create(b *model.Bank) error
@@ -36,6 +50,36 @@ func (r *bankRepo) FindPublicIDs() ([]int, error) {
 		Where("visibility = ?", model.VisibilityPublic).
 		Pluck("id", &ids).Error
 	return ids, err
+}
+
+// FindPublicPaged returns public banks (optionally name/description-filtered),
+// newest first, with per-bank question/category counts and owner info.
+func (r *bankRepo) FindPublicPaged(query string, page, pageSize int) ([]PublicBankCard, int64, error) {
+	where := "b.visibility = ? AND b.deleted_at IS NULL"
+	args := []any{model.VisibilityPublic}
+	if query != "" {
+		like := "%" + query + "%"
+		where += " AND (b.name ILIKE ? OR b.description ILIKE ?)"
+		args = append(args, like, like)
+	}
+
+	var total int64
+	if err := r.db.Table("banks b").Where(where, args...).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var rows []PublicBankCard
+	err := r.db.Table("banks b").
+		Select(`b.id, b.name, b.description, b.owner_id,
+			u.name AS owner_name, u.email AS owner_email, u.avatar_url AS owner_avatar,
+			(SELECT COUNT(*) FROM questions q WHERE q.bank_id = b.id AND q.deleted_at IS NULL) AS question_count,
+			(SELECT COUNT(*) FROM categories c WHERE c.bank_id = b.id AND c.deleted_at IS NULL) AS category_count`).
+		Joins("LEFT JOIN users u ON u.id = b.owner_id").
+		Where(where, args...).
+		Order("b.created_at DESC").
+		Limit(pageSize).Offset((page - 1) * pageSize).
+		Scan(&rows).Error
+	return rows, total, err
 }
 
 func (r *bankRepo) FindAllForUser(userID int) ([]model.BankWithRole, error) {

@@ -8,7 +8,7 @@ import type {
   ContributionComment as PbContributionComment,
   ProposedQuestion as PbProposedQuestion,
 } from '../gen/akashic/v1/contribution_pb'
-import type { Bank as PbBank, BankWithRole as PbBankWithRole, BankMember as PbBankMember } from '../gen/akashic/v1/bank_pb'
+import type { Bank as PbBank, BankWithRole as PbBankWithRole, BankMember as PbBankMember, PublicBankCard as PbPublicBankCard } from '../gen/akashic/v1/bank_pb'
 import type { Category as PbCategory } from '../gen/akashic/v1/category_pb'
 import type { Passage as PbPassage } from '../gen/akashic/v1/passage_pb'
 import type { QuestionGroup as PbQuestionGroup } from '../gen/akashic/v1/question_group_pb'
@@ -21,7 +21,8 @@ import type {
   QuestionGroup, GroupContext, Question, Test, TestQuestion, TestAttempt,
   QuestionType as AppQuestionType, QuestionDifficulty, MCQOption, QQuestionItem, QMultipleChoice,
   Contribution, ContributionEvent, ContributionComment, ProposedQuestion, User,
-  ContributionStatus as AppContributionStatus, ContributionEventType as AppEventType
+  ContributionStatus as AppContributionStatus, ContributionEventType as AppEventType,
+  PublicBank,
 } from '../types'
 
 const ts = (t?: Timestamp | null): string =>
@@ -89,6 +90,15 @@ export const fromBank = (b: PbBank): Bank => ({
 export const fromBankWithRole = (bwr: PbBankWithRole): Bank => ({
   ...(bwr.bank ? fromBank(bwr.bank) : {} as Bank),
   my_role: bwr.myRole as AppBankRole,
+})
+
+export const fromPublicBankCard = (c: PbPublicBankCard): PublicBank => ({
+  id:             c.id,
+  name:           c.name,
+  description:    c.description,
+  owner:          fromUser(c.owner),
+  question_count: c.questionCount,
+  category_count: c.categoryCount,
 })
 
 export const fromBankMember = (m: PbBankMember): BankMember => ({

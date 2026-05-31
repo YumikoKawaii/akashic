@@ -58,7 +58,7 @@ export default function ContributeTab({ bankId, categories }: { bankId: string; 
   )
   const mergeBtn = (c: Contribution) => (
     <button key="merge" className="btn btn-primary" style={ghost}
-      disabled={merge.isPending} onClick={() => merge.mutate(c.id)}>⚔ Merge into bank</button>
+      disabled={merge.isPending} onClick={() => merge.mutate(c.id)}>⚔ Merge into record</button>
   )
 
   // Contributor actions available per state (the server's nextStatus is the
@@ -95,7 +95,7 @@ export default function ContributeTab({ bankId, categories }: { bankId: string; 
         <OrnatePanel>
           <div className="section-title" style={{ marginBottom: 20 }}>Suggest a Question</div>
           <p style={{ fontSize: '0.82rem', color: 'var(--ink-dim)', marginBottom: 16 }}>
-            Your proposal is reviewed by the bank’s editors. Once approved, you merge it into the bank yourself.
+            Your proposal is reviewed by the record’s editors. Once approved, you merge it into the record yourself.
           </p>
           <ProposedQuestionForm
             categories={categories}

@@ -57,7 +57,7 @@ export default function ReviewTab({ bankId, categories }: { bankId: string; cate
       </div>
 
       <p style={{ fontSize: '0.8rem', color: 'var(--ink-dim)' }}>
-        Approving lets the contributor merge their question into the bank — it isn’t added until they do.
+        Approving lets the contributor merge their question into the record — it isn’t added until they do.
         Use the comment box to explain a decision or discuss with the contributor.
       </p>
 

@@ -41,17 +41,26 @@ export default function Sidebar() {
     const { id } = pendingDelete
     setPendingDelete(null)
     await deleteBank.mutateAsync(String(id))
-    if (bankId === String(id)) navigate('/banks')
+    if (bankId === String(id)) navigate('/')
   }
 
   return (
     <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <div
+        className="sidebar-item"
+        onClick={() => { navigate('/'); closeSidebar() }}
+        style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+      >
+        <span style={{ fontSize: '0.85rem', flexShrink: 0 }}>⌂</span>
+        <span style={{ flex: 1 }}>Home</span>
+      </div>
+
       <div className="sidebar-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span>Banks</span>
+        <span>Records</span>
         <button
           onClick={() => { setCreating(v => !v); setNewName('') }}
           style={{ background: 'none', border: 'none', color: 'var(--gold)', cursor: 'pointer', fontSize: '1rem', lineHeight: 1, padding: '0 2px' }}
-          title="New bank"
+          title="New record"
         >
           ＋
         </button>
@@ -63,7 +72,7 @@ export default function Sidebar() {
             autoFocus
             value={newName}
             onChange={e => setNewName(e.target.value)}
-            placeholder="Bank name…"
+            placeholder="Record name…"
             style={{
               flex: 1,
               background: 'var(--bg-elevated)',
@@ -121,7 +130,7 @@ export default function Sidebar() {
 
       {banks.length === 0 && !creating && (
         <div className="sidebar-item" style={{ opacity: 0.5, cursor: 'default', fontSize: '0.8rem' }}>
-          No banks yet
+          No records yet
         </div>
       )}
 

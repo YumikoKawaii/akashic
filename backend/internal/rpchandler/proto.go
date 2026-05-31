@@ -5,6 +5,7 @@ import (
 
 	pb "github.com/yumikokawaii/akashic/gen/akashic/v1"
 	"github.com/yumikokawaii/akashic/internal/model"
+	"github.com/yumikokawaii/akashic/internal/repository"
 )
 
 // ── Enums ──────────────────────────────────────────────────────────────────────
@@ -216,6 +217,25 @@ func bankToProto(b *model.Bank) *pb.Bank {
 		UpdatedAt:     timestamppb.New(b.UpdatedAt),
 		Visibility:    bankVisibilityToProto(b.Visibility),
 	}
+}
+
+func publicBankCardToProto(c *repository.PublicBankCard) *pb.PublicBankCard {
+	pc := &pb.PublicBankCard{
+		Id:            int32(c.ID),
+		Name:          c.Name,
+		Description:   c.Description,
+		QuestionCount: int32(c.QuestionCount),
+		CategoryCount: int32(c.CategoryCount),
+	}
+	if c.OwnerID != nil {
+		pc.Owner = &pb.User{
+			Id:        int32(*c.OwnerID),
+			Name:      c.OwnerName,
+			Email:     c.OwnerEmail,
+			AvatarUrl: c.OwnerAvatar,
+		}
+	}
+	return pc
 }
 
 func bankWithRoleToProto(bwr model.BankWithRole) *pb.BankWithRole {

@@ -35,6 +35,9 @@ const (
 const (
 	// BankServiceListBanksProcedure is the fully-qualified name of the BankService's ListBanks RPC.
 	BankServiceListBanksProcedure = "/akashic.v1.BankService/ListBanks"
+	// BankServiceListPublicBanksProcedure is the fully-qualified name of the BankService's
+	// ListPublicBanks RPC.
+	BankServiceListPublicBanksProcedure = "/akashic.v1.BankService/ListPublicBanks"
 	// BankServiceCreateBankProcedure is the fully-qualified name of the BankService's CreateBank RPC.
 	BankServiceCreateBankProcedure = "/akashic.v1.BankService/CreateBank"
 	// BankServiceGetBankProcedure is the fully-qualified name of the BankService's GetBank RPC.
@@ -68,6 +71,7 @@ const (
 // BankServiceClient is a client for the akashic.v1.BankService service.
 type BankServiceClient interface {
 	ListBanks(context.Context, *connect.Request[v1.ListBanksRequest]) (*connect.Response[v1.ListBanksResponse], error)
+	ListPublicBanks(context.Context, *connect.Request[v1.ListPublicBanksRequest]) (*connect.Response[v1.ListPublicBanksResponse], error)
 	CreateBank(context.Context, *connect.Request[v1.CreateBankRequest]) (*connect.Response[v1.CreateBankResponse], error)
 	GetBank(context.Context, *connect.Request[v1.GetBankRequest]) (*connect.Response[v1.GetBankResponse], error)
 	UpdateBank(context.Context, *connect.Request[v1.UpdateBankRequest]) (*connect.Response[v1.UpdateBankResponse], error)
@@ -96,6 +100,12 @@ func NewBankServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			httpClient,
 			baseURL+BankServiceListBanksProcedure,
 			connect.WithSchema(bankServiceMethods.ByName("ListBanks")),
+			connect.WithClientOptions(opts...),
+		),
+		listPublicBanks: connect.NewClient[v1.ListPublicBanksRequest, v1.ListPublicBanksResponse](
+			httpClient,
+			baseURL+BankServiceListPublicBanksProcedure,
+			connect.WithSchema(bankServiceMethods.ByName("ListPublicBanks")),
 			connect.WithClientOptions(opts...),
 		),
 		createBank: connect.NewClient[v1.CreateBankRequest, v1.CreateBankResponse](
@@ -170,6 +180,7 @@ func NewBankServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 // bankServiceClient implements BankServiceClient.
 type bankServiceClient struct {
 	listBanks               *connect.Client[v1.ListBanksRequest, v1.ListBanksResponse]
+	listPublicBanks         *connect.Client[v1.ListPublicBanksRequest, v1.ListPublicBanksResponse]
 	createBank              *connect.Client[v1.CreateBankRequest, v1.CreateBankResponse]
 	getBank                 *connect.Client[v1.GetBankRequest, v1.GetBankResponse]
 	updateBank              *connect.Client[v1.UpdateBankRequest, v1.UpdateBankResponse]
@@ -186,6 +197,11 @@ type bankServiceClient struct {
 // ListBanks calls akashic.v1.BankService.ListBanks.
 func (c *bankServiceClient) ListBanks(ctx context.Context, req *connect.Request[v1.ListBanksRequest]) (*connect.Response[v1.ListBanksResponse], error) {
 	return c.listBanks.CallUnary(ctx, req)
+}
+
+// ListPublicBanks calls akashic.v1.BankService.ListPublicBanks.
+func (c *bankServiceClient) ListPublicBanks(ctx context.Context, req *connect.Request[v1.ListPublicBanksRequest]) (*connect.Response[v1.ListPublicBanksResponse], error) {
+	return c.listPublicBanks.CallUnary(ctx, req)
 }
 
 // CreateBank calls akashic.v1.BankService.CreateBank.
@@ -246,6 +262,7 @@ func (c *bankServiceClient) SetBankVisibility(ctx context.Context, req *connect.
 // BankServiceHandler is an implementation of the akashic.v1.BankService service.
 type BankServiceHandler interface {
 	ListBanks(context.Context, *connect.Request[v1.ListBanksRequest]) (*connect.Response[v1.ListBanksResponse], error)
+	ListPublicBanks(context.Context, *connect.Request[v1.ListPublicBanksRequest]) (*connect.Response[v1.ListPublicBanksResponse], error)
 	CreateBank(context.Context, *connect.Request[v1.CreateBankRequest]) (*connect.Response[v1.CreateBankResponse], error)
 	GetBank(context.Context, *connect.Request[v1.GetBankRequest]) (*connect.Response[v1.GetBankResponse], error)
 	UpdateBank(context.Context, *connect.Request[v1.UpdateBankRequest]) (*connect.Response[v1.UpdateBankResponse], error)
@@ -270,6 +287,12 @@ func NewBankServiceHandler(svc BankServiceHandler, opts ...connect.HandlerOption
 		BankServiceListBanksProcedure,
 		svc.ListBanks,
 		connect.WithSchema(bankServiceMethods.ByName("ListBanks")),
+		connect.WithHandlerOptions(opts...),
+	)
+	bankServiceListPublicBanksHandler := connect.NewUnaryHandler(
+		BankServiceListPublicBanksProcedure,
+		svc.ListPublicBanks,
+		connect.WithSchema(bankServiceMethods.ByName("ListPublicBanks")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bankServiceCreateBankHandler := connect.NewUnaryHandler(
@@ -342,6 +365,8 @@ func NewBankServiceHandler(svc BankServiceHandler, opts ...connect.HandlerOption
 		switch r.URL.Path {
 		case BankServiceListBanksProcedure:
 			bankServiceListBanksHandler.ServeHTTP(w, r)
+		case BankServiceListPublicBanksProcedure:
+			bankServiceListPublicBanksHandler.ServeHTTP(w, r)
 		case BankServiceCreateBankProcedure:
 			bankServiceCreateBankHandler.ServeHTTP(w, r)
 		case BankServiceGetBankProcedure:
@@ -375,6 +400,10 @@ type UnimplementedBankServiceHandler struct{}
 
 func (UnimplementedBankServiceHandler) ListBanks(context.Context, *connect.Request[v1.ListBanksRequest]) (*connect.Response[v1.ListBanksResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.BankService.ListBanks is not implemented"))
+}
+
+func (UnimplementedBankServiceHandler) ListPublicBanks(context.Context, *connect.Request[v1.ListPublicBanksRequest]) (*connect.Response[v1.ListPublicBanksResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.BankService.ListPublicBanks is not implemented"))
 }
 
 func (UnimplementedBankServiceHandler) CreateBank(context.Context, *connect.Request[v1.CreateBankRequest]) (*connect.Response[v1.CreateBankResponse], error) {

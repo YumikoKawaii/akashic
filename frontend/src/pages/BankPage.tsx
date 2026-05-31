@@ -199,7 +199,7 @@ export default function BankPage() {
       {/* ── Page header ─────────────────────────────────────────── */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">{bank.name} — <span>Question Bank</span></h1>
+          <h1 className="page-title">{bank.name} — <span>Record</span></h1>
           <p className="page-meta">
             {questions.length} questions · {categories.length} categories
             <span style={{
@@ -244,7 +244,7 @@ export default function BankPage() {
                   >
                     ✕
                   </button>
-                  <div className="section-title" style={{ marginBottom: 14 }}>Share Bank</div>
+                  <div className="section-title" style={{ marginBottom: 14 }}>Share Record</div>
                   <div className="flex gap-3 items-end flex-wrap" style={{ marginBottom: 16 }}>
                     <FormField label="Email">
                       <Input

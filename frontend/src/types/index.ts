@@ -204,6 +204,16 @@ export interface TestPage {
   page_size: number
 }
 
+// A public record (bank) as shown on the community home — lightweight, with counts.
+export interface PublicBank {
+  id: number
+  name: string
+  description: string
+  owner?: User
+  question_count: number
+  category_count: number
+}
+
 export type ContributionStatus =
   | 'pending' | 'changes_requested' | 'approved' | 'rejected' | 'merged' | 'withdrawn' | 'closed'
 // Reviewer decisions (the input to ReviewContribution)…

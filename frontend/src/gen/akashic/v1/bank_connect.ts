@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddBankMemberRequest, AddBankMemberResponse, CreateBankRequest, CreateBankResponse, DeleteBankRequest, DeleteBankResponse, GetBankRequest, GetBankResponse, ListBankMembersRequest, ListBankMembersResponse, ListBanksRequest, ListBanksResponse, RemoveBankMemberRequest, RemoveBankMemberResponse, RestoreBankRequest, RestoreBankResponse, SetBankVisibilityRequest, SetBankVisibilityResponse, UpdateBankDefaultConfigRequest, UpdateBankDefaultConfigResponse, UpdateBankMemberRoleRequest, UpdateBankMemberRoleResponse, UpdateBankRequest, UpdateBankResponse } from "./bank_pb.js";
+import { AddBankMemberRequest, AddBankMemberResponse, CreateBankRequest, CreateBankResponse, DeleteBankRequest, DeleteBankResponse, GetBankRequest, GetBankResponse, ListBankMembersRequest, ListBankMembersResponse, ListBanksRequest, ListBanksResponse, ListPublicBanksRequest, ListPublicBanksResponse, RemoveBankMemberRequest, RemoveBankMemberResponse, RestoreBankRequest, RestoreBankResponse, SetBankVisibilityRequest, SetBankVisibilityResponse, UpdateBankDefaultConfigRequest, UpdateBankDefaultConfigResponse, UpdateBankMemberRoleRequest, UpdateBankMemberRoleResponse, UpdateBankRequest, UpdateBankResponse } from "./bank_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -19,6 +19,15 @@ export const BankService = {
       name: "ListBanks",
       I: ListBanksRequest,
       O: ListBanksResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc akashic.v1.BankService.ListPublicBanks
+     */
+    listPublicBanks: {
+      name: "ListPublicBanks",
+      I: ListPublicBanksRequest,
+      O: ListPublicBanksResponse,
       kind: MethodKind.Unary,
     },
     /**
