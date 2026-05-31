@@ -6,6 +6,7 @@ import { useDeleteTest } from '../../hooks/useTests'
 import { useStartAttempt, useTestAttempts } from '../../hooks/useAttempts'
 import MagicCircle from '../ui/MagicCircle'
 import RuneCorners from '../ui/RuneCorners'
+import { GRADE_COLOR, gradeForPct, bestResult } from './grade'
 
 const DIFF_COLOR: Record<string, string> = {
   easy: '#2a8a3a', medium: '#9a7018', hard: '#b03030',
@@ -30,6 +31,7 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
   const total = (cfg.easy_count ?? 0) + (cfg.medium_count ?? 0) + (cfg.hard_count ?? 0)
 
   const completed = attempts.filter(a => a.completed_at)
+  const result    = bestResult(attempts)
 
   const dominant = cfg.hard_count >= cfg.medium_count && cfg.hard_count >= cfg.easy_count
     ? 'hard' : cfg.medium_count >= cfg.easy_count ? 'medium' : 'easy'
@@ -48,7 +50,30 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
-      <div className="test-card-title">{test.name}</div>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+        <div className="test-card-title">{test.name}</div>
+        {result ? (
+          <span
+            title={`Best result: ${result.score}/${result.total}`}
+            style={{
+              flexShrink: 0, display: 'inline-flex', alignItems: 'baseline', gap: 5,
+              fontFamily: 'Cinzel, serif', fontSize: '0.62rem', letterSpacing: '0.06em',
+              padding: '3px 9px', border: `1px solid ${GRADE_COLOR[result.grade]}66`,
+              color: GRADE_COLOR[result.grade], background: `${GRADE_COLOR[result.grade]}12`,
+            }}
+          >
+            <strong style={{ fontSize: '0.78rem' }}>{result.grade}</strong>{result.pct}%
+          </span>
+        ) : (
+          <span style={{
+            flexShrink: 0, fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.14em',
+            padding: '3px 9px', border: '1px solid var(--border-dim)', color: 'var(--ink-dim)',
+            textTransform: 'uppercase',
+          }}>
+            ✦ New
+          </span>
+        )}
+      </div>
       <div className="test-card-meta">
         {total} questions<br />
         {new Date(test.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -113,8 +138,8 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
         <div style={{ marginTop: 10, borderTop: '1px solid var(--border-dim)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
           {completed.map(a => {
             const pct   = a.total ? Math.round((a.score! / a.total) * 100) : 0
-            const grade = pct >= 90 ? 'S' : pct >= 75 ? 'A' : pct >= 60 ? 'B' : pct >= 45 ? 'C' : 'D'
-            const color = { S: '#c89030', A: '#2a8a3a', B: '#3a60c0', C: '#b8942a', D: '#b03030' }[grade]
+            const grade = gradeForPct(pct)
+            const color = GRADE_COLOR[grade]
             const date  = new Date(a.completed_at!).toLocaleString('en-GB', {
               day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
             })

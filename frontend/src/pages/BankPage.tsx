@@ -3,10 +3,12 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useBank, useSetBankVisibility } from '../hooks/useBanks'
 import { useQuestions } from '../hooks/useQuestions'
-import { useTestsPaged } from '../hooks/useTests'
+import { useTests } from '../hooks/useTests'
+import { useTestsAttempts } from '../hooks/useAttempts'
 import { useCategories } from '../hooks/useCategories'
 import { usePassages, usePassagesPaged, useDeletePassage } from '../hooks/usePassages'
 import { useAuth } from '../contexts/AuthContext'
+import { bestResult, gradeForPct, GRADE_COLOR } from '../components/tests/grade'
 import { QuestionFilter } from '../types'
 import { questionClient } from '../api/connect'
 import QuestionCard from '../components/questions/QuestionCard'
@@ -118,16 +120,46 @@ export default function BankPage() {
   const [page,          setPage]          = useState(1)
   const [passagePage,   setPassagePage]   = useState(1)
   const [testPage,      setTestPage]      = useState(1)
+  const [testSort,      setTestSort]      = useState<'newest' | 'oldest' | 'name' | 'size'>('newest')
+  const [testTaken,     setTestTaken]     = useState<'all' | 'taken' | 'untaken'>('all')
 
   const { data: passagePageData }  = usePassagesPaged(bankId, passagePage)
   const pagedPassages      = passagePageData?.data      ?? []
   const totalPassages      = passagePageData?.total     ?? passages.length
   const totalPassagePages  = Math.max(1, Math.ceil(totalPassages / (passagePageData?.page_size ?? 10)))
 
-  const { data: testPageData }     = useTestsPaged(bankId, testPage)
-  const pagedTests         = testPageData?.data         ?? []
-  const totalTests         = testPageData?.total        ?? 0
-  const totalTestPages     = Math.max(1, Math.ceil(totalTests / (testPageData?.page_size ?? 10)))
+  // Tests are loaded in full and sorted/filtered/paginated client-side so the
+  // sort + taken/untaken controls can work across the whole set, not one page.
+  const { data: tests = [] } = useTests(bankId)
+  const totalTests = tests.length
+
+  const attemptResults = useTestsAttempts(bankId, tests.map(t => t.id), tab === 'tests')
+  const resultByTest: Record<number, ReturnType<typeof bestResult>> = {}
+  tests.forEach((t, i) => { resultByTest[t.id] = bestResult(attemptResults[i]?.data ?? []) })
+
+  const testQ = (t: typeof tests[number]) =>
+    (t.config.easy_count ?? 0) + (t.config.medium_count ?? 0) + (t.config.hard_count ?? 0)
+
+  const visibleTests = tests
+    .filter(t => testTaken === 'all' || (testTaken === 'taken') === (resultByTest[t.id] != null))
+    .sort((a, b) => {
+      switch (testSort) {
+        case 'oldest': return +new Date(a.created_at) - +new Date(b.created_at)
+        case 'name':   return a.name.localeCompare(b.name)
+        case 'size':   return testQ(b) - testQ(a)
+        default:       return +new Date(b.created_at) - +new Date(a.created_at)
+      }
+    })
+
+  const TESTS_PER_PAGE = 9
+  const totalTestPages = Math.max(1, Math.ceil(visibleTests.length / TESTS_PER_PAGE))
+  const pagedTests     = visibleTests.slice((testPage - 1) * TESTS_PER_PAGE, testPage * TESTS_PER_PAGE)
+
+  const takenCount     = tests.filter(t => resultByTest[t.id]).length
+  const overallBestPct = tests.reduce((m, t) => {
+    const r = resultByTest[t.id]
+    return r && r.pct > m ? r.pct : m
+  }, -1)
   const [importing,     setImporting]     = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [pConfirmDel,   setPConfirmDel]   = useState<number | null>(null)
@@ -465,18 +497,59 @@ export default function BankPage() {
       {tab === 'tests' && (
         <>
           <OrnateDivider />
-          <div className="section-title">
+
+          {tests.length > 0 && (
+            <div className="flex gap-3 items-center flex-wrap">
+              <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>Sort</span>
+              <div style={{ width: 170 }}>
+                <Select
+                  value={testSort}
+                  onChange={val => { setTestPage(1); setTestSort(val as typeof testSort) }}
+                  options={[
+                    { value: 'newest', label: 'Newest' },
+                    { value: 'oldest', label: 'Oldest' },
+                    { value: 'name',   label: 'Name (A–Z)' },
+                    { value: 'size',   label: 'Most questions' },
+                  ]}
+                />
+              </div>
+              <div style={{ width: 150 }}>
+                <Select
+                  value={testTaken}
+                  onChange={val => { setTestPage(1); setTestTaken(val as typeof testTaken) }}
+                  options={[
+                    { value: 'all',     label: 'All' },
+                    { value: 'taken',   label: 'Taken' },
+                    { value: 'untaken', label: 'Untaken' },
+                  ]}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="section-title" style={{ marginBottom: 0 }}>
             Tests ({totalTests}
             {totalTestPages > 1 && <span style={{ fontWeight: 400, fontSize: '0.7rem', color: 'var(--ink-dim)', letterSpacing: '0.05em' }}> — page {testPage}/{totalTestPages}</span>}
             )
           </div>
 
-          {pagedTests.length === 0 ? (
+          {tests.length > 0 && (
+            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.62rem', letterSpacing: '0.14em', color: 'var(--ink-dim)', textTransform: 'uppercase', marginTop: -4 }}>
+              {takenCount} of {totalTests} taken
+              {overallBestPct >= 0 && <> · best <span style={{ color: GRADE_COLOR[gradeForPct(overallBestPct)] }}>{gradeForPct(overallBestPct)}</span></>}
+            </div>
+          )}
+
+          {tests.length === 0 ? (
             <div style={{ color: 'var(--ink-dim)', fontSize: '0.88rem', padding: '24px 0', textAlign: 'center' }}>
               No tests yet.{' '}
               <span style={{ color: 'var(--gold)', cursor: 'pointer' }} onClick={() => setTab('generate')}>
                 Generate one →
               </span>
+            </div>
+          ) : pagedTests.length === 0 ? (
+            <div style={{ color: 'var(--ink-dim)', fontSize: '0.88rem', padding: '24px 0', textAlign: 'center' }}>
+              No tests match this filter.
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

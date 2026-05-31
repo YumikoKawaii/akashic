@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query'
 import { attemptClient } from '../api/connect'
 import { fromAttempt } from '../api/adapters'
 
@@ -26,6 +26,22 @@ export function useTestAttempts(bankId: string, testId: number | string) {
       return res.attempts.map(fromAttempt)
     },
     enabled: !!bankId && !!testId,
+  })
+}
+
+// Attempts for many tests at once (Tests-tab summary + taken/untaken filter).
+// Reuses the per-test query key, so the test cards' own useTestAttempts calls
+// dedupe against these — one request per test, shared.
+export function useTestsAttempts(bankId: string, testIds: number[], enabled = true) {
+  return useQueries({
+    queries: testIds.map(id => ({
+      queryKey: attemptKeys.byTest(bankId, id),
+      queryFn: async () => {
+        const res = await attemptClient.listAttemptsByTest({ bankId: Number(bankId), testId: id })
+        return res.attempts.map(fromAttempt)
+      },
+      enabled: enabled && !!bankId,
+    })),
   })
 }
 
