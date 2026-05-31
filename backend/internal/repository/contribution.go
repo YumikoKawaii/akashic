@@ -16,7 +16,6 @@ type ContributionRepository interface {
 	FindByBankAndContributor(bankID, contributorID int) ([]model.Contribution, error)
 	AddEvent(e *model.ContributionEvent) error
 	AddComment(c *model.ContributionComment) error
-	SoftDelete(id int) error
 }
 
 type contributionRepo struct{ db *gorm.DB }
@@ -75,8 +74,4 @@ func (r *contributionRepo) AddEvent(e *model.ContributionEvent) error {
 
 func (r *contributionRepo) AddComment(c *model.ContributionComment) error {
 	return r.db.Create(c).Error
-}
-
-func (r *contributionRepo) SoftDelete(id int) error {
-	return r.db.Delete(&model.Contribution{}, id).Error
 }

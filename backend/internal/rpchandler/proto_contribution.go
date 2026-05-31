@@ -21,6 +21,10 @@ func contributionStatusToProto(s string) pb.ContributionStatus {
 		return pb.ContributionStatus_CONTRIBUTION_STATUS_REJECTED
 	case model.ContributionMerged:
 		return pb.ContributionStatus_CONTRIBUTION_STATUS_MERGED
+	case model.ContributionWithdrawn:
+		return pb.ContributionStatus_CONTRIBUTION_STATUS_WITHDRAWN
+	case model.ContributionClosed:
+		return pb.ContributionStatus_CONTRIBUTION_STATUS_CLOSED
 	}
 	return pb.ContributionStatus_CONTRIBUTION_STATUS_UNSPECIFIED
 }
@@ -37,6 +41,10 @@ func contributionStatusFromProto(s pb.ContributionStatus) string {
 		return model.ContributionRejected
 	case pb.ContributionStatus_CONTRIBUTION_STATUS_MERGED:
 		return model.ContributionMerged
+	case pb.ContributionStatus_CONTRIBUTION_STATUS_WITHDRAWN:
+		return model.ContributionWithdrawn
+	case pb.ContributionStatus_CONTRIBUTION_STATUS_CLOSED:
+		return model.ContributionClosed
 	}
 	return ""
 }
@@ -53,6 +61,14 @@ func eventTypeToProto(e string) pb.ContributionEventType {
 		return pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_REVISE
 	case model.EventMerge:
 		return pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_MERGE
+	case model.EventResubmit:
+		return pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_RESUBMIT
+	case model.EventWithdraw:
+		return pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_WITHDRAW
+	case model.EventReopen:
+		return pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_REOPEN
+	case model.EventClose:
+		return pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_CLOSE
 	}
 	return pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_UNSPECIFIED
 }
@@ -69,6 +85,14 @@ func eventTypeFromProto(e pb.ContributionEventType) string {
 		return model.EventRevise
 	case pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_MERGE:
 		return model.EventMerge
+	case pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_RESUBMIT:
+		return model.EventResubmit
+	case pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_WITHDRAW:
+		return model.EventWithdraw
+	case pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_REOPEN:
+		return model.EventReopen
+	case pb.ContributionEventType_CONTRIBUTION_EVENT_TYPE_CLOSE:
+		return model.EventClose
 	}
 	return ""
 }

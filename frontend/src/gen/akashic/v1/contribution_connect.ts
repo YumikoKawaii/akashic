@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddContributionCommentRequest, AddContributionCommentResponse, ListContributionsRequest, ListContributionsResponse, ListMyContributionsRequest, ListMyContributionsResponse, MergeContributionRequest, MergeContributionResponse, ReviewContributionRequest, ReviewContributionResponse, SubmitContributionRequest, SubmitContributionResponse, UpdateContributionRequest, UpdateContributionResponse, WithdrawContributionRequest, WithdrawContributionResponse } from "./contribution_pb.js";
+import { AddContributionCommentRequest, AddContributionCommentResponse, ListContributionsRequest, ListContributionsResponse, ListMyContributionsRequest, ListMyContributionsResponse, MergeContributionRequest, MergeContributionResponse, ReviewContributionRequest, ReviewContributionResponse, SubmitContributionRequest, SubmitContributionResponse, TransitionContributionRequest, TransitionContributionResponse, UpdateContributionRequest, UpdateContributionResponse } from "./contribution_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -40,12 +40,12 @@ export const ContributionService = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc akashic.v1.ContributionService.WithdrawContribution
+     * @generated from rpc akashic.v1.ContributionService.TransitionContribution
      */
-    withdrawContribution: {
-      name: "WithdrawContribution",
-      I: WithdrawContributionRequest,
-      O: WithdrawContributionResponse,
+    transitionContribution: {
+      name: "TransitionContribution",
+      I: TransitionContributionRequest,
+      O: TransitionContributionResponse,
       kind: MethodKind.Unary,
     },
     /**

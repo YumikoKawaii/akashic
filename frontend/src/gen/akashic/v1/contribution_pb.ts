@@ -35,7 +35,7 @@ export enum ContributionStatus {
   APPROVED = 3,
 
   /**
-   * terminal
+   * reviewer rejected; contributor may reopen
    *
    * @generated from enum value: CONTRIBUTION_STATUS_REJECTED = 4;
    */
@@ -47,6 +47,20 @@ export enum ContributionStatus {
    * @generated from enum value: CONTRIBUTION_STATUS_MERGED = 5;
    */
   MERGED = 5,
+
+  /**
+   * contributor pulled back; may reopen
+   *
+   * @generated from enum value: CONTRIBUTION_STATUS_WITHDRAWN = 6;
+   */
+  WITHDRAWN = 6,
+
+  /**
+   * terminal — contributor abandoned
+   *
+   * @generated from enum value: CONTRIBUTION_STATUS_CLOSED = 7;
+   */
+  CLOSED = 7,
 }
 // Retrieve enum metadata with: proto3.getEnumType(ContributionStatus)
 proto3.util.setEnumType(ContributionStatus, "akashic.v1.ContributionStatus", [
@@ -56,13 +70,15 @@ proto3.util.setEnumType(ContributionStatus, "akashic.v1.ContributionStatus", [
   { no: 3, name: "CONTRIBUTION_STATUS_APPROVED" },
   { no: 4, name: "CONTRIBUTION_STATUS_REJECTED" },
   { no: 5, name: "CONTRIBUTION_STATUS_MERGED" },
+  { no: 6, name: "CONTRIBUTION_STATUS_WITHDRAWN" },
+  { no: 7, name: "CONTRIBUTION_STATUS_CLOSED" },
 ]);
 
 /**
  * ContributionEventType is every state transition recorded on a contribution's
- * event log. APPROVE/REJECT/REQUEST_CHANGES are reviewer (editor) actions;
- * REVISE/MERGE are contributor actions. The log carries no prose — explanations
- * are comments.
+ * event log. APPROVE/REJECT/REQUEST_CHANGES are reviewer (editor) actions; the
+ * rest are contributor actions. The log carries no prose — explanations are
+ * comments.
  *
  * @generated from enum akashic.v1.ContributionEventType
  */
@@ -73,21 +89,21 @@ export enum ContributionEventType {
   UNSPECIFIED = 0,
 
   /**
-   * -> approved (does NOT create a question; contributor merges)
+   * reviewer  -> approved (contributor then merges)
    *
    * @generated from enum value: CONTRIBUTION_EVENT_TYPE_APPROVE = 1;
    */
   APPROVE = 1,
 
   /**
-   * -> rejected (terminal)
+   * reviewer  -> rejected
    *
    * @generated from enum value: CONTRIBUTION_EVENT_TYPE_REJECT = 2;
    */
   REJECT = 2,
 
   /**
-   * -> changes_requested (bounces back to contributor)
+   * reviewer  -> changes_requested
    *
    * @generated from enum value: CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES = 3;
    */
@@ -106,6 +122,34 @@ export enum ContributionEventType {
    * @generated from enum value: CONTRIBUTION_EVENT_TYPE_MERGE = 5;
    */
   MERGE = 5,
+
+  /**
+   * contributor re-requests review (no edit) -> pending
+   *
+   * @generated from enum value: CONTRIBUTION_EVENT_TYPE_RESUBMIT = 6;
+   */
+  RESUBMIT = 6,
+
+  /**
+   * contributor -> withdrawn
+   *
+   * @generated from enum value: CONTRIBUTION_EVENT_TYPE_WITHDRAW = 7;
+   */
+  WITHDRAW = 7,
+
+  /**
+   * contributor (withdrawn|rejected) -> pending
+   *
+   * @generated from enum value: CONTRIBUTION_EVENT_TYPE_REOPEN = 8;
+   */
+  REOPEN = 8,
+
+  /**
+   * contributor -> closed (terminal)
+   *
+   * @generated from enum value: CONTRIBUTION_EVENT_TYPE_CLOSE = 9;
+   */
+  CLOSE = 9,
 }
 // Retrieve enum metadata with: proto3.getEnumType(ContributionEventType)
 proto3.util.setEnumType(ContributionEventType, "akashic.v1.ContributionEventType", [
@@ -115,6 +159,10 @@ proto3.util.setEnumType(ContributionEventType, "akashic.v1.ContributionEventType
   { no: 3, name: "CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES" },
   { no: 4, name: "CONTRIBUTION_EVENT_TYPE_REVISE" },
   { no: 5, name: "CONTRIBUTION_EVENT_TYPE_MERGE" },
+  { no: 6, name: "CONTRIBUTION_EVENT_TYPE_RESUBMIT" },
+  { no: 7, name: "CONTRIBUTION_EVENT_TYPE_WITHDRAW" },
+  { no: 8, name: "CONTRIBUTION_EVENT_TYPE_REOPEN" },
+  { no: 9, name: "CONTRIBUTION_EVENT_TYPE_CLOSE" },
 ]);
 
 /**
@@ -666,9 +714,12 @@ export class ListMyContributionsResponse extends Message<ListMyContributionsResp
 }
 
 /**
- * @generated from message akashic.v1.WithdrawContributionRequest
+ * Contributor-driven status transition: RESUBMIT / WITHDRAW / REOPEN / CLOSE.
+ * Validated against the current state + contributor ownership.
+ *
+ * @generated from message akashic.v1.TransitionContributionRequest
  */
-export class WithdrawContributionRequest extends Message<WithdrawContributionRequest> {
+export class TransitionContributionRequest extends Message<TransitionContributionRequest> {
   /**
    * @generated from field: int32 bank_id = 1;
    */
@@ -679,63 +730,75 @@ export class WithdrawContributionRequest extends Message<WithdrawContributionReq
    */
   id = 0;
 
-  constructor(data?: PartialMessage<WithdrawContributionRequest>) {
+  /**
+   * @generated from field: akashic.v1.ContributionEventType action = 3;
+   */
+  action = ContributionEventType.UNSPECIFIED;
+
+  constructor(data?: PartialMessage<TransitionContributionRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "akashic.v1.WithdrawContributionRequest";
+  static readonly typeName = "akashic.v1.TransitionContributionRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 2, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "action", kind: "enum", T: proto3.getEnumType(ContributionEventType) },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): WithdrawContributionRequest {
-    return new WithdrawContributionRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TransitionContributionRequest {
+    return new TransitionContributionRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): WithdrawContributionRequest {
-    return new WithdrawContributionRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): TransitionContributionRequest {
+    return new TransitionContributionRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): WithdrawContributionRequest {
-    return new WithdrawContributionRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): TransitionContributionRequest {
+    return new TransitionContributionRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: WithdrawContributionRequest | PlainMessage<WithdrawContributionRequest> | undefined, b: WithdrawContributionRequest | PlainMessage<WithdrawContributionRequest> | undefined): boolean {
-    return proto3.util.equals(WithdrawContributionRequest, a, b);
+  static equals(a: TransitionContributionRequest | PlainMessage<TransitionContributionRequest> | undefined, b: TransitionContributionRequest | PlainMessage<TransitionContributionRequest> | undefined): boolean {
+    return proto3.util.equals(TransitionContributionRequest, a, b);
   }
 }
 
 /**
- * @generated from message akashic.v1.WithdrawContributionResponse
+ * @generated from message akashic.v1.TransitionContributionResponse
  */
-export class WithdrawContributionResponse extends Message<WithdrawContributionResponse> {
-  constructor(data?: PartialMessage<WithdrawContributionResponse>) {
+export class TransitionContributionResponse extends Message<TransitionContributionResponse> {
+  /**
+   * @generated from field: akashic.v1.Contribution contribution = 1;
+   */
+  contribution?: Contribution;
+
+  constructor(data?: PartialMessage<TransitionContributionResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "akashic.v1.WithdrawContributionResponse";
+  static readonly typeName = "akashic.v1.TransitionContributionResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "contribution", kind: "message", T: Contribution },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): WithdrawContributionResponse {
-    return new WithdrawContributionResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TransitionContributionResponse {
+    return new TransitionContributionResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): WithdrawContributionResponse {
-    return new WithdrawContributionResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): TransitionContributionResponse {
+    return new TransitionContributionResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): WithdrawContributionResponse {
-    return new WithdrawContributionResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): TransitionContributionResponse {
+    return new TransitionContributionResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: WithdrawContributionResponse | PlainMessage<WithdrawContributionResponse> | undefined, b: WithdrawContributionResponse | PlainMessage<WithdrawContributionResponse> | undefined): boolean {
-    return proto3.util.equals(WithdrawContributionResponse, a, b);
+  static equals(a: TransitionContributionResponse | PlainMessage<TransitionContributionResponse> | undefined, b: TransitionContributionResponse | PlainMessage<TransitionContributionResponse> | undefined): boolean {
+    return proto3.util.equals(TransitionContributionResponse, a, b);
   }
 }
 

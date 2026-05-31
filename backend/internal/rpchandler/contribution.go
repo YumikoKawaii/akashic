@@ -53,14 +53,19 @@ func (h *ContributionServiceHandler) ListMyContributions(
 	return connect.NewResponse(&pb.ListMyContributionsResponse{Contributions: contributionsToProto(cs)}), nil
 }
 
-func (h *ContributionServiceHandler) WithdrawContribution(
+func (h *ContributionServiceHandler) TransitionContribution(
 	ctx context.Context,
-	req *connect.Request[pb.WithdrawContributionRequest],
-) (*connect.Response[pb.WithdrawContributionResponse], error) {
-	if err := h.svc.Withdraw(int(req.Msg.BankId), userIDFromContext(ctx), int(req.Msg.Id)); err != nil {
+	req *connect.Request[pb.TransitionContributionRequest],
+) (*connect.Response[pb.TransitionContributionResponse], error) {
+	action := eventTypeFromProto(req.Msg.Action)
+	if action == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, nil)
+	}
+	c, err := h.svc.Transition(ctx, int(req.Msg.BankId), userIDFromContext(ctx), int(req.Msg.Id), action)
+	if err != nil {
 		return nil, toConnectError(err)
 	}
-	return connect.NewResponse(&pb.WithdrawContributionResponse{}), nil
+	return connect.NewResponse(&pb.TransitionContributionResponse{Contribution: contributionToProto(c)}), nil
 }
 
 func (h *ContributionServiceHandler) MergeContribution(

@@ -1,26 +1,28 @@
 import { useState } from 'react'
-import type { Category, Contribution, ProposedQuestion } from '../../types'
+import type { Category, Contribution, ContributorAction, ProposedQuestion } from '../../types'
 import {
   useMyContributions, useSubmitContribution, useUpdateContribution,
-  useWithdrawContribution, useMergeContribution, useAddContributionComment,
+  useTransitionContribution, useMergeContribution, useAddContributionComment,
 } from '../../hooks/useContributions'
 import OrnatePanel from '../ui/OrnatePanel'
 import { Spinner } from '../ui/MagicCircle'
 import ProposedQuestionForm from './ProposedQuestionForm'
 import ContributionView from './ContributionView'
-import { isNonTerminal } from './status'
+
+const ghost = { fontSize: '0.62rem', padding: '4px 12px' } as const
+const danger = { fontSize: '0.62rem', padding: '4px 10px' } as const
 
 export default function ContributeTab({ bankId, categories }: { bankId: string; categories: Category[] }) {
   const { data: mine = [], isLoading } = useMyContributions(bankId)
-  const submit   = useSubmitContribution(bankId)
-  const update   = useUpdateContribution(bankId)
-  const withdraw = useWithdrawContribution(bankId)
-  const merge    = useMergeContribution(bankId)
-  const comment  = useAddContributionComment(bankId)
+  const submit     = useSubmitContribution(bankId)
+  const update     = useUpdateContribution(bankId)
+  const transition = useTransitionContribution(bankId)
+  const merge      = useMergeContribution(bankId)
+  const comment    = useAddContributionComment(bankId)
 
   const [composing, setComposing] = useState(false)
   const [editing,   setEditing]   = useState<number | null>(null)
-  const [confirmWithdraw, setConfirmWithdraw] = useState<number | null>(null)
+  const [confirm,   setConfirm]   = useState<{ id: number; action: ContributorAction } | null>(null)
 
   const handleSubmit = async (proposed: ProposedQuestion) => {
     await submit.mutateAsync(proposed)
@@ -33,31 +35,45 @@ export default function ContributeTab({ bankId, categories }: { bankId: string; 
 
   const noCategories = categories.length === 0
 
-  const actionsFor = (c: Contribution) => {
-    if (!isNonTerminal(c.status)) return null
-    return (
-      <>
-        {c.status === 'approved' && (
-          <button className="btn btn-primary" style={{ fontSize: '0.62rem', padding: '4px 12px' }}
-            disabled={merge.isPending} onClick={() => merge.mutate(c.id)}>
-            ⚔ Merge into bank
-          </button>
-        )}
-        <button className="btn btn-ghost" style={{ fontSize: '0.62rem', padding: '4px 12px' }}
-          onClick={() => setEditing(c.id)}>Revise</button>
-        {confirmWithdraw === c.id ? (
-          <>
-            <button className="btn btn-ghost" style={{ fontSize: '0.62rem', padding: '4px 12px', color: '#b03030', borderColor: 'rgba(176,48,48,0.4)' }}
-              onClick={() => { withdraw.mutate(c.id); setConfirmWithdraw(null) }}>Confirm withdraw</button>
-            <button className="btn btn-ghost" style={{ fontSize: '0.62rem', padding: '4px 12px' }}
-              onClick={() => setConfirmWithdraw(null)}>Cancel</button>
-          </>
-        ) : (
-          <button className="btn-danger" style={{ fontSize: '0.62rem', padding: '4px 10px' }}
-            onClick={() => setConfirmWithdraw(c.id)}>Withdraw</button>
-        )}
-      </>
+  const tBtn = (c: Contribution, action: ContributorAction, label: string) => (
+    <button key={action} className="btn btn-ghost" style={ghost}
+      disabled={transition.isPending} onClick={() => transition.mutate({ id: c.id, action })}>{label}</button>
+  )
+
+  // Withdraw/close are destructive-ish, so confirm first.
+  const confirmBtn = (c: Contribution, action: ContributorAction, label: string, confirmLabel: string) =>
+    confirm?.id === c.id && confirm.action === action ? (
+      <span key={action} className="flex gap-2">
+        <button className="btn btn-ghost" style={{ ...ghost, color: '#b03030', borderColor: 'rgba(176,48,48,0.4)' }}
+          onClick={() => { transition.mutate({ id: c.id, action }); setConfirm(null) }}>{confirmLabel}</button>
+        <button className="btn btn-ghost" style={ghost} onClick={() => setConfirm(null)}>Cancel</button>
+      </span>
+    ) : (
+      <button key={action} className="btn-danger" style={danger}
+        onClick={() => setConfirm({ id: c.id, action })}>{label}</button>
     )
+
+  const reviseBtn = (c: Contribution) => (
+    <button key="revise" className="btn btn-ghost" style={ghost} onClick={() => setEditing(c.id)}>Revise</button>
+  )
+  const mergeBtn = (c: Contribution) => (
+    <button key="merge" className="btn btn-primary" style={ghost}
+      disabled={merge.isPending} onClick={() => merge.mutate(c.id)}>⚔ Merge into bank</button>
+  )
+
+  // Contributor actions available per state (the server's nextStatus is the
+  // source of truth; this mirrors it for the UI).
+  const actionsFor = (c: Contribution) => {
+    const withdraw = confirmBtn(c, 'withdraw', 'Withdraw', 'Confirm withdraw')
+    const close    = confirmBtn(c, 'close', 'Close', 'Confirm close')
+    switch (c.status) {
+      case 'approved':          return <>{mergeBtn(c)}{reviseBtn(c)}{withdraw}{close}</>
+      case 'changes_requested': return <>{tBtn(c, 'resubmit', '↺ Re-request review')}{reviseBtn(c)}{withdraw}{close}</>
+      case 'pending':           return <>{reviseBtn(c)}{withdraw}{close}</>
+      case 'rejected':
+      case 'withdrawn':         return <>{tBtn(c, 'reopen', '↺ Reopen')}{close}</>
+      default:                  return null // merged / closed are terminal
+    }
   }
 
   return (
