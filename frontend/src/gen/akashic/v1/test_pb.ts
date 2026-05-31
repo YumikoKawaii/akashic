@@ -6,7 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
 import { Question } from "./question_pb.js";
-import { PageInfo, TestConfig } from "./common_pb.js";
+import { PageInfo, TestConfig, User } from "./common_pb.js";
 
 /**
  * @generated from message akashic.v1.TestQuestion
@@ -107,6 +107,20 @@ export class Test extends Message<Test> {
    */
   updatedAt?: Timestamp;
 
+  /**
+   * the generator's user id
+   *
+   * @generated from field: optional int32 created_by = 9;
+   */
+  createdBy?: number;
+
+  /**
+   * embedded generator
+   *
+   * @generated from field: optional akashic.v1.User creator = 10;
+   */
+  creator?: User;
+
   constructor(data?: PartialMessage<Test>) {
     super();
     proto3.util.initPartial(data, this);
@@ -123,6 +137,8 @@ export class Test extends Message<Test> {
     { no: 6, name: "questions", kind: "message", T: TestQuestion, repeated: true },
     { no: 7, name: "created_at", kind: "message", T: Timestamp },
     { no: 8, name: "updated_at", kind: "message", T: Timestamp },
+    { no: 9, name: "created_by", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
+    { no: 10, name: "creator", kind: "message", T: User, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Test {

@@ -31,6 +31,8 @@ message Test {
   repeated TestQuestion     questions = 6;
   google.protobuf.Timestamp created_at = 7;
   google.protobuf.Timestamp updated_at = 8;
+  optional int32            created_by = 9; // the generator's user id
+  optional User             creator = 10;   // embedded generator
 }
 
 message ListTestsRequest {

@@ -9,7 +9,7 @@ import (
 
 type TestRepository interface {
 	FindByBank(bankID int) ([]model.Test, error)
-	FindByBankAndCreatorPaged(bankID, userID, page, pageSize int) ([]model.Test, int64, error)
+	FindByBankPaged(bankID, page, pageSize int) ([]model.Test, int64, error)
 	FindByID(id int) (*model.Test, error)
 	FindByBankAndID(bankID, id int) (*model.Test, error)
 	RecentlyUsedQuestionIDs(bankID, lastN int) ([]int, error)
@@ -29,8 +29,9 @@ func (r *testRepo) FindByBank(bankID int) ([]model.Test, error) {
 	return ts, err
 }
 
-func (r *testRepo) FindByBankAndCreatorPaged(bankID, userID, page, pageSize int) ([]model.Test, int64, error) {
-	base := r.db.Model(&model.Test{}).Where("bank_id = ? AND created_by = ?", bankID, userID)
+// FindByBankPaged returns every test in the bank (all creators), newest first.
+func (r *testRepo) FindByBankPaged(bankID, page, pageSize int) ([]model.Test, int64, error) {
+	base := r.db.Model(&model.Test{}).Where("bank_id = ?", bankID)
 
 	var total int64
 	if err := base.Count(&total).Error; err != nil {
@@ -38,7 +39,7 @@ func (r *testRepo) FindByBankAndCreatorPaged(bankID, userID, page, pageSize int)
 	}
 
 	var ts []model.Test
-	err := base.Order("created_at DESC").
+	err := base.Preload("Creator").Order("created_at DESC").
 		Limit(pageSize).Offset((page - 1) * pageSize).
 		Find(&ts).Error
 	return ts, total, err
@@ -47,6 +48,7 @@ func (r *testRepo) FindByBankAndCreatorPaged(bankID, userID, page, pageSize int)
 func (r *testRepo) FindByID(id int) (*model.Test, error) {
 	var t model.Test
 	err := r.db.
+		Preload("Creator").
 		Preload("TestQuestions", func(db *gorm.DB) *gorm.DB { return db.Order("position ASC") }).
 		Preload("TestQuestions.Question.Item").
 		Preload("TestQuestions.Question.Choice").
@@ -60,6 +62,7 @@ func (r *testRepo) FindByID(id int) (*model.Test, error) {
 func (r *testRepo) FindByBankAndID(bankID, id int) (*model.Test, error) {
 	var t model.Test
 	err := r.db.
+		Preload("Creator").
 		Preload("TestQuestions", func(db *gorm.DB) *gorm.DB { return db.Order("position ASC") }).
 		Preload("TestQuestions.Question.Item").
 		Preload("TestQuestions.Question.Choice").

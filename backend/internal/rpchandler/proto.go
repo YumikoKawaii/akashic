@@ -454,7 +454,7 @@ func testToProto(t *model.Test) *pb.Test {
 		}
 		qs[i] = pbTQ
 	}
-	return &pb.Test{
+	pt := &pb.Test{
 		Id:          int32(t.ID),
 		BankId:      int32(t.BankID),
 		Name:        t.Name,
@@ -463,7 +463,13 @@ func testToProto(t *model.Test) *pb.Test {
 		Questions:   qs,
 		CreatedAt:   timestamppb.New(t.CreatedAt),
 		UpdatedAt:   timestamppb.New(t.UpdatedAt),
+		Creator:     userToProto(t.Creator),
 	}
+	if t.CreatedBy != nil {
+		v := int32(*t.CreatedBy)
+		pt.CreatedBy = &v
+	}
+	return pt
 }
 
 // ── Attempt ────────────────────────────────────────────────────────────────────
@@ -494,5 +500,10 @@ func attemptToProto(a *model.TestAttempt) *pb.Attempt {
 	if a.Test != nil {
 		pa.Test = testToProto(a.Test)
 	}
+	if a.UserID != nil {
+		v := int32(*a.UserID)
+		pa.UserId = &v
+	}
+	pa.Taker = userToProto(a.Taker)
 	return pa
 }

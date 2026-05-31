@@ -157,6 +157,8 @@ export interface Test {
   description: string
   config: TestConfig
   questions?: TestQuestion[]
+  created_by?: number
+  creator?: User
   created_at: string
   updated_at: string
 }
@@ -165,6 +167,8 @@ export interface TestAttempt {
   id: number
   test_id: number
   test?: Test
+  user_id?: number
+  taker?: User
   answers: Record<string, string>
   score?: number
   total?: number
