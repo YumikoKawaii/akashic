@@ -3,7 +3,10 @@ import { Difficulty, QuestionType } from '../gen/akashic/v1/common_pb'
 import { ContributionStatus, ContributionEventType } from '../gen/akashic/v1/contribution_pb'
 import { contributionClient } from '../api/connect'
 import { fromContribution } from '../api/adapters'
-import type { ProposedQuestion, ReviewDecision as AppReviewDecision } from '../types'
+import type {
+  ProposedQuestion, ReviewDecision as AppReviewDecision,
+  ContributorAction, ContributionEventType as AppEventType,
+} from '../types'
 
 export const contributionKeys = {
   mine:  (bankId: string) => ['contributions', 'mine', bankId] as const,
@@ -34,11 +37,17 @@ function toQuestionType(s: string): QuestionType {
   return map[s] ?? QuestionType.UNSPECIFIED
 }
 
-function toEventType(d: AppReviewDecision): ContributionEventType {
-  switch (d) {
+function toEventType(e: AppEventType): ContributionEventType {
+  switch (e) {
     case 'approve':         return ContributionEventType.APPROVE
     case 'reject':          return ContributionEventType.REJECT
     case 'request_changes': return ContributionEventType.REQUEST_CHANGES
+    case 'revise':          return ContributionEventType.REVISE
+    case 'merge':           return ContributionEventType.MERGE
+    case 'resubmit':        return ContributionEventType.RESUBMIT
+    case 'withdraw':        return ContributionEventType.WITHDRAW
+    case 'reopen':          return ContributionEventType.REOPEN
+    case 'close':           return ContributionEventType.CLOSE
     default:                return ContributionEventType.UNSPECIFIED
   }
 }
@@ -101,10 +110,14 @@ export function useUpdateContribution(bankId: string) {
   })
 }
 
-export function useWithdrawContribution(bankId: string) {
+// Contributor-driven status transition: resubmit / withdraw / reopen / close.
+export function useTransitionContribution(bankId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => contributionClient.withdrawContribution({ bankId: Number(bankId), id }),
+    mutationFn: async ({ id, action }: { id: number; action: ContributorAction }) => {
+      const res = await contributionClient.transitionContribution({ bankId: Number(bankId), id, action: toEventType(action) })
+      return fromContribution(res.contribution!)
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: contributionKeys.mine(bankId) }),
   })
 }

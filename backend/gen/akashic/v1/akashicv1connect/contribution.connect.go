@@ -42,9 +42,9 @@ const (
 	// ContributionServiceListMyContributionsProcedure is the fully-qualified name of the
 	// ContributionService's ListMyContributions RPC.
 	ContributionServiceListMyContributionsProcedure = "/akashic.v1.ContributionService/ListMyContributions"
-	// ContributionServiceWithdrawContributionProcedure is the fully-qualified name of the
-	// ContributionService's WithdrawContribution RPC.
-	ContributionServiceWithdrawContributionProcedure = "/akashic.v1.ContributionService/WithdrawContribution"
+	// ContributionServiceTransitionContributionProcedure is the fully-qualified name of the
+	// ContributionService's TransitionContribution RPC.
+	ContributionServiceTransitionContributionProcedure = "/akashic.v1.ContributionService/TransitionContribution"
 	// ContributionServiceMergeContributionProcedure is the fully-qualified name of the
 	// ContributionService's MergeContribution RPC.
 	ContributionServiceMergeContributionProcedure = "/akashic.v1.ContributionService/MergeContribution"
@@ -64,7 +64,7 @@ type ContributionServiceClient interface {
 	SubmitContribution(context.Context, *connect.Request[v1.SubmitContributionRequest]) (*connect.Response[v1.SubmitContributionResponse], error)
 	UpdateContribution(context.Context, *connect.Request[v1.UpdateContributionRequest]) (*connect.Response[v1.UpdateContributionResponse], error)
 	ListMyContributions(context.Context, *connect.Request[v1.ListMyContributionsRequest]) (*connect.Response[v1.ListMyContributionsResponse], error)
-	WithdrawContribution(context.Context, *connect.Request[v1.WithdrawContributionRequest]) (*connect.Response[v1.WithdrawContributionResponse], error)
+	TransitionContribution(context.Context, *connect.Request[v1.TransitionContributionRequest]) (*connect.Response[v1.TransitionContributionResponse], error)
 	MergeContribution(context.Context, *connect.Request[v1.MergeContributionRequest]) (*connect.Response[v1.MergeContributionResponse], error)
 	ListContributions(context.Context, *connect.Request[v1.ListContributionsRequest]) (*connect.Response[v1.ListContributionsResponse], error)
 	ReviewContribution(context.Context, *connect.Request[v1.ReviewContributionRequest]) (*connect.Response[v1.ReviewContributionResponse], error)
@@ -100,10 +100,10 @@ func NewContributionServiceClient(httpClient connect.HTTPClient, baseURL string,
 			connect.WithSchema(contributionServiceMethods.ByName("ListMyContributions")),
 			connect.WithClientOptions(opts...),
 		),
-		withdrawContribution: connect.NewClient[v1.WithdrawContributionRequest, v1.WithdrawContributionResponse](
+		transitionContribution: connect.NewClient[v1.TransitionContributionRequest, v1.TransitionContributionResponse](
 			httpClient,
-			baseURL+ContributionServiceWithdrawContributionProcedure,
-			connect.WithSchema(contributionServiceMethods.ByName("WithdrawContribution")),
+			baseURL+ContributionServiceTransitionContributionProcedure,
+			connect.WithSchema(contributionServiceMethods.ByName("TransitionContribution")),
 			connect.WithClientOptions(opts...),
 		),
 		mergeContribution: connect.NewClient[v1.MergeContributionRequest, v1.MergeContributionResponse](
@@ -138,7 +138,7 @@ type contributionServiceClient struct {
 	submitContribution     *connect.Client[v1.SubmitContributionRequest, v1.SubmitContributionResponse]
 	updateContribution     *connect.Client[v1.UpdateContributionRequest, v1.UpdateContributionResponse]
 	listMyContributions    *connect.Client[v1.ListMyContributionsRequest, v1.ListMyContributionsResponse]
-	withdrawContribution   *connect.Client[v1.WithdrawContributionRequest, v1.WithdrawContributionResponse]
+	transitionContribution *connect.Client[v1.TransitionContributionRequest, v1.TransitionContributionResponse]
 	mergeContribution      *connect.Client[v1.MergeContributionRequest, v1.MergeContributionResponse]
 	listContributions      *connect.Client[v1.ListContributionsRequest, v1.ListContributionsResponse]
 	reviewContribution     *connect.Client[v1.ReviewContributionRequest, v1.ReviewContributionResponse]
@@ -160,9 +160,9 @@ func (c *contributionServiceClient) ListMyContributions(ctx context.Context, req
 	return c.listMyContributions.CallUnary(ctx, req)
 }
 
-// WithdrawContribution calls akashic.v1.ContributionService.WithdrawContribution.
-func (c *contributionServiceClient) WithdrawContribution(ctx context.Context, req *connect.Request[v1.WithdrawContributionRequest]) (*connect.Response[v1.WithdrawContributionResponse], error) {
-	return c.withdrawContribution.CallUnary(ctx, req)
+// TransitionContribution calls akashic.v1.ContributionService.TransitionContribution.
+func (c *contributionServiceClient) TransitionContribution(ctx context.Context, req *connect.Request[v1.TransitionContributionRequest]) (*connect.Response[v1.TransitionContributionResponse], error) {
+	return c.transitionContribution.CallUnary(ctx, req)
 }
 
 // MergeContribution calls akashic.v1.ContributionService.MergeContribution.
@@ -190,7 +190,7 @@ type ContributionServiceHandler interface {
 	SubmitContribution(context.Context, *connect.Request[v1.SubmitContributionRequest]) (*connect.Response[v1.SubmitContributionResponse], error)
 	UpdateContribution(context.Context, *connect.Request[v1.UpdateContributionRequest]) (*connect.Response[v1.UpdateContributionResponse], error)
 	ListMyContributions(context.Context, *connect.Request[v1.ListMyContributionsRequest]) (*connect.Response[v1.ListMyContributionsResponse], error)
-	WithdrawContribution(context.Context, *connect.Request[v1.WithdrawContributionRequest]) (*connect.Response[v1.WithdrawContributionResponse], error)
+	TransitionContribution(context.Context, *connect.Request[v1.TransitionContributionRequest]) (*connect.Response[v1.TransitionContributionResponse], error)
 	MergeContribution(context.Context, *connect.Request[v1.MergeContributionRequest]) (*connect.Response[v1.MergeContributionResponse], error)
 	ListContributions(context.Context, *connect.Request[v1.ListContributionsRequest]) (*connect.Response[v1.ListContributionsResponse], error)
 	ReviewContribution(context.Context, *connect.Request[v1.ReviewContributionRequest]) (*connect.Response[v1.ReviewContributionResponse], error)
@@ -222,10 +222,10 @@ func NewContributionServiceHandler(svc ContributionServiceHandler, opts ...conne
 		connect.WithSchema(contributionServiceMethods.ByName("ListMyContributions")),
 		connect.WithHandlerOptions(opts...),
 	)
-	contributionServiceWithdrawContributionHandler := connect.NewUnaryHandler(
-		ContributionServiceWithdrawContributionProcedure,
-		svc.WithdrawContribution,
-		connect.WithSchema(contributionServiceMethods.ByName("WithdrawContribution")),
+	contributionServiceTransitionContributionHandler := connect.NewUnaryHandler(
+		ContributionServiceTransitionContributionProcedure,
+		svc.TransitionContribution,
+		connect.WithSchema(contributionServiceMethods.ByName("TransitionContribution")),
 		connect.WithHandlerOptions(opts...),
 	)
 	contributionServiceMergeContributionHandler := connect.NewUnaryHandler(
@@ -260,8 +260,8 @@ func NewContributionServiceHandler(svc ContributionServiceHandler, opts ...conne
 			contributionServiceUpdateContributionHandler.ServeHTTP(w, r)
 		case ContributionServiceListMyContributionsProcedure:
 			contributionServiceListMyContributionsHandler.ServeHTTP(w, r)
-		case ContributionServiceWithdrawContributionProcedure:
-			contributionServiceWithdrawContributionHandler.ServeHTTP(w, r)
+		case ContributionServiceTransitionContributionProcedure:
+			contributionServiceTransitionContributionHandler.ServeHTTP(w, r)
 		case ContributionServiceMergeContributionProcedure:
 			contributionServiceMergeContributionHandler.ServeHTTP(w, r)
 		case ContributionServiceListContributionsProcedure:
@@ -291,8 +291,8 @@ func (UnimplementedContributionServiceHandler) ListMyContributions(context.Conte
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.ContributionService.ListMyContributions is not implemented"))
 }
 
-func (UnimplementedContributionServiceHandler) WithdrawContribution(context.Context, *connect.Request[v1.WithdrawContributionRequest]) (*connect.Response[v1.WithdrawContributionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.ContributionService.WithdrawContribution is not implemented"))
+func (UnimplementedContributionServiceHandler) TransitionContribution(context.Context, *connect.Request[v1.TransitionContributionRequest]) (*connect.Response[v1.TransitionContributionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.ContributionService.TransitionContribution is not implemented"))
 }
 
 func (UnimplementedContributionServiceHandler) MergeContribution(context.Context, *connect.Request[v1.MergeContributionRequest]) (*connect.Response[v1.MergeContributionResponse], error) {

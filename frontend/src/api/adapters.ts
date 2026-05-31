@@ -220,6 +220,8 @@ const contributionStatus = (s: ContributionStatus): AppContributionStatus => {
     case ContributionStatus.APPROVED:          return 'approved'
     case ContributionStatus.REJECTED:          return 'rejected'
     case ContributionStatus.MERGED:            return 'merged'
+    case ContributionStatus.WITHDRAWN:         return 'withdrawn'
+    case ContributionStatus.CLOSED:            return 'closed'
     default:                                   return 'pending'
   }
 }
@@ -231,6 +233,10 @@ const eventType = (e: ContributionEventType): AppEventType => {
     case ContributionEventType.REQUEST_CHANGES: return 'request_changes'
     case ContributionEventType.REVISE:          return 'revise'
     case ContributionEventType.MERGE:           return 'merge'
+    case ContributionEventType.RESUBMIT:        return 'resubmit'
+    case ContributionEventType.WITHDRAW:        return 'withdraw'
+    case ContributionEventType.REOPEN:          return 'reopen'
+    case ContributionEventType.CLOSE:           return 'close'
     default:                                    return 'revise'
   }
 }

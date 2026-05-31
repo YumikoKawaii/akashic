@@ -225,17 +225,23 @@ type TestAttempt struct {
 const (
 	ContributionPending          = "pending"
 	ContributionChangesRequested = "changes_requested"
-	ContributionApproved         = "approved" // >=1 approve, awaiting contributor merge
-	ContributionRejected         = "rejected" // terminal
-	ContributionMerged           = "merged"   // terminal — question created
+	ContributionApproved         = "approved"  // >=1 approve, awaiting contributor merge
+	ContributionRejected         = "rejected"  // reviewer rejected; contributor may reopen
+	ContributionMerged           = "merged"    // terminal — question created
+	ContributionWithdrawn        = "withdrawn" // contributor pulled back; may reopen
+	ContributionClosed           = "closed"    // terminal — contributor abandoned
 
 	// Contribution event log — every state transition. Approve/Reject/RequestChanges
-	// are reviewer actions; Revise/Merge are contributor actions.
+	// are reviewer actions; the rest are contributor actions.
 	EventApprove        = "approve"
 	EventReject         = "reject"
 	EventRequestChanges = "request_changes"
 	EventRevise         = "revise"
 	EventMerge          = "merge"
+	EventResubmit       = "resubmit"
+	EventWithdraw       = "withdraw"
+	EventReopen         = "reopen"
+	EventClose          = "close"
 )
 
 // ContributionPayload is the proposed new question, snapshotted as JSONB. Mirrors

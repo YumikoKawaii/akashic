@@ -85,18 +85,20 @@ var procedureMinRole = map[string]string{
 	akashicv1connect.AttemptServiceGetAttemptProcedure:         membership.RoleViewer,
 	akashicv1connect.AttemptServiceSubmitAttemptProcedure:      membership.RoleViewer,
 
-	// Contributions — proposing, revising, withdrawing and merging are viewer
-	// capabilities (public visitors may contribute). Merge is viewer-floor but
-	// creates a question; that is safe because the service gates it on
-	// status==approved, which only an editor's review can produce. Reviewing the
-	// queue (list/approve/reject/request_changes) is an editor capability.
-	akashicv1connect.ContributionServiceSubmitContributionProcedure:   membership.RoleViewer,
-	akashicv1connect.ContributionServiceUpdateContributionProcedure:   membership.RoleViewer,
-	akashicv1connect.ContributionServiceListMyContributionsProcedure:  membership.RoleViewer,
-	akashicv1connect.ContributionServiceWithdrawContributionProcedure: membership.RoleViewer,
-	akashicv1connect.ContributionServiceMergeContributionProcedure:    membership.RoleViewer,
-	akashicv1connect.ContributionServiceListContributionsProcedure:    membership.RoleEditor,
-	akashicv1connect.ContributionServiceReviewContributionProcedure:   membership.RoleEditor,
+	// Contributions — proposing, revising, contributor transitions (resubmit/
+	// withdraw/reopen/close) and merging are viewer capabilities (public visitors
+	// may contribute). Merge is viewer-floor but creates a question; that is safe
+	// because the service gates it on status==approved, which only an editor's
+	// review can produce. Reviewing the queue (list/approve/reject/request_changes)
+	// is an editor capability. The contribution state machine (which transition is
+	// legal from which status) lives in the service's nextStatus.
+	akashicv1connect.ContributionServiceSubmitContributionProcedure:     membership.RoleViewer,
+	akashicv1connect.ContributionServiceUpdateContributionProcedure:     membership.RoleViewer,
+	akashicv1connect.ContributionServiceListMyContributionsProcedure:    membership.RoleViewer,
+	akashicv1connect.ContributionServiceTransitionContributionProcedure: membership.RoleViewer,
+	akashicv1connect.ContributionServiceMergeContributionProcedure:      membership.RoleViewer,
+	akashicv1connect.ContributionServiceListContributionsProcedure:      membership.RoleEditor,
+	akashicv1connect.ContributionServiceReviewContributionProcedure:     membership.RoleEditor,
 	// Commenting is open to any viewer (the contributor defends their idea; the
 	// thread is shared discussion). Service binds the comment to the bank.
 	akashicv1connect.ContributionServiceAddContributionCommentProcedure: membership.RoleViewer,

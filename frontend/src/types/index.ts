@@ -200,11 +200,14 @@ export interface TestPage {
   page_size: number
 }
 
-export type ContributionStatus = 'pending' | 'changes_requested' | 'approved' | 'rejected' | 'merged'
+export type ContributionStatus =
+  | 'pending' | 'changes_requested' | 'approved' | 'rejected' | 'merged' | 'withdrawn' | 'closed'
 // Reviewer decisions (the input to ReviewContribution)…
 export type ReviewDecision = 'approve' | 'reject' | 'request_changes'
-// …plus the contributor transitions, together forming the full event log.
-export type ContributionEventType = ReviewDecision | 'revise' | 'merge'
+// Contributor-driven transitions (the input to TransitionContribution)…
+export type ContributorAction = 'resubmit' | 'withdraw' | 'reopen' | 'close'
+// …together with revise/merge, the full event log vocabulary.
+export type ContributionEventType = ReviewDecision | ContributorAction | 'revise' | 'merge'
 
 export interface ProposedQuestion {
   category_id: number

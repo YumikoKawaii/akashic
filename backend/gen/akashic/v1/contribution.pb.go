@@ -29,8 +29,10 @@ const (
 	ContributionStatus_CONTRIBUTION_STATUS_PENDING           ContributionStatus = 1
 	ContributionStatus_CONTRIBUTION_STATUS_CHANGES_REQUESTED ContributionStatus = 2
 	ContributionStatus_CONTRIBUTION_STATUS_APPROVED          ContributionStatus = 3 // >=1 approve, awaiting contributor merge
-	ContributionStatus_CONTRIBUTION_STATUS_REJECTED          ContributionStatus = 4 // terminal
+	ContributionStatus_CONTRIBUTION_STATUS_REJECTED          ContributionStatus = 4 // reviewer rejected; contributor may reopen
 	ContributionStatus_CONTRIBUTION_STATUS_MERGED            ContributionStatus = 5 // terminal — question created
+	ContributionStatus_CONTRIBUTION_STATUS_WITHDRAWN         ContributionStatus = 6 // contributor pulled back; may reopen
+	ContributionStatus_CONTRIBUTION_STATUS_CLOSED            ContributionStatus = 7 // terminal — contributor abandoned
 )
 
 // Enum value maps for ContributionStatus.
@@ -42,6 +44,8 @@ var (
 		3: "CONTRIBUTION_STATUS_APPROVED",
 		4: "CONTRIBUTION_STATUS_REJECTED",
 		5: "CONTRIBUTION_STATUS_MERGED",
+		6: "CONTRIBUTION_STATUS_WITHDRAWN",
+		7: "CONTRIBUTION_STATUS_CLOSED",
 	}
 	ContributionStatus_value = map[string]int32{
 		"CONTRIBUTION_STATUS_UNSPECIFIED":       0,
@@ -50,6 +54,8 @@ var (
 		"CONTRIBUTION_STATUS_APPROVED":          3,
 		"CONTRIBUTION_STATUS_REJECTED":          4,
 		"CONTRIBUTION_STATUS_MERGED":            5,
+		"CONTRIBUTION_STATUS_WITHDRAWN":         6,
+		"CONTRIBUTION_STATUS_CLOSED":            7,
 	}
 )
 
@@ -81,18 +87,22 @@ func (ContributionStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 // ContributionEventType is every state transition recorded on a contribution's
-// event log. APPROVE/REJECT/REQUEST_CHANGES are reviewer (editor) actions;
-// REVISE/MERGE are contributor actions. The log carries no prose — explanations
-// are comments.
+// event log. APPROVE/REJECT/REQUEST_CHANGES are reviewer (editor) actions; the
+// rest are contributor actions. The log carries no prose — explanations are
+// comments.
 type ContributionEventType int32
 
 const (
 	ContributionEventType_CONTRIBUTION_EVENT_TYPE_UNSPECIFIED     ContributionEventType = 0
-	ContributionEventType_CONTRIBUTION_EVENT_TYPE_APPROVE         ContributionEventType = 1 // -> approved (does NOT create a question; contributor merges)
-	ContributionEventType_CONTRIBUTION_EVENT_TYPE_REJECT          ContributionEventType = 2 // -> rejected (terminal)
-	ContributionEventType_CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES ContributionEventType = 3 // -> changes_requested (bounces back to contributor)
+	ContributionEventType_CONTRIBUTION_EVENT_TYPE_APPROVE         ContributionEventType = 1 // reviewer  -> approved (contributor then merges)
+	ContributionEventType_CONTRIBUTION_EVENT_TYPE_REJECT          ContributionEventType = 2 // reviewer  -> rejected
+	ContributionEventType_CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES ContributionEventType = 3 // reviewer  -> changes_requested
 	ContributionEventType_CONTRIBUTION_EVENT_TYPE_REVISE          ContributionEventType = 4 // contributor edited -> pending
 	ContributionEventType_CONTRIBUTION_EVENT_TYPE_MERGE           ContributionEventType = 5 // contributor landed -> merged
+	ContributionEventType_CONTRIBUTION_EVENT_TYPE_RESUBMIT        ContributionEventType = 6 // contributor re-requests review (no edit) -> pending
+	ContributionEventType_CONTRIBUTION_EVENT_TYPE_WITHDRAW        ContributionEventType = 7 // contributor -> withdrawn
+	ContributionEventType_CONTRIBUTION_EVENT_TYPE_REOPEN          ContributionEventType = 8 // contributor (withdrawn|rejected) -> pending
+	ContributionEventType_CONTRIBUTION_EVENT_TYPE_CLOSE           ContributionEventType = 9 // contributor -> closed (terminal)
 )
 
 // Enum value maps for ContributionEventType.
@@ -104,6 +114,10 @@ var (
 		3: "CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES",
 		4: "CONTRIBUTION_EVENT_TYPE_REVISE",
 		5: "CONTRIBUTION_EVENT_TYPE_MERGE",
+		6: "CONTRIBUTION_EVENT_TYPE_RESUBMIT",
+		7: "CONTRIBUTION_EVENT_TYPE_WITHDRAW",
+		8: "CONTRIBUTION_EVENT_TYPE_REOPEN",
+		9: "CONTRIBUTION_EVENT_TYPE_CLOSE",
 	}
 	ContributionEventType_value = map[string]int32{
 		"CONTRIBUTION_EVENT_TYPE_UNSPECIFIED":     0,
@@ -112,6 +126,10 @@ var (
 		"CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES": 3,
 		"CONTRIBUTION_EVENT_TYPE_REVISE":          4,
 		"CONTRIBUTION_EVENT_TYPE_MERGE":           5,
+		"CONTRIBUTION_EVENT_TYPE_RESUBMIT":        6,
+		"CONTRIBUTION_EVENT_TYPE_WITHDRAW":        7,
+		"CONTRIBUTION_EVENT_TYPE_REOPEN":          8,
+		"CONTRIBUTION_EVENT_TYPE_CLOSE":           9,
 	}
 )
 
@@ -825,28 +843,31 @@ func (x *ListMyContributionsResponse) GetContributions() []*Contribution {
 	return nil
 }
 
-type WithdrawContributionRequest struct {
+// Contributor-driven status transition: RESUBMIT / WITHDRAW / REOPEN / CLOSE.
+// Validated against the current state + contributor ownership.
+type TransitionContributionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BankId        int32                  `protobuf:"varint,1,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
 	Id            int32                  `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	Action        ContributionEventType  `protobuf:"varint,3,opt,name=action,proto3,enum=akashic.v1.ContributionEventType" json:"action,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *WithdrawContributionRequest) Reset() {
-	*x = WithdrawContributionRequest{}
+func (x *TransitionContributionRequest) Reset() {
+	*x = TransitionContributionRequest{}
 	mi := &file_akashic_v1_contribution_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *WithdrawContributionRequest) String() string {
+func (x *TransitionContributionRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*WithdrawContributionRequest) ProtoMessage() {}
+func (*TransitionContributionRequest) ProtoMessage() {}
 
-func (x *WithdrawContributionRequest) ProtoReflect() protoreflect.Message {
+func (x *TransitionContributionRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_akashic_v1_contribution_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -858,45 +879,53 @@ func (x *WithdrawContributionRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use WithdrawContributionRequest.ProtoReflect.Descriptor instead.
-func (*WithdrawContributionRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use TransitionContributionRequest.ProtoReflect.Descriptor instead.
+func (*TransitionContributionRequest) Descriptor() ([]byte, []int) {
 	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *WithdrawContributionRequest) GetBankId() int32 {
+func (x *TransitionContributionRequest) GetBankId() int32 {
 	if x != nil {
 		return x.BankId
 	}
 	return 0
 }
 
-func (x *WithdrawContributionRequest) GetId() int32 {
+func (x *TransitionContributionRequest) GetId() int32 {
 	if x != nil {
 		return x.Id
 	}
 	return 0
 }
 
-type WithdrawContributionResponse struct {
+func (x *TransitionContributionRequest) GetAction() ContributionEventType {
+	if x != nil {
+		return x.Action
+	}
+	return ContributionEventType_CONTRIBUTION_EVENT_TYPE_UNSPECIFIED
+}
+
+type TransitionContributionResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Contribution  *Contribution          `protobuf:"bytes,1,opt,name=contribution,proto3" json:"contribution,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *WithdrawContributionResponse) Reset() {
-	*x = WithdrawContributionResponse{}
+func (x *TransitionContributionResponse) Reset() {
+	*x = TransitionContributionResponse{}
 	mi := &file_akashic_v1_contribution_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *WithdrawContributionResponse) String() string {
+func (x *TransitionContributionResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*WithdrawContributionResponse) ProtoMessage() {}
+func (*TransitionContributionResponse) ProtoMessage() {}
 
-func (x *WithdrawContributionResponse) ProtoReflect() protoreflect.Message {
+func (x *TransitionContributionResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_akashic_v1_contribution_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -908,9 +937,16 @@ func (x *WithdrawContributionResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use WithdrawContributionResponse.ProtoReflect.Descriptor instead.
-func (*WithdrawContributionResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use TransitionContributionResponse.ProtoReflect.Descriptor instead.
+func (*TransitionContributionResponse) Descriptor() ([]byte, []int) {
 	return file_akashic_v1_contribution_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *TransitionContributionResponse) GetContribution() *Contribution {
+	if x != nil {
+		return x.Contribution
+	}
+	return nil
 }
 
 // Contributor-only; allowed only when status == approved. Creates the question.
@@ -1382,11 +1418,13 @@ const file_akashic_v1_contribution_proto_rawDesc = "" +
 	"\x1aListMyContributionsRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\"]\n" +
 	"\x1bListMyContributionsResponse\x12>\n" +
-	"\rcontributions\x18\x01 \x03(\v2\x18.akashic.v1.ContributionR\rcontributions\"F\n" +
-	"\x1bWithdrawContributionRequest\x12\x17\n" +
+	"\rcontributions\x18\x01 \x03(\v2\x18.akashic.v1.ContributionR\rcontributions\"\x83\x01\n" +
+	"\x1dTransitionContributionRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x0e\n" +
-	"\x02id\x18\x02 \x01(\x05R\x02id\"\x1e\n" +
-	"\x1cWithdrawContributionResponse\"C\n" +
+	"\x02id\x18\x02 \x01(\x05R\x02id\x129\n" +
+	"\x06action\x18\x03 \x01(\x0e2!.akashic.v1.ContributionEventTypeR\x06action\"^\n" +
+	"\x1eTransitionContributionResponse\x12<\n" +
+	"\fcontribution\x18\x01 \x01(\v2\x18.akashic.v1.ContributionR\fcontribution\"C\n" +
 	"\x18MergeContributionRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\x05R\x02id\"Y\n" +
@@ -1408,26 +1446,32 @@ const file_akashic_v1_contribution_proto_rawDesc = "" +
 	"\x02id\x18\x02 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04body\x18\x03 \x01(\tR\x04body\"^\n" +
 	"\x1eAddContributionCommentResponse\x12<\n" +
-	"\fcontribution\x18\x01 \x01(\v2\x18.akashic.v1.ContributionR\fcontribution*\xe9\x01\n" +
+	"\fcontribution\x18\x01 \x01(\v2\x18.akashic.v1.ContributionR\fcontribution*\xac\x02\n" +
 	"\x12ContributionStatus\x12#\n" +
 	"\x1fCONTRIBUTION_STATUS_UNSPECIFIED\x10\x00\x12\x1f\n" +
 	"\x1bCONTRIBUTION_STATUS_PENDING\x10\x01\x12)\n" +
 	"%CONTRIBUTION_STATUS_CHANGES_REQUESTED\x10\x02\x12 \n" +
 	"\x1cCONTRIBUTION_STATUS_APPROVED\x10\x03\x12 \n" +
 	"\x1cCONTRIBUTION_STATUS_REJECTED\x10\x04\x12\x1e\n" +
-	"\x1aCONTRIBUTION_STATUS_MERGED\x10\x05*\xfd\x01\n" +
+	"\x1aCONTRIBUTION_STATUS_MERGED\x10\x05\x12!\n" +
+	"\x1dCONTRIBUTION_STATUS_WITHDRAWN\x10\x06\x12\x1e\n" +
+	"\x1aCONTRIBUTION_STATUS_CLOSED\x10\a*\x90\x03\n" +
 	"\x15ContributionEventType\x12'\n" +
 	"#CONTRIBUTION_EVENT_TYPE_UNSPECIFIED\x10\x00\x12#\n" +
 	"\x1fCONTRIBUTION_EVENT_TYPE_APPROVE\x10\x01\x12\"\n" +
 	"\x1eCONTRIBUTION_EVENT_TYPE_REJECT\x10\x02\x12+\n" +
 	"'CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES\x10\x03\x12\"\n" +
 	"\x1eCONTRIBUTION_EVENT_TYPE_REVISE\x10\x04\x12!\n" +
-	"\x1dCONTRIBUTION_EVENT_TYPE_MERGE\x10\x052\xcc\x06\n" +
+	"\x1dCONTRIBUTION_EVENT_TYPE_MERGE\x10\x05\x12$\n" +
+	" CONTRIBUTION_EVENT_TYPE_RESUBMIT\x10\x06\x12$\n" +
+	" CONTRIBUTION_EVENT_TYPE_WITHDRAW\x10\a\x12\"\n" +
+	"\x1eCONTRIBUTION_EVENT_TYPE_REOPEN\x10\b\x12!\n" +
+	"\x1dCONTRIBUTION_EVENT_TYPE_CLOSE\x10\t2\xd2\x06\n" +
 	"\x13ContributionService\x12c\n" +
 	"\x12SubmitContribution\x12%.akashic.v1.SubmitContributionRequest\x1a&.akashic.v1.SubmitContributionResponse\x12c\n" +
 	"\x12UpdateContribution\x12%.akashic.v1.UpdateContributionRequest\x1a&.akashic.v1.UpdateContributionResponse\x12f\n" +
-	"\x13ListMyContributions\x12&.akashic.v1.ListMyContributionsRequest\x1a'.akashic.v1.ListMyContributionsResponse\x12i\n" +
-	"\x14WithdrawContribution\x12'.akashic.v1.WithdrawContributionRequest\x1a(.akashic.v1.WithdrawContributionResponse\x12`\n" +
+	"\x13ListMyContributions\x12&.akashic.v1.ListMyContributionsRequest\x1a'.akashic.v1.ListMyContributionsResponse\x12o\n" +
+	"\x16TransitionContribution\x12).akashic.v1.TransitionContributionRequest\x1a*.akashic.v1.TransitionContributionResponse\x12`\n" +
 	"\x11MergeContribution\x12$.akashic.v1.MergeContributionRequest\x1a%.akashic.v1.MergeContributionResponse\x12`\n" +
 	"\x11ListContributions\x12$.akashic.v1.ListContributionsRequest\x1a%.akashic.v1.ListContributionsResponse\x12c\n" +
 	"\x12ReviewContribution\x12%.akashic.v1.ReviewContributionRequest\x1a&.akashic.v1.ReviewContributionResponse\x12o\n" +
@@ -1460,8 +1504,8 @@ var file_akashic_v1_contribution_proto_goTypes = []any{
 	(*UpdateContributionResponse)(nil),     // 9: akashic.v1.UpdateContributionResponse
 	(*ListMyContributionsRequest)(nil),     // 10: akashic.v1.ListMyContributionsRequest
 	(*ListMyContributionsResponse)(nil),    // 11: akashic.v1.ListMyContributionsResponse
-	(*WithdrawContributionRequest)(nil),    // 12: akashic.v1.WithdrawContributionRequest
-	(*WithdrawContributionResponse)(nil),   // 13: akashic.v1.WithdrawContributionResponse
+	(*TransitionContributionRequest)(nil),  // 12: akashic.v1.TransitionContributionRequest
+	(*TransitionContributionResponse)(nil), // 13: akashic.v1.TransitionContributionResponse
 	(*MergeContributionRequest)(nil),       // 14: akashic.v1.MergeContributionRequest
 	(*MergeContributionResponse)(nil),      // 15: akashic.v1.MergeContributionResponse
 	(*ListContributionsRequest)(nil),       // 16: akashic.v1.ListContributionsRequest
@@ -1499,33 +1543,35 @@ var file_akashic_v1_contribution_proto_depIdxs = []int32{
 	2,  // 18: akashic.v1.UpdateContributionRequest.proposed:type_name -> akashic.v1.ProposedQuestion
 	5,  // 19: akashic.v1.UpdateContributionResponse.contribution:type_name -> akashic.v1.Contribution
 	5,  // 20: akashic.v1.ListMyContributionsResponse.contributions:type_name -> akashic.v1.Contribution
-	5,  // 21: akashic.v1.MergeContributionResponse.contribution:type_name -> akashic.v1.Contribution
-	0,  // 22: akashic.v1.ListContributionsRequest.status:type_name -> akashic.v1.ContributionStatus
-	5,  // 23: akashic.v1.ListContributionsResponse.contributions:type_name -> akashic.v1.Contribution
-	1,  // 24: akashic.v1.ReviewContributionRequest.decision:type_name -> akashic.v1.ContributionEventType
-	5,  // 25: akashic.v1.ReviewContributionResponse.contribution:type_name -> akashic.v1.Contribution
-	5,  // 26: akashic.v1.AddContributionCommentResponse.contribution:type_name -> akashic.v1.Contribution
-	6,  // 27: akashic.v1.ContributionService.SubmitContribution:input_type -> akashic.v1.SubmitContributionRequest
-	8,  // 28: akashic.v1.ContributionService.UpdateContribution:input_type -> akashic.v1.UpdateContributionRequest
-	10, // 29: akashic.v1.ContributionService.ListMyContributions:input_type -> akashic.v1.ListMyContributionsRequest
-	12, // 30: akashic.v1.ContributionService.WithdrawContribution:input_type -> akashic.v1.WithdrawContributionRequest
-	14, // 31: akashic.v1.ContributionService.MergeContribution:input_type -> akashic.v1.MergeContributionRequest
-	16, // 32: akashic.v1.ContributionService.ListContributions:input_type -> akashic.v1.ListContributionsRequest
-	18, // 33: akashic.v1.ContributionService.ReviewContribution:input_type -> akashic.v1.ReviewContributionRequest
-	20, // 34: akashic.v1.ContributionService.AddContributionComment:input_type -> akashic.v1.AddContributionCommentRequest
-	7,  // 35: akashic.v1.ContributionService.SubmitContribution:output_type -> akashic.v1.SubmitContributionResponse
-	9,  // 36: akashic.v1.ContributionService.UpdateContribution:output_type -> akashic.v1.UpdateContributionResponse
-	11, // 37: akashic.v1.ContributionService.ListMyContributions:output_type -> akashic.v1.ListMyContributionsResponse
-	13, // 38: akashic.v1.ContributionService.WithdrawContribution:output_type -> akashic.v1.WithdrawContributionResponse
-	15, // 39: akashic.v1.ContributionService.MergeContribution:output_type -> akashic.v1.MergeContributionResponse
-	17, // 40: akashic.v1.ContributionService.ListContributions:output_type -> akashic.v1.ListContributionsResponse
-	19, // 41: akashic.v1.ContributionService.ReviewContribution:output_type -> akashic.v1.ReviewContributionResponse
-	21, // 42: akashic.v1.ContributionService.AddContributionComment:output_type -> akashic.v1.AddContributionCommentResponse
-	35, // [35:43] is the sub-list for method output_type
-	27, // [27:35] is the sub-list for method input_type
-	27, // [27:27] is the sub-list for extension type_name
-	27, // [27:27] is the sub-list for extension extendee
-	0,  // [0:27] is the sub-list for field type_name
+	1,  // 21: akashic.v1.TransitionContributionRequest.action:type_name -> akashic.v1.ContributionEventType
+	5,  // 22: akashic.v1.TransitionContributionResponse.contribution:type_name -> akashic.v1.Contribution
+	5,  // 23: akashic.v1.MergeContributionResponse.contribution:type_name -> akashic.v1.Contribution
+	0,  // 24: akashic.v1.ListContributionsRequest.status:type_name -> akashic.v1.ContributionStatus
+	5,  // 25: akashic.v1.ListContributionsResponse.contributions:type_name -> akashic.v1.Contribution
+	1,  // 26: akashic.v1.ReviewContributionRequest.decision:type_name -> akashic.v1.ContributionEventType
+	5,  // 27: akashic.v1.ReviewContributionResponse.contribution:type_name -> akashic.v1.Contribution
+	5,  // 28: akashic.v1.AddContributionCommentResponse.contribution:type_name -> akashic.v1.Contribution
+	6,  // 29: akashic.v1.ContributionService.SubmitContribution:input_type -> akashic.v1.SubmitContributionRequest
+	8,  // 30: akashic.v1.ContributionService.UpdateContribution:input_type -> akashic.v1.UpdateContributionRequest
+	10, // 31: akashic.v1.ContributionService.ListMyContributions:input_type -> akashic.v1.ListMyContributionsRequest
+	12, // 32: akashic.v1.ContributionService.TransitionContribution:input_type -> akashic.v1.TransitionContributionRequest
+	14, // 33: akashic.v1.ContributionService.MergeContribution:input_type -> akashic.v1.MergeContributionRequest
+	16, // 34: akashic.v1.ContributionService.ListContributions:input_type -> akashic.v1.ListContributionsRequest
+	18, // 35: akashic.v1.ContributionService.ReviewContribution:input_type -> akashic.v1.ReviewContributionRequest
+	20, // 36: akashic.v1.ContributionService.AddContributionComment:input_type -> akashic.v1.AddContributionCommentRequest
+	7,  // 37: akashic.v1.ContributionService.SubmitContribution:output_type -> akashic.v1.SubmitContributionResponse
+	9,  // 38: akashic.v1.ContributionService.UpdateContribution:output_type -> akashic.v1.UpdateContributionResponse
+	11, // 39: akashic.v1.ContributionService.ListMyContributions:output_type -> akashic.v1.ListMyContributionsResponse
+	13, // 40: akashic.v1.ContributionService.TransitionContribution:output_type -> akashic.v1.TransitionContributionResponse
+	15, // 41: akashic.v1.ContributionService.MergeContribution:output_type -> akashic.v1.MergeContributionResponse
+	17, // 42: akashic.v1.ContributionService.ListContributions:output_type -> akashic.v1.ListContributionsResponse
+	19, // 43: akashic.v1.ContributionService.ReviewContribution:output_type -> akashic.v1.ReviewContributionResponse
+	21, // 44: akashic.v1.ContributionService.AddContributionComment:output_type -> akashic.v1.AddContributionCommentResponse
+	37, // [37:45] is the sub-list for method output_type
+	29, // [29:37] is the sub-list for method input_type
+	29, // [29:29] is the sub-list for extension type_name
+	29, // [29:29] is the sub-list for extension extendee
+	0,  // [0:29] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_contribution_proto_init() }

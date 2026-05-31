@@ -13,6 +13,8 @@ const FILTERS: Array<{ value: ContributionStatus | ''; label: string }> = [
   { value: 'approved',          label: 'Approved' },
   { value: 'rejected',          label: 'Rejected' },
   { value: 'merged',            label: 'Merged' },
+  { value: 'withdrawn',         label: 'Withdrawn' },
+  { value: 'closed',            label: 'Closed' },
 ]
 
 // Reviewable = the queue can still act on it (not yet approved/rejected/merged).

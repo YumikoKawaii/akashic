@@ -11,7 +11,7 @@ service ContributionService {
   rpc SubmitContribution   (SubmitContributionRequest)   returns (SubmitContributionResponse);
   rpc UpdateContribution   (UpdateContributionRequest)   returns (UpdateContributionResponse);
   rpc ListMyContributions  (ListMyContributionsRequest)  returns (ListMyContributionsResponse);
-  rpc WithdrawContribution (WithdrawContributionRequest) returns (WithdrawContributionResponse);
+  rpc TransitionContribution (TransitionContributionRequest) returns (TransitionContributionResponse);
   rpc MergeContribution    (MergeContributionRequest)    returns (MergeContributionResponse);
   rpc ListContributions    (ListContributionsRequest)    returns (ListContributionsResponse);
   rpc ReviewContribution   (ReviewContributionRequest)   returns (ReviewContributionResponse);
@@ -23,21 +23,27 @@ enum ContributionStatus {
   CONTRIBUTION_STATUS_PENDING           = 1;
   CONTRIBUTION_STATUS_CHANGES_REQUESTED = 2;
   CONTRIBUTION_STATUS_APPROVED          = 3; // >=1 approve, awaiting contributor merge
-  CONTRIBUTION_STATUS_REJECTED          = 4; // terminal
+  CONTRIBUTION_STATUS_REJECTED          = 4; // reviewer rejected; contributor may reopen
   CONTRIBUTION_STATUS_MERGED            = 5; // terminal — question created
+  CONTRIBUTION_STATUS_WITHDRAWN         = 6; // contributor pulled back; may reopen
+  CONTRIBUTION_STATUS_CLOSED            = 7; // terminal — contributor abandoned
 }
 
 // ContributionEventType is every state transition recorded on a contribution's
-// event log. APPROVE/REJECT/REQUEST_CHANGES are reviewer (editor) actions;
-// REVISE/MERGE are contributor actions. The log carries no prose — explanations
-// are comments.
+// event log. APPROVE/REJECT/REQUEST_CHANGES are reviewer (editor) actions; the
+// rest are contributor actions. The log carries no prose — explanations are
+// comments.
 enum ContributionEventType {
   CONTRIBUTION_EVENT_TYPE_UNSPECIFIED     = 0;
-  CONTRIBUTION_EVENT_TYPE_APPROVE         = 1; // -> approved (does NOT create a question; contributor merges)
-  CONTRIBUTION_EVENT_TYPE_REJECT          = 2; // -> rejected (terminal)
-  CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES = 3; // -> changes_requested (bounces back to contributor)
+  CONTRIBUTION_EVENT_TYPE_APPROVE         = 1; // reviewer  -> approved (contributor then merges)
+  CONTRIBUTION_EVENT_TYPE_REJECT          = 2; // reviewer  -> rejected
+  CONTRIBUTION_EVENT_TYPE_REQUEST_CHANGES = 3; // reviewer  -> changes_requested
   CONTRIBUTION_EVENT_TYPE_REVISE          = 4; // contributor edited -> pending
   CONTRIBUTION_EVENT_TYPE_MERGE           = 5; // contributor landed -> merged
+  CONTRIBUTION_EVENT_TYPE_RESUBMIT        = 6; // contributor re-requests review (no edit) -> pending
+  CONTRIBUTION_EVENT_TYPE_WITHDRAW        = 7; // contributor -> withdrawn
+  CONTRIBUTION_EVENT_TYPE_REOPEN          = 8; // contributor (withdrawn|rejected) -> pending
+  CONTRIBUTION_EVENT_TYPE_CLOSE           = 9; // contributor -> closed (terminal)
 }
 
 // ── Entities ────────────────────────────────────────────────────────────────
@@ -101,8 +107,10 @@ message UpdateContributionResponse { Contribution contribution = 1; }
 message ListMyContributionsRequest  { int32 bank_id = 1; } // caller's own, this bank
 message ListMyContributionsResponse { repeated Contribution contributions = 1; }
 
-message WithdrawContributionRequest  { int32 bank_id = 1; int32 id = 2; }
-message WithdrawContributionResponse {}
+// Contributor-driven status transition: RESUBMIT / WITHDRAW / REOPEN / CLOSE.
+// Validated against the current state + contributor ownership.
+message TransitionContributionRequest  { int32 bank_id = 1; int32 id = 2; ContributionEventType action = 3; }
+message TransitionContributionResponse { Contribution contribution = 1; }
 
 // Contributor-only; allowed only when status == approved. Creates the question.
 message MergeContributionRequest  { int32 bank_id = 1; int32 id = 2; }
