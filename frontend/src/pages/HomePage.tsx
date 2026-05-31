@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useExplore } from '../hooks/useExplore'
 import PublicRecordCarousel from '../components/explore/PublicRecordCarousel'
-import AstrolabeBand from '../components/ui/AstrolabeBand'
 import { Spinner } from '../components/ui/MagicCircle'
 
 export default function HomePage() {
@@ -37,12 +36,7 @@ export default function HomePage() {
         </p>
       </div>
 
-      {/* Astrolabe rule — anchors the masthead above the search */}
-      <div style={{ width: 'min(360px, 70%)', marginTop: 16 }}>
-        <AstrolabeBand color="var(--gold-dim)" opacity={0.5} />
-      </div>
-
-      <div style={{ width: 'min(560px, 92%)', marginTop: 18, marginBottom: 30, position: 'relative' }}>
+      <div style={{ width: 'min(560px, 92%)', marginTop: 20, marginBottom: 30, position: 'relative' }}>
         <span style={{
           position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
           display: 'flex', color: 'var(--gold-dim)', pointerEvents: 'none',
