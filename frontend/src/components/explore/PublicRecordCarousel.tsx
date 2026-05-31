@@ -123,8 +123,6 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
                   ? '0 10px 30px rgba(154,112,24,0.32), 0 0 0 1px rgba(154,112,24,0.25)'
                   : '0 5px 16px rgba(0,0,0,0.12)',
               }}>
-                {/* Fore-edge — stacked page lines */}
-                <div style={{ position: 'absolute', top: 8, bottom: 8, right: 0, width: 4, background: 'repeating-linear-gradient(90deg, rgba(154,112,24,0.20) 0 1px, transparent 1px 2px)' }} />
                 {/* Magic circle — top-left corner */}
                 <div style={{ position: 'absolute', top: -110, left: -110, width: 230, height: 230, opacity: isCenter ? 0.18 : 0.08, color: 'var(--gold)', pointerEvents: 'none' }}>
                   <MagicCircle variant="inner" speed={0.4} />
@@ -157,20 +155,11 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
                     {rec.description || <span style={{ fontStyle: 'italic', opacity: 0.6 }}>No description.</span>}
                   </p>
 
-                  <div style={{ marginTop: 10, textAlign: 'center', fontSize: '0.68rem', color: 'var(--ink-dim)' }}>
-                    <div>{rec.question_count.toLocaleString()} q · {rec.category_count} cat</div>
-                    {rec.owner && <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>by {rec.owner.name}</div>}
+                  <div style={{ marginTop: 10, textAlign: 'center', fontSize: '0.7rem', color: 'var(--ink-dim)', lineHeight: 1.6 }}>
+                    <div>{rec.question_count.toLocaleString()} questions</div>
+                    <div>{rec.category_count} categories</div>
+                    {rec.owner && <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 4 }}>by {rec.owner.name}</div>}
                   </div>
-
-                  {isCenter && (
-                    <button
-                      className="btn btn-primary"
-                      style={{ marginTop: 12, fontSize: '0.6rem', padding: '6px 0', width: '100%' }}
-                      onClick={(e) => { e.stopPropagation(); navigate(`/banks/${rec.id}`) }}
-                    >
-                      Open →
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
