@@ -8,7 +8,6 @@ import MagicCircle from '../ui/MagicCircle'
 const SPACING  = 172
 const CARD_W   = 210
 const CARD_H   = 344
-const SPINE_W  = 18
 const FRAME    = 'rgba(154,112,24,0.55)'
 const ACCENT   = 'rgba(154,112,24,0.55)'
 const ROTATE_MS = 4000
@@ -112,37 +111,27 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
               opacity, zIndex,
               transition: isLive ? 'none' : 'transform 0.45s cubic-bezier(0.34,1.05,0.64,1), opacity 0.4s ease',
             }}>
-              {/* The book */}
+              {/* The book cover */}
               <div style={{
-                height: CARD_H, display: 'flex',
+                height: CARD_H, position: 'relative', overflow: 'hidden',
                 background: 'var(--bg-card)',
                 border: `1px solid ${FRAME}`,
-                borderRadius: '2px 6px 6px 2px',
-                overflow: 'hidden',
+                borderRadius: '5px',
+                padding: '20px 16px 16px',
+                display: 'flex', flexDirection: 'column',
                 boxShadow: isCenter
                   ? '0 10px 30px rgba(154,112,24,0.32), 0 0 0 1px rgba(154,112,24,0.25)'
                   : '0 5px 16px rgba(0,0,0,0.12)',
               }}>
-                {/* Spine — gradient band with binding bands */}
-                <div style={{
-                  width: SPINE_W, flexShrink: 0, position: 'relative',
-                  background: 'linear-gradient(90deg, rgba(154,112,24,0.52) 0%, rgba(154,112,24,0.24) 55%, rgba(154,112,24,0.10) 100%)',
-                  borderRight: `1px solid ${FRAME}`,
-                }}>
-                  {[0.16, 0.30, 0.70, 0.84].map((p, bi) => (
-                    <div key={bi} style={{ position: 'absolute', left: 2, right: 2, top: `${p * 100}%`, height: 1.5, background: 'rgba(154,112,24,0.55)' }} />
-                  ))}
+                {/* Fore-edge — stacked page lines */}
+                <div style={{ position: 'absolute', top: 8, bottom: 8, right: 0, width: 4, background: 'repeating-linear-gradient(90deg, rgba(154,112,24,0.20) 0 1px, transparent 1px 2px)' }} />
+                {/* Magic circle — top-left corner */}
+                <div style={{ position: 'absolute', top: -110, left: -110, width: 230, height: 230, opacity: isCenter ? 0.18 : 0.08, color: 'var(--gold)', pointerEvents: 'none' }}>
+                  <MagicCircle variant="inner" speed={0.4} />
                 </div>
 
-                {/* Cover */}
-                <div style={{ flex: 1, minWidth: 0, position: 'relative', overflow: 'hidden', padding: '20px 16px 16px', display: 'flex', flexDirection: 'column' }}>
-                  {/* Fore-edge — stacked page lines */}
-                  <div style={{ position: 'absolute', top: 8, bottom: 8, right: 0, width: 4, background: 'repeating-linear-gradient(90deg, rgba(154,112,24,0.20) 0 1px, transparent 1px 2px)' }} />
-                  {/* Magic circle — bottom corner */}
-                  <div style={{ position: 'absolute', bottom: -110, right: -110, width: 230, height: 230, opacity: isCenter ? 0.16 : 0.07, color: 'var(--gold)', pointerEvents: 'none' }}>
-                    <MagicCircle variant="inner" speed={0.4} />
-                  </div>
-
+                {/* Cover content */}
+                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
                   <div style={{ textAlign: 'center', color: 'var(--gold)', fontSize: '1.05rem', lineHeight: 1, marginBottom: 10 }}>◈</div>
 
                   <div style={{
