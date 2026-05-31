@@ -11,6 +11,8 @@ const CARD_H   = 344
 const FRAME    = 'rgba(154,112,24,0.55)'
 const ACCENT   = 'rgba(154,112,24,0.55)'
 const ROTATE_MS = 4000
+// Radiant gold aura for the centre card — same treatment as the results carousel.
+const GLOW = 'drop-shadow(0 0 5px rgba(154,112,24,0.55)) drop-shadow(0 0 14px rgba(154,112,24,0.28))'
 
 function mod(n: number, m: number) { return ((n % m) + m) % m }
 
@@ -109,7 +111,8 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
               width: CARD_W,
               transform: `translate(calc(-50% + ${x}px), -50%) scale(${scale})`,
               opacity, zIndex,
-              transition: isLive ? 'none' : 'transform 0.45s cubic-bezier(0.34,1.05,0.64,1), opacity 0.4s ease',
+              filter: isCenter ? GLOW : undefined,
+              transition: isLive ? 'none' : 'transform 0.45s cubic-bezier(0.34,1.05,0.64,1), opacity 0.4s ease, filter 0.4s ease',
             }}>
               {/* The book cover */}
               <div style={{
@@ -119,9 +122,7 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
                 borderRadius: '5px',
                 padding: '20px 16px 16px',
                 display: 'flex', flexDirection: 'column',
-                boxShadow: isCenter
-                  ? '0 10px 30px rgba(154,112,24,0.32), 0 0 0 1px rgba(154,112,24,0.25)'
-                  : '0 5px 16px rgba(0,0,0,0.12)',
+                boxShadow: isCenter ? 'none' : '0 5px 16px rgba(0,0,0,0.12)',
               }}>
                 {/* Magic circle — top-left corner */}
                 <div style={{ position: 'absolute', top: -110, left: -110, width: 230, height: 230, opacity: isCenter ? 0.18 : 0.08, color: 'var(--gold)', pointerEvents: 'none' }}>
