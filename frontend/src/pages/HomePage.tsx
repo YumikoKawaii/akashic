@@ -20,10 +20,18 @@ export default function HomePage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 24 }}>
       <div style={{ textAlign: 'center' }}>
-        <h1 style={{ fontFamily: 'Cinzel, serif', letterSpacing: '0.3em', color: 'var(--gold)', fontSize: '1.4rem', margin: 0 }}>
-          ✦ THE ARCHIVE ✦
-        </h1>
-        <p style={{ color: 'var(--ink-dim)', fontSize: '0.85rem', marginTop: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
+          <span style={{ color: 'var(--gold-dim)', fontSize: '0.85rem' }}>✦</span>
+          <h1 style={{
+            fontFamily: 'Cinzel Decorative, serif', fontWeight: 700,
+            letterSpacing: '0.22em', textIndent: '0.22em',  // textIndent re-centers the trailing letter-spacing
+            color: 'var(--gold)', fontSize: '1.75rem', margin: 0, lineHeight: 1,
+          }}>
+            THE ARCHIVE
+          </h1>
+          <span style={{ color: 'var(--gold-dim)', fontSize: '0.85rem' }}>✦</span>
+        </div>
+        <p style={{ color: 'var(--ink-dim)', fontSize: '0.85rem', letterSpacing: '0.04em', marginTop: 12 }}>
           Search the community's public records
         </p>
       </div>
