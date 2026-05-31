@@ -915,6 +915,58 @@ input[type=number].form-input { -moz-appearance: textfield; }
   justify-content: flex-end;
 }
 
+/* Parchment dropdown menu (Manage, etc.) — matches the sidebar-item idiom:
+   gold-dim frame, square corners, left accent bar + gold tint on hover. */
+.dropdown-menu {
+  min-width: 200px;
+  background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-card) 100%);
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+  box-shadow: 0 12px 30px rgba(30,21,8,0.22);
+  padding: 5px;
+}
+.dropdown-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 9px 14px 9px 15px;
+  font-family: 'EB Garamond', serif;
+  font-size: 0.9rem;
+  color: var(--ink);
+  overflow: hidden;
+  transition: color 0.18s, background 0.18s;
+}
+.dropdown-item::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+  transform: scaleY(0);
+  transition: transform 0.18s ease;
+}
+.dropdown-item:hover {
+  color: var(--gold);
+  background: linear-gradient(90deg, rgba(200,160,48,0.10) 0%, transparent 100%);
+}
+.dropdown-item:hover::before { transform: scaleY(1); }
+.dropdown-item:disabled { opacity: 0.5; cursor: default; }
+.dropdown-item:disabled:hover { color: var(--ink); background: none; }
+.dropdown-item:disabled:hover::before { transform: scaleY(0); }
+.dropdown-glyph {
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+  font-size: 0.92rem;
+  color: var(--gold-dim);
+}
+.dropdown-item:hover .dropdown-glyph { color: var(--gold); }
+
 /* Bank section tabs — a left-aligned underline tab bar with per-tab counts. */
 .bank-tabs {
   display: flex;

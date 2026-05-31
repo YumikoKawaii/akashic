@@ -244,27 +244,19 @@ export default function BankPage() {
             <div ref={manageRef} style={{ position: 'relative' }}>
               <button className="btn btn-ghost" onClick={() => setManageOpen(o => !o)}>⚙ Manage ▾</button>
               {manageOpen && (
-                <div style={{
-                  position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 50,
-                  minWidth: 200, background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
-                  borderRadius: 5, boxShadow: '0 8px 24px rgba(154,112,24,0.18)', padding: 4, textAlign: 'left',
-                }}>
+                <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 50, textAlign: 'left' }}>
                   {[
-                    { label: importing ? 'Importing…' : '⬆ Import', onClick: triggerImport, disabled: importing },
-                    { label: '⇄ Share Record', onClick: () => setShareOpen(true) },
-                    { label: bank.visibility === 'public' ? '🔒 Make Private' : '🌐 Make Public', onClick: toggleVisibility, disabled: setVisibility.isPending },
+                    { glyph: '↑', label: importing ? 'Importing…' : 'Import', onClick: triggerImport, disabled: importing },
+                    { glyph: '⇄', label: 'Share Record', onClick: () => setShareOpen(true), disabled: false },
+                    { glyph: '◈', label: bank.visibility === 'public' ? 'Make Private' : 'Make Public', onClick: toggleVisibility, disabled: setVisibility.isPending },
                   ].map(item => (
                     <button
                       key={item.label}
+                      className="dropdown-item"
                       disabled={item.disabled}
                       onClick={() => { item.onClick(); setManageOpen(false) }}
-                      style={{
-                        display: 'block', width: '100%', textAlign: 'left',
-                        background: 'none', border: 'none', cursor: item.disabled ? 'default' : 'pointer',
-                        padding: '8px 12px', fontSize: '0.82rem', color: 'var(--ink)',
-                        fontFamily: 'EB Garamond, serif', opacity: item.disabled ? 0.5 : 1,
-                      }}
                     >
+                      <span className="dropdown-glyph">{item.glyph}</span>
                       {item.label}
                     </button>
                   ))}
