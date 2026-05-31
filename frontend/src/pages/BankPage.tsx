@@ -249,16 +249,18 @@ export default function BankPage() {
                     { glyph: '↑', label: importing ? 'Importing…' : 'Import', onClick: triggerImport, disabled: importing },
                     { glyph: '⇄', label: 'Share Record', onClick: () => setShareOpen(true), disabled: false },
                     { glyph: '◈', label: bank.visibility === 'public' ? 'Make Private' : 'Make Public', onClick: toggleVisibility, disabled: setVisibility.isPending },
-                  ].map(item => (
-                    <button
-                      key={item.label}
-                      className="dropdown-item"
-                      disabled={item.disabled}
-                      onClick={() => { item.onClick(); setManageOpen(false) }}
-                    >
-                      <span className="dropdown-glyph">{item.glyph}</span>
-                      {item.label}
-                    </button>
+                  ].map((item, idx) => (
+                    <div key={item.label}>
+                      {idx > 0 && <div className="dropdown-sep" />}
+                      <button
+                        className="dropdown-item"
+                        disabled={item.disabled}
+                        onClick={() => { item.onClick(); setManageOpen(false) }}
+                      >
+                        <span className="dropdown-glyph">{item.glyph}</span>
+                        {item.label}
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}

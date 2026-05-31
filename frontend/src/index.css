@@ -966,6 +966,11 @@ input[type=number].form-input { -moz-appearance: textfield; }
   color: var(--gold-dim);
 }
 .dropdown-item:hover .dropdown-glyph { color: var(--gold); }
+.dropdown-sep {
+  height: 1px;
+  margin: 4px 10px;
+  background: linear-gradient(90deg, transparent, var(--border-dim), transparent);
+}
 
 /* Bank section tabs — a left-aligned underline tab bar with per-tab counts. */
 .bank-tabs {
