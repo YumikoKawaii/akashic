@@ -98,8 +98,8 @@ function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium
             return (
               <div key={d} className="flex items-center gap-1">
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: DIFF[d].dot, boxShadow: `0 0 4px ${DIFF[d].dot}`, display: 'inline-block', flexShrink: 0 }} />
-                <span style={{ fontSize: '0.6rem', color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
-                  {d.slice(0, 3).toUpperCase()}
+                <span style={{ fontSize: '0.6rem', color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', letterSpacing: '0.12em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                  {d}
                 </span>
                 <input type="number" min={0} max={100} value={val}
                   onChange={e => set(Math.max(0, Number(e.target.value)))}
