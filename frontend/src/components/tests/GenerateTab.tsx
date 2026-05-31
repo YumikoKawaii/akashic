@@ -261,12 +261,12 @@ function PassageForm({ bank, passages }: { bank: Bank; passages: Passage[] }) {
       toUse = filtered
     } else {
       // No filter — pick one at random
-      if (!passages.length) { setGenError('No passages available in this bank.'); return }
+      if (!passages.length) { setGenError('No passages available in this record.'); return }
       toUse = [passages[Math.floor(Math.random() * passages.length)]]
     }
 
     if (!toUse.length) {
-      setGenError(`No ${passDiff} passages found in this bank.`)
+      setGenError(`No ${passDiff} passages found in this record.`)
       return
     }
 

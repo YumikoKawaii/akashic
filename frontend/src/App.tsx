@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Layout from './components/layout/Layout'
+import HomeLayout from './components/layout/HomeLayout'
+import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import OAuthCallbackPage from './pages/OAuthCallbackPage'
 import BankPage from './pages/BankPage'
@@ -29,13 +31,11 @@ function ProtectedRoutes() {
 
   return (
     <Routes>
+      <Route element={<HomeLayout />}>
+        <Route index element={<HomePage />} />
+      </Route>
+      <Route path="/banks" element={<Navigate to="/" replace />} />
       <Route element={<Layout />}>
-        <Route index element={<Navigate to="/banks" replace />} />
-        <Route path="/banks" element={
-          <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.8rem', letterSpacing: '0.2em' }}>
-            Select a bank or create one to begin.
-          </div>
-        } />
         <Route path="/banks/:bankId" element={<BankPage />} />
         <Route path="/banks/:bankId/questions/new" element={<QuestionFormPage />} />
         <Route path="/banks/:bankId/questions/:questionId/edit" element={<QuestionFormPage />} />

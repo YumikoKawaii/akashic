@@ -346,6 +346,204 @@ func (x *ListBanksResponse) GetBanks() []*BankWithRole {
 	return nil
 }
 
+// ── Public records discovery (community home) ───────────────────────────────────
+// Not bank-scoped: any authenticated user, returns only public banks.
+type PublicBankCard struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Owner         *User                  `protobuf:"bytes,4,opt,name=owner,proto3,oneof" json:"owner,omitempty"`
+	QuestionCount int32                  `protobuf:"varint,5,opt,name=question_count,json=questionCount,proto3" json:"question_count,omitempty"`
+	CategoryCount int32                  `protobuf:"varint,6,opt,name=category_count,json=categoryCount,proto3" json:"category_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PublicBankCard) Reset() {
+	*x = PublicBankCard{}
+	mi := &file_akashic_v1_bank_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PublicBankCard) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PublicBankCard) ProtoMessage() {}
+
+func (x *PublicBankCard) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_bank_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PublicBankCard.ProtoReflect.Descriptor instead.
+func (*PublicBankCard) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *PublicBankCard) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *PublicBankCard) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *PublicBankCard) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *PublicBankCard) GetOwner() *User {
+	if x != nil {
+		return x.Owner
+	}
+	return nil
+}
+
+func (x *PublicBankCard) GetQuestionCount() int32 {
+	if x != nil {
+		return x.QuestionCount
+	}
+	return 0
+}
+
+func (x *PublicBankCard) GetCategoryCount() int32 {
+	if x != nil {
+		return x.CategoryCount
+	}
+	return 0
+}
+
+type ListPublicBanksRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Query         string                 `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
+	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPublicBanksRequest) Reset() {
+	*x = ListPublicBanksRequest{}
+	mi := &file_akashic_v1_bank_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPublicBanksRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPublicBanksRequest) ProtoMessage() {}
+
+func (x *ListPublicBanksRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_bank_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPublicBanksRequest.ProtoReflect.Descriptor instead.
+func (*ListPublicBanksRequest) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ListPublicBanksRequest) GetQuery() string {
+	if x != nil {
+		return x.Query
+	}
+	return ""
+}
+
+func (x *ListPublicBanksRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListPublicBanksRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+type ListPublicBanksResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Banks         []*PublicBankCard      `protobuf:"bytes,1,rep,name=banks,proto3" json:"banks,omitempty"`
+	PageInfo      *PageInfo              `protobuf:"bytes,2,opt,name=page_info,json=pageInfo,proto3" json:"page_info,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPublicBanksResponse) Reset() {
+	*x = ListPublicBanksResponse{}
+	mi := &file_akashic_v1_bank_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPublicBanksResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPublicBanksResponse) ProtoMessage() {}
+
+func (x *ListPublicBanksResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_bank_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPublicBanksResponse.ProtoReflect.Descriptor instead.
+func (*ListPublicBanksResponse) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ListPublicBanksResponse) GetBanks() []*PublicBankCard {
+	if x != nil {
+		return x.Banks
+	}
+	return nil
+}
+
+func (x *ListPublicBanksResponse) GetPageInfo() *PageInfo {
+	if x != nil {
+		return x.PageInfo
+	}
+	return nil
+}
+
 type CreateBankRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -357,7 +555,7 @@ type CreateBankRequest struct {
 
 func (x *CreateBankRequest) Reset() {
 	*x = CreateBankRequest{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[5]
+	mi := &file_akashic_v1_bank_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -369,7 +567,7 @@ func (x *CreateBankRequest) String() string {
 func (*CreateBankRequest) ProtoMessage() {}
 
 func (x *CreateBankRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[5]
+	mi := &file_akashic_v1_bank_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -382,7 +580,7 @@ func (x *CreateBankRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateBankRequest.ProtoReflect.Descriptor instead.
 func (*CreateBankRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{5}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *CreateBankRequest) GetName() string {
@@ -415,7 +613,7 @@ type CreateBankResponse struct {
 
 func (x *CreateBankResponse) Reset() {
 	*x = CreateBankResponse{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[6]
+	mi := &file_akashic_v1_bank_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -427,7 +625,7 @@ func (x *CreateBankResponse) String() string {
 func (*CreateBankResponse) ProtoMessage() {}
 
 func (x *CreateBankResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[6]
+	mi := &file_akashic_v1_bank_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -440,7 +638,7 @@ func (x *CreateBankResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateBankResponse.ProtoReflect.Descriptor instead.
 func (*CreateBankResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{6}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *CreateBankResponse) GetBank() *Bank {
@@ -459,7 +657,7 @@ type GetBankRequest struct {
 
 func (x *GetBankRequest) Reset() {
 	*x = GetBankRequest{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[7]
+	mi := &file_akashic_v1_bank_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -471,7 +669,7 @@ func (x *GetBankRequest) String() string {
 func (*GetBankRequest) ProtoMessage() {}
 
 func (x *GetBankRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[7]
+	mi := &file_akashic_v1_bank_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -484,7 +682,7 @@ func (x *GetBankRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBankRequest.ProtoReflect.Descriptor instead.
 func (*GetBankRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{7}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetBankRequest) GetBankId() int32 {
@@ -503,7 +701,7 @@ type GetBankResponse struct {
 
 func (x *GetBankResponse) Reset() {
 	*x = GetBankResponse{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[8]
+	mi := &file_akashic_v1_bank_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -515,7 +713,7 @@ func (x *GetBankResponse) String() string {
 func (*GetBankResponse) ProtoMessage() {}
 
 func (x *GetBankResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[8]
+	mi := &file_akashic_v1_bank_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -528,7 +726,7 @@ func (x *GetBankResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBankResponse.ProtoReflect.Descriptor instead.
 func (*GetBankResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{8}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetBankResponse) GetBank() *BankWithRole {
@@ -549,7 +747,7 @@ type UpdateBankRequest struct {
 
 func (x *UpdateBankRequest) Reset() {
 	*x = UpdateBankRequest{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[9]
+	mi := &file_akashic_v1_bank_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -561,7 +759,7 @@ func (x *UpdateBankRequest) String() string {
 func (*UpdateBankRequest) ProtoMessage() {}
 
 func (x *UpdateBankRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[9]
+	mi := &file_akashic_v1_bank_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -574,7 +772,7 @@ func (x *UpdateBankRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBankRequest.ProtoReflect.Descriptor instead.
 func (*UpdateBankRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{9}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *UpdateBankRequest) GetBankId() int32 {
@@ -607,7 +805,7 @@ type UpdateBankResponse struct {
 
 func (x *UpdateBankResponse) Reset() {
 	*x = UpdateBankResponse{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[10]
+	mi := &file_akashic_v1_bank_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -619,7 +817,7 @@ func (x *UpdateBankResponse) String() string {
 func (*UpdateBankResponse) ProtoMessage() {}
 
 func (x *UpdateBankResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[10]
+	mi := &file_akashic_v1_bank_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -632,7 +830,7 @@ func (x *UpdateBankResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBankResponse.ProtoReflect.Descriptor instead.
 func (*UpdateBankResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{10}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *UpdateBankResponse) GetBank() *Bank {
@@ -652,7 +850,7 @@ type UpdateBankDefaultConfigRequest struct {
 
 func (x *UpdateBankDefaultConfigRequest) Reset() {
 	*x = UpdateBankDefaultConfigRequest{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[11]
+	mi := &file_akashic_v1_bank_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -664,7 +862,7 @@ func (x *UpdateBankDefaultConfigRequest) String() string {
 func (*UpdateBankDefaultConfigRequest) ProtoMessage() {}
 
 func (x *UpdateBankDefaultConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[11]
+	mi := &file_akashic_v1_bank_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -677,7 +875,7 @@ func (x *UpdateBankDefaultConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBankDefaultConfigRequest.ProtoReflect.Descriptor instead.
 func (*UpdateBankDefaultConfigRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{11}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *UpdateBankDefaultConfigRequest) GetBankId() int32 {
@@ -703,7 +901,7 @@ type UpdateBankDefaultConfigResponse struct {
 
 func (x *UpdateBankDefaultConfigResponse) Reset() {
 	*x = UpdateBankDefaultConfigResponse{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[12]
+	mi := &file_akashic_v1_bank_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -715,7 +913,7 @@ func (x *UpdateBankDefaultConfigResponse) String() string {
 func (*UpdateBankDefaultConfigResponse) ProtoMessage() {}
 
 func (x *UpdateBankDefaultConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[12]
+	mi := &file_akashic_v1_bank_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -728,7 +926,7 @@ func (x *UpdateBankDefaultConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBankDefaultConfigResponse.ProtoReflect.Descriptor instead.
 func (*UpdateBankDefaultConfigResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{12}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *UpdateBankDefaultConfigResponse) GetBank() *Bank {
@@ -747,7 +945,7 @@ type DeleteBankRequest struct {
 
 func (x *DeleteBankRequest) Reset() {
 	*x = DeleteBankRequest{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[13]
+	mi := &file_akashic_v1_bank_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -759,7 +957,7 @@ func (x *DeleteBankRequest) String() string {
 func (*DeleteBankRequest) ProtoMessage() {}
 
 func (x *DeleteBankRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[13]
+	mi := &file_akashic_v1_bank_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -772,7 +970,7 @@ func (x *DeleteBankRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteBankRequest.ProtoReflect.Descriptor instead.
 func (*DeleteBankRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{13}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *DeleteBankRequest) GetBankId() int32 {
@@ -790,7 +988,7 @@ type DeleteBankResponse struct {
 
 func (x *DeleteBankResponse) Reset() {
 	*x = DeleteBankResponse{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[14]
+	mi := &file_akashic_v1_bank_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -802,7 +1000,7 @@ func (x *DeleteBankResponse) String() string {
 func (*DeleteBankResponse) ProtoMessage() {}
 
 func (x *DeleteBankResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[14]
+	mi := &file_akashic_v1_bank_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -815,7 +1013,7 @@ func (x *DeleteBankResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteBankResponse.ProtoReflect.Descriptor instead.
 func (*DeleteBankResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{14}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{17}
 }
 
 type RestoreBankRequest struct {
@@ -827,7 +1025,7 @@ type RestoreBankRequest struct {
 
 func (x *RestoreBankRequest) Reset() {
 	*x = RestoreBankRequest{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[15]
+	mi := &file_akashic_v1_bank_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -839,7 +1037,7 @@ func (x *RestoreBankRequest) String() string {
 func (*RestoreBankRequest) ProtoMessage() {}
 
 func (x *RestoreBankRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[15]
+	mi := &file_akashic_v1_bank_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -852,7 +1050,7 @@ func (x *RestoreBankRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RestoreBankRequest.ProtoReflect.Descriptor instead.
 func (*RestoreBankRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{15}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *RestoreBankRequest) GetBankId() int32 {
@@ -871,7 +1069,7 @@ type RestoreBankResponse struct {
 
 func (x *RestoreBankResponse) Reset() {
 	*x = RestoreBankResponse{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[16]
+	mi := &file_akashic_v1_bank_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -883,7 +1081,7 @@ func (x *RestoreBankResponse) String() string {
 func (*RestoreBankResponse) ProtoMessage() {}
 
 func (x *RestoreBankResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[16]
+	mi := &file_akashic_v1_bank_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -896,7 +1094,7 @@ func (x *RestoreBankResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RestoreBankResponse.ProtoReflect.Descriptor instead.
 func (*RestoreBankResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{16}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *RestoreBankResponse) GetBank() *Bank {
@@ -915,7 +1113,7 @@ type ListBankMembersRequest struct {
 
 func (x *ListBankMembersRequest) Reset() {
 	*x = ListBankMembersRequest{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[17]
+	mi := &file_akashic_v1_bank_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -927,7 +1125,7 @@ func (x *ListBankMembersRequest) String() string {
 func (*ListBankMembersRequest) ProtoMessage() {}
 
 func (x *ListBankMembersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[17]
+	mi := &file_akashic_v1_bank_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -940,7 +1138,7 @@ func (x *ListBankMembersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBankMembersRequest.ProtoReflect.Descriptor instead.
 func (*ListBankMembersRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{17}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ListBankMembersRequest) GetBankId() int32 {
@@ -959,7 +1157,7 @@ type ListBankMembersResponse struct {
 
 func (x *ListBankMembersResponse) Reset() {
 	*x = ListBankMembersResponse{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[18]
+	mi := &file_akashic_v1_bank_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -971,7 +1169,7 @@ func (x *ListBankMembersResponse) String() string {
 func (*ListBankMembersResponse) ProtoMessage() {}
 
 func (x *ListBankMembersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[18]
+	mi := &file_akashic_v1_bank_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -984,7 +1182,7 @@ func (x *ListBankMembersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBankMembersResponse.ProtoReflect.Descriptor instead.
 func (*ListBankMembersResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{18}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ListBankMembersResponse) GetMembers() []*BankMember {
@@ -1005,7 +1203,7 @@ type AddBankMemberRequest struct {
 
 func (x *AddBankMemberRequest) Reset() {
 	*x = AddBankMemberRequest{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[19]
+	mi := &file_akashic_v1_bank_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1017,7 +1215,7 @@ func (x *AddBankMemberRequest) String() string {
 func (*AddBankMemberRequest) ProtoMessage() {}
 
 func (x *AddBankMemberRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[19]
+	mi := &file_akashic_v1_bank_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1030,7 +1228,7 @@ func (x *AddBankMemberRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddBankMemberRequest.ProtoReflect.Descriptor instead.
 func (*AddBankMemberRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{19}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *AddBankMemberRequest) GetBankId() int32 {
@@ -1063,7 +1261,7 @@ type AddBankMemberResponse struct {
 
 func (x *AddBankMemberResponse) Reset() {
 	*x = AddBankMemberResponse{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[20]
+	mi := &file_akashic_v1_bank_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1075,7 +1273,7 @@ func (x *AddBankMemberResponse) String() string {
 func (*AddBankMemberResponse) ProtoMessage() {}
 
 func (x *AddBankMemberResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[20]
+	mi := &file_akashic_v1_bank_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1088,7 +1286,7 @@ func (x *AddBankMemberResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddBankMemberResponse.ProtoReflect.Descriptor instead.
 func (*AddBankMemberResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{20}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *AddBankMemberResponse) GetMember() *BankMember {
@@ -1108,7 +1306,7 @@ type RemoveBankMemberRequest struct {
 
 func (x *RemoveBankMemberRequest) Reset() {
 	*x = RemoveBankMemberRequest{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[21]
+	mi := &file_akashic_v1_bank_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1120,7 +1318,7 @@ func (x *RemoveBankMemberRequest) String() string {
 func (*RemoveBankMemberRequest) ProtoMessage() {}
 
 func (x *RemoveBankMemberRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[21]
+	mi := &file_akashic_v1_bank_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1133,7 +1331,7 @@ func (x *RemoveBankMemberRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveBankMemberRequest.ProtoReflect.Descriptor instead.
 func (*RemoveBankMemberRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{21}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *RemoveBankMemberRequest) GetBankId() int32 {
@@ -1158,7 +1356,7 @@ type RemoveBankMemberResponse struct {
 
 func (x *RemoveBankMemberResponse) Reset() {
 	*x = RemoveBankMemberResponse{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[22]
+	mi := &file_akashic_v1_bank_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1170,7 +1368,7 @@ func (x *RemoveBankMemberResponse) String() string {
 func (*RemoveBankMemberResponse) ProtoMessage() {}
 
 func (x *RemoveBankMemberResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[22]
+	mi := &file_akashic_v1_bank_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1183,7 +1381,7 @@ func (x *RemoveBankMemberResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveBankMemberResponse.ProtoReflect.Descriptor instead.
 func (*RemoveBankMemberResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{22}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{25}
 }
 
 type UpdateBankMemberRoleRequest struct {
@@ -1197,7 +1395,7 @@ type UpdateBankMemberRoleRequest struct {
 
 func (x *UpdateBankMemberRoleRequest) Reset() {
 	*x = UpdateBankMemberRoleRequest{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[23]
+	mi := &file_akashic_v1_bank_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1209,7 +1407,7 @@ func (x *UpdateBankMemberRoleRequest) String() string {
 func (*UpdateBankMemberRoleRequest) ProtoMessage() {}
 
 func (x *UpdateBankMemberRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[23]
+	mi := &file_akashic_v1_bank_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1222,7 +1420,7 @@ func (x *UpdateBankMemberRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBankMemberRoleRequest.ProtoReflect.Descriptor instead.
 func (*UpdateBankMemberRoleRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{23}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *UpdateBankMemberRoleRequest) GetBankId() int32 {
@@ -1255,7 +1453,7 @@ type UpdateBankMemberRoleResponse struct {
 
 func (x *UpdateBankMemberRoleResponse) Reset() {
 	*x = UpdateBankMemberRoleResponse{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[24]
+	mi := &file_akashic_v1_bank_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1267,7 +1465,7 @@ func (x *UpdateBankMemberRoleResponse) String() string {
 func (*UpdateBankMemberRoleResponse) ProtoMessage() {}
 
 func (x *UpdateBankMemberRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[24]
+	mi := &file_akashic_v1_bank_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1280,7 +1478,7 @@ func (x *UpdateBankMemberRoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBankMemberRoleResponse.ProtoReflect.Descriptor instead.
 func (*UpdateBankMemberRoleResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{24}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *UpdateBankMemberRoleResponse) GetMember() *BankMember {
@@ -1300,7 +1498,7 @@ type SetBankVisibilityRequest struct {
 
 func (x *SetBankVisibilityRequest) Reset() {
 	*x = SetBankVisibilityRequest{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[25]
+	mi := &file_akashic_v1_bank_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1312,7 +1510,7 @@ func (x *SetBankVisibilityRequest) String() string {
 func (*SetBankVisibilityRequest) ProtoMessage() {}
 
 func (x *SetBankVisibilityRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[25]
+	mi := &file_akashic_v1_bank_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1325,7 +1523,7 @@ func (x *SetBankVisibilityRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetBankVisibilityRequest.ProtoReflect.Descriptor instead.
 func (*SetBankVisibilityRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{25}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *SetBankVisibilityRequest) GetBankId() int32 {
@@ -1351,7 +1549,7 @@ type SetBankVisibilityResponse struct {
 
 func (x *SetBankVisibilityResponse) Reset() {
 	*x = SetBankVisibilityResponse{}
-	mi := &file_akashic_v1_bank_proto_msgTypes[26]
+	mi := &file_akashic_v1_bank_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1363,7 +1561,7 @@ func (x *SetBankVisibilityResponse) String() string {
 func (*SetBankVisibilityResponse) ProtoMessage() {}
 
 func (x *SetBankVisibilityResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_bank_proto_msgTypes[26]
+	mi := &file_akashic_v1_bank_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1376,7 +1574,7 @@ func (x *SetBankVisibilityResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetBankVisibilityResponse.ProtoReflect.Descriptor instead.
 func (*SetBankVisibilityResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{26}
+	return file_akashic_v1_bank_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *SetBankVisibilityResponse) GetBank() *Bank {
@@ -1422,7 +1620,22 @@ const file_akashic_v1_bank_proto_rawDesc = "" +
 	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x12\n" +
 	"\x10ListBanksRequest\"C\n" +
 	"\x11ListBanksResponse\x12.\n" +
-	"\x05banks\x18\x01 \x03(\v2\x18.akashic.v1.BankWithRoleR\x05banks\"\x88\x01\n" +
+	"\x05banks\x18\x01 \x03(\v2\x18.akashic.v1.BankWithRoleR\x05banks\"\xdb\x01\n" +
+	"\x0ePublicBankCard\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12+\n" +
+	"\x05owner\x18\x04 \x01(\v2\x10.akashic.v1.UserH\x00R\x05owner\x88\x01\x01\x12%\n" +
+	"\x0equestion_count\x18\x05 \x01(\x05R\rquestionCount\x12%\n" +
+	"\x0ecategory_count\x18\x06 \x01(\x05R\rcategoryCountB\b\n" +
+	"\x06_owner\"_\n" +
+	"\x16ListPublicBanksRequest\x12\x14\n" +
+	"\x05query\x18\x01 \x01(\tR\x05query\x12\x12\n" +
+	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"~\n" +
+	"\x17ListPublicBanksResponse\x120\n" +
+	"\x05banks\x18\x01 \x03(\v2\x1a.akashic.v1.PublicBankCardR\x05banks\x121\n" +
+	"\tpage_info\x18\x02 \x01(\v2\x14.akashic.v1.PageInfoR\bpageInfo\"\x88\x01\n" +
 	"\x11CreateBankRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12=\n" +
@@ -1477,9 +1690,10 @@ const file_akashic_v1_bank_proto_rawDesc = "" +
 	"visibility\x18\x02 \x01(\x0e2\x1a.akashic.v1.BankVisibilityR\n" +
 	"visibility\"A\n" +
 	"\x19SetBankVisibilityResponse\x12$\n" +
-	"\x04bank\x18\x01 \x01(\v2\x10.akashic.v1.BankR\x04bank2\xa4\b\n" +
+	"\x04bank\x18\x01 \x01(\v2\x10.akashic.v1.BankR\x04bank2\x80\t\n" +
 	"\vBankService\x12H\n" +
-	"\tListBanks\x12\x1c.akashic.v1.ListBanksRequest\x1a\x1d.akashic.v1.ListBanksResponse\x12K\n" +
+	"\tListBanks\x12\x1c.akashic.v1.ListBanksRequest\x1a\x1d.akashic.v1.ListBanksResponse\x12Z\n" +
+	"\x0fListPublicBanks\x12\".akashic.v1.ListPublicBanksRequest\x1a#.akashic.v1.ListPublicBanksResponse\x12K\n" +
 	"\n" +
 	"CreateBank\x12\x1d.akashic.v1.CreateBankRequest\x1a\x1e.akashic.v1.CreateBankResponse\x12B\n" +
 	"\aGetBank\x12\x1a.akashic.v1.GetBankRequest\x1a\x1b.akashic.v1.GetBankResponse\x12K\n" +
@@ -1507,95 +1721,104 @@ func file_akashic_v1_bank_proto_rawDescGZIP() []byte {
 	return file_akashic_v1_bank_proto_rawDescData
 }
 
-var file_akashic_v1_bank_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
+var file_akashic_v1_bank_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_akashic_v1_bank_proto_goTypes = []any{
 	(*Bank)(nil),                            // 0: akashic.v1.Bank
 	(*BankWithRole)(nil),                    // 1: akashic.v1.BankWithRole
 	(*BankMember)(nil),                      // 2: akashic.v1.BankMember
 	(*ListBanksRequest)(nil),                // 3: akashic.v1.ListBanksRequest
 	(*ListBanksResponse)(nil),               // 4: akashic.v1.ListBanksResponse
-	(*CreateBankRequest)(nil),               // 5: akashic.v1.CreateBankRequest
-	(*CreateBankResponse)(nil),              // 6: akashic.v1.CreateBankResponse
-	(*GetBankRequest)(nil),                  // 7: akashic.v1.GetBankRequest
-	(*GetBankResponse)(nil),                 // 8: akashic.v1.GetBankResponse
-	(*UpdateBankRequest)(nil),               // 9: akashic.v1.UpdateBankRequest
-	(*UpdateBankResponse)(nil),              // 10: akashic.v1.UpdateBankResponse
-	(*UpdateBankDefaultConfigRequest)(nil),  // 11: akashic.v1.UpdateBankDefaultConfigRequest
-	(*UpdateBankDefaultConfigResponse)(nil), // 12: akashic.v1.UpdateBankDefaultConfigResponse
-	(*DeleteBankRequest)(nil),               // 13: akashic.v1.DeleteBankRequest
-	(*DeleteBankResponse)(nil),              // 14: akashic.v1.DeleteBankResponse
-	(*RestoreBankRequest)(nil),              // 15: akashic.v1.RestoreBankRequest
-	(*RestoreBankResponse)(nil),             // 16: akashic.v1.RestoreBankResponse
-	(*ListBankMembersRequest)(nil),          // 17: akashic.v1.ListBankMembersRequest
-	(*ListBankMembersResponse)(nil),         // 18: akashic.v1.ListBankMembersResponse
-	(*AddBankMemberRequest)(nil),            // 19: akashic.v1.AddBankMemberRequest
-	(*AddBankMemberResponse)(nil),           // 20: akashic.v1.AddBankMemberResponse
-	(*RemoveBankMemberRequest)(nil),         // 21: akashic.v1.RemoveBankMemberRequest
-	(*RemoveBankMemberResponse)(nil),        // 22: akashic.v1.RemoveBankMemberResponse
-	(*UpdateBankMemberRoleRequest)(nil),     // 23: akashic.v1.UpdateBankMemberRoleRequest
-	(*UpdateBankMemberRoleResponse)(nil),    // 24: akashic.v1.UpdateBankMemberRoleResponse
-	(*SetBankVisibilityRequest)(nil),        // 25: akashic.v1.SetBankVisibilityRequest
-	(*SetBankVisibilityResponse)(nil),       // 26: akashic.v1.SetBankVisibilityResponse
-	(*TestConfig)(nil),                      // 27: akashic.v1.TestConfig
-	(*timestamppb.Timestamp)(nil),           // 28: google.protobuf.Timestamp
-	(BankVisibility)(0),                     // 29: akashic.v1.BankVisibility
-	(*User)(nil),                            // 30: akashic.v1.User
-	(BankRole)(0),                           // 31: akashic.v1.BankRole
+	(*PublicBankCard)(nil),                  // 5: akashic.v1.PublicBankCard
+	(*ListPublicBanksRequest)(nil),          // 6: akashic.v1.ListPublicBanksRequest
+	(*ListPublicBanksResponse)(nil),         // 7: akashic.v1.ListPublicBanksResponse
+	(*CreateBankRequest)(nil),               // 8: akashic.v1.CreateBankRequest
+	(*CreateBankResponse)(nil),              // 9: akashic.v1.CreateBankResponse
+	(*GetBankRequest)(nil),                  // 10: akashic.v1.GetBankRequest
+	(*GetBankResponse)(nil),                 // 11: akashic.v1.GetBankResponse
+	(*UpdateBankRequest)(nil),               // 12: akashic.v1.UpdateBankRequest
+	(*UpdateBankResponse)(nil),              // 13: akashic.v1.UpdateBankResponse
+	(*UpdateBankDefaultConfigRequest)(nil),  // 14: akashic.v1.UpdateBankDefaultConfigRequest
+	(*UpdateBankDefaultConfigResponse)(nil), // 15: akashic.v1.UpdateBankDefaultConfigResponse
+	(*DeleteBankRequest)(nil),               // 16: akashic.v1.DeleteBankRequest
+	(*DeleteBankResponse)(nil),              // 17: akashic.v1.DeleteBankResponse
+	(*RestoreBankRequest)(nil),              // 18: akashic.v1.RestoreBankRequest
+	(*RestoreBankResponse)(nil),             // 19: akashic.v1.RestoreBankResponse
+	(*ListBankMembersRequest)(nil),          // 20: akashic.v1.ListBankMembersRequest
+	(*ListBankMembersResponse)(nil),         // 21: akashic.v1.ListBankMembersResponse
+	(*AddBankMemberRequest)(nil),            // 22: akashic.v1.AddBankMemberRequest
+	(*AddBankMemberResponse)(nil),           // 23: akashic.v1.AddBankMemberResponse
+	(*RemoveBankMemberRequest)(nil),         // 24: akashic.v1.RemoveBankMemberRequest
+	(*RemoveBankMemberResponse)(nil),        // 25: akashic.v1.RemoveBankMemberResponse
+	(*UpdateBankMemberRoleRequest)(nil),     // 26: akashic.v1.UpdateBankMemberRoleRequest
+	(*UpdateBankMemberRoleResponse)(nil),    // 27: akashic.v1.UpdateBankMemberRoleResponse
+	(*SetBankVisibilityRequest)(nil),        // 28: akashic.v1.SetBankVisibilityRequest
+	(*SetBankVisibilityResponse)(nil),       // 29: akashic.v1.SetBankVisibilityResponse
+	(*TestConfig)(nil),                      // 30: akashic.v1.TestConfig
+	(*timestamppb.Timestamp)(nil),           // 31: google.protobuf.Timestamp
+	(BankVisibility)(0),                     // 32: akashic.v1.BankVisibility
+	(*User)(nil),                            // 33: akashic.v1.User
+	(BankRole)(0),                           // 34: akashic.v1.BankRole
+	(*PageInfo)(nil),                        // 35: akashic.v1.PageInfo
 }
 var file_akashic_v1_bank_proto_depIdxs = []int32{
-	27, // 0: akashic.v1.Bank.default_config:type_name -> akashic.v1.TestConfig
-	28, // 1: akashic.v1.Bank.created_at:type_name -> google.protobuf.Timestamp
-	28, // 2: akashic.v1.Bank.updated_at:type_name -> google.protobuf.Timestamp
-	29, // 3: akashic.v1.Bank.visibility:type_name -> akashic.v1.BankVisibility
+	30, // 0: akashic.v1.Bank.default_config:type_name -> akashic.v1.TestConfig
+	31, // 1: akashic.v1.Bank.created_at:type_name -> google.protobuf.Timestamp
+	31, // 2: akashic.v1.Bank.updated_at:type_name -> google.protobuf.Timestamp
+	32, // 3: akashic.v1.Bank.visibility:type_name -> akashic.v1.BankVisibility
 	0,  // 4: akashic.v1.BankWithRole.bank:type_name -> akashic.v1.Bank
-	30, // 5: akashic.v1.BankMember.user:type_name -> akashic.v1.User
-	31, // 6: akashic.v1.BankMember.role:type_name -> akashic.v1.BankRole
-	28, // 7: akashic.v1.BankMember.created_at:type_name -> google.protobuf.Timestamp
-	28, // 8: akashic.v1.BankMember.updated_at:type_name -> google.protobuf.Timestamp
+	33, // 5: akashic.v1.BankMember.user:type_name -> akashic.v1.User
+	34, // 6: akashic.v1.BankMember.role:type_name -> akashic.v1.BankRole
+	31, // 7: akashic.v1.BankMember.created_at:type_name -> google.protobuf.Timestamp
+	31, // 8: akashic.v1.BankMember.updated_at:type_name -> google.protobuf.Timestamp
 	1,  // 9: akashic.v1.ListBanksResponse.banks:type_name -> akashic.v1.BankWithRole
-	27, // 10: akashic.v1.CreateBankRequest.default_config:type_name -> akashic.v1.TestConfig
-	0,  // 11: akashic.v1.CreateBankResponse.bank:type_name -> akashic.v1.Bank
-	1,  // 12: akashic.v1.GetBankResponse.bank:type_name -> akashic.v1.BankWithRole
-	0,  // 13: akashic.v1.UpdateBankResponse.bank:type_name -> akashic.v1.Bank
-	27, // 14: akashic.v1.UpdateBankDefaultConfigRequest.config:type_name -> akashic.v1.TestConfig
-	0,  // 15: akashic.v1.UpdateBankDefaultConfigResponse.bank:type_name -> akashic.v1.Bank
-	0,  // 16: akashic.v1.RestoreBankResponse.bank:type_name -> akashic.v1.Bank
-	2,  // 17: akashic.v1.ListBankMembersResponse.members:type_name -> akashic.v1.BankMember
-	31, // 18: akashic.v1.AddBankMemberRequest.role:type_name -> akashic.v1.BankRole
-	2,  // 19: akashic.v1.AddBankMemberResponse.member:type_name -> akashic.v1.BankMember
-	31, // 20: akashic.v1.UpdateBankMemberRoleRequest.role:type_name -> akashic.v1.BankRole
-	2,  // 21: akashic.v1.UpdateBankMemberRoleResponse.member:type_name -> akashic.v1.BankMember
-	29, // 22: akashic.v1.SetBankVisibilityRequest.visibility:type_name -> akashic.v1.BankVisibility
-	0,  // 23: akashic.v1.SetBankVisibilityResponse.bank:type_name -> akashic.v1.Bank
-	3,  // 24: akashic.v1.BankService.ListBanks:input_type -> akashic.v1.ListBanksRequest
-	5,  // 25: akashic.v1.BankService.CreateBank:input_type -> akashic.v1.CreateBankRequest
-	7,  // 26: akashic.v1.BankService.GetBank:input_type -> akashic.v1.GetBankRequest
-	9,  // 27: akashic.v1.BankService.UpdateBank:input_type -> akashic.v1.UpdateBankRequest
-	11, // 28: akashic.v1.BankService.UpdateBankDefaultConfig:input_type -> akashic.v1.UpdateBankDefaultConfigRequest
-	13, // 29: akashic.v1.BankService.DeleteBank:input_type -> akashic.v1.DeleteBankRequest
-	15, // 30: akashic.v1.BankService.RestoreBank:input_type -> akashic.v1.RestoreBankRequest
-	17, // 31: akashic.v1.BankService.ListBankMembers:input_type -> akashic.v1.ListBankMembersRequest
-	19, // 32: akashic.v1.BankService.AddBankMember:input_type -> akashic.v1.AddBankMemberRequest
-	21, // 33: akashic.v1.BankService.RemoveBankMember:input_type -> akashic.v1.RemoveBankMemberRequest
-	23, // 34: akashic.v1.BankService.UpdateBankMemberRole:input_type -> akashic.v1.UpdateBankMemberRoleRequest
-	25, // 35: akashic.v1.BankService.SetBankVisibility:input_type -> akashic.v1.SetBankVisibilityRequest
-	4,  // 36: akashic.v1.BankService.ListBanks:output_type -> akashic.v1.ListBanksResponse
-	6,  // 37: akashic.v1.BankService.CreateBank:output_type -> akashic.v1.CreateBankResponse
-	8,  // 38: akashic.v1.BankService.GetBank:output_type -> akashic.v1.GetBankResponse
-	10, // 39: akashic.v1.BankService.UpdateBank:output_type -> akashic.v1.UpdateBankResponse
-	12, // 40: akashic.v1.BankService.UpdateBankDefaultConfig:output_type -> akashic.v1.UpdateBankDefaultConfigResponse
-	14, // 41: akashic.v1.BankService.DeleteBank:output_type -> akashic.v1.DeleteBankResponse
-	16, // 42: akashic.v1.BankService.RestoreBank:output_type -> akashic.v1.RestoreBankResponse
-	18, // 43: akashic.v1.BankService.ListBankMembers:output_type -> akashic.v1.ListBankMembersResponse
-	20, // 44: akashic.v1.BankService.AddBankMember:output_type -> akashic.v1.AddBankMemberResponse
-	22, // 45: akashic.v1.BankService.RemoveBankMember:output_type -> akashic.v1.RemoveBankMemberResponse
-	24, // 46: akashic.v1.BankService.UpdateBankMemberRole:output_type -> akashic.v1.UpdateBankMemberRoleResponse
-	26, // 47: akashic.v1.BankService.SetBankVisibility:output_type -> akashic.v1.SetBankVisibilityResponse
-	36, // [36:48] is the sub-list for method output_type
-	24, // [24:36] is the sub-list for method input_type
-	24, // [24:24] is the sub-list for extension type_name
-	24, // [24:24] is the sub-list for extension extendee
-	0,  // [0:24] is the sub-list for field type_name
+	33, // 10: akashic.v1.PublicBankCard.owner:type_name -> akashic.v1.User
+	5,  // 11: akashic.v1.ListPublicBanksResponse.banks:type_name -> akashic.v1.PublicBankCard
+	35, // 12: akashic.v1.ListPublicBanksResponse.page_info:type_name -> akashic.v1.PageInfo
+	30, // 13: akashic.v1.CreateBankRequest.default_config:type_name -> akashic.v1.TestConfig
+	0,  // 14: akashic.v1.CreateBankResponse.bank:type_name -> akashic.v1.Bank
+	1,  // 15: akashic.v1.GetBankResponse.bank:type_name -> akashic.v1.BankWithRole
+	0,  // 16: akashic.v1.UpdateBankResponse.bank:type_name -> akashic.v1.Bank
+	30, // 17: akashic.v1.UpdateBankDefaultConfigRequest.config:type_name -> akashic.v1.TestConfig
+	0,  // 18: akashic.v1.UpdateBankDefaultConfigResponse.bank:type_name -> akashic.v1.Bank
+	0,  // 19: akashic.v1.RestoreBankResponse.bank:type_name -> akashic.v1.Bank
+	2,  // 20: akashic.v1.ListBankMembersResponse.members:type_name -> akashic.v1.BankMember
+	34, // 21: akashic.v1.AddBankMemberRequest.role:type_name -> akashic.v1.BankRole
+	2,  // 22: akashic.v1.AddBankMemberResponse.member:type_name -> akashic.v1.BankMember
+	34, // 23: akashic.v1.UpdateBankMemberRoleRequest.role:type_name -> akashic.v1.BankRole
+	2,  // 24: akashic.v1.UpdateBankMemberRoleResponse.member:type_name -> akashic.v1.BankMember
+	32, // 25: akashic.v1.SetBankVisibilityRequest.visibility:type_name -> akashic.v1.BankVisibility
+	0,  // 26: akashic.v1.SetBankVisibilityResponse.bank:type_name -> akashic.v1.Bank
+	3,  // 27: akashic.v1.BankService.ListBanks:input_type -> akashic.v1.ListBanksRequest
+	6,  // 28: akashic.v1.BankService.ListPublicBanks:input_type -> akashic.v1.ListPublicBanksRequest
+	8,  // 29: akashic.v1.BankService.CreateBank:input_type -> akashic.v1.CreateBankRequest
+	10, // 30: akashic.v1.BankService.GetBank:input_type -> akashic.v1.GetBankRequest
+	12, // 31: akashic.v1.BankService.UpdateBank:input_type -> akashic.v1.UpdateBankRequest
+	14, // 32: akashic.v1.BankService.UpdateBankDefaultConfig:input_type -> akashic.v1.UpdateBankDefaultConfigRequest
+	16, // 33: akashic.v1.BankService.DeleteBank:input_type -> akashic.v1.DeleteBankRequest
+	18, // 34: akashic.v1.BankService.RestoreBank:input_type -> akashic.v1.RestoreBankRequest
+	20, // 35: akashic.v1.BankService.ListBankMembers:input_type -> akashic.v1.ListBankMembersRequest
+	22, // 36: akashic.v1.BankService.AddBankMember:input_type -> akashic.v1.AddBankMemberRequest
+	24, // 37: akashic.v1.BankService.RemoveBankMember:input_type -> akashic.v1.RemoveBankMemberRequest
+	26, // 38: akashic.v1.BankService.UpdateBankMemberRole:input_type -> akashic.v1.UpdateBankMemberRoleRequest
+	28, // 39: akashic.v1.BankService.SetBankVisibility:input_type -> akashic.v1.SetBankVisibilityRequest
+	4,  // 40: akashic.v1.BankService.ListBanks:output_type -> akashic.v1.ListBanksResponse
+	7,  // 41: akashic.v1.BankService.ListPublicBanks:output_type -> akashic.v1.ListPublicBanksResponse
+	9,  // 42: akashic.v1.BankService.CreateBank:output_type -> akashic.v1.CreateBankResponse
+	11, // 43: akashic.v1.BankService.GetBank:output_type -> akashic.v1.GetBankResponse
+	13, // 44: akashic.v1.BankService.UpdateBank:output_type -> akashic.v1.UpdateBankResponse
+	15, // 45: akashic.v1.BankService.UpdateBankDefaultConfig:output_type -> akashic.v1.UpdateBankDefaultConfigResponse
+	17, // 46: akashic.v1.BankService.DeleteBank:output_type -> akashic.v1.DeleteBankResponse
+	19, // 47: akashic.v1.BankService.RestoreBank:output_type -> akashic.v1.RestoreBankResponse
+	21, // 48: akashic.v1.BankService.ListBankMembers:output_type -> akashic.v1.ListBankMembersResponse
+	23, // 49: akashic.v1.BankService.AddBankMember:output_type -> akashic.v1.AddBankMemberResponse
+	25, // 50: akashic.v1.BankService.RemoveBankMember:output_type -> akashic.v1.RemoveBankMemberResponse
+	27, // 51: akashic.v1.BankService.UpdateBankMemberRole:output_type -> akashic.v1.UpdateBankMemberRoleResponse
+	29, // 52: akashic.v1.BankService.SetBankVisibility:output_type -> akashic.v1.SetBankVisibilityResponse
+	40, // [40:53] is the sub-list for method output_type
+	27, // [27:40] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_bank_proto_init() }
@@ -1605,13 +1828,14 @@ func file_akashic_v1_bank_proto_init() {
 	}
 	file_akashic_v1_common_proto_init()
 	file_akashic_v1_bank_proto_msgTypes[0].OneofWrappers = []any{}
+	file_akashic_v1_bank_proto_msgTypes[5].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_akashic_v1_bank_proto_rawDesc), len(file_akashic_v1_bank_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   27,
+			NumMessages:   30,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

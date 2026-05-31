@@ -34,6 +34,24 @@ func (s *BankService) List(userID int) ([]model.BankWithRole, error) {
 	return s.repo.FindAllForUser(userID)
 }
 
+// PublicBankPage is a page of public-bank cards for the community home.
+type PublicBankPage struct {
+	Data     []repository.PublicBankCard
+	Total    int64
+	Page     int
+	PageSize int
+}
+
+// ListPublic returns public banks for discovery — open to any authenticated
+// user (not bank-scoped; only public banks are ever returned).
+func (s *BankService) ListPublic(query string, page, pageSize int) (*PublicBankPage, error) {
+	cards, total, err := s.repo.FindPublicPaged(query, page, pageSize)
+	if err != nil {
+		return nil, err
+	}
+	return &PublicBankPage{Data: cards, Total: total, Page: page, PageSize: pageSize}, nil
+}
+
 func (s *BankService) GetByID(bankID, userID int) (*model.BankWithRole, error) {
 	bank, err := s.repo.FindByID(bankID)
 	if err != nil {

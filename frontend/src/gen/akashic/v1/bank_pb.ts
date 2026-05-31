@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
-import { BankRole, BankVisibility, TestConfig, User } from "./common_pb.js";
+import { BankRole, BankVisibility, PageInfo, TestConfig, User } from "./common_pb.js";
 
 /**
  * @generated from message akashic.v1.Bank
@@ -267,6 +267,168 @@ export class ListBanksResponse extends Message<ListBanksResponse> {
 
   static equals(a: ListBanksResponse | PlainMessage<ListBanksResponse> | undefined, b: ListBanksResponse | PlainMessage<ListBanksResponse> | undefined): boolean {
     return proto3.util.equals(ListBanksResponse, a, b);
+  }
+}
+
+/**
+ * ── Public records discovery (community home) ───────────────────────────────────
+ * Not bank-scoped: any authenticated user, returns only public banks.
+ *
+ * @generated from message akashic.v1.PublicBankCard
+ */
+export class PublicBankCard extends Message<PublicBankCard> {
+  /**
+   * @generated from field: int32 id = 1;
+   */
+  id = 0;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name = "";
+
+  /**
+   * @generated from field: string description = 3;
+   */
+  description = "";
+
+  /**
+   * @generated from field: optional akashic.v1.User owner = 4;
+   */
+  owner?: User;
+
+  /**
+   * @generated from field: int32 question_count = 5;
+   */
+  questionCount = 0;
+
+  /**
+   * @generated from field: int32 category_count = 6;
+   */
+  categoryCount = 0;
+
+  constructor(data?: PartialMessage<PublicBankCard>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.PublicBankCard";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "description", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "owner", kind: "message", T: User, opt: true },
+    { no: 5, name: "question_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 6, name: "category_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PublicBankCard {
+    return new PublicBankCard().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PublicBankCard {
+    return new PublicBankCard().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PublicBankCard {
+    return new PublicBankCard().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: PublicBankCard | PlainMessage<PublicBankCard> | undefined, b: PublicBankCard | PlainMessage<PublicBankCard> | undefined): boolean {
+    return proto3.util.equals(PublicBankCard, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.ListPublicBanksRequest
+ */
+export class ListPublicBanksRequest extends Message<ListPublicBanksRequest> {
+  /**
+   * @generated from field: string query = 1;
+   */
+  query = "";
+
+  /**
+   * @generated from field: int32 page = 2;
+   */
+  page = 0;
+
+  /**
+   * @generated from field: int32 page_size = 3;
+   */
+  pageSize = 0;
+
+  constructor(data?: PartialMessage<ListPublicBanksRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.ListPublicBanksRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "query", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "page", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "page_size", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListPublicBanksRequest {
+    return new ListPublicBanksRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListPublicBanksRequest {
+    return new ListPublicBanksRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListPublicBanksRequest {
+    return new ListPublicBanksRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListPublicBanksRequest | PlainMessage<ListPublicBanksRequest> | undefined, b: ListPublicBanksRequest | PlainMessage<ListPublicBanksRequest> | undefined): boolean {
+    return proto3.util.equals(ListPublicBanksRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.ListPublicBanksResponse
+ */
+export class ListPublicBanksResponse extends Message<ListPublicBanksResponse> {
+  /**
+   * @generated from field: repeated akashic.v1.PublicBankCard banks = 1;
+   */
+  banks: PublicBankCard[] = [];
+
+  /**
+   * @generated from field: akashic.v1.PageInfo page_info = 2;
+   */
+  pageInfo?: PageInfo;
+
+  constructor(data?: PartialMessage<ListPublicBanksResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.ListPublicBanksResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "banks", kind: "message", T: PublicBankCard, repeated: true },
+    { no: 2, name: "page_info", kind: "message", T: PageInfo },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListPublicBanksResponse {
+    return new ListPublicBanksResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListPublicBanksResponse {
+    return new ListPublicBanksResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListPublicBanksResponse {
+    return new ListPublicBanksResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListPublicBanksResponse | PlainMessage<ListPublicBanksResponse> | undefined, b: ListPublicBanksResponse | PlainMessage<ListPublicBanksResponse> | undefined): boolean {
+    return proto3.util.equals(ListPublicBanksResponse, a, b);
   }
 }
 

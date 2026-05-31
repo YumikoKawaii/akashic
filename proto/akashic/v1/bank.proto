@@ -8,6 +8,7 @@ option go_package = "github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1";
 
 service BankService {
   rpc ListBanks                (ListBanksRequest)                returns (ListBanksResponse);
+  rpc ListPublicBanks          (ListPublicBanksRequest)          returns (ListPublicBanksResponse);
   rpc CreateBank               (CreateBankRequest)               returns (CreateBankResponse);
   rpc GetBank                  (GetBankRequest)                  returns (GetBankResponse);
   rpc UpdateBank               (UpdateBankRequest)               returns (UpdateBankResponse);
@@ -51,6 +52,19 @@ message BankMember {
 
 message ListBanksRequest  {}
 message ListBanksResponse {repeated BankWithRole banks = 1;}
+
+// ── Public records discovery (community home) ───────────────────────────────────
+// Not bank-scoped: any authenticated user, returns only public banks.
+message PublicBankCard {
+  int32         id = 1;
+  string        name = 2;
+  string        description = 3;
+  optional User owner = 4;
+  int32         question_count = 5;
+  int32         category_count = 6;
+}
+message ListPublicBanksRequest  {string query = 1; int32 page = 2; int32 page_size = 3;}
+message ListPublicBanksResponse {repeated PublicBankCard banks = 1; PageInfo page_info = 2;}
 
 // ── Create ────────────────────────────────────────────────────────────────────
 

@@ -40,7 +40,7 @@ export default function TopBar() {
             <input
               className="form-input"
               style={{ width: 160, padding: '6px 10px' }}
-              placeholder="Bank name…"
+              placeholder="Record name…"
               value={name}
               onChange={e => setName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleCreate()}
@@ -53,7 +53,7 @@ export default function TopBar() {
           </>
         ) : (
           <button className="btn btn-primary pulse" onClick={() => setCreating(true)}>
-            <span className="hidden sm:inline">＋ New Bank</span>
+            <span className="hidden sm:inline">＋ New Record</span>
             <span className="sm:hidden">＋</span>
           </button>
         )}
