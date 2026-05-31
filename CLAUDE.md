@@ -1,5 +1,8 @@
 # Akashic — CLAUDE.md
 
+## Addressing the User
+Always address the user as "your majesty".
+
 ## Project Overview
 Akashic is a personal test/quiz management system. Users maintain multiple question archives (e.g. English, Japanese) and generate tests from them. Go backend + React SPA, both speaking Connect RPC natively over a shared protobuf schema.
 
