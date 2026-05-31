@@ -46,15 +46,6 @@ export default function Sidebar() {
 
   return (
     <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-      <div
-        className="sidebar-item"
-        onClick={() => { navigate('/'); closeSidebar() }}
-        style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-      >
-        <span style={{ fontSize: '0.85rem', flexShrink: 0 }}>⌂</span>
-        <span style={{ flex: 1 }}>Home</span>
-      </div>
-
       <div className="sidebar-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span>Records</span>
         <button

@@ -30,7 +30,16 @@ export default function TopBar() {
         <span /><span /><span />
       </button>
 
-      <span className="topbar-logo">Akashic</span>
+      <span
+        className="topbar-logo"
+        onClick={() => navigate('/')}
+        style={{ cursor: 'pointer' }}
+        role="link"
+        aria-label="Home"
+        title="Home"
+      >
+        Akashic
+      </span>
       <div className="topbar-divider" />
       <span className="topbar-subtitle">Knowledge Archive</span>
 
