@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { useBank, useMembers, useAddMember, useRemoveMember, useSetBankVisibility } from '../hooks/useBanks'
+import { useBank, useSetBankVisibility } from '../hooks/useBanks'
 import { useQuestions } from '../hooks/useQuestions'
 import { useTestsPaged } from '../hooks/useTests'
 import { useCategories } from '../hooks/useCategories'
@@ -14,12 +14,10 @@ import TestCard from '../components/tests/TestCard'
 import GenerateTab from '../components/tests/GenerateTab'
 import ContributeTab from '../components/contributions/ContributeTab'
 import ReviewTab from '../components/contributions/ReviewTab'
+import ShareRecordDialog from '../components/banks/ShareRecordDialog'
 import OrnateDivider from '../components/ui/OrnateDivider'
-import OrnatePanel from '../components/ui/OrnatePanel'
-import { FormField, Input } from '../components/ui/FormField'
 import { Spinner } from '../components/ui/MagicCircle'
 import MagicCircle from '../components/ui/MagicCircle'
-import RuneCorners from '../components/ui/RuneCorners'
 import Select from '../components/ui/Select'
 
 type Tab = 'questions' | 'passages' | 'generate' | 'tests' | 'contribute' | 'review'
@@ -101,10 +99,7 @@ export default function BankPage() {
   const { data: bank }             = useBank(bankId)
   const { data: categories = [] }  = useCategories(bankId)
   const { data: passages = [] }    = usePassages(bankId)   // full list for GenerateTab
-  const { data: members = [] }     = useMembers(bankId)
   const deletePassage              = useDeletePassage(bankId)
-  const addMember                  = useAddMember(bankId)
-  const removeMember               = useRemoveMember(bankId)
   const setVisibility              = useSetBankVisibility()
 
   const myRole  = bank?.my_role ?? 'viewer'
@@ -137,12 +132,19 @@ export default function BankPage() {
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [pConfirmDel,   setPConfirmDel]   = useState<number | null>(null)
 
-  const [shareOpen,   setShareOpen]   = useState(false)
-  const [shareEmail, setShareEmail] = useState('')
-  const [shareRole,  setShareRole]  = useState<'editor' | 'viewer'>('viewer')
-  const [shareError, setShareError] = useState<string | null>(null)
+  const [shareOpen,  setShareOpen]  = useState(false)
+  const [manageOpen, setManageOpen] = useState(false)
+  const manageRef = useRef<HTMLDivElement>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Close the Manage menu on an outside click.
+  useEffect(() => {
+    if (!manageOpen) return
+    const onDoc = (e: MouseEvent) => { if (manageRef.current && !manageRef.current.contains(e.target as Node)) setManageOpen(false) }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [manageOpen])
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
@@ -188,10 +190,31 @@ export default function BankPage() {
   const totalQ      = questionPage?.total     ?? 0
   const totalPages  = Math.max(1, Math.ceil(totalQ / (questionPage?.page_size ?? 20)))
 
+  const tabCount: Partial<Record<Tab, number>> = {
+    questions: totalQ,
+    passages:  totalPassages,
+    tests:     totalTests,
+  }
+
   if (!bank) return (
     <div className="flex items-center justify-center h-full">
       <Spinner />
     </div>
+  )
+
+  const triggerImport = () => fileInputRef.current?.click()
+  const toggleVisibility = () =>
+    setVisibility.mutate({ id: bankId, visibility: bank.visibility === 'public' ? 'private' : 'public' })
+
+  const Chip = ({ text, on }: { text: string; on: boolean }) => (
+    <span style={{
+      marginLeft: 10,
+      fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.12em',
+      padding: '2px 7px', border: '1px solid var(--border-dim)',
+      color: on ? 'var(--gold)' : 'var(--ink-dim)', textTransform: 'uppercase',
+    }}>
+      {text}
+    </span>
   )
 
   return (
@@ -201,122 +224,53 @@ export default function BankPage() {
         <div>
           <h1 className="page-title">{bank.name} — <span>Record</span></h1>
           <p className="page-meta">
-            {questions.length} questions · {categories.length} categories
-            <span style={{
-              marginLeft: 10,
-              fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.12em',
-              padding: '2px 7px', border: '1px solid var(--border-dim)',
-              color: myRole === 'owner' ? 'var(--gold)' : 'var(--ink-dim)',
-              textTransform: 'uppercase',
-            }}>
-              {myRole}
-            </span>
-            <span style={{
-              marginLeft: 8,
-              fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.12em',
-              padding: '2px 7px', border: '1px solid var(--border-dim)',
-              color: bank.visibility === 'public' ? 'var(--gold)' : 'var(--ink-dim)',
-              textTransform: 'uppercase',
-            }}>
-              {bank.visibility}
-            </span>
+            {totalQ} questions · {categories.length} categories · {totalPassages} passages · {totalTests} tests
+            <Chip text={myRole} on={myRole === 'owner'} />
+            <Chip text={bank.visibility} on={bank.visibility === 'public'} />
           </p>
         </div>
         <div className="page-header-actions">
           {canEdit && (
-            <>
-              <input ref={fileInputRef} type="file" accept=".json,.yaml,.yml,.csv" multiple style={{ display: 'none' }} onChange={handleImport} />
-              <button className="btn btn-ghost" disabled={importing} onClick={() => fileInputRef.current?.click()}>
-                <span className="hidden sm:inline">{importing ? 'Importing…' : '⬆ Import'}</span>
-                <span className="sm:hidden">⬆</span>
-              </button>
-            </>
+            <input ref={fileInputRef} type="file" accept=".json,.yaml,.yml,.csv" multiple style={{ display: 'none' }} onChange={handleImport} />
+          )}
+          {/* Editors get Import inline; owners get the full Manage menu. */}
+          {canEdit && !isOwner && (
+            <button className="btn btn-ghost" disabled={importing} onClick={triggerImport}>
+              <span className="hidden sm:inline">{importing ? 'Importing…' : '⬆ Import'}</span>
+              <span className="sm:hidden">⬆</span>
+            </button>
           )}
           {isOwner && (
-            <div style={{ position: 'relative' }}>
-              <button className="btn btn-ghost" onClick={() => setShareOpen(v => !v)}>⇄ Share</button>
-              {shareOpen && (
-                <OrnatePanel className="ornate-panel--float" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 'min(460px, 92vw)', zIndex: 40, textAlign: 'left' }}>
-                  <button
-                    onClick={() => setShareOpen(false)}
-                    aria-label="Close"
-                    style={{ position: 'absolute', top: 10, right: 14, zIndex: 2, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-dim)', fontSize: '0.95rem', lineHeight: 1 }}
-                  >
-                    ✕
-                  </button>
-                  <div className="section-title" style={{ marginBottom: 14 }}>Share Record</div>
-                  <div className="flex gap-3 items-end flex-wrap" style={{ marginBottom: 16 }}>
-                    <FormField label="Email">
-                      <Input
-                        value={shareEmail}
-                        onChange={e => { setShareEmail(e.target.value); setShareError(null) }}
-                        placeholder="name@example.com"
-                        style={{ width: 220 }}
-                        type="email"
-                      />
-                    </FormField>
-                    <FormField label="Role">
-                      <div className="flex gap-1" style={{ border: '1px solid var(--border-dim)', padding: 3, borderRadius: 4 }}>
-                        {(['viewer', 'editor'] as const).map(r => (
-                          <button key={r} onClick={() => setShareRole(r)} style={{
-                            fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.1em',
-                            padding: '4px 10px', border: 'none', cursor: 'pointer', borderRadius: 2,
-                            background: shareRole === r ? 'var(--gold-dim)' : 'transparent',
-                            color: shareRole === r ? 'var(--bg)' : 'var(--ink-dim)',
-                            textTransform: 'uppercase',
-                          }}>
-                            {r}
-                          </button>
-                        ))}
-                      </div>
-                    </FormField>
+            <div ref={manageRef} style={{ position: 'relative' }}>
+              <button className="btn btn-ghost" onClick={() => setManageOpen(o => !o)}>⚙ Manage ▾</button>
+              {manageOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 50,
+                  minWidth: 200, background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+                  borderRadius: 5, boxShadow: '0 8px 24px rgba(154,112,24,0.18)', padding: 4, textAlign: 'left',
+                }}>
+                  {[
+                    { label: importing ? 'Importing…' : '⬆ Import', onClick: triggerImport, disabled: importing },
+                    { label: '⇄ Share Record', onClick: () => setShareOpen(true) },
+                    { label: bank.visibility === 'public' ? '🔒 Make Private' : '🌐 Make Public', onClick: toggleVisibility, disabled: setVisibility.isPending },
+                  ].map(item => (
                     <button
-                      className="btn btn-primary"
-                      disabled={!shareEmail.trim() || addMember.isPending}
-                      onClick={async () => {
-                        try {
-                          await addMember.mutateAsync({ email: shareEmail.trim(), role: shareRole })
-                          setShareEmail('')
-                          setShareError(null)
-                        } catch {
-                          setShareError('No user with that email — they must sign in once first.')
-                        }
+                      key={item.label}
+                      disabled={item.disabled}
+                      onClick={() => { item.onClick(); setManageOpen(false) }}
+                      style={{
+                        display: 'block', width: '100%', textAlign: 'left',
+                        background: 'none', border: 'none', cursor: item.disabled ? 'default' : 'pointer',
+                        padding: '8px 12px', fontSize: '0.82rem', color: 'var(--ink)',
+                        fontFamily: 'EB Garamond, serif', opacity: item.disabled ? 0.5 : 1,
                       }}
                     >
-                      {addMember.isPending ? '…' : '＋ Add'}
+                      {item.label}
                     </button>
-                  </div>
-                  {shareError && <div style={{ fontSize: '0.8rem', color: '#b03030', marginBottom: 10 }}>{shareError}</div>}
-                  {members.length > 0 && (
-                    <div className="flex flex-col gap-2">
-                      {members.map(m => (
-                        <div key={m.user_id} className="flex items-center justify-between gap-3" style={{ fontSize: '0.85rem', padding: '6px 0', borderBottom: '1px solid var(--border-dim)' }}>
-                          <div>
-                            <span style={{ color: 'var(--ink)' }}>{m.user?.name}</span>
-                            <span style={{ color: 'var(--ink-dim)', marginLeft: 8, fontSize: '0.75rem' }}>{m.user?.email}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.1em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>{m.role}</span>
-                            {m.user_id !== user?.id && (
-                              <button className="btn-danger" style={{ fontSize: '0.6rem', padding: '2px 6px' }} onClick={() => removeMember.mutate(m.user_id)}>✕</button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </OrnatePanel>
+                  ))}
+                </div>
               )}
             </div>
-          )}
-          {isOwner && (
-            <button
-              className="btn btn-ghost"
-              disabled={setVisibility.isPending}
-              onClick={() => setVisibility.mutate({ id: bankId, visibility: bank.visibility === 'public' ? 'private' : 'public' })}
-            >
-              {bank.visibility === 'public' ? '🔒 Make Private' : '🌐 Make Public'}
-            </button>
           )}
         </div>
       </div>
@@ -326,34 +280,14 @@ export default function BankPage() {
         {visibleTabs.map(t => (
           <button
             key={t}
-            className={`btn ${tab === t ? 'btn-primary' : 'btn-ghost'}`}
+            className={`bank-tab ${tab === t ? 'active' : ''}`}
             onClick={() => setTab(t)}
           >
             {TAB_LABELS[t]}
+            {tabCount[t] !== undefined && <span className="bank-tab-count">{tabCount[t]}</span>}
           </button>
         ))}
       </nav>
-
-      {/* ── Stats ───────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {([
-          { value: totalQ,             label: 'Questions',  color: 'var(--gold)',     circle: { variant: 'orbit' as const, color: 'var(--gold)',    opacity: 0.90 } },
-          { value: passages.length,   label: 'Passages',   color: 'var(--ink-dim)',  circle: { variant: 'halo'  as const, color: '#2a8a3a',         opacity: 0.85 } },
-          { value: categories.length, label: 'Categories', color: 'var(--ink-dim)',  circle: { variant: 'sigil' as const, color: 'var(--gold-dim)', opacity: 0.85 } },
-          { value: totalTests,         label: 'Tests',      color: 'var(--ink-dim)',  circle: { variant: 'spark' as const, color: '#6b4c8a',          opacity: 0.82 } },
-        ]).map(s => (
-          <div key={s.label} className="stat-card">
-            <RuneCorners color="var(--gold-dim)" opacity={0.60} />
-            <div style={{ position: 'absolute', bottom: -100, right: -100, width: 200, height: 200, color: s.circle.color, opacity: s.circle.opacity, pointerEvents: 'none', zIndex: 0 }}>
-              <MagicCircle variant={s.circle.variant} speed={4} />
-            </div>
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
-              <div className="stat-label">{s.label}</div>
-            </div>
-          </div>
-        ))}
-      </div>
 
       {/* ── Import message ──────────────────────────────────────── */}
       {importMessage && (
@@ -579,6 +513,8 @@ export default function BankPage() {
       )}
 
       <div style={{ height: 32 }} />
+
+      {shareOpen && <ShareRecordDialog bankId={bankId} onClose={() => setShareOpen(false)} />}
     </>
   )
 }

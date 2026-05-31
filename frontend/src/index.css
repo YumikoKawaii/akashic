@@ -915,14 +915,46 @@ input[type=number].form-input { -moz-appearance: textfield; }
   justify-content: flex-end;
 }
 
-/* Bank section tabs — their own row so they never collide with header actions. */
+/* Bank section tabs — a left-aligned underline tab bar with per-tab counts. */
 .bank-tabs {
   display: flex;
-  gap: 8px;
+  gap: 2px;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  margin: 16px 0 4px;
+  justify-content: flex-start;
+  margin: 18px 0 0;
+  border-bottom: 1px solid var(--border-dim);
 }
+.bank-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 9px 16px;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  transition: color 0.2s, border-color 0.2s;
+}
+.bank-tab:hover { color: var(--gold); }
+.bank-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.bank-tab-count {
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-dim);
+  background: rgba(154,112,24,0.08);
+  border: 1px solid var(--border-dim);
+  border-radius: 10px;
+  padding: 0 7px;
+  line-height: 1.6;
+}
+.bank-tab.active .bank-tab-count { color: var(--gold); border-color: var(--gold-dim); }
 
 /* ─── Responsive breakpoints ──────────────────────────────────── */
 @media (max-width: 1024px) {

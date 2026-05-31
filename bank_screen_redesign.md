@@ -1,9 +1,11 @@
-# Bank (Record) Screen — Reorganization Draft
+# Bank (Record) Screen — Reorganization
 
-Status: **draft for review** · Target: `frontend/src/pages/BankPage.tsx`, `components/layout/*`
+Status: **implemented** (all 5 phases shipped) · Target: `frontend/src/pages/BankPage.tsx`, `components/layout/*`
 
-This is a plan, not yet implemented. It captures *what's wrong now*, the *new layout*, and a
-*phased path* to get there. Nothing is committed in code until this is approved.
+Originally a draft; now built. The sidebar is replaced by a top-bar record switcher, the
+header collapsed to one count line, the stat cards removed, the tabs are an underline bar
+with folded-in counts, and owner actions live behind a `⚙ Manage` menu. The Share popover
+was rebuilt as a centered modal (`components/banks/ShareRecordDialog.tsx`).
 
 ---
 
@@ -144,20 +146,23 @@ Net: the screen goes from **header + tabs + stats + filter** (4 bands) to **head
 
 ---
 
-## 6. Phased implementation
+## 6. Phased implementation — all done ✅
 
-Ordered so navigation is never stranded:
+Ordered so navigation was never stranded:
 
-1. **Add the record switcher** to `TopBar` (new `RecordSwitcher` component using `useBanks`
-   + `createBank`). Sidebar still present — both work.
-2. **Remove the sidebar**: drop it from `Layout.tsx`, set `leftOffset={0}`, delete the
-   `.app-layout` sidebar column CSS, delete `Sidebar.tsx`. Verify record nav via the new
-   switcher.
-3. **Collapse the header**: merge all counts into one meta line; delete the stat-card block.
-4. **Tab bar restyle**: underline tabs, left-aligned, counts folded in.
-5. **⚙ Manage menu**: move Import / Share / visibility under one dropdown.
+1. ✅ **Record switcher** in `TopBar` (`RecordSwitcher.tsx`, uses `useBanks`). Creation stays
+   on TopBar's existing "New Record" button.
+2. ✅ **Sidebar removed**: dropped from `Layout.tsx`, `leftOffset={0}`, `.app-layout` →
+   `1fr`, `Sidebar.tsx` deleted, hamburger removed from `TopBar`.
+3. ✅ **Header collapsed**: one count line (questions · categories · passages · tests);
+   stat-card block deleted.
+4. ✅ **Tab bar restyle**: `.bank-tab` underline bar, left-aligned, counts folded in via
+   `.bank-tab-count`.
+5. ✅ **⚙ Manage menu**: Import / Share / visibility behind one owner-only dropdown; editors
+   keep Import inline. Share rebuilt as `ShareRecordDialog` (centered modal).
 
-Each step is independently shippable and reversible.
+Leftover dead CSS (`.sidebar*`, `.hamburger`, `.stat-card*`) is harmless and can be swept
+later.
 
 ---
 
