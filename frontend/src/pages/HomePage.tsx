@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useExplore } from '../hooks/useExplore'
 import PublicRecordCarousel from '../components/explore/PublicRecordCarousel'
+import AstrolabeBand from '../components/ui/AstrolabeBand'
 import { Spinner } from '../components/ui/MagicCircle'
 
 export default function HomePage() {
@@ -36,13 +37,27 @@ export default function HomePage() {
         </p>
       </div>
 
-      <div style={{ width: 'min(560px, 92%)', marginTop: 20, marginBottom: 30 }}>
+      {/* Astrolabe rule — anchors the masthead above the search */}
+      <div style={{ width: 'min(360px, 70%)', marginTop: 16 }}>
+        <AstrolabeBand color="var(--gold-dim)" opacity={0.5} />
+      </div>
+
+      <div style={{ width: 'min(560px, 92%)', marginTop: 18, marginBottom: 30, position: 'relative' }}>
+        <span style={{
+          position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
+          display: 'flex', color: 'var(--gold-dim)', pointerEvents: 'none',
+        }}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+            <circle cx="7" cy="7" r="5" />
+            <line x1="11" y1="11" x2="14.5" y2="14.5" />
+          </svg>
+        </span>
         <input
           className="form-input"
           placeholder="Search public records…"
           value={input}
           onChange={e => setInput(e.target.value)}
-          style={{ width: '100%', padding: '11px 16px' }}
+          style={{ width: '100%', padding: '11px 16px 11px 44px' }}
           autoFocus
         />
       </div>

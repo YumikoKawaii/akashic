@@ -88,6 +88,24 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
         onPointerUp={onPointerUp}
         onPointerCancel={() => { dragStartX.current = null; setDragOffset(0) }}
       >
+        {/* The shelf the books stand on — a board with a soft contact shadow */}
+        <div style={{
+          position: 'absolute', left: '50%', bottom: 16, transform: 'translateX(-50%)',
+          width: CARD_W + 70, zIndex: 1, pointerEvents: 'none',
+        }}>
+          <div style={{
+            height: 16, width: CARD_W - 16, margin: '0 auto',
+            borderRadius: '50%', filter: 'blur(3px)',
+            background: 'radial-gradient(ellipse at center, rgba(120,86,20,0.30), transparent 70%)',
+          }} />
+          <div style={{
+            height: 3, marginTop: 1,
+            background: `linear-gradient(90deg, transparent, ${ACCENT}, transparent)`,
+            boxShadow: '0 1px 7px rgba(154,112,24,0.28)',
+          }} />
+          <div style={{ height: 7, background: 'linear-gradient(180deg, rgba(154,112,24,0.16), transparent)' }} />
+        </div>
+
         {records.map((rec, i) => {
           let rawSlot = i - activeIndex
           if (rawSlot >  n / 2) rawSlot -= n
