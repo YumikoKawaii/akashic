@@ -50,23 +50,25 @@ export default function RecordSwitcher() {
         }}>
           {banks.length === 0 ? (
             <div style={{ padding: '10px 12px', fontSize: '0.8rem', color: 'var(--ink-dim)' }}>No records yet</div>
-          ) : banks.map(b => {
+          ) : banks.map((b, idx) => {
             const isActive = String(b.id) === bankId
             return (
-              <button
-                key={b.id}
-                onClick={() => { navigate(`/banks/${b.id}`); setOpen(false) }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-                  background: isActive ? 'linear-gradient(90deg, rgba(200,160,48,0.10), transparent)' : 'none',
-                  border: 'none', textAlign: 'left', cursor: 'pointer',
-                  padding: '8px 12px', fontSize: '0.85rem', fontFamily: 'EB Garamond, serif',
-                  color: isActive ? 'var(--gold)' : 'var(--ink)',
-                }}
-              >
-                <span style={{ width: 12, flexShrink: 0, color: 'var(--gold)' }}>{isActive ? '✦' : ''}</span>
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name}</span>
-              </button>
+              <div key={b.id}>
+                {idx > 0 && <div className="dropdown-sep" />}
+                <button
+                  onClick={() => { navigate(`/banks/${b.id}`); setOpen(false) }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                    background: isActive ? 'linear-gradient(90deg, rgba(200,160,48,0.10), transparent)' : 'none',
+                    border: 'none', textAlign: 'left', cursor: 'pointer',
+                    padding: '8px 12px', fontSize: '0.85rem', fontFamily: 'EB Garamond, serif',
+                    color: isActive ? 'var(--gold)' : 'var(--ink)',
+                  }}
+                >
+                  <span style={{ width: 12, flexShrink: 0, color: 'var(--gold)' }}>{isActive ? '✦' : ''}</span>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name}</span>
+                </button>
+              </div>
             )
           })}
         </div>
