@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreateQuestionRequest, CreateQuestionResponse, DeleteQuestionRequest, DeleteQuestionResponse, GetQuestionRequest, GetQuestionResponse, IngestQuestionsRequest, IngestQuestionsResponse, ListQuestionsRequest, ListQuestionsResponse, RestoreQuestionRequest, RestoreQuestionResponse, UpdateQuestionRequest, UpdateQuestionResponse } from "./question_pb.js";
+import { CreateQuestionRequest, CreateQuestionResponse, DeleteQuestionRequest, DeleteQuestionResponse, GetQuestionRequest, GetQuestionResponse, IngestQuestionsRequest, IngestQuestionsResponse, ListQuestionsRequest, ListQuestionsResponse, ListTagsRequest, ListTagsResponse, RestoreQuestionRequest, RestoreQuestionResponse, UpdateQuestionRequest, UpdateQuestionResponse } from "./question_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -73,6 +73,15 @@ export const QuestionService = {
       name: "IngestQuestions",
       I: IngestQuestionsRequest,
       O: IngestQuestionsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc akashic.v1.QuestionService.ListTags
+     */
+    listTags: {
+      name: "ListTags",
+      I: ListTagsRequest,
+      O: ListTagsResponse,
       kind: MethodKind.Unary,
     },
   }

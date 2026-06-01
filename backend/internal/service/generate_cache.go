@@ -357,10 +357,15 @@ func filterPool(pool []CachedQuestion, categoryIDs []int, types []string, tags [
 			}
 		}
 		if len(tagSet) > 0 {
-			matched := false
+			// AND semantics: the question must carry every selected tag.
+			has := make(map[string]struct{}, len(q.Tags))
 			for _, t := range q.Tags {
-				if _, ok := tagSet[t]; ok {
-					matched = true
+				has[t] = struct{}{}
+			}
+			matched := true
+			for t := range tagSet {
+				if _, ok := has[t]; !ok {
+					matched = false
 					break
 				}
 			}

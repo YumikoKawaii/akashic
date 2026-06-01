@@ -56,6 +56,17 @@ function toQuestionType(s: string): QuestionType {
   return map[s] ?? QuestionType.UNSPECIFIED
 }
 
+export function useTags(bankId: string) {
+  return useQuery({
+    queryKey: ['tags', bankId] as const,
+    queryFn:  async () => {
+      const res = await questionClient.listTags({ bankId: Number(bankId) })
+      return res.tags
+    },
+    enabled: !!bankId,
+  })
+}
+
 export function useQuestions(bankId: string, filter: QuestionFilter = {}, page = 1) {
   return useQuery({
     queryKey: questionKeys.all(bankId, filter, page),

@@ -1030,3 +1030,77 @@ export class IngestQuestionsResponse extends Message<IngestQuestionsResponse> {
   }
 }
 
+/**
+ * @generated from message akashic.v1.ListTagsRequest
+ */
+export class ListTagsRequest extends Message<ListTagsRequest> {
+  /**
+   * @generated from field: int32 bank_id = 1;
+   */
+  bankId = 0;
+
+  constructor(data?: PartialMessage<ListTagsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.ListTagsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListTagsRequest {
+    return new ListTagsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListTagsRequest {
+    return new ListTagsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListTagsRequest {
+    return new ListTagsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListTagsRequest | PlainMessage<ListTagsRequest> | undefined, b: ListTagsRequest | PlainMessage<ListTagsRequest> | undefined): boolean {
+    return proto3.util.equals(ListTagsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.ListTagsResponse
+ */
+export class ListTagsResponse extends Message<ListTagsResponse> {
+  /**
+   * @generated from field: repeated string tags = 1;
+   */
+  tags: string[] = [];
+
+  constructor(data?: PartialMessage<ListTagsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.ListTagsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListTagsResponse {
+    return new ListTagsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListTagsResponse {
+    return new ListTagsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListTagsResponse {
+    return new ListTagsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListTagsResponse | PlainMessage<ListTagsResponse> | undefined, b: ListTagsResponse | PlainMessage<ListTagsResponse> | undefined): boolean {
+    return proto3.util.equals(ListTagsResponse, a, b);
+  }
+}
+

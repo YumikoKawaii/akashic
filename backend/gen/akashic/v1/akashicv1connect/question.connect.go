@@ -54,6 +54,9 @@ const (
 	// QuestionServiceIngestQuestionsProcedure is the fully-qualified name of the QuestionService's
 	// IngestQuestions RPC.
 	QuestionServiceIngestQuestionsProcedure = "/akashic.v1.QuestionService/IngestQuestions"
+	// QuestionServiceListTagsProcedure is the fully-qualified name of the QuestionService's ListTags
+	// RPC.
+	QuestionServiceListTagsProcedure = "/akashic.v1.QuestionService/ListTags"
 )
 
 // QuestionServiceClient is a client for the akashic.v1.QuestionService service.
@@ -65,6 +68,7 @@ type QuestionServiceClient interface {
 	DeleteQuestion(context.Context, *connect.Request[v1.DeleteQuestionRequest]) (*connect.Response[v1.DeleteQuestionResponse], error)
 	RestoreQuestion(context.Context, *connect.Request[v1.RestoreQuestionRequest]) (*connect.Response[v1.RestoreQuestionResponse], error)
 	IngestQuestions(context.Context, *connect.Request[v1.IngestQuestionsRequest]) (*connect.Response[v1.IngestQuestionsResponse], error)
+	ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error)
 }
 
 // NewQuestionServiceClient constructs a client for the akashic.v1.QuestionService service. By
@@ -120,6 +124,12 @@ func NewQuestionServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(questionServiceMethods.ByName("IngestQuestions")),
 			connect.WithClientOptions(opts...),
 		),
+		listTags: connect.NewClient[v1.ListTagsRequest, v1.ListTagsResponse](
+			httpClient,
+			baseURL+QuestionServiceListTagsProcedure,
+			connect.WithSchema(questionServiceMethods.ByName("ListTags")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -132,6 +142,7 @@ type questionServiceClient struct {
 	deleteQuestion  *connect.Client[v1.DeleteQuestionRequest, v1.DeleteQuestionResponse]
 	restoreQuestion *connect.Client[v1.RestoreQuestionRequest, v1.RestoreQuestionResponse]
 	ingestQuestions *connect.Client[v1.IngestQuestionsRequest, v1.IngestQuestionsResponse]
+	listTags        *connect.Client[v1.ListTagsRequest, v1.ListTagsResponse]
 }
 
 // ListQuestions calls akashic.v1.QuestionService.ListQuestions.
@@ -169,6 +180,11 @@ func (c *questionServiceClient) IngestQuestions(ctx context.Context, req *connec
 	return c.ingestQuestions.CallUnary(ctx, req)
 }
 
+// ListTags calls akashic.v1.QuestionService.ListTags.
+func (c *questionServiceClient) ListTags(ctx context.Context, req *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error) {
+	return c.listTags.CallUnary(ctx, req)
+}
+
 // QuestionServiceHandler is an implementation of the akashic.v1.QuestionService service.
 type QuestionServiceHandler interface {
 	ListQuestions(context.Context, *connect.Request[v1.ListQuestionsRequest]) (*connect.Response[v1.ListQuestionsResponse], error)
@@ -178,6 +194,7 @@ type QuestionServiceHandler interface {
 	DeleteQuestion(context.Context, *connect.Request[v1.DeleteQuestionRequest]) (*connect.Response[v1.DeleteQuestionResponse], error)
 	RestoreQuestion(context.Context, *connect.Request[v1.RestoreQuestionRequest]) (*connect.Response[v1.RestoreQuestionResponse], error)
 	IngestQuestions(context.Context, *connect.Request[v1.IngestQuestionsRequest]) (*connect.Response[v1.IngestQuestionsResponse], error)
+	ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error)
 }
 
 // NewQuestionServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -229,6 +246,12 @@ func NewQuestionServiceHandler(svc QuestionServiceHandler, opts ...connect.Handl
 		connect.WithSchema(questionServiceMethods.ByName("IngestQuestions")),
 		connect.WithHandlerOptions(opts...),
 	)
+	questionServiceListTagsHandler := connect.NewUnaryHandler(
+		QuestionServiceListTagsProcedure,
+		svc.ListTags,
+		connect.WithSchema(questionServiceMethods.ByName("ListTags")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/akashic.v1.QuestionService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case QuestionServiceListQuestionsProcedure:
@@ -245,6 +268,8 @@ func NewQuestionServiceHandler(svc QuestionServiceHandler, opts ...connect.Handl
 			questionServiceRestoreQuestionHandler.ServeHTTP(w, r)
 		case QuestionServiceIngestQuestionsProcedure:
 			questionServiceIngestQuestionsHandler.ServeHTTP(w, r)
+		case QuestionServiceListTagsProcedure:
+			questionServiceListTagsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -280,4 +305,8 @@ func (UnimplementedQuestionServiceHandler) RestoreQuestion(context.Context, *con
 
 func (UnimplementedQuestionServiceHandler) IngestQuestions(context.Context, *connect.Request[v1.IngestQuestionsRequest]) (*connect.Response[v1.IngestQuestionsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.QuestionService.IngestQuestions is not implemented"))
+}
+
+func (UnimplementedQuestionServiceHandler) ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.QuestionService.ListTags is not implemented"))
 }

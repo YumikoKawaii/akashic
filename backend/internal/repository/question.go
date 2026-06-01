@@ -34,6 +34,7 @@ type QuestionRepository interface {
 	FindByBankPaged(bankID int, f QuestionFilter, page, pageSize int) ([]model.Question, int64, error)
 	FindByBankAndDifficulty(bankID int, difficulty string, f QuestionFilter) ([]model.Question, error)
 	FindAllMeta(bankID int) ([]QuestionMeta, error)
+	ListTags(bankID int) ([]string, error)
 	FindByIDs(ids []int) ([]model.Question, error)
 	FindByGroup(groupID int) ([]model.Question, error)
 	FindByID(id int) (*model.Question, error)
@@ -91,6 +92,18 @@ func (r *questionRepo) FindAllMeta(bankID int) ([]QuestionMeta, error) {
 		Where("bank_id = ? AND deleted_at IS NULL", bankID).
 		Scan(&metas).Error
 	return metas, err
+}
+
+// ListTags returns the bank's distinct, alphabetically-sorted question tags.
+func (r *questionRepo) ListTags(bankID int) ([]string, error) {
+	var tags []string
+	err := r.db.Raw(
+		`SELECT DISTINCT unnest(tags) AS tag
+		 FROM questions
+		 WHERE bank_id = ? AND deleted_at IS NULL
+		 ORDER BY tag`, bankID,
+	).Scan(&tags).Error
+	return tags, err
 }
 
 func (r *questionRepo) FindByIDs(ids []int) ([]model.Question, error) {

@@ -5,6 +5,7 @@ import OrnatePanel from '../ui/OrnatePanel'
 import { FormField, Input } from '../ui/FormField'
 import MultiSelect from '../ui/MultiSelect'
 import { useGenerateTest } from '../../hooks/useTests'
+import { useTags } from '../../hooks/useQuestions'
 import { useStartAttempt } from '../../hooks/useAttempts'
 import MagicCircle from '../ui/MagicCircle'
 
@@ -172,10 +173,12 @@ function StandaloneForm({ bank, categories }: { bank: Bank; categories: Category
   const generate = useGenerateTest(String(bank.id))
   const start    = useStartAttempt()
   const def      = bank.default_config
+  const { data: tagOptions = [] } = useTags(String(bank.id))
 
   const [name,       setName]       = useState('')
   const [catIds,     setCatIds]     = useState<string[]>([])
   const [types,      setTypes]      = useState<string[]>([])
+  const [tags,       setTags]       = useState<string[]>([])
   const [diffMode,   setDiffMode]   = useState<DiffMode>('difficulty')
   const [easy,       setEasy]       = useState(def.easy_count   ?? 3)
   const [medium,     setMedium]     = useState(def.medium_count ?? 5)
@@ -187,8 +190,8 @@ function StandaloneForm({ bank, categories }: { bank: Bank; categories: Category
     setGenError(null)
     const categoryIds = catIds.map(Number).filter(Boolean)
     const config = diffMode === 'count'
-      ? (() => { const [e, m, h] = autoSplit(totalCount); return { easy_count: e, medium_count: m, hard_count: h, standalone_only: true, ...(categoryIds.length ? { category_ids: categoryIds } : {}), ...(types.length ? { types } : {}) } })()
-      : { easy_count: easy, medium_count: medium, hard_count: hard, standalone_only: true, ...(categoryIds.length ? { category_ids: categoryIds } : {}), ...(types.length ? { types } : {}) }
+      ? (() => { const [e, m, h] = autoSplit(totalCount); return { easy_count: e, medium_count: m, hard_count: h, standalone_only: true, ...(categoryIds.length ? { category_ids: categoryIds } : {}), ...(types.length ? { types } : {}), ...(tags.length ? { tags } : {}) } })()
+      : { easy_count: easy, medium_count: medium, hard_count: hard, standalone_only: true, ...(categoryIds.length ? { category_ids: categoryIds } : {}), ...(types.length ? { types } : {}), ...(tags.length ? { tags } : {}) }
     const test = await generate.mutateAsync({ name: name.trim() || `${bank.name} — ${new Date().toLocaleString()}`, config })
     if (!test.questions?.length) {
       setGenError('No standalone questions found. Questions organised into passages cannot be used in Standalone mode — switch to Passage mode.')
@@ -200,7 +203,7 @@ function StandaloneForm({ bank, categories }: { bank: Bank; categories: Category
 
   return (
     <OrnatePanel>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1.5fr', gap: 14, marginBottom: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: tagOptions.length ? '2fr 1.5fr 1.5fr 1.5fr' : '2fr 1.5fr 1.5fr', gap: 14, marginBottom: 14 }}>
         <FormField label="Test Name">
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="Morning Practice" />
         </FormField>
@@ -211,6 +214,12 @@ function StandaloneForm({ bank, categories }: { bank: Bank; categories: Category
         <FormField label="Types">
           <MultiSelect value={types} onChange={setTypes} placeholder="All Types" options={TYPE_OPTIONS} />
         </FormField>
+        {tagOptions.length > 0 && (
+          <FormField label="Tags · match all">
+            <MultiSelect value={tags} onChange={setTags} placeholder="Any Tags"
+              options={tagOptions.map(t => ({ value: t, label: t }))} />
+          </FormField>
+        )}
       </div>
       <DifficultyRow
         diffMode={diffMode} setDiffMode={setDiffMode}

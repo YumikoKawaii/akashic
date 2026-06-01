@@ -181,6 +181,17 @@ func (h *QuestionServiceHandler) IngestQuestions(
 	}), nil
 }
 
+func (h *QuestionServiceHandler) ListTags(
+	ctx context.Context,
+	req *connect.Request[pb.ListTagsRequest],
+) (*connect.Response[pb.ListTagsResponse], error) {
+	tags, err := h.svc.ListTags(int(req.Msg.BankId))
+	if err != nil {
+		return nil, toConnectError(err)
+	}
+	return connect.NewResponse(&pb.ListTagsResponse{Tags: tags}), nil
+}
+
 func ingestFormatToExt(f pb.IngestFormat) string {
 	switch f {
 	case pb.IngestFormat_INGEST_FORMAT_JSON:

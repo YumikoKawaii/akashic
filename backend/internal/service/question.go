@@ -54,6 +54,14 @@ func (s *QuestionService) ListPaged(bankID int, f repository.QuestionFilter, pag
 	return &QuestionPage{Data: qs, Total: total, Page: page, PageSize: pageSize}, nil
 }
 
+// ListTags returns the bank's distinct question tags, for the generate-by-tags picker.
+func (s *QuestionService) ListTags(bankID int) ([]string, error) {
+	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
+		return nil, err
+	}
+	return s.uow.Store().Questions.ListTags(bankID)
+}
+
 func (s *QuestionService) GetByID(bankID, id int) (*model.Question, error) {
 	q, err := s.uow.Store().Questions.FindByID(id)
 	if err != nil {

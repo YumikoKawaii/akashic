@@ -47,6 +47,7 @@ var procedureMinRole = map[string]string{
 
 	// Questions
 	akashicv1connect.QuestionServiceListQuestionsProcedure:   membership.RoleViewer,
+	akashicv1connect.QuestionServiceListTagsProcedure:        membership.RoleViewer,
 	akashicv1connect.QuestionServiceGetQuestionProcedure:     membership.RoleViewer,
 	akashicv1connect.QuestionServiceCreateQuestionProcedure:  membership.RoleEditor,
 	akashicv1connect.QuestionServiceUpdateQuestionProcedure:  membership.RoleEditor,
