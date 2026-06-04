@@ -595,7 +595,7 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
   return (
     <>
       <Starfield />
-      <SolarSystemBackground flash={flash} />
+      <SolarSystemBackground flash={flash} center={{ x: '78%', y: '82%' }} scale={0.7} />
       {flash && <div key={flash.key} className={`bg-flash bg-flash-${flash.type}`}
         style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }} />}
       <div className="attempt-layout">

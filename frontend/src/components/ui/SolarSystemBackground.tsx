@@ -163,11 +163,16 @@ const PLANETS = [
   { orbitR: 460, size:  85, period: 68, startAngle: 75,  dir: 'cw'  as const, color: '#0d2268', opacity: 0.82, Planet: SolarWheel },
 ]
 
-export default function SolarSystemBackground({ flash }: {
+export default function SolarSystemBackground({ flash, center = { x: '50%', y: '50%' }, scale = 1 }: {
   flash?: { key: number; type: 'correct' | 'wrong' } | null
+  center?: { x: string; y: string }   // where the sun sits within the viewport
+  scale?: number                      // overall size multiplier
 }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+      {/* All orbit content is centred on `center` and scaled together. The flash
+          overlay stays full-screen, outside this wrapper. */}
+      <div style={{ position: 'absolute', left: center.x, top: center.y, width: 0, height: 0, transform: `scale(${scale})` }}>
 
       {ORBIT_RINGS.map(r => (
         <div key={`${r}-${flash?.key ?? 0}`} style={{
@@ -213,6 +218,7 @@ export default function SolarSystemBackground({ flash }: {
           </div>
         )
       })}
+      </div>
 
       {flash && <div key={flash.key} className={`bg-flash bg-flash-${flash.type}`}/>}
     </div>
