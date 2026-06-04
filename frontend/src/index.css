@@ -651,6 +651,71 @@ input[type=number].form-input { -moz-appearance: textfield; }
 .attempt-nav-star.current .num { color: #2a1c08; }
 .attempt-nav-star.current:not(.answered) .num { color: var(--gold-glow); }
 
+/* ── Exam body: vertical focus-scaled star rail + question column ────── */
+.exam-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  padding: 0 32px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+.exam-main {
+  flex: 1;
+  max-width: 720px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 44px 8px calc(48px + env(safe-area-inset-bottom, 0px));
+}
+.exam-rail {
+  flex-shrink: 0;
+  width: 66px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0;
+  overflow-y: auto;
+  overflow-x: visible;
+  scrollbar-width: none;
+}
+.exam-rail::-webkit-scrollbar { width: 0; height: 0; }
+.exam-rail-star {
+  flex-shrink: 0;
+  position: relative;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--border-dim);
+  transition: transform 0.28s ease, opacity 0.28s ease, color 0.2s, filter 0.2s;
+}
+.exam-rail-star svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.exam-rail-star .num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(2px);
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  color: var(--gold-dim);
+  pointer-events: none;
+}
+.exam-rail-star:hover { color: var(--gold-dim); }
+.exam-rail-star.answered { color: var(--gold); filter: drop-shadow(0 0 5px rgba(154,112,24,0.55)); }
+.exam-rail-star.answered .num { color: #2a1c08; }
+.exam-rail-star.current { color: var(--gold-glow); filter: drop-shadow(0 0 10px rgba(240,220,160,0.85)); }
+.exam-rail-star.current .num { color: #2a1c08; }
+.exam-rail-star.current:not(.answered) .num { color: var(--gold-glow); }
+
 /* ─── Attempt / Test taking ───────────────────────────────────── */
 .attempt-layout {
   height: 100vh;
@@ -1091,6 +1156,11 @@ input[type=number].form-input { -moz-appearance: textfield; }
 
   .attempt-header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
   .attempt-body   { padding: 24px 16px calc(24px + env(safe-area-inset-bottom, 0px)); gap: 20px; }
+
+  .exam-body { padding: 0 10px; gap: 10px; }
+  .exam-rail { width: 46px; gap: 13px; padding: 16px 0; }
+  .exam-rail-star { width: 28px; height: 28px; }
+  .exam-main { padding: 28px 6px calc(36px + env(safe-area-inset-bottom, 0px)); }
 
   .answer-options { grid-template-columns: 1fr; }
 

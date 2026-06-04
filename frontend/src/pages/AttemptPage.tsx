@@ -48,6 +48,17 @@ function CorrectAnswerBox({ answer }: { answer: string }) {
 const STAR_PATH =
   'M12 2 L14.35 8.76 L21.5 8.91 L15.8 13.24 L17.88 20.09 L12 16 L6.12 20.09 L8.2 13.24 L2.49 8.91 L9.65 8.76 Z'
 
+function StarGlyph({ answered }: { answered: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d={STAR_PATH} fill={answered ? 'currentColor' : 'none'}
+        stroke="currentColor" strokeWidth={answered ? 0 : 1.4} strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+// Wrapping grid of stars — used by the passage layout, where every question is
+// already laid out below and the stars are just a jump aid.
 function QuestionNavigator({ questions, answers, currentId, onJump }: {
   questions: TestQuestion[]
   answers: Record<string, string>
@@ -68,10 +79,54 @@ function QuestionNavigator({ questions, answers, currentId, onJump }: {
             onClick={() => onJump(i)}
             title={`Question ${tq.position || i + 1}${answered ? ' — answered' : ''}`}
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d={STAR_PATH} fill={answered ? 'currentColor' : 'none'}
-                stroke="currentColor" strokeWidth={answered ? 0 : 1.4} strokeLinejoin="round" />
-            </svg>
+            <StarGlyph answered={answered} />
+            <span className="num">{tq.position || i + 1}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// Vertical focus-scaled rail — the current star sits centered and enlarged,
+// neighbours shrink and fade by distance, and the rail auto-scrolls to keep the
+// current star centred. Used by the exam layout so the question keeps the page.
+function QuestionRail({ questions, answers, currentId, onJump }: {
+  questions: TestQuestion[]
+  answers: Record<string, string>
+  currentId?: number
+  onJump: (idx: number) => void
+}) {
+  const railRef = useRef<HTMLDivElement>(null)
+  const curRef  = useRef<HTMLButtonElement>(null)
+  const curIdx  = questions.findIndex(t => t.question?.id === currentId)
+
+  useEffect(() => {
+    const rail = railRef.current, cur = curRef.current
+    if (!rail || !cur) return
+    rail.scrollTo({ top: cur.offsetTop - rail.clientHeight / 2 + cur.offsetHeight / 2, behavior: 'smooth' })
+  }, [currentId])
+
+  return (
+    <div className="exam-rail" ref={railRef}>
+      {questions.map((tq, i) => {
+        const q = tq.question
+        if (!q) return null
+        const answered = !!answers[String(q.id)]?.trim()
+        const current  = q.id === currentId
+        const dist     = Math.abs(i - curIdx)
+        const scale    = current ? 1.35 : Math.max(0.6, 1 - 0.12 * dist)
+        const opacity  = current ? 1 : Math.max(0.32, 1 - 0.16 * dist)
+        return (
+          <button
+            key={q.id}
+            ref={current ? curRef : undefined}
+            className={`exam-rail-star${answered ? ' answered' : ''}${current ? ' current' : ''}`}
+            onClick={() => onJump(i)}
+            title={`Question ${tq.position || i + 1}${answered ? ' — answered' : ''}`}
+            style={{ transform: `scale(${scale})`, opacity }}
+          >
+            <StarGlyph answered={answered} />
             <span className="num">{tq.position || i + 1}</span>
           </button>
         )
@@ -583,14 +638,10 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
           </div>
         </div>
 
-        {/* ── Body ── */}
-        <div className="attempt-body">
-          <div className="w-full" style={{ maxWidth: 720 }}>
-
-            {/* Navigator — jump to any question */}
-            <div style={{ marginBottom: 24 }}>
-              <QuestionNavigator questions={questions} answers={answers} currentId={q.id} onJump={setCurrentIdx} />
-            </div>
+        {/* ── Body: star rail + question ── */}
+        <div className="exam-body">
+          <QuestionRail questions={questions} answers={answers} currentId={q.id} onJump={setCurrentIdx} />
+          <div className="exam-main">
 
             {passage && (
               <div style={{ position: 'relative', marginBottom: 14, padding: '12px 16px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.88rem', color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', letterSpacing: '0.06em' }}>
