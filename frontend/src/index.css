@@ -600,58 +600,45 @@ input[type=number].form-input { -moz-appearance: textfield; }
   padding: 28px 32px;
 }
 
-/* ── Question navigator — a constellation of stars ──────────────────── */
+/* ── Question orb — a small luminous node per question ──────────────── */
+.q-orb {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-family: 'Cinzel', serif;
+  font-size: 0.66rem;
+  color: var(--gold-dim);
+  background: transparent;
+  border: 1.5px solid var(--border-dim);
+  cursor: pointer;
+  transition: transform 0.28s ease, opacity 0.28s ease, color 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.q-orb:hover { border-color: var(--gold-dim); color: var(--ink); }
+.q-orb.answered {
+  color: #2a1c08;
+  border-color: rgba(154,112,24,0.7);
+  background: radial-gradient(circle at 35% 30%, var(--gold-glow), var(--gold) 72%);
+  box-shadow: 0 0 7px rgba(154,112,24,0.5);
+}
+.q-orb.current {
+  border-color: var(--gold-glow);
+  box-shadow: 0 0 11px rgba(240,220,160,0.8);
+}
+.q-orb.current:not(.answered) { color: var(--gold-glow); }
+
+/* ── Passage layout: wrapping grid of orbs ──────────────────────────── */
 .attempt-nav {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
-.attempt-nav-star {
-  position: relative;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--border-dim);          /* drives the star's stroke/fill via currentColor */
-  transition: color 0.2s, transform 0.2s, filter 0.2s;
-}
-.attempt-nav-star svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-.attempt-nav-star .num {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* nudge into the star's body, off the top point */
-  transform: translateY(2px);
-  font-family: 'Cinzel', serif;
-  font-size: 0.62rem;
-  color: var(--gold-dim);
-  pointer-events: none;
-}
-.attempt-nav-star:hover { color: var(--gold-dim); transform: translateY(-1px); }
-.attempt-nav-star:hover .num { color: var(--ink); }
-.attempt-nav-star.answered {
-  color: var(--gold);
-  filter: drop-shadow(0 0 4px rgba(154,112,24,0.5));
-}
-.attempt-nav-star.answered .num { color: #2a1c08; }   /* dark, reads on the gold fill */
-.attempt-nav-star.current {
-  color: var(--gold-glow);
-  filter: drop-shadow(0 0 8px rgba(240,220,160,0.75));
-  transform: scale(1.14);
-}
-.attempt-nav-star.current .num { color: #2a1c08; }
-.attempt-nav-star.current:not(.answered) .num { color: var(--gold-glow); }
 
-/* ── Exam body: vertical focus-scaled star rail + question column ────── */
+/* ── Exam body: collapsed vertical orb carousel + question column ────── */
 .exam-body {
   flex: 1;
   min-height: 0;
@@ -672,49 +659,24 @@ input[type=number].form-input { -moz-appearance: textfield; }
 }
 .exam-rail {
   flex-shrink: 0;
-  width: 66px;
+  width: 64px;
+  align-self: center;
+  /* collapsed window: ~10 orbs tall (orb 32 + gap 12 ≈ 44px each) */
+  max-height: min(64vh, 440px);
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 24px 0;
+  gap: 12px;
+  padding: 16px 0;
   overflow-y: auto;
   overflow-x: visible;
   scrollbar-width: none;
+  /* fade the top/bottom edges so the window looks like a carousel */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
+          mask-image: linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
 }
 .exam-rail::-webkit-scrollbar { width: 0; height: 0; }
-.exam-rail-star {
-  flex-shrink: 0;
-  position: relative;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--border-dim);
-  transition: transform 0.28s ease, opacity 0.28s ease, color 0.2s, filter 0.2s;
-}
-.exam-rail-star svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.exam-rail-star .num {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: translateY(2px);
-  font-family: 'Cinzel', serif;
-  font-size: 0.6rem;
-  color: var(--gold-dim);
-  pointer-events: none;
-}
-.exam-rail-star:hover { color: var(--gold-dim); }
-.exam-rail-star.answered { color: var(--gold); filter: drop-shadow(0 0 5px rgba(154,112,24,0.55)); }
-.exam-rail-star.answered .num { color: #2a1c08; }
-.exam-rail-star.current { color: var(--gold-glow); filter: drop-shadow(0 0 10px rgba(240,220,160,0.85)); }
-.exam-rail-star.current .num { color: #2a1c08; }
-.exam-rail-star.current:not(.answered) .num { color: var(--gold-glow); }
 
 /* ─── Attempt / Test taking ───────────────────────────────────── */
 .attempt-layout {
@@ -1158,8 +1120,8 @@ input[type=number].form-input { -moz-appearance: textfield; }
   .attempt-body   { padding: 24px 16px calc(24px + env(safe-area-inset-bottom, 0px)); gap: 20px; }
 
   .exam-body { padding: 0 10px; gap: 10px; }
-  .exam-rail { width: 46px; gap: 13px; padding: 16px 0; }
-  .exam-rail-star { width: 28px; height: 28px; }
+  .exam-rail { width: 46px; gap: 10px; max-height: min(58vh, 380px); }
+  .q-orb { width: 28px; height: 28px; font-size: 0.6rem; }
   .exam-main { padding: 28px 6px calc(36px + env(safe-area-inset-bottom, 0px)); }
 
   .answer-options { grid-template-columns: 1fr; }

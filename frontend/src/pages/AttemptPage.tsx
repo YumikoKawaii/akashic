@@ -40,25 +40,11 @@ function CorrectAnswerBox({ answer }: { answer: string }) {
 }
 
 // ── Question navigator ───────────────────────────────────────────────────────
-// A constellation of every question, marking answered/current, letting the taker
-// jump to any question in any order. onJump receives the question's index. Each
-// question is a star: hollow when untouched, filled + glowing once answered,
-// brightest at the one you're on.
+// Every question as a small orb — hollow when untouched, lit + glowing once
+// answered, brightest at the one you're on. onJump receives the question's index.
 
-const STAR_PATH =
-  'M12 2 L14.35 8.76 L21.5 8.91 L15.8 13.24 L17.88 20.09 L12 16 L6.12 20.09 L8.2 13.24 L2.49 8.91 L9.65 8.76 Z'
-
-function StarGlyph({ answered }: { answered: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d={STAR_PATH} fill={answered ? 'currentColor' : 'none'}
-        stroke="currentColor" strokeWidth={answered ? 0 : 1.4} strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-// Wrapping grid of stars — used by the passage layout, where every question is
-// already laid out below and the stars are just a jump aid.
+// Wrapping grid of orbs — used by the passage layout, where every question is
+// already laid out below and the orbs are just a jump aid.
 function QuestionNavigator({ questions, answers, currentId, onJump }: {
   questions: TestQuestion[]
   answers: Record<string, string>
@@ -75,12 +61,11 @@ function QuestionNavigator({ questions, answers, currentId, onJump }: {
         return (
           <button
             key={q.id}
-            className={`attempt-nav-star${answered ? ' answered' : ''}${current ? ' current' : ''}`}
+            className={`q-orb${answered ? ' answered' : ''}${current ? ' current' : ''}`}
             onClick={() => onJump(i)}
             title={`Question ${tq.position || i + 1}${answered ? ' — answered' : ''}`}
           >
-            <StarGlyph answered={answered} />
-            <span className="num">{tq.position || i + 1}</span>
+            {tq.position || i + 1}
           </button>
         )
       })}
@@ -88,9 +73,10 @@ function QuestionNavigator({ questions, answers, currentId, onJump }: {
   )
 }
 
-// Vertical focus-scaled rail — the current star sits centered and enlarged,
-// neighbours shrink and fade by distance, and the rail auto-scrolls to keep the
-// current star centred. Used by the exam layout so the question keeps the page.
+// Vertical focus-scaled carousel — collapsed to a compact ~10-orb window that
+// scrolls, auto-centering the current question (which sits enlarged while
+// neighbours shrink and fade). Every question stays reachable by scrolling the
+// rail. Used by the exam layout so the question keeps the page.
 function QuestionRail({ questions, answers, currentId, onJump }: {
   questions: TestQuestion[]
   answers: Record<string, string>
@@ -115,19 +101,18 @@ function QuestionRail({ questions, answers, currentId, onJump }: {
         const answered = !!answers[String(q.id)]?.trim()
         const current  = q.id === currentId
         const dist     = Math.abs(i - curIdx)
-        const scale    = current ? 1.35 : Math.max(0.6, 1 - 0.12 * dist)
-        const opacity  = current ? 1 : Math.max(0.32, 1 - 0.16 * dist)
+        const scale    = current ? 1.3 : Math.max(0.62, 1 - 0.11 * dist)
+        const opacity  = current ? 1 : Math.max(0.35, 1 - 0.15 * dist)
         return (
           <button
             key={q.id}
             ref={current ? curRef : undefined}
-            className={`exam-rail-star${answered ? ' answered' : ''}${current ? ' current' : ''}`}
+            className={`q-orb${answered ? ' answered' : ''}${current ? ' current' : ''}`}
             onClick={() => onJump(i)}
             title={`Question ${tq.position || i + 1}${answered ? ' — answered' : ''}`}
             style={{ transform: `scale(${scale})`, opacity }}
           >
-            <StarGlyph answered={answered} />
-            <span className="num">{tq.position || i + 1}</span>
+            {tq.position || i + 1}
           </button>
         )
       })}
