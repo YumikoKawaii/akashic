@@ -40,8 +40,13 @@ function CorrectAnswerBox({ answer }: { answer: string }) {
 }
 
 // ── Question navigator ───────────────────────────────────────────────────────
-// A palette of every question, marking answered/current, letting the taker jump
-// to any question in any order. onJump receives the question's index.
+// A constellation of every question, marking answered/current, letting the taker
+// jump to any question in any order. onJump receives the question's index. Each
+// question is a star: hollow when untouched, filled + glowing once answered,
+// brightest at the one you're on.
+
+const STAR_PATH =
+  'M12 2 L14.35 8.76 L21.5 8.91 L15.8 13.24 L17.88 20.09 L12 16 L6.12 20.09 L8.2 13.24 L2.49 8.91 L9.65 8.76 Z'
 
 function QuestionNavigator({ questions, answers, currentId, onJump }: {
   questions: TestQuestion[]
@@ -59,11 +64,15 @@ function QuestionNavigator({ questions, answers, currentId, onJump }: {
         return (
           <button
             key={q.id}
-            className={`attempt-nav-cell${answered ? ' answered' : ''}${current ? ' current' : ''}`}
+            className={`attempt-nav-star${answered ? ' answered' : ''}${current ? ' current' : ''}`}
             onClick={() => onJump(i)}
             title={`Question ${tq.position || i + 1}${answered ? ' — answered' : ''}`}
           >
-            {tq.position || i + 1}
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d={STAR_PATH} fill={answered ? 'currentColor' : 'none'}
+                stroke="currentColor" strokeWidth={answered ? 0 : 1.4} strokeLinejoin="round" />
+            </svg>
+            <span className="num">{tq.position || i + 1}</span>
           </button>
         )
       })}
@@ -540,21 +549,6 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
       {flash && <div key={flash.key} className={`bg-flash bg-flash-${flash.type}`}
         style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }} />}
       <div className="attempt-layout">
-
-        {/* ── Segmented progress (filled = answered) ── */}
-        <div className="attempt-progress">
-          {questions.map((qq, i) => {
-            const done = !!answers[String(qq.question?.id)]?.trim()
-            return (
-              <div key={i} style={{
-                flex: 1, height: '100%',
-                background: done ? 'var(--gold)' : 'var(--border-dim)',
-                boxShadow: done ? '0 0 6px rgba(154,112,24,0.4)' : 'none',
-                transition: 'background 0.3s, box-shadow 0.3s',
-              }} />
-            )
-          })}
-        </div>
 
         {/* ── Header ── */}
         <div className="attempt-header">
