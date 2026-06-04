@@ -644,7 +644,7 @@ input[type=number].form-input { -moz-appearance: textfield; }
   min-height: 0;
   display: flex;
   justify-content: center;
-  align-items: center;          /* page sizes to its content, centred — not stretched */
+  align-items: flex-start;      /* anchor the page to the top, not floating centred */
   gap: 0;
   padding: 28px 32px;
   overflow: hidden;
@@ -656,8 +656,9 @@ input[type=number].form-input { -moz-appearance: textfield; }
 .exam-tabs {
   flex-shrink: 0;
   width: 48px;
-  align-self: center;
-  max-height: 100%;
+  align-self: flex-start;            /* top-anchored, matching the page */
+  max-height: min(560px, 100%);
+  height: min(560px, 100%);
   display: flex;
   flex-direction: column;
   gap: 5px;
