@@ -701,12 +701,11 @@ input[type=number].form-input { -moz-appearance: textfield; }
   box-shadow: -2px 0 9px rgba(154,112,24,0.4);
 }
 
-/* The book page itself — sizes to its content, capped to the body height */
+/* The book page itself — a constant height; long questions scroll inside it */
 .book-page {
   flex: 1;
   max-width: 680px;
-  min-height: min(460px, 100%);   /* ≈ thumb-index tab 14–15 */
-  max-height: 100%;
+  height: min(560px, 100%);   /* constant page length, capped to the body */
   display: flex;
   flex-direction: column;
   position: relative;
