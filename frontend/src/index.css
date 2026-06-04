@@ -717,14 +717,14 @@ input[type=number].form-input { -moz-appearance: textfield; }
 .exam-tab.answered .exam-tab-face::after { border-color: rgba(154,112,24,0.42); }
 .exam-tab.current {
   width: 50px;
-  background: var(--gold);
-  filter: drop-shadow(-2px 0 8px rgba(154,112,24,0.45));
+  background: rgba(154,112,24,0.5);
+  filter: drop-shadow(-2px 0 6px rgba(154,112,24,0.28));
 }
 .exam-tab.current .exam-tab-face {
-  color: #2a1c08;
-  background: linear-gradient(90deg, var(--gold-glow), var(--gold));
+  color: #6b4c14;
+  background: linear-gradient(135deg, rgba(154,112,24,0.2), rgba(154,112,24,0.07));
 }
-.exam-tab.current .exam-tab-face::after { border-color: rgba(42,28,8,0.32); }
+.exam-tab.current .exam-tab-face::after { border-color: rgba(154,112,24,0.5); }
 
 /* The book page itself — a constant height; long questions scroll inside it */
 .book-page {
