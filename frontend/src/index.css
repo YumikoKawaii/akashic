@@ -666,8 +666,8 @@ input[type=number].form-input { -moz-appearance: textfield; }
   overflow-y: auto;
   overflow-x: visible;
   scrollbar-width: none;
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
-          mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 82%, transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 82%, transparent 100%);
 }
 .exam-tabs::-webkit-scrollbar { width: 0; height: 0; }
 /* Each tab is a chamfered double-framed plaque: an outer gilt frame, a parchment
