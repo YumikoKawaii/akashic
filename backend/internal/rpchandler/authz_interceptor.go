@@ -82,10 +82,11 @@ var procedureMinRole = map[string]string{
 	akashicv1connect.TestServiceRestoreTestProcedure:  membership.RoleViewer,
 
 	// Attempts — running a test reads bank content, so viewer suffices.
-	akashicv1connect.AttemptServiceListAttemptsByTestProcedure: membership.RoleViewer,
-	akashicv1connect.AttemptServiceStartAttemptProcedure:       membership.RoleViewer,
-	akashicv1connect.AttemptServiceGetAttemptProcedure:         membership.RoleViewer,
-	akashicv1connect.AttemptServiceSubmitAttemptProcedure:      membership.RoleViewer,
+	akashicv1connect.AttemptServiceListAttemptsByTestProcedure:  membership.RoleViewer,
+	akashicv1connect.AttemptServiceStartAttemptProcedure:        membership.RoleViewer,
+	akashicv1connect.AttemptServiceGetAttemptProcedure:          membership.RoleViewer,
+	akashicv1connect.AttemptServiceSaveAttemptProgressProcedure: membership.RoleViewer,
+	akashicv1connect.AttemptServiceSubmitAttemptProcedure:       membership.RoleViewer,
 
 	// Contributions — proposing, revising, contributor transitions (resubmit/
 	// withdraw/reopen/close) and merging are viewer capabilities (public visitors

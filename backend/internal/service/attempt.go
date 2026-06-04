@@ -58,6 +58,32 @@ type SubmitAttemptInput struct {
 	Answers map[string]string `json:"answers" binding:"required"`
 }
 
+// SaveProgress persists in-progress answers without grading or completing the
+// attempt, so a reload can resume. Same caller guards as Submit (taker-only,
+// must belong to the bank, must still be in progress), but it only touches the
+// answers column.
+func (s *AttemptService) SaveProgress(bankID, id, userID int, answers map[string]string) (*model.TestAttempt, error) {
+	attempt, err := s.repo.FindByIDLite(id)
+	if err != nil {
+		return nil, err
+	}
+	if attempt.Test == nil || attempt.Test.BankID != bankID {
+		return nil, ErrForbidden
+	}
+	if attempt.UserID == nil || *attempt.UserID != userID {
+		return nil, ErrForbidden
+	}
+	if attempt.CompletedAt != nil {
+		return nil, ErrAttemptAlreadyCompleted
+	}
+
+	if err := s.repo.UpdateAnswers(id, answers); err != nil {
+		return nil, err
+	}
+	attempt.Answers = answers
+	return attempt, nil
+}
+
 func (s *AttemptService) Submit(bankID, id, userID int, input SubmitAttemptInput) (*model.TestAttempt, error) {
 	attempt, err := s.repo.FindByID(id)
 	if err != nil {

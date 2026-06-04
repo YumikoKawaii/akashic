@@ -442,6 +442,110 @@ func (x *GetAttemptResponse) GetAttempt() *Attempt {
 	return nil
 }
 
+type SaveAttemptProgressRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Answers       map[string]string      `protobuf:"bytes,2,rep,name=answers,proto3" json:"answers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	BankId        int32                  `protobuf:"varint,3,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SaveAttemptProgressRequest) Reset() {
+	*x = SaveAttemptProgressRequest{}
+	mi := &file_akashic_v1_attempt_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SaveAttemptProgressRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SaveAttemptProgressRequest) ProtoMessage() {}
+
+func (x *SaveAttemptProgressRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_attempt_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SaveAttemptProgressRequest.ProtoReflect.Descriptor instead.
+func (*SaveAttemptProgressRequest) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_attempt_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *SaveAttemptProgressRequest) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *SaveAttemptProgressRequest) GetAnswers() map[string]string {
+	if x != nil {
+		return x.Answers
+	}
+	return nil
+}
+
+func (x *SaveAttemptProgressRequest) GetBankId() int32 {
+	if x != nil {
+		return x.BankId
+	}
+	return 0
+}
+
+type SaveAttemptProgressResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Attempt       *Attempt               `protobuf:"bytes,1,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SaveAttemptProgressResponse) Reset() {
+	*x = SaveAttemptProgressResponse{}
+	mi := &file_akashic_v1_attempt_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SaveAttemptProgressResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SaveAttemptProgressResponse) ProtoMessage() {}
+
+func (x *SaveAttemptProgressResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_attempt_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SaveAttemptProgressResponse.ProtoReflect.Descriptor instead.
+func (*SaveAttemptProgressResponse) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_attempt_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *SaveAttemptProgressResponse) GetAttempt() *Attempt {
+	if x != nil {
+		return x.Attempt
+	}
+	return nil
+}
+
 type SubmitAttemptRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -453,7 +557,7 @@ type SubmitAttemptRequest struct {
 
 func (x *SubmitAttemptRequest) Reset() {
 	*x = SubmitAttemptRequest{}
-	mi := &file_akashic_v1_attempt_proto_msgTypes[7]
+	mi := &file_akashic_v1_attempt_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -465,7 +569,7 @@ func (x *SubmitAttemptRequest) String() string {
 func (*SubmitAttemptRequest) ProtoMessage() {}
 
 func (x *SubmitAttemptRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_attempt_proto_msgTypes[7]
+	mi := &file_akashic_v1_attempt_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -478,7 +582,7 @@ func (x *SubmitAttemptRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitAttemptRequest.ProtoReflect.Descriptor instead.
 func (*SubmitAttemptRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_attempt_proto_rawDescGZIP(), []int{7}
+	return file_akashic_v1_attempt_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *SubmitAttemptRequest) GetId() int32 {
@@ -511,7 +615,7 @@ type SubmitAttemptResponse struct {
 
 func (x *SubmitAttemptResponse) Reset() {
 	*x = SubmitAttemptResponse{}
-	mi := &file_akashic_v1_attempt_proto_msgTypes[8]
+	mi := &file_akashic_v1_attempt_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -523,7 +627,7 @@ func (x *SubmitAttemptResponse) String() string {
 func (*SubmitAttemptResponse) ProtoMessage() {}
 
 func (x *SubmitAttemptResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_attempt_proto_msgTypes[8]
+	mi := &file_akashic_v1_attempt_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -536,7 +640,7 @@ func (x *SubmitAttemptResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitAttemptResponse.ProtoReflect.Descriptor instead.
 func (*SubmitAttemptResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_attempt_proto_rawDescGZIP(), []int{8}
+	return file_akashic_v1_attempt_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *SubmitAttemptResponse) GetAttempt() *Attempt {
@@ -592,6 +696,15 @@ const file_akashic_v1_attempt_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x17\n" +
 	"\abank_id\x18\x02 \x01(\x05R\x06bankId\"C\n" +
 	"\x12GetAttemptResponse\x12-\n" +
+	"\aattempt\x18\x01 \x01(\v2\x13.akashic.v1.AttemptR\aattempt\"\xd0\x01\n" +
+	"\x1aSaveAttemptProgressRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12M\n" +
+	"\aanswers\x18\x02 \x03(\v23.akashic.v1.SaveAttemptProgressRequest.AnswersEntryR\aanswers\x12\x17\n" +
+	"\abank_id\x18\x03 \x01(\x05R\x06bankId\x1a:\n" +
+	"\fAnswersEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"L\n" +
+	"\x1bSaveAttemptProgressResponse\x12-\n" +
 	"\aattempt\x18\x01 \x01(\v2\x13.akashic.v1.AttemptR\aattempt\"\xc4\x01\n" +
 	"\x14SubmitAttemptRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12G\n" +
@@ -601,12 +714,13 @@ const file_akashic_v1_attempt_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"F\n" +
 	"\x15SubmitAttemptResponse\x12-\n" +
-	"\aattempt\x18\x01 \x01(\v2\x13.akashic.v1.AttemptR\aattempt2\xeb\x02\n" +
+	"\aattempt\x18\x01 \x01(\v2\x13.akashic.v1.AttemptR\aattempt2\xd3\x03\n" +
 	"\x0eAttemptService\x12c\n" +
 	"\x12ListAttemptsByTest\x12%.akashic.v1.ListAttemptsByTestRequest\x1a&.akashic.v1.ListAttemptsByTestResponse\x12Q\n" +
 	"\fStartAttempt\x12\x1f.akashic.v1.StartAttemptRequest\x1a .akashic.v1.StartAttemptResponse\x12K\n" +
 	"\n" +
-	"GetAttempt\x12\x1d.akashic.v1.GetAttemptRequest\x1a\x1e.akashic.v1.GetAttemptResponse\x12T\n" +
+	"GetAttempt\x12\x1d.akashic.v1.GetAttemptRequest\x1a\x1e.akashic.v1.GetAttemptResponse\x12f\n" +
+	"\x13SaveAttemptProgress\x12&.akashic.v1.SaveAttemptProgressRequest\x1a'.akashic.v1.SaveAttemptProgressResponse\x12T\n" +
 	"\rSubmitAttempt\x12 .akashic.v1.SubmitAttemptRequest\x1a!.akashic.v1.SubmitAttemptResponseB:Z8github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1b\x06proto3"
 
 var (
@@ -621,49 +735,56 @@ func file_akashic_v1_attempt_proto_rawDescGZIP() []byte {
 	return file_akashic_v1_attempt_proto_rawDescData
 }
 
-var file_akashic_v1_attempt_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_akashic_v1_attempt_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_akashic_v1_attempt_proto_goTypes = []any{
-	(*Attempt)(nil),                    // 0: akashic.v1.Attempt
-	(*ListAttemptsByTestRequest)(nil),  // 1: akashic.v1.ListAttemptsByTestRequest
-	(*ListAttemptsByTestResponse)(nil), // 2: akashic.v1.ListAttemptsByTestResponse
-	(*StartAttemptRequest)(nil),        // 3: akashic.v1.StartAttemptRequest
-	(*StartAttemptResponse)(nil),       // 4: akashic.v1.StartAttemptResponse
-	(*GetAttemptRequest)(nil),          // 5: akashic.v1.GetAttemptRequest
-	(*GetAttemptResponse)(nil),         // 6: akashic.v1.GetAttemptResponse
-	(*SubmitAttemptRequest)(nil),       // 7: akashic.v1.SubmitAttemptRequest
-	(*SubmitAttemptResponse)(nil),      // 8: akashic.v1.SubmitAttemptResponse
-	nil,                                // 9: akashic.v1.Attempt.AnswersEntry
-	nil,                                // 10: akashic.v1.SubmitAttemptRequest.AnswersEntry
-	(*timestamppb.Timestamp)(nil),      // 11: google.protobuf.Timestamp
-	(*Test)(nil),                       // 12: akashic.v1.Test
-	(*User)(nil),                       // 13: akashic.v1.User
+	(*Attempt)(nil),                     // 0: akashic.v1.Attempt
+	(*ListAttemptsByTestRequest)(nil),   // 1: akashic.v1.ListAttemptsByTestRequest
+	(*ListAttemptsByTestResponse)(nil),  // 2: akashic.v1.ListAttemptsByTestResponse
+	(*StartAttemptRequest)(nil),         // 3: akashic.v1.StartAttemptRequest
+	(*StartAttemptResponse)(nil),        // 4: akashic.v1.StartAttemptResponse
+	(*GetAttemptRequest)(nil),           // 5: akashic.v1.GetAttemptRequest
+	(*GetAttemptResponse)(nil),          // 6: akashic.v1.GetAttemptResponse
+	(*SaveAttemptProgressRequest)(nil),  // 7: akashic.v1.SaveAttemptProgressRequest
+	(*SaveAttemptProgressResponse)(nil), // 8: akashic.v1.SaveAttemptProgressResponse
+	(*SubmitAttemptRequest)(nil),        // 9: akashic.v1.SubmitAttemptRequest
+	(*SubmitAttemptResponse)(nil),       // 10: akashic.v1.SubmitAttemptResponse
+	nil,                                 // 11: akashic.v1.Attempt.AnswersEntry
+	nil,                                 // 12: akashic.v1.SaveAttemptProgressRequest.AnswersEntry
+	nil,                                 // 13: akashic.v1.SubmitAttemptRequest.AnswersEntry
+	(*timestamppb.Timestamp)(nil),       // 14: google.protobuf.Timestamp
+	(*Test)(nil),                        // 15: akashic.v1.Test
+	(*User)(nil),                        // 16: akashic.v1.User
 }
 var file_akashic_v1_attempt_proto_depIdxs = []int32{
-	9,  // 0: akashic.v1.Attempt.answers:type_name -> akashic.v1.Attempt.AnswersEntry
-	11, // 1: akashic.v1.Attempt.started_at:type_name -> google.protobuf.Timestamp
-	11, // 2: akashic.v1.Attempt.completed_at:type_name -> google.protobuf.Timestamp
-	11, // 3: akashic.v1.Attempt.created_at:type_name -> google.protobuf.Timestamp
-	11, // 4: akashic.v1.Attempt.updated_at:type_name -> google.protobuf.Timestamp
-	12, // 5: akashic.v1.Attempt.test:type_name -> akashic.v1.Test
-	13, // 6: akashic.v1.Attempt.taker:type_name -> akashic.v1.User
+	11, // 0: akashic.v1.Attempt.answers:type_name -> akashic.v1.Attempt.AnswersEntry
+	14, // 1: akashic.v1.Attempt.started_at:type_name -> google.protobuf.Timestamp
+	14, // 2: akashic.v1.Attempt.completed_at:type_name -> google.protobuf.Timestamp
+	14, // 3: akashic.v1.Attempt.created_at:type_name -> google.protobuf.Timestamp
+	14, // 4: akashic.v1.Attempt.updated_at:type_name -> google.protobuf.Timestamp
+	15, // 5: akashic.v1.Attempt.test:type_name -> akashic.v1.Test
+	16, // 6: akashic.v1.Attempt.taker:type_name -> akashic.v1.User
 	0,  // 7: akashic.v1.ListAttemptsByTestResponse.attempts:type_name -> akashic.v1.Attempt
 	0,  // 8: akashic.v1.StartAttemptResponse.attempt:type_name -> akashic.v1.Attempt
 	0,  // 9: akashic.v1.GetAttemptResponse.attempt:type_name -> akashic.v1.Attempt
-	10, // 10: akashic.v1.SubmitAttemptRequest.answers:type_name -> akashic.v1.SubmitAttemptRequest.AnswersEntry
-	0,  // 11: akashic.v1.SubmitAttemptResponse.attempt:type_name -> akashic.v1.Attempt
-	1,  // 12: akashic.v1.AttemptService.ListAttemptsByTest:input_type -> akashic.v1.ListAttemptsByTestRequest
-	3,  // 13: akashic.v1.AttemptService.StartAttempt:input_type -> akashic.v1.StartAttemptRequest
-	5,  // 14: akashic.v1.AttemptService.GetAttempt:input_type -> akashic.v1.GetAttemptRequest
-	7,  // 15: akashic.v1.AttemptService.SubmitAttempt:input_type -> akashic.v1.SubmitAttemptRequest
-	2,  // 16: akashic.v1.AttemptService.ListAttemptsByTest:output_type -> akashic.v1.ListAttemptsByTestResponse
-	4,  // 17: akashic.v1.AttemptService.StartAttempt:output_type -> akashic.v1.StartAttemptResponse
-	6,  // 18: akashic.v1.AttemptService.GetAttempt:output_type -> akashic.v1.GetAttemptResponse
-	8,  // 19: akashic.v1.AttemptService.SubmitAttempt:output_type -> akashic.v1.SubmitAttemptResponse
-	16, // [16:20] is the sub-list for method output_type
-	12, // [12:16] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	12, // 10: akashic.v1.SaveAttemptProgressRequest.answers:type_name -> akashic.v1.SaveAttemptProgressRequest.AnswersEntry
+	0,  // 11: akashic.v1.SaveAttemptProgressResponse.attempt:type_name -> akashic.v1.Attempt
+	13, // 12: akashic.v1.SubmitAttemptRequest.answers:type_name -> akashic.v1.SubmitAttemptRequest.AnswersEntry
+	0,  // 13: akashic.v1.SubmitAttemptResponse.attempt:type_name -> akashic.v1.Attempt
+	1,  // 14: akashic.v1.AttemptService.ListAttemptsByTest:input_type -> akashic.v1.ListAttemptsByTestRequest
+	3,  // 15: akashic.v1.AttemptService.StartAttempt:input_type -> akashic.v1.StartAttemptRequest
+	5,  // 16: akashic.v1.AttemptService.GetAttempt:input_type -> akashic.v1.GetAttemptRequest
+	7,  // 17: akashic.v1.AttemptService.SaveAttemptProgress:input_type -> akashic.v1.SaveAttemptProgressRequest
+	9,  // 18: akashic.v1.AttemptService.SubmitAttempt:input_type -> akashic.v1.SubmitAttemptRequest
+	2,  // 19: akashic.v1.AttemptService.ListAttemptsByTest:output_type -> akashic.v1.ListAttemptsByTestResponse
+	4,  // 20: akashic.v1.AttemptService.StartAttempt:output_type -> akashic.v1.StartAttemptResponse
+	6,  // 21: akashic.v1.AttemptService.GetAttempt:output_type -> akashic.v1.GetAttemptResponse
+	8,  // 22: akashic.v1.AttemptService.SaveAttemptProgress:output_type -> akashic.v1.SaveAttemptProgressResponse
+	10, // 23: akashic.v1.AttemptService.SubmitAttempt:output_type -> akashic.v1.SubmitAttemptResponse
+	19, // [19:24] is the sub-list for method output_type
+	14, // [14:19] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_attempt_proto_init() }
@@ -680,7 +801,7 @@ func file_akashic_v1_attempt_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_akashic_v1_attempt_proto_rawDesc), len(file_akashic_v1_attempt_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAttempt, useSubmitAttempt } from '../hooks/useAttempts'
+import { useAttempt, useSubmitAttempt, useSaveAttemptProgress } from '../hooks/useAttempts'
 import { Passage, Question, QuestionGroup, TestQuestion } from '../types'
 import OrnatePanel from '../components/ui/OrnatePanel'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
@@ -15,17 +15,6 @@ import Select from '../components/ui/Select'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function checkAnswer(q: Question, answer: string): boolean {
-  const got = answer.trim()
-  if (q.choice) {
-    const want = [...q.choice.answers].sort()
-    const got2 = got.split('|').map(s => s.trim()).filter(Boolean).sort()
-    return got2.length === want.length && got2.every((v, i) => v === want[i])
-  }
-  if (!q.item) return false
-  return got.toLowerCase() === q.item.answer.trim().toLowerCase()
-}
-
 function questionContent(q: Question): string {
   return q.item?.content ?? q.choice?.content ?? ''
 }
@@ -35,6 +24,38 @@ function CorrectAnswerBox({ answer }: { answer: string }) {
     <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
       <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>CORRECT ANSWER</div>
       <div style={{ color: '#2a8a3a' }}>{answer}</div>
+    </div>
+  )
+}
+
+// ── Question navigator ───────────────────────────────────────────────────────
+// A palette of every question, marking answered/current, letting the taker jump
+// to any question in any order. onJump receives the question's index.
+
+function QuestionNavigator({ questions, answers, currentId, onJump }: {
+  questions: TestQuestion[]
+  answers: Record<string, string>
+  currentId?: number
+  onJump: (idx: number) => void
+}) {
+  return (
+    <div className="attempt-nav">
+      {questions.map((tq, i) => {
+        const q = tq.question
+        if (!q) return null
+        const answered = !!answers[String(q.id)]?.trim()
+        const current  = q.id === currentId
+        return (
+          <button
+            key={q.id}
+            className={`attempt-nav-cell${answered ? ' answered' : ''}${current ? ' current' : ''}`}
+            onClick={() => onJump(i)}
+            title={`Question ${tq.position || i + 1}${answered ? ' — answered' : ''}`}
+          >
+            {tq.position || i + 1}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -371,6 +392,16 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
 
         {/* Right — questions */}
         <div className="passage-panel-right">
+          <div style={{ marginBottom: 24 }}>
+            <QuestionNavigator
+              questions={questions}
+              answers={answers}
+              onJump={(i) => {
+                const q = questions[i]?.question
+                if (q) document.getElementById(`attempt-q-${q.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              }}
+            />
+          </div>
           {sections.map(({ groupId, group, items }) => (
             <div key={groupId} style={{ position: 'relative', marginBottom: 36, paddingLeft: 12, borderLeft: '2px solid var(--border-dim)' }}>
               {/* small sigil at section start */}
@@ -383,7 +414,7 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
                 const sel = answers[String(q.id)] ?? ''
                 const isFillBlank = q.type === 'sentence_completion' || q.type === 'form_completion'
                 return (
-                  <div key={q.id} style={{ marginBottom: 20 }}>
+                  <div key={q.id} id={`attempt-q-${q.id}`} style={{ marginBottom: 20, scrollMarginTop: 80 }}>
                     {isFillBlank ? (
                       <div style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
                         <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 28, flexShrink: 0 }}>
@@ -420,73 +451,54 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
   )
 }
 
-// ── Flash-card layout ──────────────────────────────────────────────────────────
+// ── Exam layout (standalone tests) ──────────────────────────────────────────────
+// Answer questions in any order via the navigator; one Submit at the end grades
+// everything. Opens at the first unanswered question so a resumed attempt lands
+// where the taker left off.
 
-function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }: {
+function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPending }: {
   attempt: any
   questions: TestQuestion[]
+  answers: Record<string, string>
   setAnswers: React.Dispatch<React.SetStateAction<Record<string, string>>>
-  onFinish: () => void
+  onSubmit: () => void
   isPending: boolean
 }) {
-  const [currentIdx, setCurrentIdx] = useState(0)
-  const [selected,   setSelected]   = useState('')
-  const [revealed,   setRevealed]   = useState(false)
-  const [score,      setScore]      = useState(0)
-  const [scorable,   setScorable]   = useState(0)
-  const [flash,      setFlash]      = useState<{ key: number; type: 'correct' | 'wrong' } | null>(null)
+  const total = questions.length
 
-  const total  = questions.length
-  const tq     = questions[currentIdx]
-  const q      = tq?.question
-  const isLast = currentIdx === total - 1
+  // Seed the starting question once (first unanswered) — afterwards the taker
+  // drives currentIdx via the navigator / prev-next.
+  const firstUnanswered = useMemo(() => {
+    const i = questions.findIndex(tq => !answers[String(tq.question?.id)]?.trim())
+    return i === -1 ? 0 : i
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
+  const [currentIdx, setCurrentIdx] = useState(firstUnanswered)
+  const idx = Math.min(currentIdx, total - 1)
+  const tq  = questions[idx]
+  const q   = tq?.question
   if (!q) return null
 
-  const group       = q.group
-  const passage     = group?.passage
-  const content     = questionContent(q)
-  const isScoreable  = q.type !== 'short_answer'
-  const isSkippable  = q.type === 'sentence_completion' || q.type === 'form_completion' || q.type === 'short_answer'
-  const isCorrect    = revealed && isScoreable && checkAnswer(q, selected)
+  const group    = q.group
+  const passage  = group?.passage
+  const content  = questionContent(q)
+  const sel      = answers[String(q.id)] ?? ''
+  const answered = Object.values(answers).filter(v => v?.trim()).length
+  const isLast   = idx === total - 1
 
-  const handleReveal = () => {
-    if (!selected) return
-    setAnswers(prev => ({ ...prev, [String(q.id)]: selected }))
-    setRevealed(true)
-    if (isScoreable) {
-      const correct = checkAnswer(q, selected)
-      setScorable(s => s + 1)
-      if (correct) setScore(s => s + 1)
-      setFlash({ key: Date.now(), type: correct ? 'correct' : 'wrong' })
-    }
-  }
-
-  const handleNext = async () => {
-    if (isLast) { onFinish(); return }
-    setCurrentIdx(i => i + 1)
-    setSelected('')
-    setRevealed(false)
-  }
-
-  const handleSkip = () => {
-    setAnswers(prev => ({ ...prev, [String(q.id)]: '' }))
-    setRevealed(true)
-    setFlash({ key: Date.now(), type: 'wrong' })
-  }
+  const setAnswer = (val: string) => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))
 
   return (
     <>
       <Starfield />
-      <SolarSystemBackground flash={flash} />
-      {flash && <div key={flash.key} className={`bg-flash bg-flash-${flash.type}`}
-        style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}/>}
+      <SolarSystemBackground />
       <div className="attempt-layout">
 
-        {/* ── Segmented progress ── */}
+        {/* ── Segmented progress (filled = answered) ── */}
         <div className="attempt-progress">
-          {questions.map((_, i) => {
-            const done = i < currentIdx || (i === currentIdx && revealed)
+          {questions.map((qq, i) => {
+            const done = !!answers[String(qq.question?.id)]?.trim()
             return (
               <div key={i} style={{
                 flex: 1, height: '100%',
@@ -502,8 +514,6 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
         <div className="attempt-header">
           <StarTrails />
           <RuneCorners size={22} color="var(--gold-dim)" opacity={0.50} />
-
-          {/* decorative circles */}
           <div style={{ position: 'absolute', top: -24, left: 80, width: 64, height: 64, color: '#6b4c8a', opacity: 0.20, pointerEvents: 'none' }}>
             <MagicCircle variant="halo" speed={2} />
           </div>
@@ -511,34 +521,27 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
           <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>{attempt.test.name}</div>
             <div style={{ fontSize: '0.78rem', color: 'var(--ink-dim)', marginTop: 2 }}>
-              Question {currentIdx + 1} / {total}
+              Question {idx + 1} / {total} · {answered} answered
             </div>
           </div>
 
-          {scorable > 0 && (
-            <div style={{ textAlign: 'right', position: 'relative', zIndex: 1 }}>
-              {/* halo ring behind score */}
-              <div style={{ position: 'absolute', top: '50%', right: -8, transform: 'translateY(-50%)', width: 64, height: 64, color: 'var(--gold)', opacity: 0.25, pointerEvents: 'none' }}>
-                <MagicCircle variant="halo" speed={1.5} />
-              </div>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.4rem', color: 'var(--gold)', lineHeight: 1, position: 'relative' }}>
-                {score}<span style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', marginLeft: 2 }}>/ {scorable}</span>
-              </div>
-              <div style={{ fontSize: '0.68rem', color: 'var(--ink-dim)', letterSpacing: '0.12em', fontFamily: 'Cinzel, serif' }}>SCORE</div>
-            </div>
-          )}
+          <button className="btn btn-primary" onClick={onSubmit} disabled={isPending} style={{ padding: '9px 26px', position: 'relative', zIndex: 1 }}>
+            {isPending ? '…' : 'Submit All →'}
+          </button>
         </div>
 
         {/* ── Body ── */}
         <div className="attempt-body">
           <div className="w-full" style={{ maxWidth: 720 }}>
 
+            {/* Navigator — jump to any question */}
+            <div style={{ marginBottom: 24 }}>
+              <QuestionNavigator questions={questions} answers={answers} currentId={q.id} onJump={setCurrentIdx} />
+            </div>
+
             {passage && (
               <div style={{ position: 'relative', marginBottom: 14, padding: '12px 16px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.88rem', color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', letterSpacing: '0.06em' }}>
                 <RuneCorners size={18} color="var(--gold-dim)" opacity={0.38} />
-                <div style={{ position: 'absolute', top: -18, right: -18, width: 48, height: 48, color: 'var(--gold)', opacity: 0.20, pointerEvents: 'none' }}>
-                  <MagicCircle variant="spark" speed={2} />
-                </div>
                 <span style={{ color: 'var(--gold-dim)', marginRight: 8 }}>Passage</span>
                 {passage.title}
               </div>
@@ -553,7 +556,7 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
                     <MagicCircle variant="full" speed={3} />
                   </div>
                   <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'var(--gold-dim)', paddingTop: 2, minWidth: 32, display: 'block', position: 'relative' }}>
-                    {String(currentIdx + 1).padStart(2, '0')}
+                    {String(idx + 1).padStart(2, '0')}
                   </span>
                 </div>
                 <div style={{ flex: 1 }}>
@@ -561,29 +564,25 @@ function FlashCardLayout({ attempt, questions, setAnswers, onFinish, isPending }
                   <div className="flex gap-2 mt-3 flex-wrap">
                     <TypeTag type={q.type} />
                     <DifficultyTag difficulty={q.difficulty} />
-                    {revealed && isScoreable && (
-                      <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.56rem', letterSpacing: '0.1em', padding: '2px 8px', border: '1px solid', borderColor: isCorrect ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorrect ? '#2a8a3a' : '#b03030', textTransform: 'uppercase' }}>
-                        {isCorrect ? '✓ Correct' : '✕ Wrong'}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
             </OrnatePanel>
 
-            <AnswerOptions q={q} selected={selected} onSelect={setSelected} revealed={revealed} />
+            <AnswerOptions q={q} selected={sel} onSelect={setAnswer} />
 
-            <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-              {!revealed ? (
-                <>
-                  <button className="btn btn-primary" onClick={handleReveal} disabled={!selected} style={{ padding: '10px 32px' }}>Submit</button>
-                  {isSkippable && (
-                    <button className="btn" onClick={handleSkip} style={{ padding: '10px 24px', color: 'var(--ink-dim)', borderColor: 'var(--border-dim)' }}>Skip</button>
-                  )}
-                </>
+            <div style={{ display: 'flex', gap: 12, marginTop: 20, alignItems: 'center' }}>
+              <button className="btn" onClick={() => setCurrentIdx(i => Math.max(0, i - 1))} disabled={idx === 0}
+                style={{ padding: '10px 24px', color: 'var(--ink-dim)', borderColor: 'var(--border-dim)', opacity: idx === 0 ? 0.4 : 1 }}>
+                ← Prev
+              </button>
+              {!isLast ? (
+                <button className="btn btn-primary" onClick={() => setCurrentIdx(i => Math.min(total - 1, i + 1))} style={{ padding: '10px 32px' }}>
+                  Next →
+                </button>
               ) : (
-                <button className="btn btn-primary pulse" onClick={handleNext} disabled={isPending} style={{ padding: '10px 32px' }}>
-                  {isPending ? '…' : isLast ? 'Finish →' : 'Next →'}
+                <button className="btn btn-primary pulse" onClick={onSubmit} disabled={isPending} style={{ padding: '10px 32px' }}>
+                  {isPending ? '…' : 'Finish →'}
                 </button>
               )}
             </div>
@@ -601,9 +600,55 @@ export default function AttemptPage() {
   const navigate          = useNavigate()
   const { data: attempt } = useAttempt(bankId, id)
   const submit            = useSubmitAttempt()
+  const saveProgress      = useSaveAttemptProgress()
   const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [hydrated, setHydrated] = useState(false)
 
-  if (!attempt?.test) return (
+  // Seed local answers from the server once per attempt, so a reload resumes
+  // exactly where the taker left off. We hold rendering until this runs (see the
+  // !hydrated guard below) so the exam layout opens at the first *unanswered*
+  // question rather than always at question one.
+  const seededFor = useRef<number | null>(null)
+  useEffect(() => {
+    if (attempt && seededFor.current !== attempt.id) {
+      setAnswers(attempt.answers ?? {})
+      seededFor.current = attempt.id
+      setHydrated(true)
+    }
+  }, [attempt])
+
+  // Debounced autosave of in-progress answers. dirtyRef gates out the initial
+  // seed (no point re-saving what we just loaded); submittedRef stops a stray
+  // save from racing the final grade-and-complete Submit.
+  const dirtyRef     = useRef(false)
+  const submittedRef = useRef(false)
+  const latest       = useRef(answers)
+  latest.current     = answers
+  const completed    = !!attempt?.completed_at
+
+  useEffect(() => {
+    if (!attempt || completed || submittedRef.current) return
+    if (seededFor.current !== attempt.id || !dirtyRef.current) return
+    const t = setTimeout(() => { saveProgress.mutate({ bankId, id, answers }) }, 700)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answers, completed])
+
+  // Flush the last edit on unmount — the debounce may not have fired yet.
+  useEffect(() => () => {
+    if (dirtyRef.current && !submittedRef.current && seededFor.current != null) {
+      saveProgress.mutate({ bankId, id, answers: latest.current })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // setAnswers wrapper that marks the attempt dirty on a real user edit.
+  const updateAnswers: React.Dispatch<React.SetStateAction<Record<string, string>>> = (action) => {
+    dirtyRef.current = true
+    setAnswers(action)
+  }
+
+  if (!attempt?.test || !hydrated) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <Starfield />
       <SolarSystemBackground />
@@ -628,6 +673,7 @@ export default function AttemptPage() {
   const isPassageTest = questions.some(tq => !!tq.question?.group?.passage_id)
 
   const handleSubmit = async () => {
+    submittedRef.current = true
     await submit.mutateAsync({ bankId, id, answers })
     navigate(`/attempts/${bankId}/${id}/results`)
   }
@@ -638,7 +684,7 @@ export default function AttemptPage() {
         attempt={attempt}
         questions={questions}
         answers={answers}
-        setAnswers={setAnswers}
+        setAnswers={updateAnswers}
         onSubmit={handleSubmit}
         isPending={submit.isPending}
       />
@@ -646,11 +692,12 @@ export default function AttemptPage() {
   }
 
   return (
-    <FlashCardLayout
+    <ExamLayout
       attempt={attempt}
       questions={questions}
-      setAnswers={setAnswers}
-      onFinish={handleSubmit}
+      answers={answers}
+      setAnswers={updateAnswers}
+      onSubmit={handleSubmit}
       isPending={submit.isPending}
     />
   )

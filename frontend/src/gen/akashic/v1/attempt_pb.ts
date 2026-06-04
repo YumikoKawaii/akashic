@@ -360,6 +360,92 @@ export class GetAttemptResponse extends Message<GetAttemptResponse> {
 }
 
 /**
+ * @generated from message akashic.v1.SaveAttemptProgressRequest
+ */
+export class SaveAttemptProgressRequest extends Message<SaveAttemptProgressRequest> {
+  /**
+   * @generated from field: int32 id = 1;
+   */
+  id = 0;
+
+  /**
+   * @generated from field: map<string, string> answers = 2;
+   */
+  answers: { [key: string]: string } = {};
+
+  /**
+   * @generated from field: int32 bank_id = 3;
+   */
+  bankId = 0;
+
+  constructor(data?: PartialMessage<SaveAttemptProgressRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.SaveAttemptProgressRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "answers", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "scalar", T: 9 /* ScalarType.STRING */} },
+    { no: 3, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SaveAttemptProgressRequest {
+    return new SaveAttemptProgressRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SaveAttemptProgressRequest {
+    return new SaveAttemptProgressRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SaveAttemptProgressRequest {
+    return new SaveAttemptProgressRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SaveAttemptProgressRequest | PlainMessage<SaveAttemptProgressRequest> | undefined, b: SaveAttemptProgressRequest | PlainMessage<SaveAttemptProgressRequest> | undefined): boolean {
+    return proto3.util.equals(SaveAttemptProgressRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.SaveAttemptProgressResponse
+ */
+export class SaveAttemptProgressResponse extends Message<SaveAttemptProgressResponse> {
+  /**
+   * @generated from field: akashic.v1.Attempt attempt = 1;
+   */
+  attempt?: Attempt;
+
+  constructor(data?: PartialMessage<SaveAttemptProgressResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.SaveAttemptProgressResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "attempt", kind: "message", T: Attempt },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SaveAttemptProgressResponse {
+    return new SaveAttemptProgressResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SaveAttemptProgressResponse {
+    return new SaveAttemptProgressResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SaveAttemptProgressResponse {
+    return new SaveAttemptProgressResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SaveAttemptProgressResponse | PlainMessage<SaveAttemptProgressResponse> | undefined, b: SaveAttemptProgressResponse | PlainMessage<SaveAttemptProgressResponse> | undefined): boolean {
+    return proto3.util.equals(SaveAttemptProgressResponse, a, b);
+  }
+}
+
+/**
  * @generated from message akashic.v1.SubmitAttemptRequest
  */
 export class SubmitAttemptRequest extends Message<SubmitAttemptRequest> {

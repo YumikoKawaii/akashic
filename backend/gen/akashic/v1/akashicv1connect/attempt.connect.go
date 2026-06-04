@@ -42,6 +42,9 @@ const (
 	// AttemptServiceGetAttemptProcedure is the fully-qualified name of the AttemptService's GetAttempt
 	// RPC.
 	AttemptServiceGetAttemptProcedure = "/akashic.v1.AttemptService/GetAttempt"
+	// AttemptServiceSaveAttemptProgressProcedure is the fully-qualified name of the AttemptService's
+	// SaveAttemptProgress RPC.
+	AttemptServiceSaveAttemptProgressProcedure = "/akashic.v1.AttemptService/SaveAttemptProgress"
 	// AttemptServiceSubmitAttemptProcedure is the fully-qualified name of the AttemptService's
 	// SubmitAttempt RPC.
 	AttemptServiceSubmitAttemptProcedure = "/akashic.v1.AttemptService/SubmitAttempt"
@@ -52,6 +55,10 @@ type AttemptServiceClient interface {
 	ListAttemptsByTest(context.Context, *connect.Request[v1.ListAttemptsByTestRequest]) (*connect.Response[v1.ListAttemptsByTestResponse], error)
 	StartAttempt(context.Context, *connect.Request[v1.StartAttemptRequest]) (*connect.Response[v1.StartAttemptResponse], error)
 	GetAttempt(context.Context, *connect.Request[v1.GetAttemptRequest]) (*connect.Response[v1.GetAttemptResponse], error)
+	// Persists in-progress answers without grading or completing the attempt, so a
+	// reload can resume where the taker left off. Only the taker may save, and only
+	// while the attempt is still in progress.
+	SaveAttemptProgress(context.Context, *connect.Request[v1.SaveAttemptProgressRequest]) (*connect.Response[v1.SaveAttemptProgressResponse], error)
 	SubmitAttempt(context.Context, *connect.Request[v1.SubmitAttemptRequest]) (*connect.Response[v1.SubmitAttemptResponse], error)
 }
 
@@ -84,6 +91,12 @@ func NewAttemptServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(attemptServiceMethods.ByName("GetAttempt")),
 			connect.WithClientOptions(opts...),
 		),
+		saveAttemptProgress: connect.NewClient[v1.SaveAttemptProgressRequest, v1.SaveAttemptProgressResponse](
+			httpClient,
+			baseURL+AttemptServiceSaveAttemptProgressProcedure,
+			connect.WithSchema(attemptServiceMethods.ByName("SaveAttemptProgress")),
+			connect.WithClientOptions(opts...),
+		),
 		submitAttempt: connect.NewClient[v1.SubmitAttemptRequest, v1.SubmitAttemptResponse](
 			httpClient,
 			baseURL+AttemptServiceSubmitAttemptProcedure,
@@ -95,10 +108,11 @@ func NewAttemptServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // attemptServiceClient implements AttemptServiceClient.
 type attemptServiceClient struct {
-	listAttemptsByTest *connect.Client[v1.ListAttemptsByTestRequest, v1.ListAttemptsByTestResponse]
-	startAttempt       *connect.Client[v1.StartAttemptRequest, v1.StartAttemptResponse]
-	getAttempt         *connect.Client[v1.GetAttemptRequest, v1.GetAttemptResponse]
-	submitAttempt      *connect.Client[v1.SubmitAttemptRequest, v1.SubmitAttemptResponse]
+	listAttemptsByTest  *connect.Client[v1.ListAttemptsByTestRequest, v1.ListAttemptsByTestResponse]
+	startAttempt        *connect.Client[v1.StartAttemptRequest, v1.StartAttemptResponse]
+	getAttempt          *connect.Client[v1.GetAttemptRequest, v1.GetAttemptResponse]
+	saveAttemptProgress *connect.Client[v1.SaveAttemptProgressRequest, v1.SaveAttemptProgressResponse]
+	submitAttempt       *connect.Client[v1.SubmitAttemptRequest, v1.SubmitAttemptResponse]
 }
 
 // ListAttemptsByTest calls akashic.v1.AttemptService.ListAttemptsByTest.
@@ -116,6 +130,11 @@ func (c *attemptServiceClient) GetAttempt(ctx context.Context, req *connect.Requ
 	return c.getAttempt.CallUnary(ctx, req)
 }
 
+// SaveAttemptProgress calls akashic.v1.AttemptService.SaveAttemptProgress.
+func (c *attemptServiceClient) SaveAttemptProgress(ctx context.Context, req *connect.Request[v1.SaveAttemptProgressRequest]) (*connect.Response[v1.SaveAttemptProgressResponse], error) {
+	return c.saveAttemptProgress.CallUnary(ctx, req)
+}
+
 // SubmitAttempt calls akashic.v1.AttemptService.SubmitAttempt.
 func (c *attemptServiceClient) SubmitAttempt(ctx context.Context, req *connect.Request[v1.SubmitAttemptRequest]) (*connect.Response[v1.SubmitAttemptResponse], error) {
 	return c.submitAttempt.CallUnary(ctx, req)
@@ -126,6 +145,10 @@ type AttemptServiceHandler interface {
 	ListAttemptsByTest(context.Context, *connect.Request[v1.ListAttemptsByTestRequest]) (*connect.Response[v1.ListAttemptsByTestResponse], error)
 	StartAttempt(context.Context, *connect.Request[v1.StartAttemptRequest]) (*connect.Response[v1.StartAttemptResponse], error)
 	GetAttempt(context.Context, *connect.Request[v1.GetAttemptRequest]) (*connect.Response[v1.GetAttemptResponse], error)
+	// Persists in-progress answers without grading or completing the attempt, so a
+	// reload can resume where the taker left off. Only the taker may save, and only
+	// while the attempt is still in progress.
+	SaveAttemptProgress(context.Context, *connect.Request[v1.SaveAttemptProgressRequest]) (*connect.Response[v1.SaveAttemptProgressResponse], error)
 	SubmitAttempt(context.Context, *connect.Request[v1.SubmitAttemptRequest]) (*connect.Response[v1.SubmitAttemptResponse], error)
 }
 
@@ -154,6 +177,12 @@ func NewAttemptServiceHandler(svc AttemptServiceHandler, opts ...connect.Handler
 		connect.WithSchema(attemptServiceMethods.ByName("GetAttempt")),
 		connect.WithHandlerOptions(opts...),
 	)
+	attemptServiceSaveAttemptProgressHandler := connect.NewUnaryHandler(
+		AttemptServiceSaveAttemptProgressProcedure,
+		svc.SaveAttemptProgress,
+		connect.WithSchema(attemptServiceMethods.ByName("SaveAttemptProgress")),
+		connect.WithHandlerOptions(opts...),
+	)
 	attemptServiceSubmitAttemptHandler := connect.NewUnaryHandler(
 		AttemptServiceSubmitAttemptProcedure,
 		svc.SubmitAttempt,
@@ -168,6 +197,8 @@ func NewAttemptServiceHandler(svc AttemptServiceHandler, opts ...connect.Handler
 			attemptServiceStartAttemptHandler.ServeHTTP(w, r)
 		case AttemptServiceGetAttemptProcedure:
 			attemptServiceGetAttemptHandler.ServeHTTP(w, r)
+		case AttemptServiceSaveAttemptProgressProcedure:
+			attemptServiceSaveAttemptProgressHandler.ServeHTTP(w, r)
 		case AttemptServiceSubmitAttemptProcedure:
 			attemptServiceSubmitAttemptHandler.ServeHTTP(w, r)
 		default:
@@ -189,6 +220,10 @@ func (UnimplementedAttemptServiceHandler) StartAttempt(context.Context, *connect
 
 func (UnimplementedAttemptServiceHandler) GetAttempt(context.Context, *connect.Request[v1.GetAttemptRequest]) (*connect.Response[v1.GetAttemptResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.AttemptService.GetAttempt is not implemented"))
+}
+
+func (UnimplementedAttemptServiceHandler) SaveAttemptProgress(context.Context, *connect.Request[v1.SaveAttemptProgressRequest]) (*connect.Response[v1.SaveAttemptProgressResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.AttemptService.SaveAttemptProgress is not implemented"))
 }
 
 func (UnimplementedAttemptServiceHandler) SubmitAttempt(context.Context, *connect.Request[v1.SubmitAttemptRequest]) (*connect.Response[v1.SubmitAttemptResponse], error) {

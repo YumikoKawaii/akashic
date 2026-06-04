@@ -54,6 +54,18 @@ export function useStartAttempt() {
   })
 }
 
+// Persists in-progress answers without grading/completing, so a reload resumes.
+// Does not invalidate the attempt query — the page already holds the live answers
+// in local state; re-fetching mid-attempt would only risk clobbering them.
+export function useSaveAttemptProgress() {
+  return useMutation({
+    mutationFn: async ({ bankId, id, answers }: { bankId: string; id: string; answers: Record<string, string> }) => {
+      const res = await attemptClient.saveAttemptProgress({ id: Number(id), answers, bankId: Number(bankId) })
+      return fromAttempt(res.attempt!)
+    },
+  })
+}
+
 export function useSubmitAttempt() {
   const qc = useQueryClient()
   return useMutation({

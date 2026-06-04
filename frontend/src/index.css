@@ -611,6 +611,38 @@ input[type=number].form-input { -moz-appearance: textfield; }
   align-items: stretch;
 }
 
+/* ── Question navigator (jump to any question) ──────────────────────── */
+.attempt-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.attempt-nav-cell {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  color: var(--ink-dim);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-dim);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.attempt-nav-cell:hover { border-color: var(--gold-dim); color: var(--ink); }
+.attempt-nav-cell.answered {
+  color: var(--gold);
+  border-color: rgba(154,112,24,0.55);
+  background: rgba(154,112,24,0.08);
+}
+.attempt-nav-cell.current {
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 8px rgba(154,112,24,0.45), inset 0 0 4px rgba(154,112,24,0.15);
+}
+
 /* ─── Attempt / Test taking ───────────────────────────────────── */
 .attempt-layout {
   height: 100vh;

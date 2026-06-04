@@ -11,7 +11,11 @@ service AttemptService {
   rpc ListAttemptsByTest (ListAttemptsByTestRequest) returns (ListAttemptsByTestResponse);
   rpc StartAttempt       (StartAttemptRequest)       returns (StartAttemptResponse);
   rpc GetAttempt         (GetAttemptRequest)         returns (GetAttemptResponse);
-  rpc SubmitAttempt      (SubmitAttemptRequest)      returns (SubmitAttemptResponse);
+  // Persists in-progress answers without grading or completing the attempt, so a
+  // reload can resume where the taker left off. Only the taker may save, and only
+  // while the attempt is still in progress.
+  rpc SaveAttemptProgress (SaveAttemptProgressRequest) returns (SaveAttemptProgressResponse);
+  rpc SubmitAttempt      (SubmitAttemptRequest)       returns (SubmitAttemptResponse);
 }
 
 message Attempt {
@@ -37,6 +41,13 @@ message StartAttemptResponse {Attempt attempt = 1;}
 
 message GetAttemptRequest  {int32 id = 1; int32 bank_id = 2;}
 message GetAttemptResponse {Attempt attempt = 1;}
+
+message SaveAttemptProgressRequest {
+  int32               id = 1;
+  map<string, string> answers = 2;
+  int32               bank_id = 3;
+}
+message SaveAttemptProgressResponse {Attempt attempt = 1;}
 
 message SubmitAttemptRequest {
   int32               id = 1;

@@ -56,6 +56,17 @@ func (h *AttemptServiceHandler) GetAttempt(
 	return connect.NewResponse(&pb.GetAttemptResponse{Attempt: attemptToProto(attempt)}), nil
 }
 
+func (h *AttemptServiceHandler) SaveAttemptProgress(
+	ctx context.Context,
+	req *connect.Request[pb.SaveAttemptProgressRequest],
+) (*connect.Response[pb.SaveAttemptProgressResponse], error) {
+	attempt, err := h.svc.SaveProgress(int(req.Msg.BankId), int(req.Msg.Id), userIDFromContext(ctx), req.Msg.Answers)
+	if err != nil {
+		return nil, toConnectError(err)
+	}
+	return connect.NewResponse(&pb.SaveAttemptProgressResponse{Attempt: attemptToProto(attempt)}), nil
+}
+
 func (h *AttemptServiceHandler) SubmitAttempt(
 	ctx context.Context,
 	req *connect.Request[pb.SubmitAttemptRequest],

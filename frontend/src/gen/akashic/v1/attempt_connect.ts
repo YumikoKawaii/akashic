@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetAttemptRequest, GetAttemptResponse, ListAttemptsByTestRequest, ListAttemptsByTestResponse, StartAttemptRequest, StartAttemptResponse, SubmitAttemptRequest, SubmitAttemptResponse } from "./attempt_pb.js";
+import { GetAttemptRequest, GetAttemptResponse, ListAttemptsByTestRequest, ListAttemptsByTestResponse, SaveAttemptProgressRequest, SaveAttemptProgressResponse, StartAttemptRequest, StartAttemptResponse, SubmitAttemptRequest, SubmitAttemptResponse } from "./attempt_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -37,6 +37,19 @@ export const AttemptService = {
       name: "GetAttempt",
       I: GetAttemptRequest,
       O: GetAttemptResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Persists in-progress answers without grading or completing the attempt, so a
+     * reload can resume where the taker left off. Only the taker may save, and only
+     * while the attempt is still in progress.
+     *
+     * @generated from rpc akashic.v1.AttemptService.SaveAttemptProgress
+     */
+    saveAttemptProgress: {
+      name: "SaveAttemptProgress",
+      I: SaveAttemptProgressRequest,
+      O: SaveAttemptProgressResponse,
       kind: MethodKind.Unary,
     },
     /**
