@@ -106,7 +106,7 @@ function QuestionTabs({ questions, answers, currentId, onJump }: {
             onClick={() => onJump(i)}
             title={`Question ${tq.position || i + 1}${answered ? ' — answered' : ''}`}
           >
-            {tq.position || i + 1}
+            <span className="exam-tab-face">{tq.position || i + 1}</span>
           </button>
         )
       })}
