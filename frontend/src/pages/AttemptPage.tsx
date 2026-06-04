@@ -700,13 +700,7 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
 
             <div className="book-page-foot">— {idx + 1} / {total} —</div>
           </div>
-
-          {/* Right — decorative magic circle filling the open space */}
-          <div className="exam-aside" aria-hidden="true">
-            <div className="exam-aside-circle">
-              <MagicCircle variant="full" speed={0.5} />
-            </div>
-          </div>
+          {/* The page sits left; the solar-system background fills the open right. */}
         </div>
       </div>
     </>

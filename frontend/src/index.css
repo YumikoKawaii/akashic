@@ -643,30 +643,13 @@ input[type=number].form-input { -moz-appearance: textfield; }
   flex: 1;
   min-height: 0;
   display: flex;
-  justify-content: center;      /* aside (flex:1) absorbs the slack → page sits left */
+  justify-content: flex-start;  /* page hugs the left; solar-system bg fills the right */
   align-items: flex-start;      /* anchor the page to the top, not floating centred */
   gap: 0;
   padding: 28px 32px;
   overflow: hidden;
   position: relative;
   z-index: 1;
-}
-
-/* Right — a large, faint magic circle filling the open space beside the page */
-.exam-aside {
-  flex: 1 1 0;
-  min-width: 0;
-  align-self: stretch;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-.exam-aside-circle {
-  width: min(440px, 82%);
-  aspect-ratio: 1 / 1;
-  color: var(--gold);
-  opacity: 0.2;
 }
 
 /* Thumb-index — page tabs flush against the spine */
@@ -744,7 +727,7 @@ input[type=number].form-input { -moz-appearance: textfield; }
 /* The book page itself — a constant height; long questions scroll inside it */
 .book-page {
   flex: 1;
-  max-width: 680px;
+  max-width: 880px;
   height: min(560px, 100%);   /* constant page length, capped to the body */
   display: flex;
   flex-direction: column;
@@ -1217,7 +1200,6 @@ input[type=number].form-input { -moz-appearance: textfield; }
   .attempt-body   { padding: 24px 16px calc(24px + env(safe-area-inset-bottom, 0px)); gap: 20px; }
 
   .exam-book { padding: 14px 10px; }
-  .exam-aside { display: none; }      /* page re-centers without the circle */
   .exam-tabs { width: 40px; }
   .exam-tab { width: 32px; height: 28px; }
   .exam-tab-face { font-size: 0.56rem; }
