@@ -18,6 +18,26 @@ function questionContent(q: Question): string {
   return q.item?.content ?? q.choice?.content ?? ''
 }
 
+// Deterministic shuffle: the same seed always yields the same order, so an MCQ's
+// options stay put when you leave a question and come back (no reshuffle-on-
+// revisit confusion). Seeded by (attemptId, questionId) — stable across reloads
+// and devices, with no stored state. mulberry32 PRNG + seeded Fisher-Yates.
+function seededShuffle<T>(arr: readonly T[], seed: number): T[] {
+  const out = [...arr]
+  let s = seed >>> 0
+  const rand = () => {
+    s = (s + 0x6d2b79f5) | 0
+    let t = Math.imul(s ^ (s >>> 15), 1 | s)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1))
+    ;[out[i], out[j]] = [out[j], out[i]]
+  }
+  return out
+}
+
 function checkAnswer(q: Question, answer: string): boolean {
   const got = answer.trim()
   if (q.choice) {
@@ -193,22 +213,18 @@ function GroupContextBox({ group }: { group: QuestionGroup }) {
 
 // ── Answer options ─────────────────────────────────────────────────────────────
 
-function AnswerOptions({ q, selected, onSelect, revealed = false }: {
-  q: Question; selected: string; onSelect: (v: string) => void; revealed?: boolean
+function AnswerOptions({ q, selected, onSelect, revealed = false, attemptId = 0 }: {
+  q: Question; selected: string; onSelect: (v: string) => void; revealed?: boolean; attemptId?: number
 }) {
   const locked = revealed
   const ctx    = q.group?.context
 
   const shuffledMCQ = useMemo(() => {
     if (!q.choice) return []
-    const opts = [...q.choice.options]
-    for (let i = opts.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [opts[i], opts[j]] = [opts[j], opts[i]]
-    }
-    return opts
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q.id])
+    // Stable per (attempt, question): same order on every revisit/reload.
+    const seed = (Math.imul(attemptId, 0x9e3779b1) + q.id) >>> 0
+    return seededShuffle(q.choice.options, seed)
+  }, [q.id, attemptId, q.choice])
 
   if (q.type === 'mcq' && q.choice) {
     const correctKeys  = new Set(q.choice.answers)
@@ -475,7 +491,7 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
                           {tq.position}.
                         </span>
                         <div style={{ flex: 1 }}>
-                          <AnswerOptions q={q} selected={sel} onSelect={val => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))} />
+                          <AnswerOptions q={q} selected={sel} onSelect={val => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))} attemptId={attempt.id} />
                         </div>
                       </div>
                     ) : (
@@ -489,7 +505,7 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
                           </p>
                         </div>
                         <div style={{ paddingLeft: 40 }}>
-                          <AnswerOptions q={q} selected={sel} onSelect={val => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))} />
+                          <AnswerOptions q={q} selected={sel} onSelect={val => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))} attemptId={attempt.id} />
                         </div>
                       </>
                     )}
@@ -656,7 +672,7 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
 
               <p className="question-text" style={{ marginTop: 18, marginBottom: 22 }}>{content}</p>
 
-              <AnswerOptions q={q} selected={sel} onSelect={setAnswer} revealed={revealed} />
+              <AnswerOptions q={q} selected={sel} onSelect={setAnswer} revealed={revealed} attemptId={attempt.id} />
 
               <div style={{ display: 'flex', gap: 12, marginTop: 24, alignItems: 'center' }}>
                 <button className="btn" onClick={() => setCurrentIdx(i => Math.max(0, i - 1))} disabled={idx === 0}
