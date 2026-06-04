@@ -638,45 +638,101 @@ input[type=number].form-input { -moz-appearance: textfield; }
   gap: 8px;
 }
 
-/* ── Exam body: collapsed vertical orb carousel + question column ────── */
-.exam-body {
+/* ── Exam body: thumb-index + book page ──────────────────────────────── */
+.exam-book {
   flex: 1;
   min-height: 0;
   display: flex;
   justify-content: center;
-  gap: 28px;
-  padding: 0 32px;
+  align-items: stretch;
+  gap: 0;
+  padding: 28px 32px;
   overflow: hidden;
   position: relative;
   z-index: 1;
 }
-.exam-main {
-  flex: 1;
-  max-width: 720px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 44px 8px calc(48px + env(safe-area-inset-bottom, 0px));
-}
-.exam-rail {
+
+/* Thumb-index — page tabs flush against the spine */
+.exam-tabs {
   flex-shrink: 0;
-  width: 64px;
+  width: 48px;
   align-self: center;
-  /* collapsed window: ~10 orbs tall (orb 32 + gap 12 ≈ 44px each) */
-  max-height: min(64vh, 440px);
-  position: relative;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 0;
+  gap: 5px;
+  padding: 6px 0;
   overflow-y: auto;
   overflow-x: visible;
   scrollbar-width: none;
-  /* fade the top/bottom edges so the window looks like a carousel */
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
-          mask-image: linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+          mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
 }
-.exam-rail::-webkit-scrollbar { width: 0; height: 0; }
+.exam-tabs::-webkit-scrollbar { width: 0; height: 0; }
+.exam-tab {
+  flex-shrink: 0;
+  width: 38px;
+  height: 30px;
+  margin-left: auto;            /* push toward the spine on the right */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 0.64rem;
+  color: var(--ink-dim);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-dim);
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  cursor: pointer;
+  transition: width 0.18s ease, color 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.exam-tab:hover { width: 44px; color: var(--ink); border-color: var(--gold-dim); }
+.exam-tab.answered {
+  color: var(--gold);
+  border-color: rgba(154,112,24,0.5);
+  background: rgba(154,112,24,0.08);
+}
+.exam-tab.current {
+  width: 46px;
+  color: #2a1c08;
+  background: linear-gradient(90deg, var(--gold-glow), var(--gold));
+  border-color: var(--gold);
+  box-shadow: -2px 0 9px rgba(154,112,24,0.4);
+}
+
+/* The book page itself */
+.book-page {
+  flex: 1;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-left: 2px solid var(--gold-dim);   /* the spine the tabs bind into */
+  box-shadow: 6px 8px 26px rgba(0,0,0,0.12), inset 0 0 0 1px rgba(255,255,255,0.02);
+}
+.book-page-inner {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 34px 40px 20px;
+  position: relative;
+  z-index: 1;
+}
+.book-page-foot {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 9px;
+  font-family: 'Cinzel', serif;
+  font-size: 0.64rem;
+  letter-spacing: 0.24em;
+  color: var(--gold-dim);
+  border-top: 1px solid var(--border-dim);
+  background: linear-gradient(0deg, rgba(154,112,24,0.04), transparent);
+}
 
 /* ─── Attempt / Test taking ───────────────────────────────────── */
 .attempt-layout {
@@ -1119,10 +1175,13 @@ input[type=number].form-input { -moz-appearance: textfield; }
   .attempt-header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
   .attempt-body   { padding: 24px 16px calc(24px + env(safe-area-inset-bottom, 0px)); gap: 20px; }
 
-  .exam-body { padding: 0 10px; gap: 10px; }
-  .exam-rail { width: 46px; gap: 10px; max-height: min(58vh, 380px); }
+  .exam-book { padding: 14px 10px; }
+  .exam-tabs { width: 38px; }
+  .exam-tab { width: 30px; height: 27px; font-size: 0.58rem; }
+  .exam-tab:hover { width: 34px; }
+  .exam-tab.current { width: 36px; }
   .q-orb { width: 28px; height: 28px; font-size: 0.6rem; }
-  .exam-main { padding: 28px 6px calc(36px + env(safe-area-inset-bottom, 0px)); }
+  .book-page-inner { padding: 24px 18px 16px; }
 
   .answer-options { grid-template-columns: 1fr; }
 

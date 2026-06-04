@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAttempt, useSubmitAttempt, useSaveAttemptProgress } from '../hooks/useAttempts'
 import { Passage, Question, QuestionGroup, TestQuestion } from '../types'
-import OrnatePanel from '../components/ui/OrnatePanel'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
 import Starfield from '../components/ui/Starfield'
 import MagicCircle, { Spinner } from '../components/ui/MagicCircle'
@@ -73,44 +72,39 @@ function QuestionNavigator({ questions, answers, currentId, onJump }: {
   )
 }
 
-// Vertical focus-scaled carousel — collapsed to a compact ~10-orb window that
-// scrolls, auto-centering the current question (which sits enlarged while
-// neighbours shrink and fade). Every question stays reachable by scrolling the
-// rail. Used by the exam layout so the question keeps the page.
-function QuestionRail({ questions, answers, currentId, onJump }: {
+// Thumb-index — a slim scrollable column of numbered page tabs flush against the
+// book's spine. Click any tab to jump straight to that page (precise, even for
+// far questions); answered tabs are gilded, the current tab juts out. The column
+// auto-centers the current tab. Used by the exam layout (the book).
+function QuestionTabs({ questions, answers, currentId, onJump }: {
   questions: TestQuestion[]
   answers: Record<string, string>
   currentId?: number
   onJump: (idx: number) => void
 }) {
-  const railRef = useRef<HTMLDivElement>(null)
-  const curRef  = useRef<HTMLButtonElement>(null)
-  const curIdx  = questions.findIndex(t => t.question?.id === currentId)
+  const colRef = useRef<HTMLDivElement>(null)
+  const curRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    const rail = railRef.current, cur = curRef.current
-    if (!rail || !cur) return
-    rail.scrollTo({ top: cur.offsetTop - rail.clientHeight / 2 + cur.offsetHeight / 2, behavior: 'smooth' })
+    const col = colRef.current, cur = curRef.current
+    if (!col || !cur) return
+    col.scrollTo({ top: cur.offsetTop - col.clientHeight / 2 + cur.offsetHeight / 2, behavior: 'smooth' })
   }, [currentId])
 
   return (
-    <div className="exam-rail" ref={railRef}>
+    <div className="exam-tabs" ref={colRef}>
       {questions.map((tq, i) => {
         const q = tq.question
         if (!q) return null
         const answered = !!answers[String(q.id)]?.trim()
         const current  = q.id === currentId
-        const dist     = Math.abs(i - curIdx)
-        const scale    = current ? 1.3 : Math.max(0.62, 1 - 0.11 * dist)
-        const opacity  = current ? 1 : Math.max(0.35, 1 - 0.15 * dist)
         return (
           <button
             key={q.id}
             ref={current ? curRef : undefined}
-            className={`q-orb${answered ? ' answered' : ''}${current ? ' current' : ''}`}
+            className={`exam-tab${answered ? ' answered' : ''}${current ? ' current' : ''}`}
             onClick={() => onJump(i)}
             title={`Question ${tq.position || i + 1}${answered ? ' — answered' : ''}`}
-            style={{ transform: `scale(${scale})`, opacity }}
           >
             {tq.position || i + 1}
           </button>
@@ -623,70 +617,72 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
           </div>
         </div>
 
-        {/* ── Body: star rail + question ── */}
-        <div className="exam-body">
-          <QuestionRail questions={questions} answers={answers} currentId={q.id} onJump={setCurrentIdx} />
-          <div className="exam-main">
+        {/* ── Body: thumb-index + book page ── */}
+        <div className="exam-book">
+          <QuestionTabs questions={questions} answers={answers} currentId={q.id} onJump={setCurrentIdx} />
 
-            {passage && (
-              <div style={{ position: 'relative', marginBottom: 14, padding: '12px 16px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.88rem', color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', letterSpacing: '0.06em' }}>
-                <RuneCorners size={18} color="var(--gold-dim)" opacity={0.38} />
-                <span style={{ color: 'var(--gold-dim)', marginRight: 8 }}>Passage</span>
-                {passage.title}
-              </div>
-            )}
-
-            {group && <GroupContextBox group={group} />}
-
-            <OrnatePanel style={{ marginBottom: 14 } as React.CSSProperties}>
-              <div className="flex items-start gap-4">
-                <div style={{ position: 'relative' }}>
-                  <div style={{ position: 'absolute', top: -14, left: -14, width: 44, height: 44, color: 'var(--gold)', opacity: 0.30, pointerEvents: 'none' }}>
-                    <MagicCircle variant="full" speed={3} />
-                  </div>
-                  <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'var(--gold-dim)', paddingTop: 2, minWidth: 32, display: 'block', position: 'relative' }}>
-                    {String(idx + 1).padStart(2, '0')}
-                  </span>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p className="question-text">{content}</p>
-                  <div className="flex gap-2 mt-3 flex-wrap">
-                    <TypeTag type={q.type} />
-                    <DifficultyTag difficulty={q.difficulty} />
-                    {revealed && isScoreable && (
-                      <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.56rem', letterSpacing: '0.1em', padding: '2px 8px', border: '1px solid', borderColor: isCorrect ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorrect ? '#2a8a3a' : '#b03030', textTransform: 'uppercase' }}>
-                        {isCorrect ? '✓ Correct' : '✕ Wrong'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </OrnatePanel>
-
-            <AnswerOptions q={q} selected={sel} onSelect={setAnswer} revealed={revealed} />
-
-            <div style={{ display: 'flex', gap: 12, marginTop: 20, alignItems: 'center' }}>
-              <button className="btn" onClick={() => setCurrentIdx(i => Math.max(0, i - 1))} disabled={idx === 0}
-                style={{ padding: '10px 24px', color: 'var(--ink-dim)', borderColor: 'var(--border-dim)', opacity: idx === 0 ? 0.4 : 1 }}>
-                ← Prev
-              </button>
-              {!revealed ? (
-                <>
-                  <button className="btn btn-primary" onClick={handleCheck} disabled={!sel} style={{ padding: '10px 32px' }}>Check</button>
-                  {isSkippable && (
-                    <button className="btn" onClick={handleSkip} style={{ padding: '10px 24px', color: 'var(--ink-dim)', borderColor: 'var(--border-dim)' }}>Skip</button>
-                  )}
-                </>
-              ) : !isLast ? (
-                <button className="btn btn-primary" onClick={() => setCurrentIdx(i => Math.min(total - 1, i + 1))} style={{ padding: '10px 32px' }}>
-                  Next →
-                </button>
-              ) : (
-                <button className="btn btn-primary pulse" onClick={onSubmit} disabled={isPending} style={{ padding: '10px 32px' }}>
-                  {isPending ? '…' : 'Finish →'}
-                </button>
-              )}
+          <div className="book-page">
+            <RuneCorners size={26} color="var(--gold-dim)" opacity={0.4} />
+            <div style={{ position: 'absolute', bottom: -60, right: -60, width: 170, height: 170, color: 'var(--gold)', opacity: 0.07, pointerEvents: 'none' }}>
+              <MagicCircle variant="inner" speed={0.5} />
             </div>
+
+            <div className="book-page-inner">
+              {passage && (
+                <div style={{ position: 'relative', marginBottom: 14, padding: '12px 16px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.88rem', color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', letterSpacing: '0.06em' }}>
+                  <RuneCorners size={18} color="var(--gold-dim)" opacity={0.38} />
+                  <span style={{ color: 'var(--gold-dim)', marginRight: 8 }}>Passage</span>
+                  {passage.title}
+                </div>
+              )}
+
+              {group && <GroupContextBox group={group} />}
+
+              {/* Page head — chapter-style number + tags + verdict */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
+                <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.62rem', letterSpacing: '0.22em', color: 'var(--gold-dim)' }}>
+                  QUESTION {String(idx + 1).padStart(2, '0')}
+                </span>
+                <TypeTag type={q.type} />
+                <DifficultyTag difficulty={q.difficulty} />
+                {revealed && isScoreable && (
+                  <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.56rem', letterSpacing: '0.1em', padding: '2px 8px', border: '1px solid', borderColor: isCorrect ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorrect ? '#2a8a3a' : '#b03030', textTransform: 'uppercase' }}>
+                    {isCorrect ? '✓ Correct' : '✕ Wrong'}
+                  </span>
+                )}
+              </div>
+
+              <OrnateDivider />
+
+              <p className="question-text" style={{ marginTop: 18, marginBottom: 22 }}>{content}</p>
+
+              <AnswerOptions q={q} selected={sel} onSelect={setAnswer} revealed={revealed} />
+
+              <div style={{ display: 'flex', gap: 12, marginTop: 24, alignItems: 'center' }}>
+                <button className="btn" onClick={() => setCurrentIdx(i => Math.max(0, i - 1))} disabled={idx === 0}
+                  style={{ padding: '10px 22px', color: 'var(--ink-dim)', borderColor: 'var(--border-dim)', opacity: idx === 0 ? 0.4 : 1 }}>
+                  ‹ Prev
+                </button>
+                {!revealed ? (
+                  <>
+                    <button className="btn btn-primary" onClick={handleCheck} disabled={!sel} style={{ padding: '10px 32px' }}>Check</button>
+                    {isSkippable && (
+                      <button className="btn" onClick={handleSkip} style={{ padding: '10px 22px', color: 'var(--ink-dim)', borderColor: 'var(--border-dim)' }}>Skip</button>
+                    )}
+                  </>
+                ) : !isLast ? (
+                  <button className="btn btn-primary" onClick={() => setCurrentIdx(i => Math.min(total - 1, i + 1))} style={{ padding: '10px 32px' }}>
+                    Next ›
+                  </button>
+                ) : (
+                  <button className="btn btn-primary pulse" onClick={onSubmit} disabled={isPending} style={{ padding: '10px 32px' }}>
+                    {isPending ? '…' : 'Finish ›'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="book-page-foot">— {idx + 1} / {total} —</div>
           </div>
         </div>
       </div>
