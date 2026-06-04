@@ -19,6 +19,17 @@ function questionContent(q: Question): string {
   return q.item?.content ?? q.choice?.content ?? ''
 }
 
+function checkAnswer(q: Question, answer: string): boolean {
+  const got = answer.trim()
+  if (q.choice) {
+    const want = [...q.choice.answers].sort()
+    const got2 = got.split('|').map(s => s.trim()).filter(Boolean).sort()
+    return got2.length === want.length && got2.every((v, i) => v === want[i])
+  }
+  if (!q.item) return false
+  return got.toLowerCase() === q.item.answer.trim().toLowerCase()
+}
+
 function CorrectAnswerBox({ answer }: { answer: string }) {
   return (
     <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
@@ -452,9 +463,14 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
 }
 
 // ── Exam layout (standalone tests) ──────────────────────────────────────────────
-// Answer questions in any order via the navigator; one Submit at the end grades
-// everything. Opens at the first unanswered question so a resumed attempt lands
-// where the taker left off.
+// Answer questions in any order via the navigator. Each question can be checked
+// in place — that reveals the correct answer, locks the question, and feeds the
+// running score — exactly like the old flash cards, but now you can also jump
+// around freely. One Submit at the end records the official attempt. Opens at the
+// first unanswered question so a resumed attempt lands where the taker left off.
+//
+// Reveal/lock state is session-local (not persisted): a reload restores answers
+// but no question is locked, so the taker can keep checking from there.
 
 function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPending }: {
   attempt: any
@@ -474,7 +490,10 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const [currentIdx, setCurrentIdx] = useState(firstUnanswered)
+  const [currentIdx,  setCurrentIdx]  = useState(firstUnanswered)
+  const [revealedIds, setRevealedIds] = useState<Set<number>>(new Set())
+  const [flash,       setFlash]       = useState<{ key: number; type: 'correct' | 'wrong' } | null>(null)
+
   const idx = Math.min(currentIdx, total - 1)
   const tq  = questions[idx]
   const q   = tq?.question
@@ -487,12 +506,39 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
   const answered = Object.values(answers).filter(v => v?.trim()).length
   const isLast   = idx === total - 1
 
+  // Running score over the checked questions (short-answer is open-ended, so it
+  // is revealed for reference but never auto-scored — mirrors the old behaviour).
+  let score = 0, scorable = 0
+  questions.forEach(t => {
+    const qq = t.question
+    if (!qq || !revealedIds.has(qq.id) || qq.type === 'short_answer') return
+    scorable++
+    if (checkAnswer(qq, answers[String(qq.id)] ?? '')) score++
+  })
+
+  const revealed    = revealedIds.has(q.id)
+  const isScoreable = q.type !== 'short_answer'
+  const isSkippable = q.type === 'sentence_completion' || q.type === 'form_completion' || q.type === 'short_answer'
+  const isCorrect   = revealed && isScoreable && checkAnswer(q, sel)
+
   const setAnswer = (val: string) => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))
+
+  const reveal = (markWrong: boolean) => {
+    setRevealedIds(prev => new Set(prev).add(q.id))
+    if (isScoreable) {
+      const correct = !markWrong && checkAnswer(q, sel)
+      setFlash({ key: Date.now(), type: correct ? 'correct' : 'wrong' })
+    }
+  }
+  const handleCheck = () => { if (sel) reveal(false) }
+  const handleSkip  = () => { setAnswer(''); reveal(true) }
 
   return (
     <>
       <Starfield />
-      <SolarSystemBackground />
+      <SolarSystemBackground flash={flash} />
+      {flash && <div key={flash.key} className={`bg-flash bg-flash-${flash.type}`}
+        style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }} />}
       <div className="attempt-layout">
 
         {/* ── Segmented progress (filled = answered) ── */}
@@ -525,9 +571,22 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
             </div>
           </div>
 
-          <button className="btn btn-primary" onClick={onSubmit} disabled={isPending} style={{ padding: '9px 26px', position: 'relative', zIndex: 1 }}>
-            {isPending ? '…' : 'Submit All →'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, position: 'relative', zIndex: 1 }}>
+            {scorable > 0 && (
+              <div style={{ textAlign: 'right', position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '50%', right: -8, transform: 'translateY(-50%)', width: 64, height: 64, color: 'var(--gold)', opacity: 0.25, pointerEvents: 'none' }}>
+                  <MagicCircle variant="halo" speed={1.5} />
+                </div>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.4rem', color: 'var(--gold)', lineHeight: 1, position: 'relative' }}>
+                  {score}<span style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', marginLeft: 2 }}>/ {scorable}</span>
+                </div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--ink-dim)', letterSpacing: '0.12em', fontFamily: 'Cinzel, serif' }}>SCORE</div>
+              </div>
+            )}
+            <button className="btn btn-primary" onClick={onSubmit} disabled={isPending} style={{ padding: '9px 26px' }}>
+              {isPending ? '…' : 'Submit All →'}
+            </button>
+          </div>
         </div>
 
         {/* ── Body ── */}
@@ -564,19 +623,31 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
                   <div className="flex gap-2 mt-3 flex-wrap">
                     <TypeTag type={q.type} />
                     <DifficultyTag difficulty={q.difficulty} />
+                    {revealed && isScoreable && (
+                      <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.56rem', letterSpacing: '0.1em', padding: '2px 8px', border: '1px solid', borderColor: isCorrect ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorrect ? '#2a8a3a' : '#b03030', textTransform: 'uppercase' }}>
+                        {isCorrect ? '✓ Correct' : '✕ Wrong'}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
             </OrnatePanel>
 
-            <AnswerOptions q={q} selected={sel} onSelect={setAnswer} />
+            <AnswerOptions q={q} selected={sel} onSelect={setAnswer} revealed={revealed} />
 
             <div style={{ display: 'flex', gap: 12, marginTop: 20, alignItems: 'center' }}>
               <button className="btn" onClick={() => setCurrentIdx(i => Math.max(0, i - 1))} disabled={idx === 0}
                 style={{ padding: '10px 24px', color: 'var(--ink-dim)', borderColor: 'var(--border-dim)', opacity: idx === 0 ? 0.4 : 1 }}>
                 ← Prev
               </button>
-              {!isLast ? (
+              {!revealed ? (
+                <>
+                  <button className="btn btn-primary" onClick={handleCheck} disabled={!sel} style={{ padding: '10px 32px' }}>Check</button>
+                  {isSkippable && (
+                    <button className="btn" onClick={handleSkip} style={{ padding: '10px 24px', color: 'var(--ink-dim)', borderColor: 'var(--border-dim)' }}>Skip</button>
+                  )}
+                </>
+              ) : !isLast ? (
                 <button className="btn btn-primary" onClick={() => setCurrentIdx(i => Math.min(total - 1, i + 1))} style={{ padding: '10px 32px' }}>
                   Next →
                 </button>
