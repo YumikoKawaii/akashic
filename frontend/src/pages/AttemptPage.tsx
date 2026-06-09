@@ -681,7 +681,15 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
                 </button>
                 {!revealed ? (
                   <>
-                    <button className="btn btn-primary" onClick={handleCheck} disabled={!sel} style={{ padding: '10px 32px' }}>Check</button>
+                    {/* Scoreable questions auto-grade on Check; open answers have
+                        nothing to check, so they just advance (and stay editable). */}
+                    {isScoreable ? (
+                      <button className="btn btn-primary" onClick={handleCheck} disabled={!sel} style={{ padding: '10px 32px' }}>Check</button>
+                    ) : isLast ? (
+                      <button className="btn btn-primary pulse" onClick={onSubmit} disabled={isPending} style={{ padding: '10px 32px' }}>{isPending ? '…' : 'Finish ›'}</button>
+                    ) : (
+                      <button className="btn btn-primary" onClick={() => setCurrentIdx(i => Math.min(total - 1, i + 1))} disabled={!sel} style={{ padding: '10px 32px' }}>Next ›</button>
+                    )}
                     {isSkippable && (
                       <button className="btn" onClick={handleSkip} style={{ padding: '10px 22px', color: 'var(--ink-dim)', borderColor: 'var(--border-dim)' }}>Skip</button>
                     )}
