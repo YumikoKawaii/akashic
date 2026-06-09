@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { BankRole, TestConfig as PbTestConfig } from '../gen/akashic/v1/common_pb'
 import { bankClient } from '../api/connect'
-import { fromBankWithRole, fromBank, fromBankMember, toBankVisibility } from '../api/adapters'
+import { fromBankWithRole, fromBank, fromBankMember, toBankVisibility, toQuestionType } from '../api/adapters'
 import type { TestConfig, BankVisibility } from '../types'
 
 export const memberKeys = {
@@ -20,6 +20,7 @@ function toProtoConfig(cfg?: Partial<TestConfig>): PbTestConfig {
     hardCount:      cfg?.hard_count   ?? 0,
     categoryIds:    cfg?.category_ids ?? [],
     passageIds:     cfg?.passage_ids  ?? [],
+    types:          (cfg?.types ?? []).map(toQuestionType),
     tags:           cfg?.tags         ?? [],
     standaloneOnly: cfg?.standalone_only ?? false,
   })

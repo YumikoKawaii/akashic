@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Difficulty, QuestionType } from '../gen/akashic/v1/common_pb'
+import { Difficulty } from '../gen/akashic/v1/common_pb'
 import { questionClient } from '../api/connect'
-import { fromQuestion } from '../api/adapters'
+import { fromQuestion, toQuestionType } from '../api/adapters'
 import type { QuestionFilter, MCQOption } from '../types'
 
 export const PAGE_SIZE = 20
@@ -39,21 +39,6 @@ function toDifficulty(s: string): Difficulty {
     case 'hard':   return Difficulty.HARD
     default:       return Difficulty.UNSPECIFIED
   }
-}
-
-function toQuestionType(s: string): QuestionType {
-  const map: Record<string, QuestionType> = {
-    mcq:                  QuestionType.MCQ,
-    tf_ng:                QuestionType.TF_NG,
-    yn_ng:                QuestionType.YN_NG,
-    short_answer:         QuestionType.SHORT_ANSWER,
-    sentence_completion:  QuestionType.SENTENCE_COMPLETION,
-    form_completion:      QuestionType.FORM_COMPLETION,
-    matching_headings:    QuestionType.MATCHING_HEADINGS,
-    matching_information: QuestionType.MATCHING_INFORMATION,
-    matching_features:    QuestionType.MATCHING_FEATURES,
-  }
-  return map[s] ?? QuestionType.UNSPECIFIED
 }
 
 export function useTags(bankId: string) {

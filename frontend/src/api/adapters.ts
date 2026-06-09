@@ -66,6 +66,21 @@ const bankVisibility = (v: BankVisibility): AppBankVisibility =>
 export const toBankVisibility = (v: AppBankVisibility): BankVisibility =>
   v === 'public' ? BankVisibility.PUBLIC : BankVisibility.PRIVATE
 
+const QUESTION_TYPE_TO_PROTO: Record<string, QuestionType> = {
+  mcq:                  QuestionType.MCQ,
+  tf_ng:                QuestionType.TF_NG,
+  yn_ng:                QuestionType.YN_NG,
+  short_answer:         QuestionType.SHORT_ANSWER,
+  sentence_completion:  QuestionType.SENTENCE_COMPLETION,
+  form_completion:      QuestionType.FORM_COMPLETION,
+  matching_headings:    QuestionType.MATCHING_HEADINGS,
+  matching_information: QuestionType.MATCHING_INFORMATION,
+  matching_features:    QuestionType.MATCHING_FEATURES,
+}
+
+export const toQuestionType = (s: string): QuestionType =>
+  QUESTION_TYPE_TO_PROTO[s] ?? QuestionType.UNSPECIFIED
+
 export const fromBank = (b: PbBank): Bank => ({
   id:             b.id,
   name:           b.name,

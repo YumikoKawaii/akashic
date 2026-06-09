@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { TestConfig as PbTestConfig } from '../gen/akashic/v1/common_pb'
 import { testClient } from '../api/connect'
-import { fromTest } from '../api/adapters'
+import { fromTest, toQuestionType } from '../api/adapters'
 import type { TestConfig } from '../types'
 
 export const TEST_PAGE_SIZE = 10
@@ -19,6 +19,7 @@ function toProtoConfig(cfg?: Partial<TestConfig>): PbTestConfig {
     hardCount:      cfg?.hard_count   ?? 0,
     categoryIds:    cfg?.category_ids ?? [],
     passageIds:     cfg?.passage_ids  ?? [],
+    types:          (cfg?.types ?? []).map(toQuestionType),
     tags:           cfg?.tags         ?? [],
     standaloneOnly: cfg?.standalone_only ?? false,
   })
