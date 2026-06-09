@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { useBank, useSetBankVisibility } from '../hooks/useBanks'
+import { useBank, useSetBankVisibility, useDeleteBank } from '../hooks/useBanks'
 import { useQuestions } from '../hooks/useQuestions'
 import { useTests } from '../hooks/useTests'
 import { useTestsAttempts } from '../hooks/useAttempts'
@@ -103,6 +103,7 @@ export default function BankPage() {
   const { data: passages = [] }    = usePassages(bankId)   // full list for GenerateTab
   const deletePassage              = useDeletePassage(bankId)
   const setVisibility              = useSetBankVisibility()
+  const deleteBank                 = useDeleteBank()
 
   const myRole  = bank?.my_role ?? 'viewer'
   const canEdit = myRole === 'owner' || myRole === 'editor'
@@ -164,8 +165,9 @@ export default function BankPage() {
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [pConfirmDel,   setPConfirmDel]   = useState<number | null>(null)
 
-  const [shareOpen,  setShareOpen]  = useState(false)
-  const [manageOpen, setManageOpen] = useState(false)
+  const [shareOpen,   setShareOpen]   = useState(false)
+  const [manageOpen,  setManageOpen]  = useState(false)
+  const [confirmDel,  setConfirmDel]  = useState(false)
   const manageRef = useRef<HTMLDivElement>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -237,6 +239,8 @@ export default function BankPage() {
   const triggerImport = () => fileInputRef.current?.click()
   const toggleVisibility = () =>
     setVisibility.mutate({ id: bankId, visibility: bank.visibility === 'public' ? 'private' : 'public' })
+  const handleDelete = () =>
+    deleteBank.mutate(bankId, { onSuccess: () => navigate('/') })
 
   const Chip = ({ text, on }: { text: string; on: boolean }) => (
     <span style={{
@@ -278,9 +282,10 @@ export default function BankPage() {
               {manageOpen && (
                 <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 50, textAlign: 'left' }}>
                   {[
-                    { glyph: '↑', label: importing ? 'Importing…' : 'Import', onClick: triggerImport, disabled: importing },
-                    { glyph: '⇄', label: 'Share Record', onClick: () => setShareOpen(true), disabled: false },
-                    { glyph: '◈', label: bank.visibility === 'public' ? 'Make Private' : 'Make Public', onClick: toggleVisibility, disabled: setVisibility.isPending },
+                    { glyph: '↑', label: importing ? 'Importing…' : 'Import', onClick: triggerImport, disabled: importing, danger: false },
+                    { glyph: '⇄', label: 'Share Record', onClick: () => setShareOpen(true), disabled: false, danger: false },
+                    { glyph: '◈', label: bank.visibility === 'public' ? 'Make Private' : 'Make Public', onClick: toggleVisibility, disabled: setVisibility.isPending, danger: false },
+                    { glyph: '✕', label: 'Delete Record', onClick: () => setConfirmDel(true), disabled: deleteBank.isPending, danger: true },
                   ].map((item, idx) => (
                     <div key={item.label}>
                       {idx > 0 && <div className="dropdown-sep" />}
@@ -288,6 +293,7 @@ export default function BankPage() {
                         className="dropdown-item"
                         disabled={item.disabled}
                         onClick={() => { item.onClick(); setManageOpen(false) }}
+                        style={item.danger ? { color: '#b03030' } : undefined}
                       >
                         <span className="dropdown-glyph">{item.glyph}</span>
                         {item.label}
@@ -582,6 +588,47 @@ export default function BankPage() {
       <div style={{ height: 32 }} />
 
       {shareOpen && <ShareRecordDialog bankId={bankId} onClose={() => setShareOpen(false)} />}
+
+      {/* ── Delete confirmation ─────────────────────────────────── */}
+      {confirmDel && (
+        <div
+          onClick={() => !deleteBank.isPending && setConfirmDel(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 80,
+            background: 'rgba(30,21,8,0.38)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: 'min(440px, 96vw)',
+              background: 'var(--bg-elevated)', border: '1px solid var(--gold-dim)',
+              borderRadius: 6, boxShadow: '0 20px 60px rgba(30,21,8,0.35)', position: 'relative',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--border-dim)' }}>
+              <span className="section-title" style={{ marginBottom: 0, color: '#b03030' }}>Delete Record</span>
+              <button onClick={() => setConfirmDel(false)} disabled={deleteBank.isPending} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-dim)', fontSize: '1rem', lineHeight: 1 }}>✕</button>
+            </div>
+            <div style={{ padding: '20px 22px' }}>
+              <p style={{ fontSize: '0.88rem', color: 'var(--ink)', lineHeight: 1.6, marginBottom: 8 }}>
+                Delete <strong>{bank.name}</strong> and everything inside it — its
+                questions, passages, and tests?
+              </p>
+              <p style={{ fontSize: '0.8rem', color: 'var(--ink-dim)', lineHeight: 1.6, marginBottom: 18 }}>
+                The record is archived (soft-deleted) and will no longer appear for you or any members.
+              </p>
+              <div className="flex gap-2 justify-end">
+                <button className="btn btn-ghost" disabled={deleteBank.isPending} onClick={() => setConfirmDel(false)}>Cancel</button>
+                <button className="btn-danger" style={{ padding: '7px 16px' }} disabled={deleteBank.isPending} onClick={handleDelete}>
+                  {deleteBank.isPending ? 'Deleting…' : 'Delete Record'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
