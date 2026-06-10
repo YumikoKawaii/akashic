@@ -31,18 +31,53 @@ message Test {
   repeated TestQuestion     questions = 6;
   google.protobuf.Timestamp created_at = 7;
   google.protobuf.Timestamp updated_at = 8;
-  optional int32            created_by = 9; // the generator's user id
-  optional User             creator = 10;   // embedded generator
+  optional int32            created_by = 9;   // the generator's user id
+  optional User             creator = 10;     // embedded generator
+  optional BestResult       best_result = 11; // the caller's best completed attempt, if any
+  int32                     attempt_count = 12; // completed attempts by anyone (History count)
+}
+
+// BestResult is the caller's highest-scoring completed attempt on a test.
+message BestResult {
+  int32 score = 1;
+  int32 total = 2;
+  int32 pct   = 3; // round(score/total*100)
+}
+
+enum TestSort {
+  TEST_SORT_UNSPECIFIED = 0; // treated as NEWEST
+  TEST_SORT_NEWEST      = 1;
+  TEST_SORT_OLDEST      = 2;
+  TEST_SORT_NAME        = 3; // name A–Z
+  TEST_SORT_SIZE        = 4; // most questions first
+}
+
+enum TakenFilter {
+  TAKEN_FILTER_UNSPECIFIED = 0; // treated as ALL
+  TAKEN_FILTER_ALL         = 1;
+  TAKEN_FILTER_TAKEN       = 2; // only tests the caller has completed
+  TAKEN_FILTER_UNTAKEN     = 3; // only tests the caller has not completed
+}
+
+// TestsSummary aggregates over the whole filtered bank set, not just one page,
+// so the Tests-tab header stays correct across pages.
+message TestsSummary {
+  int32 total       = 1; // tests matching the filter
+  int32 taken_count = 2; // of those, how many the caller has completed
+  int32 best_pct    = 3; // caller's best pct across the set, -1 if none
 }
 
 message ListTestsRequest {
-  int32 bank_id = 1;
-  int32 page = 2;
-  int32 page_size = 3;
+  int32       bank_id = 1;
+  int32       page = 2;
+  int32       page_size = 3;
+  TestSort    sort = 4;
+  TakenFilter taken_filter = 5;
 }
 message ListTestsResponse {
   repeated Test tests = 1;
   PageInfo      page_info = 2;
+  TestsSummary  summary = 3;
 }
 
 message GenerateTestRequest {

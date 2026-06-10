@@ -10,16 +10,3 @@ export function gradeForPct(pct: number): string {
 }
 
 export interface BestResult { pct: number; score: number; total: number; grade: string }
-
-type AttemptLike = { completed_at?: string; score?: number; total?: number }
-
-// The highest-scoring completed attempt, or null if the test was never finished.
-export function bestResult(attempts: AttemptLike[]): BestResult | null {
-  let best: BestResult | null = null
-  for (const a of attempts) {
-    if (!a.completed_at || !a.total) continue
-    const pct = Math.round((a.score ?? 0) / a.total * 100)
-    if (!best || pct > best.pct) best = { pct, score: a.score ?? 0, total: a.total, grade: gradeForPct(pct) }
-  }
-  return best
-}

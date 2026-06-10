@@ -22,6 +22,113 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type TestSort int32
+
+const (
+	TestSort_TEST_SORT_UNSPECIFIED TestSort = 0 // treated as NEWEST
+	TestSort_TEST_SORT_NEWEST      TestSort = 1
+	TestSort_TEST_SORT_OLDEST      TestSort = 2
+	TestSort_TEST_SORT_NAME        TestSort = 3 // name A–Z
+	TestSort_TEST_SORT_SIZE        TestSort = 4 // most questions first
+)
+
+// Enum value maps for TestSort.
+var (
+	TestSort_name = map[int32]string{
+		0: "TEST_SORT_UNSPECIFIED",
+		1: "TEST_SORT_NEWEST",
+		2: "TEST_SORT_OLDEST",
+		3: "TEST_SORT_NAME",
+		4: "TEST_SORT_SIZE",
+	}
+	TestSort_value = map[string]int32{
+		"TEST_SORT_UNSPECIFIED": 0,
+		"TEST_SORT_NEWEST":      1,
+		"TEST_SORT_OLDEST":      2,
+		"TEST_SORT_NAME":        3,
+		"TEST_SORT_SIZE":        4,
+	}
+)
+
+func (x TestSort) Enum() *TestSort {
+	p := new(TestSort)
+	*p = x
+	return p
+}
+
+func (x TestSort) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TestSort) Descriptor() protoreflect.EnumDescriptor {
+	return file_akashic_v1_test_proto_enumTypes[0].Descriptor()
+}
+
+func (TestSort) Type() protoreflect.EnumType {
+	return &file_akashic_v1_test_proto_enumTypes[0]
+}
+
+func (x TestSort) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TestSort.Descriptor instead.
+func (TestSort) EnumDescriptor() ([]byte, []int) {
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{0}
+}
+
+type TakenFilter int32
+
+const (
+	TakenFilter_TAKEN_FILTER_UNSPECIFIED TakenFilter = 0 // treated as ALL
+	TakenFilter_TAKEN_FILTER_ALL         TakenFilter = 1
+	TakenFilter_TAKEN_FILTER_TAKEN       TakenFilter = 2 // only tests the caller has completed
+	TakenFilter_TAKEN_FILTER_UNTAKEN     TakenFilter = 3 // only tests the caller has not completed
+)
+
+// Enum value maps for TakenFilter.
+var (
+	TakenFilter_name = map[int32]string{
+		0: "TAKEN_FILTER_UNSPECIFIED",
+		1: "TAKEN_FILTER_ALL",
+		2: "TAKEN_FILTER_TAKEN",
+		3: "TAKEN_FILTER_UNTAKEN",
+	}
+	TakenFilter_value = map[string]int32{
+		"TAKEN_FILTER_UNSPECIFIED": 0,
+		"TAKEN_FILTER_ALL":         1,
+		"TAKEN_FILTER_TAKEN":       2,
+		"TAKEN_FILTER_UNTAKEN":     3,
+	}
+)
+
+func (x TakenFilter) Enum() *TakenFilter {
+	p := new(TakenFilter)
+	*p = x
+	return p
+}
+
+func (x TakenFilter) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TakenFilter) Descriptor() protoreflect.EnumDescriptor {
+	return file_akashic_v1_test_proto_enumTypes[1].Descriptor()
+}
+
+func (TakenFilter) Type() protoreflect.EnumType {
+	return &file_akashic_v1_test_proto_enumTypes[1]
+}
+
+func (x TakenFilter) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TakenFilter.Descriptor instead.
+func (TakenFilter) EnumDescriptor() ([]byte, []int) {
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{1}
+}
+
 type TestQuestion struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TestId        int32                  `protobuf:"varint,1,opt,name=test_id,json=testId,proto3" json:"test_id,omitempty"`
@@ -100,8 +207,10 @@ type Test struct {
 	Questions     []*TestQuestion        `protobuf:"bytes,6,rep,name=questions,proto3" json:"questions,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	CreatedBy     *int32                 `protobuf:"varint,9,opt,name=created_by,json=createdBy,proto3,oneof" json:"created_by,omitempty"` // the generator's user id
-	Creator       *User                  `protobuf:"bytes,10,opt,name=creator,proto3,oneof" json:"creator,omitempty"`                      // embedded generator
+	CreatedBy     *int32                 `protobuf:"varint,9,opt,name=created_by,json=createdBy,proto3,oneof" json:"created_by,omitempty"`     // the generator's user id
+	Creator       *User                  `protobuf:"bytes,10,opt,name=creator,proto3,oneof" json:"creator,omitempty"`                          // embedded generator
+	BestResult    *BestResult            `protobuf:"bytes,11,opt,name=best_result,json=bestResult,proto3,oneof" json:"best_result,omitempty"`  // the caller's best completed attempt, if any
+	AttemptCount  int32                  `protobuf:"varint,12,opt,name=attempt_count,json=attemptCount,proto3" json:"attempt_count,omitempty"` // completed attempts by anyone (History count)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -206,18 +315,157 @@ func (x *Test) GetCreator() *User {
 	return nil
 }
 
+func (x *Test) GetBestResult() *BestResult {
+	if x != nil {
+		return x.BestResult
+	}
+	return nil
+}
+
+func (x *Test) GetAttemptCount() int32 {
+	if x != nil {
+		return x.AttemptCount
+	}
+	return 0
+}
+
+// BestResult is the caller's highest-scoring completed attempt on a test.
+type BestResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Score         int32                  `protobuf:"varint,1,opt,name=score,proto3" json:"score,omitempty"`
+	Total         int32                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	Pct           int32                  `protobuf:"varint,3,opt,name=pct,proto3" json:"pct,omitempty"` // round(score/total*100)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BestResult) Reset() {
+	*x = BestResult{}
+	mi := &file_akashic_v1_test_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BestResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BestResult) ProtoMessage() {}
+
+func (x *BestResult) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_test_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BestResult.ProtoReflect.Descriptor instead.
+func (*BestResult) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *BestResult) GetScore() int32 {
+	if x != nil {
+		return x.Score
+	}
+	return 0
+}
+
+func (x *BestResult) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *BestResult) GetPct() int32 {
+	if x != nil {
+		return x.Pct
+	}
+	return 0
+}
+
+// TestsSummary aggregates over the whole filtered bank set, not just one page,
+// so the Tests-tab header stays correct across pages.
+type TestsSummary struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Total         int32                  `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`                             // tests matching the filter
+	TakenCount    int32                  `protobuf:"varint,2,opt,name=taken_count,json=takenCount,proto3" json:"taken_count,omitempty"` // of those, how many the caller has completed
+	BestPct       int32                  `protobuf:"varint,3,opt,name=best_pct,json=bestPct,proto3" json:"best_pct,omitempty"`          // caller's best pct across the set, -1 if none
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TestsSummary) Reset() {
+	*x = TestsSummary{}
+	mi := &file_akashic_v1_test_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TestsSummary) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TestsSummary) ProtoMessage() {}
+
+func (x *TestsSummary) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_test_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TestsSummary.ProtoReflect.Descriptor instead.
+func (*TestsSummary) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *TestsSummary) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *TestsSummary) GetTakenCount() int32 {
+	if x != nil {
+		return x.TakenCount
+	}
+	return 0
+}
+
+func (x *TestsSummary) GetBestPct() int32 {
+	if x != nil {
+		return x.BestPct
+	}
+	return 0
+}
+
 type ListTestsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BankId        int32                  `protobuf:"varint,1,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
 	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
 	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	Sort          TestSort               `protobuf:"varint,4,opt,name=sort,proto3,enum=akashic.v1.TestSort" json:"sort,omitempty"`
+	TakenFilter   TakenFilter            `protobuf:"varint,5,opt,name=taken_filter,json=takenFilter,proto3,enum=akashic.v1.TakenFilter" json:"taken_filter,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListTestsRequest) Reset() {
 	*x = ListTestsRequest{}
-	mi := &file_akashic_v1_test_proto_msgTypes[2]
+	mi := &file_akashic_v1_test_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -229,7 +477,7 @@ func (x *ListTestsRequest) String() string {
 func (*ListTestsRequest) ProtoMessage() {}
 
 func (x *ListTestsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_test_proto_msgTypes[2]
+	mi := &file_akashic_v1_test_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -242,7 +490,7 @@ func (x *ListTestsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTestsRequest.ProtoReflect.Descriptor instead.
 func (*ListTestsRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_test_proto_rawDescGZIP(), []int{2}
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ListTestsRequest) GetBankId() int32 {
@@ -266,17 +514,32 @@ func (x *ListTestsRequest) GetPageSize() int32 {
 	return 0
 }
 
+func (x *ListTestsRequest) GetSort() TestSort {
+	if x != nil {
+		return x.Sort
+	}
+	return TestSort_TEST_SORT_UNSPECIFIED
+}
+
+func (x *ListTestsRequest) GetTakenFilter() TakenFilter {
+	if x != nil {
+		return x.TakenFilter
+	}
+	return TakenFilter_TAKEN_FILTER_UNSPECIFIED
+}
+
 type ListTestsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Tests         []*Test                `protobuf:"bytes,1,rep,name=tests,proto3" json:"tests,omitempty"`
 	PageInfo      *PageInfo              `protobuf:"bytes,2,opt,name=page_info,json=pageInfo,proto3" json:"page_info,omitempty"`
+	Summary       *TestsSummary          `protobuf:"bytes,3,opt,name=summary,proto3" json:"summary,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListTestsResponse) Reset() {
 	*x = ListTestsResponse{}
-	mi := &file_akashic_v1_test_proto_msgTypes[3]
+	mi := &file_akashic_v1_test_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -288,7 +551,7 @@ func (x *ListTestsResponse) String() string {
 func (*ListTestsResponse) ProtoMessage() {}
 
 func (x *ListTestsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_test_proto_msgTypes[3]
+	mi := &file_akashic_v1_test_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -301,7 +564,7 @@ func (x *ListTestsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTestsResponse.ProtoReflect.Descriptor instead.
 func (*ListTestsResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_test_proto_rawDescGZIP(), []int{3}
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListTestsResponse) GetTests() []*Test {
@@ -318,6 +581,13 @@ func (x *ListTestsResponse) GetPageInfo() *PageInfo {
 	return nil
 }
 
+func (x *ListTestsResponse) GetSummary() *TestsSummary {
+	if x != nil {
+		return x.Summary
+	}
+	return nil
+}
+
 type GenerateTestRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BankId        int32                  `protobuf:"varint,1,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
@@ -330,7 +600,7 @@ type GenerateTestRequest struct {
 
 func (x *GenerateTestRequest) Reset() {
 	*x = GenerateTestRequest{}
-	mi := &file_akashic_v1_test_proto_msgTypes[4]
+	mi := &file_akashic_v1_test_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -342,7 +612,7 @@ func (x *GenerateTestRequest) String() string {
 func (*GenerateTestRequest) ProtoMessage() {}
 
 func (x *GenerateTestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_test_proto_msgTypes[4]
+	mi := &file_akashic_v1_test_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -355,7 +625,7 @@ func (x *GenerateTestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateTestRequest.ProtoReflect.Descriptor instead.
 func (*GenerateTestRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_test_proto_rawDescGZIP(), []int{4}
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GenerateTestRequest) GetBankId() int32 {
@@ -395,7 +665,7 @@ type GenerateTestResponse struct {
 
 func (x *GenerateTestResponse) Reset() {
 	*x = GenerateTestResponse{}
-	mi := &file_akashic_v1_test_proto_msgTypes[5]
+	mi := &file_akashic_v1_test_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -407,7 +677,7 @@ func (x *GenerateTestResponse) String() string {
 func (*GenerateTestResponse) ProtoMessage() {}
 
 func (x *GenerateTestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_test_proto_msgTypes[5]
+	mi := &file_akashic_v1_test_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -420,7 +690,7 @@ func (x *GenerateTestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateTestResponse.ProtoReflect.Descriptor instead.
 func (*GenerateTestResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_test_proto_rawDescGZIP(), []int{5}
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GenerateTestResponse) GetTest() *Test {
@@ -440,7 +710,7 @@ type GetTestRequest struct {
 
 func (x *GetTestRequest) Reset() {
 	*x = GetTestRequest{}
-	mi := &file_akashic_v1_test_proto_msgTypes[6]
+	mi := &file_akashic_v1_test_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -452,7 +722,7 @@ func (x *GetTestRequest) String() string {
 func (*GetTestRequest) ProtoMessage() {}
 
 func (x *GetTestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_test_proto_msgTypes[6]
+	mi := &file_akashic_v1_test_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -465,7 +735,7 @@ func (x *GetTestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTestRequest.ProtoReflect.Descriptor instead.
 func (*GetTestRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_test_proto_rawDescGZIP(), []int{6}
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetTestRequest) GetBankId() int32 {
@@ -491,7 +761,7 @@ type GetTestResponse struct {
 
 func (x *GetTestResponse) Reset() {
 	*x = GetTestResponse{}
-	mi := &file_akashic_v1_test_proto_msgTypes[7]
+	mi := &file_akashic_v1_test_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -503,7 +773,7 @@ func (x *GetTestResponse) String() string {
 func (*GetTestResponse) ProtoMessage() {}
 
 func (x *GetTestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_test_proto_msgTypes[7]
+	mi := &file_akashic_v1_test_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -516,7 +786,7 @@ func (x *GetTestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTestResponse.ProtoReflect.Descriptor instead.
 func (*GetTestResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_test_proto_rawDescGZIP(), []int{7}
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetTestResponse) GetTest() *Test {
@@ -536,7 +806,7 @@ type DeleteTestRequest struct {
 
 func (x *DeleteTestRequest) Reset() {
 	*x = DeleteTestRequest{}
-	mi := &file_akashic_v1_test_proto_msgTypes[8]
+	mi := &file_akashic_v1_test_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -548,7 +818,7 @@ func (x *DeleteTestRequest) String() string {
 func (*DeleteTestRequest) ProtoMessage() {}
 
 func (x *DeleteTestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_test_proto_msgTypes[8]
+	mi := &file_akashic_v1_test_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -561,7 +831,7 @@ func (x *DeleteTestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTestRequest.ProtoReflect.Descriptor instead.
 func (*DeleteTestRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_test_proto_rawDescGZIP(), []int{8}
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *DeleteTestRequest) GetBankId() int32 {
@@ -586,7 +856,7 @@ type DeleteTestResponse struct {
 
 func (x *DeleteTestResponse) Reset() {
 	*x = DeleteTestResponse{}
-	mi := &file_akashic_v1_test_proto_msgTypes[9]
+	mi := &file_akashic_v1_test_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -598,7 +868,7 @@ func (x *DeleteTestResponse) String() string {
 func (*DeleteTestResponse) ProtoMessage() {}
 
 func (x *DeleteTestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_test_proto_msgTypes[9]
+	mi := &file_akashic_v1_test_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -611,7 +881,7 @@ func (x *DeleteTestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTestResponse.ProtoReflect.Descriptor instead.
 func (*DeleteTestResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_test_proto_rawDescGZIP(), []int{9}
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{11}
 }
 
 type RestoreTestRequest struct {
@@ -624,7 +894,7 @@ type RestoreTestRequest struct {
 
 func (x *RestoreTestRequest) Reset() {
 	*x = RestoreTestRequest{}
-	mi := &file_akashic_v1_test_proto_msgTypes[10]
+	mi := &file_akashic_v1_test_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -636,7 +906,7 @@ func (x *RestoreTestRequest) String() string {
 func (*RestoreTestRequest) ProtoMessage() {}
 
 func (x *RestoreTestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_test_proto_msgTypes[10]
+	mi := &file_akashic_v1_test_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -649,7 +919,7 @@ func (x *RestoreTestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RestoreTestRequest.ProtoReflect.Descriptor instead.
 func (*RestoreTestRequest) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_test_proto_rawDescGZIP(), []int{10}
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *RestoreTestRequest) GetBankId() int32 {
@@ -675,7 +945,7 @@ type RestoreTestResponse struct {
 
 func (x *RestoreTestResponse) Reset() {
 	*x = RestoreTestResponse{}
-	mi := &file_akashic_v1_test_proto_msgTypes[11]
+	mi := &file_akashic_v1_test_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -687,7 +957,7 @@ func (x *RestoreTestResponse) String() string {
 func (*RestoreTestResponse) ProtoMessage() {}
 
 func (x *RestoreTestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_test_proto_msgTypes[11]
+	mi := &file_akashic_v1_test_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -700,7 +970,7 @@ func (x *RestoreTestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RestoreTestResponse.ProtoReflect.Descriptor instead.
 func (*RestoreTestResponse) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_test_proto_rawDescGZIP(), []int{11}
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *RestoreTestResponse) GetTest() *Test {
@@ -721,7 +991,7 @@ const file_akashic_v1_test_proto_rawDesc = "" +
 	"\vquestion_id\x18\x02 \x01(\x05R\n" +
 	"questionId\x12\x1a\n" +
 	"\bposition\x18\x03 \x01(\x05R\bposition\x120\n" +
-	"\bquestion\x18\x04 \x01(\v2\x14.akashic.v1.QuestionR\bquestion\"\xb3\x03\n" +
+	"\bquestion\x18\x04 \x01(\v2\x14.akashic.v1.QuestionR\bquestion\"\xa6\x04\n" +
 	"\x04Test\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x17\n" +
 	"\abank_id\x18\x02 \x01(\x05R\x06bankId\x12\x12\n" +
@@ -736,17 +1006,34 @@ const file_akashic_v1_test_proto_rawDesc = "" +
 	"\n" +
 	"created_by\x18\t \x01(\x05H\x00R\tcreatedBy\x88\x01\x01\x12/\n" +
 	"\acreator\x18\n" +
-	" \x01(\v2\x10.akashic.v1.UserH\x01R\acreator\x88\x01\x01B\r\n" +
+	" \x01(\v2\x10.akashic.v1.UserH\x01R\acreator\x88\x01\x01\x12<\n" +
+	"\vbest_result\x18\v \x01(\v2\x16.akashic.v1.BestResultH\x02R\n" +
+	"bestResult\x88\x01\x01\x12#\n" +
+	"\rattempt_count\x18\f \x01(\x05R\fattemptCountB\r\n" +
 	"\v_created_byB\n" +
 	"\n" +
-	"\b_creator\"\\\n" +
+	"\b_creatorB\x0e\n" +
+	"\f_best_result\"J\n" +
+	"\n" +
+	"BestResult\x12\x14\n" +
+	"\x05score\x18\x01 \x01(\x05R\x05score\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\x12\x10\n" +
+	"\x03pct\x18\x03 \x01(\x05R\x03pct\"`\n" +
+	"\fTestsSummary\x12\x14\n" +
+	"\x05total\x18\x01 \x01(\x05R\x05total\x12\x1f\n" +
+	"\vtaken_count\x18\x02 \x01(\x05R\n" +
+	"takenCount\x12\x19\n" +
+	"\bbest_pct\x18\x03 \x01(\x05R\abestPct\"\xc2\x01\n" +
 	"\x10ListTestsRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"n\n" +
+	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\x12(\n" +
+	"\x04sort\x18\x04 \x01(\x0e2\x14.akashic.v1.TestSortR\x04sort\x12:\n" +
+	"\ftaken_filter\x18\x05 \x01(\x0e2\x17.akashic.v1.TakenFilterR\vtakenFilter\"\xa2\x01\n" +
 	"\x11ListTestsResponse\x12&\n" +
 	"\x05tests\x18\x01 \x03(\v2\x10.akashic.v1.TestR\x05tests\x121\n" +
-	"\tpage_info\x18\x02 \x01(\v2\x14.akashic.v1.PageInfoR\bpageInfo\"\x94\x01\n" +
+	"\tpage_info\x18\x02 \x01(\v2\x14.akashic.v1.PageInfoR\bpageInfo\x122\n" +
+	"\asummary\x18\x03 \x01(\v2\x18.akashic.v1.TestsSummaryR\asummary\"\x94\x01\n" +
 	"\x13GenerateTestRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -767,7 +1054,18 @@ const file_akashic_v1_test_proto_rawDesc = "" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\x05R\x02id\";\n" +
 	"\x13RestoreTestResponse\x12$\n" +
-	"\x04test\x18\x01 \x01(\v2\x10.akashic.v1.TestR\x04test2\x8b\x03\n" +
+	"\x04test\x18\x01 \x01(\v2\x10.akashic.v1.TestR\x04test*y\n" +
+	"\bTestSort\x12\x19\n" +
+	"\x15TEST_SORT_UNSPECIFIED\x10\x00\x12\x14\n" +
+	"\x10TEST_SORT_NEWEST\x10\x01\x12\x14\n" +
+	"\x10TEST_SORT_OLDEST\x10\x02\x12\x12\n" +
+	"\x0eTEST_SORT_NAME\x10\x03\x12\x12\n" +
+	"\x0eTEST_SORT_SIZE\x10\x04*s\n" +
+	"\vTakenFilter\x12\x1c\n" +
+	"\x18TAKEN_FILTER_UNSPECIFIED\x10\x00\x12\x14\n" +
+	"\x10TAKEN_FILTER_ALL\x10\x01\x12\x16\n" +
+	"\x12TAKEN_FILTER_TAKEN\x10\x02\x12\x18\n" +
+	"\x14TAKEN_FILTER_UNTAKEN\x10\x032\x8b\x03\n" +
 	"\vTestService\x12H\n" +
 	"\tListTests\x12\x1c.akashic.v1.ListTestsRequest\x1a\x1d.akashic.v1.ListTestsResponse\x12Q\n" +
 	"\fGenerateTest\x12\x1f.akashic.v1.GenerateTestRequest\x1a .akashic.v1.GenerateTestResponse\x12B\n" +
@@ -788,54 +1086,63 @@ func file_akashic_v1_test_proto_rawDescGZIP() []byte {
 	return file_akashic_v1_test_proto_rawDescData
 }
 
-var file_akashic_v1_test_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_akashic_v1_test_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_akashic_v1_test_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_akashic_v1_test_proto_goTypes = []any{
-	(*TestQuestion)(nil),          // 0: akashic.v1.TestQuestion
-	(*Test)(nil),                  // 1: akashic.v1.Test
-	(*ListTestsRequest)(nil),      // 2: akashic.v1.ListTestsRequest
-	(*ListTestsResponse)(nil),     // 3: akashic.v1.ListTestsResponse
-	(*GenerateTestRequest)(nil),   // 4: akashic.v1.GenerateTestRequest
-	(*GenerateTestResponse)(nil),  // 5: akashic.v1.GenerateTestResponse
-	(*GetTestRequest)(nil),        // 6: akashic.v1.GetTestRequest
-	(*GetTestResponse)(nil),       // 7: akashic.v1.GetTestResponse
-	(*DeleteTestRequest)(nil),     // 8: akashic.v1.DeleteTestRequest
-	(*DeleteTestResponse)(nil),    // 9: akashic.v1.DeleteTestResponse
-	(*RestoreTestRequest)(nil),    // 10: akashic.v1.RestoreTestRequest
-	(*RestoreTestResponse)(nil),   // 11: akashic.v1.RestoreTestResponse
-	(*Question)(nil),              // 12: akashic.v1.Question
-	(*TestConfig)(nil),            // 13: akashic.v1.TestConfig
-	(*timestamppb.Timestamp)(nil), // 14: google.protobuf.Timestamp
-	(*User)(nil),                  // 15: akashic.v1.User
-	(*PageInfo)(nil),              // 16: akashic.v1.PageInfo
+	(TestSort)(0),                 // 0: akashic.v1.TestSort
+	(TakenFilter)(0),              // 1: akashic.v1.TakenFilter
+	(*TestQuestion)(nil),          // 2: akashic.v1.TestQuestion
+	(*Test)(nil),                  // 3: akashic.v1.Test
+	(*BestResult)(nil),            // 4: akashic.v1.BestResult
+	(*TestsSummary)(nil),          // 5: akashic.v1.TestsSummary
+	(*ListTestsRequest)(nil),      // 6: akashic.v1.ListTestsRequest
+	(*ListTestsResponse)(nil),     // 7: akashic.v1.ListTestsResponse
+	(*GenerateTestRequest)(nil),   // 8: akashic.v1.GenerateTestRequest
+	(*GenerateTestResponse)(nil),  // 9: akashic.v1.GenerateTestResponse
+	(*GetTestRequest)(nil),        // 10: akashic.v1.GetTestRequest
+	(*GetTestResponse)(nil),       // 11: akashic.v1.GetTestResponse
+	(*DeleteTestRequest)(nil),     // 12: akashic.v1.DeleteTestRequest
+	(*DeleteTestResponse)(nil),    // 13: akashic.v1.DeleteTestResponse
+	(*RestoreTestRequest)(nil),    // 14: akashic.v1.RestoreTestRequest
+	(*RestoreTestResponse)(nil),   // 15: akashic.v1.RestoreTestResponse
+	(*Question)(nil),              // 16: akashic.v1.Question
+	(*TestConfig)(nil),            // 17: akashic.v1.TestConfig
+	(*timestamppb.Timestamp)(nil), // 18: google.protobuf.Timestamp
+	(*User)(nil),                  // 19: akashic.v1.User
+	(*PageInfo)(nil),              // 20: akashic.v1.PageInfo
 }
 var file_akashic_v1_test_proto_depIdxs = []int32{
-	12, // 0: akashic.v1.TestQuestion.question:type_name -> akashic.v1.Question
-	13, // 1: akashic.v1.Test.config:type_name -> akashic.v1.TestConfig
-	0,  // 2: akashic.v1.Test.questions:type_name -> akashic.v1.TestQuestion
-	14, // 3: akashic.v1.Test.created_at:type_name -> google.protobuf.Timestamp
-	14, // 4: akashic.v1.Test.updated_at:type_name -> google.protobuf.Timestamp
-	15, // 5: akashic.v1.Test.creator:type_name -> akashic.v1.User
-	1,  // 6: akashic.v1.ListTestsResponse.tests:type_name -> akashic.v1.Test
-	16, // 7: akashic.v1.ListTestsResponse.page_info:type_name -> akashic.v1.PageInfo
-	13, // 8: akashic.v1.GenerateTestRequest.config:type_name -> akashic.v1.TestConfig
-	1,  // 9: akashic.v1.GenerateTestResponse.test:type_name -> akashic.v1.Test
-	1,  // 10: akashic.v1.GetTestResponse.test:type_name -> akashic.v1.Test
-	1,  // 11: akashic.v1.RestoreTestResponse.test:type_name -> akashic.v1.Test
-	2,  // 12: akashic.v1.TestService.ListTests:input_type -> akashic.v1.ListTestsRequest
-	4,  // 13: akashic.v1.TestService.GenerateTest:input_type -> akashic.v1.GenerateTestRequest
-	6,  // 14: akashic.v1.TestService.GetTest:input_type -> akashic.v1.GetTestRequest
-	8,  // 15: akashic.v1.TestService.DeleteTest:input_type -> akashic.v1.DeleteTestRequest
-	10, // 16: akashic.v1.TestService.RestoreTest:input_type -> akashic.v1.RestoreTestRequest
-	3,  // 17: akashic.v1.TestService.ListTests:output_type -> akashic.v1.ListTestsResponse
-	5,  // 18: akashic.v1.TestService.GenerateTest:output_type -> akashic.v1.GenerateTestResponse
-	7,  // 19: akashic.v1.TestService.GetTest:output_type -> akashic.v1.GetTestResponse
-	9,  // 20: akashic.v1.TestService.DeleteTest:output_type -> akashic.v1.DeleteTestResponse
-	11, // 21: akashic.v1.TestService.RestoreTest:output_type -> akashic.v1.RestoreTestResponse
-	17, // [17:22] is the sub-list for method output_type
-	12, // [12:17] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	16, // 0: akashic.v1.TestQuestion.question:type_name -> akashic.v1.Question
+	17, // 1: akashic.v1.Test.config:type_name -> akashic.v1.TestConfig
+	2,  // 2: akashic.v1.Test.questions:type_name -> akashic.v1.TestQuestion
+	18, // 3: akashic.v1.Test.created_at:type_name -> google.protobuf.Timestamp
+	18, // 4: akashic.v1.Test.updated_at:type_name -> google.protobuf.Timestamp
+	19, // 5: akashic.v1.Test.creator:type_name -> akashic.v1.User
+	4,  // 6: akashic.v1.Test.best_result:type_name -> akashic.v1.BestResult
+	0,  // 7: akashic.v1.ListTestsRequest.sort:type_name -> akashic.v1.TestSort
+	1,  // 8: akashic.v1.ListTestsRequest.taken_filter:type_name -> akashic.v1.TakenFilter
+	3,  // 9: akashic.v1.ListTestsResponse.tests:type_name -> akashic.v1.Test
+	20, // 10: akashic.v1.ListTestsResponse.page_info:type_name -> akashic.v1.PageInfo
+	5,  // 11: akashic.v1.ListTestsResponse.summary:type_name -> akashic.v1.TestsSummary
+	17, // 12: akashic.v1.GenerateTestRequest.config:type_name -> akashic.v1.TestConfig
+	3,  // 13: akashic.v1.GenerateTestResponse.test:type_name -> akashic.v1.Test
+	3,  // 14: akashic.v1.GetTestResponse.test:type_name -> akashic.v1.Test
+	3,  // 15: akashic.v1.RestoreTestResponse.test:type_name -> akashic.v1.Test
+	6,  // 16: akashic.v1.TestService.ListTests:input_type -> akashic.v1.ListTestsRequest
+	8,  // 17: akashic.v1.TestService.GenerateTest:input_type -> akashic.v1.GenerateTestRequest
+	10, // 18: akashic.v1.TestService.GetTest:input_type -> akashic.v1.GetTestRequest
+	12, // 19: akashic.v1.TestService.DeleteTest:input_type -> akashic.v1.DeleteTestRequest
+	14, // 20: akashic.v1.TestService.RestoreTest:input_type -> akashic.v1.RestoreTestRequest
+	7,  // 21: akashic.v1.TestService.ListTests:output_type -> akashic.v1.ListTestsResponse
+	9,  // 22: akashic.v1.TestService.GenerateTest:output_type -> akashic.v1.GenerateTestResponse
+	11, // 23: akashic.v1.TestService.GetTest:output_type -> akashic.v1.GetTestResponse
+	13, // 24: akashic.v1.TestService.DeleteTest:output_type -> akashic.v1.DeleteTestResponse
+	15, // 25: akashic.v1.TestService.RestoreTest:output_type -> akashic.v1.RestoreTestResponse
+	21, // [21:26] is the sub-list for method output_type
+	16, // [16:21] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_test_proto_init() }
@@ -851,13 +1158,14 @@ func file_akashic_v1_test_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_akashic_v1_test_proto_rawDesc), len(file_akashic_v1_test_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   12,
+			NumEnums:      2,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_akashic_v1_test_proto_goTypes,
 		DependencyIndexes: file_akashic_v1_test_proto_depIdxs,
+		EnumInfos:         file_akashic_v1_test_proto_enumTypes,
 		MessageInfos:      file_akashic_v1_test_proto_msgTypes,
 	}.Build()
 	File_akashic_v1_test_proto = out.File

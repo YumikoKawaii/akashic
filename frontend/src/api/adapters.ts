@@ -238,6 +238,10 @@ export const fromTest = (t: PbTest): Test => ({
   creator:    fromUser(t.creator),
   created_at: ts(t.createdAt),
   updated_at: ts(t.updatedAt),
+  best_result: t.bestResult
+    ? { score: t.bestResult.score, total: t.bestResult.total, pct: t.bestResult.pct }
+    : undefined,
+  attempt_count: t.attemptCount,
 })
 
 const contributionStatus = (s: ContributionStatus): AppContributionStatus => {

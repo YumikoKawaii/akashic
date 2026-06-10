@@ -6,7 +6,7 @@ import { useDeleteTest } from '../../hooks/useTests'
 import { useStartAttempt, useTestAttempts } from '../../hooks/useAttempts'
 import MagicCircle from '../ui/MagicCircle'
 import RuneCorners from '../ui/RuneCorners'
-import { GRADE_COLOR, gradeForPct, bestResult } from './grade'
+import { GRADE_COLOR, gradeForPct } from './grade'
 
 const DIFF_COLOR: Record<string, string> = {
   easy: '#2a8a3a', medium: '#9a7018', hard: '#b03030',
@@ -20,7 +20,9 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
   const start       = useStartAttempt()
   const [showHistory,  setShowHistory]  = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const { data: attempts = [] } = useTestAttempts(bankId, test.id)
+  // The best-result badge comes from the list response; the per-test attempt
+  // history (all takers) is fetched lazily, only once History is expanded.
+  const { data: attempts = [] } = useTestAttempts(bankId, test.id, showHistory)
 
   const handleStart = async () => {
     const attempt = await start.mutateAsync({ bankId, testId: test.id })
@@ -30,8 +32,11 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
   const cfg   = test.config
   const total = (cfg.easy_count ?? 0) + (cfg.medium_count ?? 0) + (cfg.hard_count ?? 0)
 
-  const completed = attempts.filter(a => a.completed_at)
-  const result    = bestResult(attempts)
+  const completed     = attempts.filter(a => a.completed_at)
+  const completedCount = test.attempt_count ?? 0 // History count from the list response
+  const result        = test.best_result
+    ? { ...test.best_result, grade: gradeForPct(test.best_result.pct) }
+    : null
 
   const dominant = cfg.hard_count >= cfg.medium_count && cfg.hard_count >= cfg.easy_count
     ? 'hard' : cfg.medium_count >= cfg.easy_count ? 'medium' : 'easy'
@@ -114,13 +119,13 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
             <button className="btn btn-primary" style={{ fontSize: '0.6rem', padding: '6px 14px' }} onClick={handleStart} disabled={start.isPending}>
               {start.isPending ? '…' : '▶ Start'}
             </button>
-            {completed.length > 0 && (
+            {completedCount > 0 && (
               <button
                 className="btn btn-ghost"
                 style={{ fontSize: '0.6rem', padding: '6px 14px' }}
                 onClick={() => setShowHistory(v => !v)}
               >
-                {showHistory ? '▴ History' : `▾ History (${completed.length})`}
+                {showHistory ? '▴ History' : `▾ History (${completedCount})`}
               </button>
             )}
             {canDelete && (

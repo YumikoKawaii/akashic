@@ -150,6 +150,12 @@ export interface TestQuestion {
   position: number
 }
 
+export interface BestResult {
+  score: number
+  total: number
+  pct: number
+}
+
 export interface Test {
   id: number
   bank_id: number
@@ -161,6 +167,8 @@ export interface Test {
   creator?: User
   created_at: string
   updated_at: string
+  best_result?: BestResult // the caller's best completed attempt, if any
+  attempt_count?: number   // completed attempts by anyone (History count)
 }
 
 export interface TestAttempt {
@@ -197,11 +205,21 @@ export interface PassagePage {
   page_size: number
 }
 
+export type TestSort  = 'newest' | 'oldest' | 'name' | 'size'
+export type TestTaken = 'all' | 'taken' | 'untaken'
+
+export interface TestsSummary {
+  total:       number
+  taken_count: number
+  best_pct:    number // caller's best across the set, -1 if none
+}
+
 export interface TestPage {
   data:      Test[]
   total:     number
   page:      number
   page_size: number
+  summary:   TestsSummary
 }
 
 // A public record (bank) as shown on the community home — lightweight, with counts.

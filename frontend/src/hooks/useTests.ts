@@ -1,15 +1,32 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { TestConfig as PbTestConfig } from '../gen/akashic/v1/common_pb'
+import { TestSort as PbTestSort, TakenFilter as PbTakenFilter } from '../gen/akashic/v1/test_pb'
 import { testClient } from '../api/connect'
 import { fromTest, toQuestionType } from '../api/adapters'
-import type { TestConfig } from '../types'
+import type { TestConfig, TestSort, TestTaken } from '../types'
 
-export const TEST_PAGE_SIZE = 10
+export const TEST_PAGE_SIZE = 9
 
 export const testKeys = {
-  all:    (bankId: string) => ['tests', bankId] as const,
-  paged:  (bankId: string, page: number) => ['tests', bankId, 'paged', page] as const,
-  detail: (bankId: string, id: string)   => ['tests', bankId, id] as const,
+  // every listing of a bank, regardless of page/sort/filter — used for broad
+  // invalidation after a generate/delete.
+  lists:  (bankId: string) => ['tests', bankId, 'paged'] as const,
+  paged:  (bankId: string, page: number, sort: TestSort, taken: TestTaken) =>
+    ['tests', bankId, 'paged', page, sort, taken] as const,
+  detail: (bankId: string, id: string) => ['tests', bankId, id] as const,
+}
+
+const SORT_TO_PB: Record<TestSort, PbTestSort> = {
+  newest: PbTestSort.NEWEST,
+  oldest: PbTestSort.OLDEST,
+  name:   PbTestSort.NAME,
+  size:   PbTestSort.SIZE,
+}
+
+const TAKEN_TO_PB: Record<TestTaken, PbTakenFilter> = {
+  all:     PbTakenFilter.ALL,
+  taken:   PbTakenFilter.TAKEN,
+  untaken: PbTakenFilter.UNTAKEN,
 }
 
 function toProtoConfig(cfg?: Partial<TestConfig>): PbTestConfig {
@@ -25,27 +42,30 @@ function toProtoConfig(cfg?: Partial<TestConfig>): PbTestConfig {
   })
 }
 
-export function useTests(bankId: string) {
+// One page of a bank's shared tests, sorted + filtered server-side. The server
+// also returns each test's best result inline and a bank-wide summary, so the
+// list never has to fetch the whole set or every test's attempts client-side.
+export function useTestsPaged(bankId: string, page = 1, sort: TestSort = 'newest', taken: TestTaken = 'all') {
   return useQuery({
-    queryKey: testKeys.all(bankId),
+    queryKey: testKeys.paged(bankId, page, sort, taken),
     queryFn:  async () => {
-      const res = await testClient.listTests({ bankId: Number(bankId), page: 1, pageSize: 1000 })
-      return res.tests.map(fromTest)
-    },
-    enabled: !!bankId,
-  })
-}
-
-export function useTestsPaged(bankId: string, page = 1) {
-  return useQuery({
-    queryKey: testKeys.paged(bankId, page),
-    queryFn:  async () => {
-      const res = await testClient.listTests({ bankId: Number(bankId), page, pageSize: TEST_PAGE_SIZE })
+      const res = await testClient.listTests({
+        bankId:      Number(bankId),
+        page,
+        pageSize:    TEST_PAGE_SIZE,
+        sort:        SORT_TO_PB[sort],
+        takenFilter: TAKEN_TO_PB[taken],
+      })
       return {
         data:      res.tests.map(fromTest),
-        total:     res.pageInfo?.total     ?? 0,
+        total:     res.pageInfo?.total    ?? 0,
         page:      res.pageInfo?.page      ?? page,
         page_size: res.pageInfo?.pageSize  ?? TEST_PAGE_SIZE,
+        summary: {
+          total:       res.summary?.total       ?? 0,
+          taken_count: res.summary?.takenCount   ?? 0,
+          best_pct:    res.summary?.bestPct      ?? -1,
+        },
       }
     },
     enabled: !!bankId,
@@ -76,7 +96,7 @@ export function useGenerateTest(bankId: string) {
       })
       return fromTest(res.test!)
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: testKeys.all(bankId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: testKeys.lists(bankId) }),
   })
 }
 
@@ -85,6 +105,6 @@ export function useDeleteTest(bankId: string) {
   return useMutation({
     mutationFn: (id: number | string) =>
       testClient.deleteTest({ bankId: Number(bankId), id: Number(id) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: testKeys.all(bankId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: testKeys.lists(bankId) }),
   })
 }

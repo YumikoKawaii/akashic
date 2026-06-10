@@ -6,6 +6,7 @@ import (
 	"connectrpc.com/connect"
 	pb "github.com/yumikokawaii/akashic/gen/akashic/v1"
 	"github.com/yumikokawaii/akashic/gen/akashic/v1/akashicv1connect"
+	"github.com/yumikokawaii/akashic/internal/repository"
 	"github.com/yumikokawaii/akashic/internal/service"
 )
 
@@ -30,13 +31,24 @@ func (h *TestServiceHandler) ListTests(
 	if pageSize <= 0 || pageSize > 50 {
 		pageSize = 10
 	}
-	result, err := h.svc.ListByBankPaged(int(req.Msg.BankId), page, pageSize)
+	result, err := h.svc.ListByBankPaged(int(req.Msg.BankId), repository.TestListQuery{
+		Page:     page,
+		PageSize: pageSize,
+		Sort:     testSortFromProto(req.Msg.Sort),
+		Taken:    takenFilterFromProto(req.Msg.TakenFilter),
+		UserID:   userIDFromContext(ctx),
+	})
 	if err != nil {
 		return nil, toConnectError(err)
 	}
 	pbTests := make([]*pb.Test, len(result.Data))
 	for i := range result.Data {
-		pbTests[i] = testToProto(&result.Data[i])
+		pt := testToProto(&result.Data[i])
+		if b, ok := result.Best[result.Data[i].ID]; ok {
+			pt.BestResult = bestResultToProto(b)
+		}
+		pt.AttemptCount = int32(result.Completed[result.Data[i].ID])
+		pbTests[i] = pt
 	}
 	return connect.NewResponse(&pb.ListTestsResponse{
 		Tests: pbTests,
@@ -46,7 +58,44 @@ func (h *TestServiceHandler) ListTests(
 			Total:      int32(result.Total),
 			TotalPages: int32((result.Total + int64(result.PageSize) - 1) / int64(result.PageSize)),
 		},
+		Summary: &pb.TestsSummary{
+			Total:      int32(result.Summary.Total),
+			TakenCount: int32(result.Summary.TakenCount),
+			BestPct:    int32(result.Summary.BestPct),
+		},
 	}), nil
+}
+
+func testSortFromProto(s pb.TestSort) repository.TestSort {
+	switch s {
+	case pb.TestSort_TEST_SORT_OLDEST:
+		return repository.SortOldest
+	case pb.TestSort_TEST_SORT_NAME:
+		return repository.SortName
+	case pb.TestSort_TEST_SORT_SIZE:
+		return repository.SortSize
+	default:
+		return repository.SortNewest
+	}
+}
+
+func takenFilterFromProto(f pb.TakenFilter) repository.TakenFilter {
+	switch f {
+	case pb.TakenFilter_TAKEN_FILTER_TAKEN:
+		return repository.TakenOnly
+	case pb.TakenFilter_TAKEN_FILTER_UNTAKEN:
+		return repository.UntakenOnly
+	default:
+		return repository.TakenAll
+	}
+}
+
+func bestResultToProto(b repository.BestResult) *pb.BestResult {
+	pct := 0
+	if b.Total > 0 {
+		pct = int(float64(b.Score)/float64(b.Total)*100 + 0.5)
+	}
+	return &pb.BestResult{Score: int32(b.Score), Total: int32(b.Total), Pct: int32(pct)}
 }
 
 func (h *TestServiceHandler) GenerateTest(

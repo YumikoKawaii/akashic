@@ -9,6 +9,88 @@ import { Question } from "./question_pb.js";
 import { PageInfo, TestConfig, User } from "./common_pb.js";
 
 /**
+ * @generated from enum akashic.v1.TestSort
+ */
+export enum TestSort {
+  /**
+   * treated as NEWEST
+   *
+   * @generated from enum value: TEST_SORT_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: TEST_SORT_NEWEST = 1;
+   */
+  NEWEST = 1,
+
+  /**
+   * @generated from enum value: TEST_SORT_OLDEST = 2;
+   */
+  OLDEST = 2,
+
+  /**
+   * name A–Z
+   *
+   * @generated from enum value: TEST_SORT_NAME = 3;
+   */
+  NAME = 3,
+
+  /**
+   * most questions first
+   *
+   * @generated from enum value: TEST_SORT_SIZE = 4;
+   */
+  SIZE = 4,
+}
+// Retrieve enum metadata with: proto3.getEnumType(TestSort)
+proto3.util.setEnumType(TestSort, "akashic.v1.TestSort", [
+  { no: 0, name: "TEST_SORT_UNSPECIFIED" },
+  { no: 1, name: "TEST_SORT_NEWEST" },
+  { no: 2, name: "TEST_SORT_OLDEST" },
+  { no: 3, name: "TEST_SORT_NAME" },
+  { no: 4, name: "TEST_SORT_SIZE" },
+]);
+
+/**
+ * @generated from enum akashic.v1.TakenFilter
+ */
+export enum TakenFilter {
+  /**
+   * treated as ALL
+   *
+   * @generated from enum value: TAKEN_FILTER_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: TAKEN_FILTER_ALL = 1;
+   */
+  ALL = 1,
+
+  /**
+   * only tests the caller has completed
+   *
+   * @generated from enum value: TAKEN_FILTER_TAKEN = 2;
+   */
+  TAKEN = 2,
+
+  /**
+   * only tests the caller has not completed
+   *
+   * @generated from enum value: TAKEN_FILTER_UNTAKEN = 3;
+   */
+  UNTAKEN = 3,
+}
+// Retrieve enum metadata with: proto3.getEnumType(TakenFilter)
+proto3.util.setEnumType(TakenFilter, "akashic.v1.TakenFilter", [
+  { no: 0, name: "TAKEN_FILTER_UNSPECIFIED" },
+  { no: 1, name: "TAKEN_FILTER_ALL" },
+  { no: 2, name: "TAKEN_FILTER_TAKEN" },
+  { no: 3, name: "TAKEN_FILTER_UNTAKEN" },
+]);
+
+/**
  * @generated from message akashic.v1.TestQuestion
  */
 export class TestQuestion extends Message<TestQuestion> {
@@ -121,6 +203,20 @@ export class Test extends Message<Test> {
    */
   creator?: User;
 
+  /**
+   * the caller's best completed attempt, if any
+   *
+   * @generated from field: optional akashic.v1.BestResult best_result = 11;
+   */
+  bestResult?: BestResult;
+
+  /**
+   * completed attempts by anyone (History count)
+   *
+   * @generated from field: int32 attempt_count = 12;
+   */
+  attemptCount = 0;
+
   constructor(data?: PartialMessage<Test>) {
     super();
     proto3.util.initPartial(data, this);
@@ -139,6 +235,8 @@ export class Test extends Message<Test> {
     { no: 8, name: "updated_at", kind: "message", T: Timestamp },
     { no: 9, name: "created_by", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
     { no: 10, name: "creator", kind: "message", T: User, opt: true },
+    { no: 11, name: "best_result", kind: "message", T: BestResult, opt: true },
+    { no: 12, name: "attempt_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Test {
@@ -155,6 +253,117 @@ export class Test extends Message<Test> {
 
   static equals(a: Test | PlainMessage<Test> | undefined, b: Test | PlainMessage<Test> | undefined): boolean {
     return proto3.util.equals(Test, a, b);
+  }
+}
+
+/**
+ * BestResult is the caller's highest-scoring completed attempt on a test.
+ *
+ * @generated from message akashic.v1.BestResult
+ */
+export class BestResult extends Message<BestResult> {
+  /**
+   * @generated from field: int32 score = 1;
+   */
+  score = 0;
+
+  /**
+   * @generated from field: int32 total = 2;
+   */
+  total = 0;
+
+  /**
+   * round(score/total*100)
+   *
+   * @generated from field: int32 pct = 3;
+   */
+  pct = 0;
+
+  constructor(data?: PartialMessage<BestResult>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.BestResult";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "score", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "total", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "pct", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): BestResult {
+    return new BestResult().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): BestResult {
+    return new BestResult().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): BestResult {
+    return new BestResult().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: BestResult | PlainMessage<BestResult> | undefined, b: BestResult | PlainMessage<BestResult> | undefined): boolean {
+    return proto3.util.equals(BestResult, a, b);
+  }
+}
+
+/**
+ * TestsSummary aggregates over the whole filtered bank set, not just one page,
+ * so the Tests-tab header stays correct across pages.
+ *
+ * @generated from message akashic.v1.TestsSummary
+ */
+export class TestsSummary extends Message<TestsSummary> {
+  /**
+   * tests matching the filter
+   *
+   * @generated from field: int32 total = 1;
+   */
+  total = 0;
+
+  /**
+   * of those, how many the caller has completed
+   *
+   * @generated from field: int32 taken_count = 2;
+   */
+  takenCount = 0;
+
+  /**
+   * caller's best pct across the set, -1 if none
+   *
+   * @generated from field: int32 best_pct = 3;
+   */
+  bestPct = 0;
+
+  constructor(data?: PartialMessage<TestsSummary>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.TestsSummary";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "total", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "taken_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "best_pct", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TestsSummary {
+    return new TestsSummary().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): TestsSummary {
+    return new TestsSummary().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): TestsSummary {
+    return new TestsSummary().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: TestsSummary | PlainMessage<TestsSummary> | undefined, b: TestsSummary | PlainMessage<TestsSummary> | undefined): boolean {
+    return proto3.util.equals(TestsSummary, a, b);
   }
 }
 
@@ -177,6 +386,16 @@ export class ListTestsRequest extends Message<ListTestsRequest> {
    */
   pageSize = 0;
 
+  /**
+   * @generated from field: akashic.v1.TestSort sort = 4;
+   */
+  sort = TestSort.UNSPECIFIED;
+
+  /**
+   * @generated from field: akashic.v1.TakenFilter taken_filter = 5;
+   */
+  takenFilter = TakenFilter.UNSPECIFIED;
+
   constructor(data?: PartialMessage<ListTestsRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -188,6 +407,8 @@ export class ListTestsRequest extends Message<ListTestsRequest> {
     { no: 1, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 2, name: "page", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 3, name: "page_size", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 4, name: "sort", kind: "enum", T: proto3.getEnumType(TestSort) },
+    { no: 5, name: "taken_filter", kind: "enum", T: proto3.getEnumType(TakenFilter) },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListTestsRequest {
@@ -221,6 +442,11 @@ export class ListTestsResponse extends Message<ListTestsResponse> {
    */
   pageInfo?: PageInfo;
 
+  /**
+   * @generated from field: akashic.v1.TestsSummary summary = 3;
+   */
+  summary?: TestsSummary;
+
   constructor(data?: PartialMessage<ListTestsResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -231,6 +457,7 @@ export class ListTestsResponse extends Message<ListTestsResponse> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "tests", kind: "message", T: Test, repeated: true },
     { no: 2, name: "page_info", kind: "message", T: PageInfo },
+    { no: 3, name: "summary", kind: "message", T: TestsSummary },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListTestsResponse {

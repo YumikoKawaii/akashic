@@ -26,26 +26,55 @@ func (s *TestService) ListByBank(bankID int) ([]model.Test, error) {
 }
 
 type TestPage struct {
-	Data     []model.Test `json:"data"`
-	Total    int64        `json:"total"`
-	Page     int          `json:"page"`
-	PageSize int          `json:"page_size"`
+	Data      []model.Test                  `json:"data"`
+	Best      map[int]repository.BestResult `json:"-"` // caller's best per test id
+	Completed map[int]int                   `json:"-"` // completed-attempt count per test id
+	Summary   repository.TestsSummary       `json:"-"` // caller's standing across the bank
+	Total     int64                         `json:"total"`
+	Page      int                           `json:"page"`
+	PageSize  int                           `json:"page_size"`
 }
 
-// Tests are personal to their creator: every list/get/delete is scoped to the
-// calling user, so public-bank visitors can generate and manage their own
-// practice tests without seeing or touching anyone else's.
-// ListByBankPaged returns every test in the bank — tests are shared, so all
-// members (and public visitors) see them all.
-func (s *TestService) ListByBankPaged(bankID, page, pageSize int) (*TestPage, error) {
+// ListByBankPaged returns one page of the bank's shared tests — all members and
+// public visitors see them all. The page is sorted/filtered per q, each test
+// carries the caller's best completed attempt, and the summary aggregates the
+// caller's standing over the whole filtered bank (not just this page).
+func (s *TestService) ListByBankPaged(bankID int, q repository.TestListQuery) (*TestPage, error) {
 	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	ts, total, err := s.uow.Store().Tests.FindByBankPaged(bankID, page, pageSize)
+	store := s.uow.Store()
+	ts, total, err := store.Tests.FindByBankPaged(bankID, q)
 	if err != nil {
 		return nil, err
 	}
-	return &TestPage{Data: ts, Total: total, Page: page, PageSize: pageSize}, nil
+
+	ids := make([]int, len(ts))
+	for i := range ts {
+		ids[i] = ts[i].ID
+	}
+	best, err := store.Tests.BestResultsByUser(bankID, q.UserID, ids)
+	if err != nil {
+		return nil, err
+	}
+	completed, err := store.Tests.CompletedCounts(ids)
+	if err != nil {
+		return nil, err
+	}
+	summary, err := store.Tests.TestsSummary(bankID, q.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TestPage{
+		Data:      ts,
+		Best:      best,
+		Completed: completed,
+		Summary:   summary,
+		Total:     total,
+		Page:      q.Page,
+		PageSize:  q.PageSize,
+	}, nil
 }
 
 func (s *TestService) GetByID(bankID, id int) (*model.Test, error) {
