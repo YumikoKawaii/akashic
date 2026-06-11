@@ -124,14 +124,22 @@ func main() {
 
 	// ── Static frontend ────────────────────────────────────────────────────────
 	if cfg.StaticDir != "" {
-		mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(cfg.StaticDir+"/assets"))))
-		mux.Handle("/favicon/", http.StripPrefix("/favicon/", http.FileServer(http.Dir(cfg.StaticDir+"/favicon"))))
-		mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, cfg.StaticDir+"/favicon/favicon.ico")
-		})
-		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Asset filenames are content-hashed, so they can be cached forever;
+		// index.html must always revalidate so deploys take effect.
+		assets := http.StripPrefix("/assets/", http.FileServer(http.Dir(cfg.StaticDir+"/assets")))
+		mux.Handle("/assets/", withGzip(withCacheControl("public, max-age=31536000, immutable", assets)))
+
+		favicons := http.StripPrefix("/favicon/", http.FileServer(http.Dir(cfg.StaticDir+"/favicon")))
+		mux.Handle("/favicon/", withCacheControl("public, max-age=86400", favicons))
+		mux.Handle("/favicon.ico", withCacheControl("public, max-age=86400",
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				http.ServeFile(w, r, cfg.StaticDir+"/favicon/favicon.ico")
+			})))
+
+		index := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, cfg.StaticDir+"/index.html")
 		})
+		mux.Handle("/", withGzip(withCacheControl("no-cache", index)))
 	}
 
 	addr := fmt.Sprintf(":%s", cfg.ServerPort)
