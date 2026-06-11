@@ -271,6 +271,22 @@ func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTe
 	}
 
 	// ── Persist test ──────────────────────────────────────────────────────
+	// Snapshot the actual difficulty mix of the picked questions: passage
+	// mode requests zero counts and backfill can shift the standalone mix,
+	// so the requested counts may not reflect the test's real composition.
+	var easyN, mediumN, hardN int
+	for i := range picked {
+		switch picked[i].Difficulty {
+		case "easy":
+			easyN++
+		case "medium":
+			mediumN++
+		case "hard":
+			hardN++
+		}
+	}
+	config.EasyCount, config.MediumCount, config.HardCount = easyN, mediumN, hardN
+
 	test := &model.Test{
 		BankID:      bankID,
 		CreatedBy:   &input.UserID,

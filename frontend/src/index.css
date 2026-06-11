@@ -511,6 +511,7 @@ body {
 .difficulty-bar span {
   flex: 1; border-radius: 1px;
   background: var(--border-dim);
+  min-width: 8px; /* a 1-question slice of a huge test stays visible */
 }
 .difficulty-bar span.easy   { background: var(--easy);   box-shadow: 0 0 4px var(--easy); }
 .difficulty-bar span.medium { background: var(--medium); box-shadow: 0 0 4px var(--gold-light); }
