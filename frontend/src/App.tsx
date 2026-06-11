@@ -45,6 +45,9 @@ function ProtectedRoutes() {
 
       <Route path="/attempts/:bankId/:id" element={<AttemptPage />} />
       <Route path="/attempts/:bankId/:id/results" element={<ResultsPage />} />
+      {/* Unmatched URLs render nothing inside <Routes>, which looks like a
+          dead blank page — send them home instead. */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

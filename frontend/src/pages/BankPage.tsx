@@ -425,7 +425,7 @@ export default function BankPage() {
                           <button
                             className="btn btn-ghost"
                             style={{ fontSize: '0.6rem', padding: '4px 10px' }}
-                            onClick={() => navigate(`/banks/${bankId}/passages/${p.id}`)}
+                            onClick={() => navigate(`/banks/${bankId}/passages/${p.id}/edit`)}
                           >
                             Edit
                           </button>
