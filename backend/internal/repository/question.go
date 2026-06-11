@@ -11,6 +11,7 @@ import (
 type QuestionFilter struct {
 	CategoryIDs    []int
 	GroupID        *int
+	PassageID      *int // questions whose group belongs to this passage
 	Type           string
 	Types          []string
 	Difficulty     string
@@ -69,9 +70,15 @@ func (r *questionRepo) FindByBankPaged(bankID int, f QuestionFilter, page, pageS
 		return nil, 0, err
 	}
 
+	order := "created_at DESC"
+	if f.PassageID != nil {
+		// Passage view reads in document order, not recency.
+		order = "group_id ASC, position ASC, id ASC"
+	}
+
 	var qs []model.Question
-	err := base.Preload("Item").Preload("Choice").
-		Order("created_at DESC").
+	err := base.Preload("Item").Preload("Choice").Preload("Group").
+		Order(order).
 		Limit(pageSize).Offset((page - 1) * pageSize).
 		Find(&qs).Error
 	return qs, total, err
@@ -172,6 +179,9 @@ func applyQuestionFilter(q *gorm.DB, f QuestionFilter) *gorm.DB {
 	}
 	if f.GroupID != nil {
 		q = q.Where("group_id = ?", *f.GroupID)
+	}
+	if f.PassageID != nil {
+		q = q.Where("group_id IN (SELECT id FROM question_groups WHERE passage_id = ? AND deleted_at IS NULL)", *f.PassageID)
 	}
 	if f.Type != "" {
 		q = q.Where("type = ?", f.Type)

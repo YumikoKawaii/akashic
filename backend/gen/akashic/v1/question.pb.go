@@ -363,6 +363,7 @@ type QuestionFilter struct {
 	Type           QuestionType           `protobuf:"varint,3,opt,name=type,proto3,enum=akashic.v1.QuestionType" json:"type,omitempty"`
 	Tags           []string               `protobuf:"bytes,4,rep,name=tags,proto3" json:"tags,omitempty"`
 	StandaloneOnly bool                   `protobuf:"varint,5,opt,name=standalone_only,json=standaloneOnly,proto3" json:"standalone_only,omitempty"`
+	PassageId      *int32                 `protobuf:"varint,6,opt,name=passage_id,json=passageId,proto3,oneof" json:"passage_id,omitempty"` // questions whose group belongs to this passage
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -430,6 +431,13 @@ func (x *QuestionFilter) GetStandaloneOnly() bool {
 		return x.StandaloneOnly
 	}
 	return false
+}
+
+func (x *QuestionFilter) GetPassageId() int32 {
+	if x != nil && x.PassageId != nil {
+		return *x.PassageId
+	}
+	return 0
 }
 
 type ListQuestionsRequest struct {
@@ -1476,7 +1484,7 @@ const file_akashic_v1_question_proto_rawDesc = "" +
 	"\acontentB\v\n" +
 	"\t_group_idB\v\n" +
 	"\t_positionB\b\n" +
-	"\x06_group\"\xd6\x01\n" +
+	"\x06_group\"\x89\x02\n" +
 	"\x0eQuestionFilter\x12!\n" +
 	"\fcategory_ids\x18\x01 \x03(\x05R\vcategoryIds\x126\n" +
 	"\n" +
@@ -1484,7 +1492,10 @@ const file_akashic_v1_question_proto_rawDesc = "" +
 	"difficulty\x12,\n" +
 	"\x04type\x18\x03 \x01(\x0e2\x18.akashic.v1.QuestionTypeR\x04type\x12\x12\n" +
 	"\x04tags\x18\x04 \x03(\tR\x04tags\x12'\n" +
-	"\x0fstandalone_only\x18\x05 \x01(\bR\x0estandaloneOnly\"\x94\x01\n" +
+	"\x0fstandalone_only\x18\x05 \x01(\bR\x0estandaloneOnly\x12\"\n" +
+	"\n" +
+	"passage_id\x18\x06 \x01(\x05H\x00R\tpassageId\x88\x01\x01B\r\n" +
+	"\v_passage_id\"\x94\x01\n" +
 	"\x14ListQuestionsRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x122\n" +
 	"\x06filter\x18\x02 \x01(\v2\x1a.akashic.v1.QuestionFilterR\x06filter\x12\x12\n" +
@@ -1673,6 +1684,7 @@ func file_akashic_v1_question_proto_init() {
 		(*Question_Item)(nil),
 		(*Question_Choice)(nil),
 	}
+	file_akashic_v1_question_proto_msgTypes[3].OneofWrappers = []any{}
 	file_akashic_v1_question_proto_msgTypes[6].OneofWrappers = []any{
 		(*CreateQuestionRequest_Item)(nil),
 		(*CreateQuestionRequest_Choice)(nil),

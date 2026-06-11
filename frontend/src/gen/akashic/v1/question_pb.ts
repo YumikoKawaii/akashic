@@ -279,6 +279,13 @@ export class QuestionFilter extends Message<QuestionFilter> {
    */
   standaloneOnly = false;
 
+  /**
+   * questions whose group belongs to this passage
+   *
+   * @generated from field: optional int32 passage_id = 6;
+   */
+  passageId?: number;
+
   constructor(data?: PartialMessage<QuestionFilter>) {
     super();
     proto3.util.initPartial(data, this);
@@ -292,6 +299,7 @@ export class QuestionFilter extends Message<QuestionFilter> {
     { no: 3, name: "type", kind: "enum", T: proto3.getEnumType(QuestionType) },
     { no: 4, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
     { no: 5, name: "standalone_only", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 6, name: "passage_id", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QuestionFilter {

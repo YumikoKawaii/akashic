@@ -80,6 +80,24 @@ export function useQuestions(bankId: string, filter: QuestionFilter = {}, page =
   })
 }
 
+// Every question belonging to the passage's groups, in document order
+// (group, then position), each with its group embedded.
+export function usePassageQuestions(bankId: string, passageId: string) {
+  return useQuery({
+    queryKey: ['questions', bankId, 'passage', passageId] as const,
+    queryFn:  async () => {
+      const res = await questionClient.listQuestions({
+        bankId:   Number(bankId),
+        page:     1,
+        pageSize: 100,
+        filter:   { passageId: Number(passageId) },
+      })
+      return res.questions.map(fromQuestion)
+    },
+    enabled: !!bankId && !!passageId,
+  })
+}
+
 export function useQuestion(bankId: string, id: string) {
   return useQuery({
     queryKey: questionKeys.detail(bankId, id),

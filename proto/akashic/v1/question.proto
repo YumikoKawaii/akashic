@@ -59,6 +59,7 @@ message QuestionFilter {
   QuestionType      type = 3;
   repeated string   tags = 4;
   bool              standalone_only = 5;
+  optional int32    passage_id = 6; // questions whose group belongs to this passage
 }
 
 message ListQuestionsRequest {

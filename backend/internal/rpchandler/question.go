@@ -36,6 +36,10 @@ func (h *QuestionServiceHandler) ListQuestions(
 		f.Type = questionTypeFromProto(req.Msg.Filter.Type)
 		f.Tags = req.Msg.Filter.Tags
 		f.StandaloneOnly = req.Msg.Filter.StandaloneOnly
+		if req.Msg.Filter.PassageId != nil {
+			pid := int(*req.Msg.Filter.PassageId)
+			f.PassageID = &pid
+		}
 	}
 	page, pageSize := int(req.Msg.Page), int(req.Msg.PageSize)
 	if page <= 0 {
