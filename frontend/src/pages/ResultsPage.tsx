@@ -6,6 +6,7 @@ import OrnateDivider from '../components/ui/OrnateDivider'
 import Starfield from '../components/ui/Starfield'
 import { Spinner, MagicCircleBackground } from '../components/ui/MagicCircle'
 import QuestionCarousel from '../components/results/QuestionCarousel'
+import WaxSeal from '../components/ui/WaxSeal'
 
 function isCorrectAnswer(q: Question, userAns: string | undefined): boolean | null {
   if (!userAns) return false
@@ -74,8 +75,8 @@ export default function ResultsPage() {
             <div className="results-score" style={{ color: gradeColor }}>
               {score}<span style={{ fontSize: '2.5rem', color: 'var(--ink-dim)' }}>/{total}</span>
             </div>
-            <div style={{ marginTop: 12, fontFamily: 'Cinzel, serif', fontSize: '2rem', color: gradeColor, textShadow: `0 0 20px ${gradeColor}40` }}>
-              {grade}
+            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
+              <WaxSeal letter={grade} color={gradeColor} />
             </div>
             <div style={{ marginTop: 8, color: 'var(--ink-dim)', fontSize: '0.9rem' }}>
               {pct}% correct

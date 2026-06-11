@@ -366,7 +366,7 @@ function PassageBody({ passage }: { passage: Passage }) {
               {para.label}
             </span>
           )}
-          <span>{para.text}</span>
+          <span className={i === 0 ? 'drop-cap' : undefined}>{para.text}</span>
         </p>
       ))}
     </div>

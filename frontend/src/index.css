@@ -38,6 +38,21 @@ body {
   overflow: hidden;
 }
 
+/* Paper grain — one fixed translucent noise layer over everything, so panels
+   and background share the same parchment tooth. Kept faint enough that it
+   never competes with text. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  mix-blend-mode: multiply;
+}
+
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
@@ -183,6 +198,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 22px;
+  animation: page-in 0.3s ease both;
+}
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ─── Page header ─────────────────────────────────────────────── */
@@ -201,6 +221,16 @@ body {
   width: 60px; height: 1px;
   background: var(--gold);
   box-shadow: 0 0 8px rgba(200,160,48,0.5);
+}
+/* a small rotated diamond capping the gold accent line */
+.page-header::before {
+  content: '';
+  position: absolute;
+  bottom: -3.5px; left: 60px;
+  width: 6px; height: 6px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  box-shadow: 0 0 6px rgba(200,160,48,0.5);
 }
 
 .page-title {
@@ -223,6 +253,12 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+.section-title::before {
+  content: '✦';
+  font-size: 0.7rem;
+  color: var(--gold-dim);
+  letter-spacing: 0;
 }
 .section-title::after {
   content: '';
@@ -291,6 +327,25 @@ body {
 }
 .ornate-divider::before { background: linear-gradient(to right,  transparent, var(--border-dim)); }
 .ornate-divider::after  { background: linear-gradient(to left,   transparent, var(--border-dim)); }
+.ornate-divider-tick {
+  font-size: 0.42rem;
+  opacity: 0.65;
+}
+.ornate-divider-glyph {
+  text-shadow: 0 0 8px rgba(200,160,48,0.35);
+}
+
+/* ─── Drop cap — illuminated first letter of a passage ────────── */
+.drop-cap { display: block; }
+.drop-cap::first-letter {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 3.1em;
+  line-height: 0.8;
+  float: left;
+  margin: 5px 10px 0 0;
+  color: var(--gold);
+  text-shadow: 0 0 14px rgba(200,160,48,0.35);
+}
 
 /* ─── Buttons ─────────────────────────────────────────────────── */
 .btn {
