@@ -211,6 +211,15 @@ func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTe
 			"hard":   {"medium", "easy"},
 		}
 
+		// Explicit passages with no per-difficulty counts means "the whole
+		// passage": take every group the selected passages contain.
+		easyCount, mediumCount, hardCount := config.EasyCount, config.MediumCount, config.HardCount
+		if len(config.PassageIDs) > 0 && easyCount+mediumCount+hardCount <= 0 {
+			easyCount = len(groupPools["easy"])
+			mediumCount = len(groupPools["medium"])
+			hardCount = len(groupPools["hard"])
+		}
+
 		var groupUnits []selUnit
 		shortage := map[string]int{}
 
@@ -218,9 +227,9 @@ func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTe
 			diff  string
 			count int
 		}{
-			{"easy", config.EasyCount},
-			{"medium", config.MediumCount},
-			{"hard", config.HardCount},
+			{"easy", easyCount},
+			{"medium", mediumCount},
+			{"hard", hardCount},
 		} {
 			if b.count <= 0 {
 				continue
@@ -235,9 +244,9 @@ func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTe
 			diff  string
 			count int
 		}{
-			{"easy", config.EasyCount},
-			{"medium", config.MediumCount},
-			{"hard", config.HardCount},
+			{"easy", easyCount},
+			{"medium", mediumCount},
+			{"hard", hardCount},
 		} {
 			need := shortage[b.diff]
 			for _, bf := range backfillOrder[b.diff] {

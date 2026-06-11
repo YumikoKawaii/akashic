@@ -279,12 +279,13 @@ function PassageForm({ bank, passages }: { bank: Bank; passages: Passage[] }) {
       return
     }
 
-    const pIds   = toUse.map(p => p.id)
-    const groups = toUse.flatMap(p => p.groups ?? [])
+    const pIds = toUse.map(p => p.id)
+    // Zero counts + passage_ids → the backend includes every question group
+    // belonging to the selected passages.
     const config = {
-      easy_count:   groups.filter(g => g.difficulty === 'easy').length,
-      medium_count: groups.filter(g => g.difficulty === 'medium').length,
-      hard_count:   groups.filter(g => g.difficulty === 'hard').length,
+      easy_count:   0,
+      medium_count: 0,
+      hard_count:   0,
       passage_ids:  pIds,
     }
 

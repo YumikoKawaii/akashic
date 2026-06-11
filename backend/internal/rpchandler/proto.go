@@ -292,7 +292,13 @@ func passageToProto(p *model.Passage) *pb.Passage {
 	}
 }
 
+// paragraphsFromProto returns nil for an empty list: proto3 cannot tell an
+// absent repeated field from an empty one, and Update treats nil as "keep" —
+// so an edit that omits paragraphs must not wipe them.
 func paragraphsFromProto(pbs []*pb.PassageParagraph) []model.PassageParagraph {
+	if len(pbs) == 0 {
+		return nil
+	}
 	out := make([]model.PassageParagraph, len(pbs))
 	for i, p := range pbs {
 		out[i] = model.PassageParagraph{Label: p.Label, Text: p.Text}

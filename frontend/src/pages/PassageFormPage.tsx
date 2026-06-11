@@ -6,7 +6,7 @@ import { FormField, Input } from '../components/ui/FormField'
 import Select from '../components/ui/Select'
 import OrnatePanel from '../components/ui/OrnatePanel'
 import { Spinner } from '../components/ui/MagicCircle'
-import { QuestionDifficulty } from '../types'
+import { Passage, QuestionDifficulty } from '../types'
 
 const DIFF_OPTIONS = [
   { value: 'easy',   label: 'Easy' },
@@ -14,13 +14,12 @@ const DIFF_OPTIONS = [
   { value: 'hard',   label: 'Hard' },
 ]
 
+// Loader wrapper: the form below initialises its state from `existing`, so it
+// must not mount until the passage has loaded. Keeping the early return here
+// (above a component that owns the useState hooks) keeps hook order stable.
 export default function PassageFormPage() {
   const { bankId = '', passageId } = useParams<{ bankId: string; passageId?: string }>()
-  const navigate                   = useNavigate()
-  const { data: categories = [] }  = useCategories(bankId)
   const { data: existing }         = usePassage(bankId, passageId ?? '')
-  const create                     = useCreatePassage(bankId)
-  const update                     = useUpdatePassage(bankId)
 
   const isEdit = !!passageId
   if (isEdit && !existing) return (
@@ -28,6 +27,19 @@ export default function PassageFormPage() {
       <Spinner />
     </div>
   )
+
+  return <PassageForm bankId={bankId} passageId={passageId} existing={existing} />
+}
+
+function PassageForm({ bankId, passageId, existing }: {
+  bankId: string; passageId?: string; existing?: Passage
+}) {
+  const navigate                  = useNavigate()
+  const { data: categories = [] } = useCategories(bankId)
+  const create                    = useCreatePassage(bankId)
+  const update                    = useUpdatePassage(bankId)
+
+  const isEdit = !!passageId
 
   const [title,      setTitle]      = useState(existing?.title ?? '')
   const [difficulty, setDifficulty] = useState<QuestionDifficulty>(existing?.difficulty ?? 'medium')
