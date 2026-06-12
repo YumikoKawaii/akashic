@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { ConnectError, Code } from '@connectrpc/connect'
 import { useMembers, useAddMember, useRemoveMember } from '../../hooks/useBanks'
 import { useAuth } from '../../contexts/AuthContext'
 import { FormField, Input } from '../ui/FormField'
@@ -23,13 +24,20 @@ export default function ShareRecordDialog({ bankId, onClose }: { bankId: string;
   }, [onClose])
 
   const submit = async () => {
-    if (!email.trim()) return
+    if (!email.trim() || addMember.isPending) return
     try {
       await addMember.mutateAsync({ email: email.trim(), role })
       setEmail('')
       setError(null)
-    } catch {
-      setError('No user with that email — they must sign in once first.')
+    } catch (err) {
+      // Don't blame the email for every failure — only NotFound means that.
+      if (err instanceof ConnectError && err.code === Code.NotFound) {
+        setError('No user with that email — they must sign in once first.')
+      } else if (err instanceof ConnectError && err.code === Code.AlreadyExists) {
+        setError('That user is already a member of this record.')
+      } else {
+        setError('Adding the member failed — please try again.')
+      }
     }
   }
 
@@ -102,8 +110,8 @@ export default function ShareRecordDialog({ bankId, onClose }: { bankId: string;
                 </div>
                 <div className="flex items-center gap-3" style={{ flexShrink: 0 }}>
                   <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.12em', color: m.role === 'owner' ? 'var(--gold)' : 'var(--gold-dim)', textTransform: 'uppercase' }}>{m.role}</span>
-                  {m.user_id !== user?.id && (
-                    <button className="btn-danger" style={{ fontSize: '0.6rem', padding: '2px 6px' }} onClick={() => removeMember.mutate(m.user_id)}>✕</button>
+                  {m.user_id !== user?.id && m.role !== 'owner' && (
+                    <button className="btn-danger" style={{ fontSize: '0.6rem', padding: '2px 6px' }} disabled={removeMember.isPending} onClick={() => removeMember.mutate(m.user_id)}>✕</button>
                   )}
                 </div>
               </div>

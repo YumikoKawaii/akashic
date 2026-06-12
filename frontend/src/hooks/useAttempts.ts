@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { attemptClient } from '../api/connect'
 import { fromAttempt } from '../api/adapters'
+import { testKeys } from './useTests'
 
 export const attemptKeys = {
   detail:  (id: string)                              => ['attempts', id] as const,
@@ -60,6 +61,13 @@ export function useSubmitAttempt() {
       const res = await attemptClient.submitAttempt({ id: Number(id), answers, bankId: Number(bankId) })
       return fromAttempt(res.attempt!)
     },
-    onSuccess: (_, { id }) => qc.invalidateQueries({ queryKey: attemptKeys.detail(id) }),
+    onSuccess: (graded, { bankId, id }) => {
+      // The mutation already returns the graded attempt — seed the cache with it
+      // so the results page renders the real score immediately (no 0/0 flash).
+      qc.setQueryData(attemptKeys.detail(id), graded)
+      // Best-result badges, taken counts, and the history list are all stale now.
+      qc.invalidateQueries({ queryKey: attemptKeys.byTest(bankId, graded.test_id) })
+      qc.invalidateQueries({ queryKey: testKeys.lists(bankId) })
+    },
   })
 }

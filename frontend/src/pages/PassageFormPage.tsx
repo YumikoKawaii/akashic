@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useCategories } from '../hooks/useCategories'
+import { useBank } from '../hooks/useBanks'
 import { useCreatePassage, useUpdatePassage, usePassage } from '../hooks/usePassages'
 import { usePassageQuestions } from '../hooks/useQuestions'
 import QuestionCard from '../components/questions/QuestionCard'
@@ -40,16 +41,24 @@ const DIFF_COLORS: Record<string, { dot: string; border: string; bg: string }> =
 // (above a component that owns the useState hooks) keeps hook order stable.
 export default function PassageFormPage() {
   const { bankId = '', passageId } = useParams<{ bankId: string; passageId?: string }>()
-  const { data: existing }         = usePassage(bankId, passageId ?? '')
+  const { data: existing, isError } = usePassage(bankId, passageId ?? '')
 
   const isEdit = !!passageId
+
+  if (isEdit && isError) return (
+    <div className="flex items-center justify-center h-full" style={{ flexDirection: 'column', gap: 12, textAlign: 'center' }}>
+      <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>Passage Not Found</div>
+      <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>This passage could not be loaded — it may have been removed.</div>
+    </div>
+  )
+
   if (isEdit && !existing) return (
     <div className="flex items-center justify-center h-full">
       <Spinner />
     </div>
   )
 
-  return <PassageForm bankId={bankId} passageId={passageId} existing={existing} />
+  return <PassageForm key={existing?.id ?? 'new'} bankId={bankId} passageId={passageId} existing={existing} />
 }
 
 function PassageForm({ bankId, passageId, existing }: {
@@ -57,8 +66,11 @@ function PassageForm({ bankId, passageId, existing }: {
 }) {
   const navigate                  = useNavigate()
   const { data: categories = [] } = useCategories(bankId)
+  const { data: bank }            = useBank(bankId)
   const create                    = useCreatePassage(bankId)
   const update                    = useUpdatePassage(bankId)
+
+  const canEdit = bank?.my_role === 'owner' || bank?.my_role === 'editor'
 
   const isEdit = !!passageId
   const { data: questions = [], isLoading: questionsLoading } = usePassageQuestions(bankId, passageId ?? '')
@@ -67,6 +79,14 @@ function PassageForm({ bankId, passageId, existing }: {
   const [difficulty, setDifficulty] = useState<QuestionDifficulty>(existing?.difficulty ?? 'medium')
   const [categoryId, setCategoryId] = useState<number>(existing?.category_id ?? (categories[0]?.id ?? 0))
   const [paragraphs, setParagraphs] = useState<PassageParagraph[]>(existing?.paragraphs ?? [])
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  // Categories usually load after mount on the "new" page — adopt the first one
+  // once they arrive so the Save button isn't stuck disabled on category_id 0.
+  useEffect(() => {
+    if (!categoryId && categories.length) setCategoryId(categories[0].id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories])
 
   // Group the passage's questions by their question-group, in document order.
   const grouped = useMemo(() => {
@@ -89,18 +109,24 @@ function PassageForm({ bankId, passageId, existing }: {
     setParagraphs(ps => ps.filter((_, idx) => idx !== i))
 
   const handleSubmit = async () => {
+    if (isPending) return
+    setSubmitError(null)
     const payload = {
       title:       title.trim(),
       difficulty,
       category_id: categoryId,
       paragraphs:  paragraphs.filter(p => p.text.trim()),
     }
-    if (isEdit) {
-      await update.mutateAsync({ id: passageId!, data: payload })
-    } else {
-      await create.mutateAsync(payload)
+    try {
+      if (isEdit) {
+        await update.mutateAsync({ id: passageId!, data: payload })
+      } else {
+        await create.mutateAsync(payload)
+      }
+      navigate(`/banks/${bankId}?tab=passages`)
+    } catch (err: any) {
+      setSubmitError(err?.message ?? 'Saving failed — please try again.')
     }
-    navigate(`/banks/${bankId}?tab=passages`)
   }
 
   let questionIndex = 0
@@ -187,6 +213,12 @@ function PassageForm({ bankId, passageId, existing }: {
             )}
           </div>
 
+          {submitError && (
+            <div style={{ padding: '10px 14px', background: 'rgba(176,48,48,0.06)', border: '1px solid rgba(176,48,48,0.3)', fontSize: '0.85rem', color: '#b03030' }}>
+              {submitError}
+            </div>
+          )}
+
           <div className="flex gap-3 mt-2">
             <button className="btn btn-primary" onClick={handleSubmit} disabled={isPending || !title.trim() || !categoryId}>
               {isPending ? '…' : isEdit ? '⚔ Save Changes' : '⚔ Create Passage'}
@@ -239,7 +271,7 @@ function PassageForm({ bankId, passageId, existing }: {
                       </span>
                     </div>
                     <div className="flex flex-col gap-3">
-                      {qs.map(q => <QuestionCard key={q.id} question={q} index={questionIndex++} bankId={bankId} />)}
+                      {qs.map(q => <QuestionCard key={q.id} question={q} index={questionIndex++} bankId={bankId} canEdit={canEdit} />)}
                     </div>
                   </div>
                 )

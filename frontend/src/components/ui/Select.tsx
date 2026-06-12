@@ -12,12 +12,15 @@ interface Props {
   options: SelectOption[]
   placeholder?: string
   disabled?: boolean
+  // Re-clicking the selected option clears the value (''). Off by default —
+  // most call sites are required fields where an empty value is invalid.
+  clearable?: boolean
   triggerStyle?: React.CSSProperties
 }
 
 interface DropPos { top: number; left: number; width: number }
 
-export default function Select({ value, onChange, options, placeholder = '', disabled = false, triggerStyle }: Props) {
+export default function Select({ value, onChange, options, placeholder = '', disabled = false, clearable = false, triggerStyle }: Props) {
   const [open, setOpen]   = useState(false)
   const [pos,  setPos]    = useState<DropPos>({ top: 0, left: 0, width: 0 })
   const triggerRef        = useRef<HTMLButtonElement>(null)
@@ -110,7 +113,7 @@ export default function Select({ value, onChange, options, placeholder = '', dis
           {options.map(opt => (
             <div
               key={opt.value}
-              onClick={() => { onChange(opt.value === value ? '' : opt.value); setOpen(false) }}
+              onClick={() => { onChange(opt.value === value ? (clearable ? '' : opt.value) : opt.value); setOpen(false) }}
               style={{
                 padding: '8px 12px',
                 fontSize: '0.9rem',

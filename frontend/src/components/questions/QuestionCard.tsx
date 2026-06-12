@@ -17,9 +17,10 @@ interface Props {
   question: Question
   index: number
   bankId: string
+  canEdit: boolean
 }
 
-export default function QuestionCard({ question, index, bankId }: Props) {
+export default function QuestionCard({ question, index, bankId, canEdit }: Props) {
   const navigate   = useNavigate()
   const del        = useDeleteQuestion(bankId)
   const [confirming, setConfirming] = useState(false)
@@ -37,8 +38,8 @@ export default function QuestionCard({ question, index, bankId }: Props) {
     <>
     <div
       className="q-card"
-      style={{ animationDelay: `${Math.min(index * 0.05, 0.3)}s` }}
-      onClick={() => navigate(`/banks/${bankId}/questions/${question.id}/edit`)}
+      style={{ animationDelay: `${Math.min(index * 0.05, 0.3)}s`, cursor: canEdit ? 'pointer' : 'default' }}
+      onClick={() => canEdit && navigate(`/banks/${bankId}/questions/${question.id}/edit`)}
     >
       <RuneCorners color="var(--gold-dim)" opacity={0.55} />
       {/* Top-left — full circle, difficulty color */}
@@ -67,17 +68,19 @@ export default function QuestionCard({ question, index, bankId }: Props) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-1" onClick={e => e.stopPropagation()}>
-          <button
-            className="btn-icon"
-            onClick={() => navigate(`/banks/${bankId}/questions/${question.id}/edit`)}
-          >✎</button>
-          <button
-            className="btn-danger"
-            onClick={handleDelete}
-            disabled={del.isPending}
-          >✕</button>
-        </div>
+        {canEdit && (
+          <div className="flex flex-col gap-1" onClick={e => e.stopPropagation()}>
+            <button
+              className="btn-icon"
+              onClick={() => navigate(`/banks/${bankId}/questions/${question.id}/edit`)}
+            >✎</button>
+            <button
+              className="btn-danger"
+              onClick={handleDelete}
+              disabled={del.isPending}
+            >✕</button>
+          </div>
+        )}
       </div>
     </div>
 

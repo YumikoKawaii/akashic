@@ -36,8 +36,18 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
     return () => clearInterval(t)
   }, [autoRotate, paused, n, dragOffset])
 
+  // If a refetch returns fewer records (e.g. a public bank went private),
+  // keep the index inside the new bounds.
+  useEffect(() => {
+    if (n > 0) setActiveIndex(i => (i >= n ? 0 : i))
+  }, [n])
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // The home page autofocuses its search input — moving the text caret
+      // with arrow keys must not also spin the carousel.
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
       if (e.key === 'ArrowRight') setActiveIndex(i => mod(i + 1, n))
       if (e.key === 'ArrowLeft')  setActiveIndex(i => mod(i - 1, n))
     }
@@ -62,7 +72,8 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
       const rect   = e.currentTarget.getBoundingClientRect()
       const clickX = e.clientX - (rect.left + rect.width / 2)
       const slot   = Math.max(-2, Math.min(2, Math.round(clickX / SPACING)))
-      if (slot === 0) navigate(`/banks/${records[activeIndex].id}`)
+      const center = records[mod(activeIndex, n)]
+      if (slot === 0) { if (center) navigate(`/banks/${center.id}`) }
       else            setActiveIndex(i => mod(i + slot, n))
     } else {
       if (dragOffset < -70)      setActiveIndex(i => mod(i + 1, n))

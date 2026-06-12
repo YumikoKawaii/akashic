@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Category, ProposedQuestion, QuestionDifficulty, QuestionType, MCQOption } from '../../types'
 import { FormField, Input, Textarea } from '../ui/FormField'
 import Select from '../ui/Select'
@@ -33,30 +33,55 @@ const isMCQ = (t: QuestionType) => t === 'mcq'
 const isFillBlank = (t: QuestionType) => t === 'sentence_completion' || t === 'form_completion'
 
 export default function ProposedQuestionForm({ categories, initial, submitLabel, pending, onSubmit, onCancel }: Props) {
+  // Seed each stored option's text at its key's slot (a revised proposal may
+  // have non-contiguous keys, e.g. [A, C]) so the stored answer keys stay valid.
+  const seedMcqTexts = (): string[] => {
+    const arr = ['', '', '', '']
+    initial?.options?.forEach(o => {
+      const i = OPTION_KEYS.indexOf(o.key)
+      if (i >= 0) { while (arr.length <= i) arr.push(''); arr[i] = o.text }
+    })
+    return arr
+  }
+
   const [content,    setContent]    = useState(initial?.content ?? '')
   const [type,       setType]       = useState<QuestionType>(initial?.type ?? 'mcq')
   const [difficulty, setDifficulty] = useState<QuestionDifficulty>(initial?.difficulty ?? 'medium')
   const [categoryId, setCategoryId] = useState<number>(initial?.category_id ?? (categories[0]?.id ?? 0))
   const [tags,       setTags]       = useState(initial?.tags?.join(', ') ?? '')
   const [answer,     setAnswer]     = useState(initial?.answer ?? '')
-  const [mcqTexts,   setMcqTexts]   = useState<string[]>(initial?.options?.map(o => o.text) ?? ['', '', '', ''])
+  const [mcqTexts,   setMcqTexts]   = useState<string[]>(seedMcqTexts)
   const [mcqAnswers, setMcqAnswers] = useState<string[]>(initial?.answers ?? [])
 
+  // Adopt the first category once the async list arrives (new-proposal case).
+  useEffect(() => {
+    if (!categoryId && categories.length) setCategoryId(categories[0].id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories])
+
   const handleTypeChange = (t: QuestionType) => { setType(t); setAnswer(''); setMcqAnswers([]) }
-  const updateMcqText = (i: number, val: string) => setMcqTexts(prev => prev.map((o, idx) => idx === i ? val : o))
+  // Blanking an option's text also retires its answer key.
+  const updateMcqText = (i: number, val: string) => {
+    setMcqTexts(prev => prev.map((o, idx) => idx === i ? val : o))
+    if (!val.trim()) setMcqAnswers(prev => prev.filter(k => k !== OPTION_KEYS[i]))
+  }
   const toggleMcqAnswer = (key: string) => setMcqAnswers(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+
+  const survivingOptions: MCQOption[] = mcqTexts
+    .map((text, i) => ({ key: OPTION_KEYS[i], text: text.trim() }))
+    .filter(o => o.text)
+  const survivingAnswers = mcqAnswers.filter(k => survivingOptions.some(o => o.key === k))
 
   const valid = (() => {
     if (!content.trim() || !categoryId) return false
-    if (isMCQ(type)) return mcqTexts.some(t => t.trim()) && mcqAnswers.length > 0
+    if (isMCQ(type)) return survivingOptions.length > 0 && survivingAnswers.length > 0
     return !!answer.trim()
   })()
 
   const handleSubmit = () => {
     const tagList = tags.split(',').map(t => t.trim()).filter(Boolean)
     if (isMCQ(type)) {
-      const options: MCQOption[] = mcqTexts.map((text, i) => ({ key: OPTION_KEYS[i], text })).filter(o => o.text)
-      onSubmit({ category_id: categoryId, type, difficulty, tags: tagList, content, options, answers: mcqAnswers })
+      onSubmit({ category_id: categoryId, type, difficulty, tags: tagList, content, options: survivingOptions, answers: survivingAnswers })
     } else {
       onSubmit({ category_id: categoryId, type, difficulty, tags: tagList, content, answer })
     }

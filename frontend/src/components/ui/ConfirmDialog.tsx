@@ -9,14 +9,16 @@ interface Props {
 }
 
 export default function ConfirmDialog({ message, confirmLabel = 'Delete', onConfirm, onCancel }: Props) {
+  // No global Enter→confirm: Cancel is autofocused, so Enter would activate
+  // Cancel AND the window handler would confirm the destructive action anyway.
+  // Escape cancels; confirming requires clicking (or tabbing to) the button.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancel()
-      if (e.key === 'Enter') onConfirm()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onConfirm, onCancel])
+  }, [onCancel])
 
   return (
     <div

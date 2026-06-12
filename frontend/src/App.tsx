@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Layout from './components/layout/Layout'
@@ -40,7 +40,7 @@ function ProtectedRoutes() {
       </Route>
       <Route path="/banks" element={<Navigate to="/" replace />} />
       <Route element={<Layout />}>
-        <Route path="/banks/:bankId" element={<BankPage />} />
+        <Route path="/banks/:bankId" element={<BankPageKeyed />} />
         <Route path="/banks/:bankId/questions/new" element={<QuestionFormPage />} />
         <Route path="/banks/:bankId/questions/:questionId/edit" element={<QuestionFormPage />} />
         <Route path="/banks/:bankId/passages/new" element={<PassageFormPage />} />
@@ -70,6 +70,14 @@ export default function App() {
       </AuthProvider>
     </QueryClientProvider>
   )
+}
+
+// Switching records via the RecordSwitcher stays on the same route pattern, so
+// BankPage would otherwise keep its mounted state (tab, page, filters, import
+// banner) — and briefly show bank A's data under bank B's header. Remount per bank.
+function BankPageKeyed() {
+  const { bankId } = useParams<{ bankId: string }>()
+  return <BankPage key={bankId} />
 }
 
 // Redirect already-logged-in users away from login

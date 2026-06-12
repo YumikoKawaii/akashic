@@ -23,14 +23,25 @@ export default function ContributeTab({ bankId, categories }: { bankId: string; 
   const [composing, setComposing] = useState(false)
   const [editing,   setEditing]   = useState<number | null>(null)
   const [confirm,   setConfirm]   = useState<{ id: number; action: ContributorAction } | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const handleSubmit = async (proposed: ProposedQuestion) => {
-    await submit.mutateAsync(proposed)
-    setComposing(false)
+    try {
+      await submit.mutateAsync(proposed)
+      setComposing(false)
+      setFormError(null)
+    } catch {
+      setFormError('Submitting the proposal failed — please try again.')
+    }
   }
   const handleUpdate = async (id: number, proposed: ProposedQuestion) => {
-    await update.mutateAsync({ id, proposed })
-    setEditing(null)
+    try {
+      await update.mutateAsync({ id, proposed })
+      setEditing(null)
+      setFormError(null)
+    } catch {
+      setFormError('Saving the revision failed — please try again.')
+    }
   }
 
   const noCategories = categories.length === 0
@@ -88,6 +99,13 @@ export default function ContributeTab({ bankId, categories }: { bankId: string; 
       {noCategories && (
         <div style={{ color: 'var(--ink-dim)', fontSize: '0.85rem' }}>
           This bank has no categories yet, so questions can’t be proposed.
+        </div>
+      )}
+
+      {formError && (
+        <div style={{ padding: '10px 14px', background: 'rgba(176,48,48,0.06)', border: '1px solid rgba(176,48,48,0.3)', fontSize: '0.85rem', color: '#b03030', cursor: 'pointer' }}
+          onClick={() => setFormError(null)}>
+          {formError} <span style={{ opacity: 0.6 }}>✕</span>
         </div>
       )}
 

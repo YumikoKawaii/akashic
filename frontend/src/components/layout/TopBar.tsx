@@ -10,13 +10,21 @@ export default function TopBar() {
   const { user, logout } = useAuth()
   const [creating, setCreating] = useState(false)
   const [name, setName]         = useState('')
+  const [createError, setCreateError] = useState(false)
 
   const handleCreate = async () => {
-    if (!name.trim()) return
-    const bank = await createBank.mutateAsync({ name: name.trim() })
-    setName('')
-    setCreating(false)
-    navigate(`/banks/${bank.id}`)
+    // Guard re-entry: Enter in the input isn't disabled by isPending the way
+    // the Confirm button is, so a second Enter would create a duplicate record.
+    if (!name.trim() || createBank.isPending) return
+    try {
+      const bank = await createBank.mutateAsync({ name: name.trim() })
+      setName('')
+      setCreating(false)
+      setCreateError(false)
+      navigate(`/banks/${bank.id}`)
+    } catch {
+      setCreateError(true)
+    }
   }
 
   return (
@@ -41,17 +49,18 @@ export default function TopBar() {
           <>
             <input
               className="form-input"
-              style={{ width: 160, padding: '6px 10px' }}
+              style={{ width: 160, padding: '6px 10px', borderColor: createError ? '#b03030' : undefined }}
               placeholder="Record name…"
+              title={createError ? 'Creating the record failed — try again.' : undefined}
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={e => { setName(e.target.value); setCreateError(false) }}
               onKeyDown={e => e.key === 'Enter' && handleCreate()}
               autoFocus
             />
             <button className="btn btn-primary" onClick={handleCreate} disabled={createBank.isPending}>
-              Confirm
+              {createBank.isPending ? '…' : 'Confirm'}
             </button>
-            <button className="btn btn-ghost" onClick={() => setCreating(false)}>✕</button>
+            <button className="btn btn-ghost" onClick={() => { setCreating(false); setCreateError(false) }}>✕</button>
           </>
         ) : (
           <button className="btn btn-primary pulse" onClick={() => setCreating(true)}>

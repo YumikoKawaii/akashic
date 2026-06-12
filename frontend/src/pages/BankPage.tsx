@@ -44,9 +44,6 @@ const QUESTION_TYPES = [
   { value: 'matching_features',    label: 'Match Features' },
 ]
 
-const questionTypeLabel = (value: string) =>
-  QUESTION_TYPES.find(t => t.value === value)?.label ?? value
-
 const DIFF_COLORS = {
   easy:   { dot: '#2a8a3a', border: 'rgba(42,138,58,0.45)',   bg: 'rgba(42,138,58,0.07)' },
   medium: { dot: '#9a7018', border: 'rgba(154,112,24,0.45)',  bg: 'rgba(154,112,24,0.07)' },
@@ -97,7 +94,7 @@ export default function BankPage() {
   const [searchParams]        = useSearchParams()
 
   const { user }                   = useAuth()
-  const { data: bank }             = useBank(bankId)
+  const { data: bank, isError: bankError } = useBank(bankId)
   const { data: categories = [] }  = useCategories(bankId)
   const { data: passages = [] }    = usePassages(bankId)   // full list for GenerateTab
   const deletePassage              = useDeletePassage(bankId)
@@ -116,6 +113,9 @@ export default function BankPage() {
   ]
 
   const [tab,           setTab]           = useState<Tab>((searchParams.get('tab') as Tab) ?? 'questions')
+  // The URL param is unvalidated, and a role-mismatched tab (e.g. ?tab=review as
+  // a viewer) would otherwise render a blank content area with no active tab.
+  const activeTab: Tab = visibleTabs.includes(tab) ? tab : 'questions'
   const [filter,        setFilter]        = useState<QuestionFilter>({})
   const [page,          setPage]          = useState(1)
   const [passagePage,   setPassagePage]   = useState(1)
@@ -201,11 +201,24 @@ export default function BankPage() {
   const totalQ      = questionPage?.total     ?? 0
   const totalPages  = Math.max(1, Math.ceil(totalQ / (questionPage?.page_size ?? 20)))
 
+  // Deleting the last item on the last page leaves the page number out of
+  // range ("page 5/4", no rows) — clamp back onto the final page.
+  useEffect(() => { if (questionPage && page > totalPages) setPage(totalPages) }, [questionPage, page, totalPages])
+  useEffect(() => { if (testPageData && testPage > totalTestPages) setTestPage(totalTestPages) }, [testPageData, testPage, totalTestPages])
+
   const tabCount: Partial<Record<Tab, number>> = {
     questions: totalQ,
     passages:  totalPassages,
     tests:     totalTests,
   }
+
+  if (bankError) return (
+    <div className="flex items-center justify-center h-full" style={{ flexDirection: 'column', gap: 16, textAlign: 'center' }}>
+      <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>Record Unavailable</div>
+      <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>This record could not be loaded — it may have been removed, or you may not have access.</div>
+      <button className="btn btn-primary" onClick={() => navigate('/')} style={{ padding: '10px 28px' }}>Go Home</button>
+    </div>
+  )
 
   if (!bank) return (
     <div className="flex items-center justify-center h-full">
@@ -289,7 +302,7 @@ export default function BankPage() {
         {visibleTabs.map(t => (
           <button
             key={t}
-            className={`bank-tab ${tab === t ? 'active' : ''}`}
+            className={`bank-tab ${activeTab === t ? 'active' : ''}`}
             onClick={() => setTab(t)}
           >
             {TAB_LABELS[t]}
@@ -315,7 +328,7 @@ export default function BankPage() {
       )}
 
       {/* ── Questions tab ───────────────────────────────────────── */}
-      {tab === 'questions' && (
+      {activeTab === 'questions' && (
         <>
           <div className="flex gap-3 items-center flex-wrap">
             <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>Filter</span>
@@ -357,14 +370,19 @@ export default function BankPage() {
           <div className="flex flex-col gap-3">
             {questions.length === 0 ? (
               <div style={{ color: 'var(--ink-dim)', fontSize: '0.88rem', padding: '24px 0', textAlign: 'center' }}>
-                No questions found.{' '}
-                <span style={{ color: 'var(--gold)', cursor: 'pointer' }} onClick={() => navigate(`/banks/${bankId}/questions/new`)}>
-                  Add the first one →
-                </span>
+                No questions found.
+                {canEdit && (
+                  <>
+                    {' '}
+                    <span style={{ color: 'var(--gold)', cursor: 'pointer' }} onClick={() => navigate(`/banks/${bankId}/questions/new`)}>
+                      Add the first one →
+                    </span>
+                  </>
+                )}
               </div>
             ) : (
               questions.map((q, i) => (
-                <QuestionCard key={q.id} question={q} index={(page - 1) * 20 + i} bankId={bankId} />
+                <QuestionCard key={q.id} question={q} index={(page - 1) * 20 + i} bankId={bankId} canEdit={canEdit} />
               ))
             )}
           </div>
@@ -375,7 +393,7 @@ export default function BankPage() {
       )}
 
       {/* ── Passages tab ────────────────────────────────────────── */}
-      {tab === 'passages' && (
+      {activeTab === 'passages' && (
         <>
           <OrnateDivider />
           <div className="flex items-center justify-between">
@@ -416,8 +434,7 @@ export default function BankPage() {
                           </span>
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--ink-dim)' }}>
-                          {p.category?.name}{p.category?.name && ' · '}
-                          {p.groups?.length ?? 0} group{(p.groups?.length ?? 0) !== 1 ? 's' : ''}
+                          {p.paragraphs?.length ?? 0} paragraph{(p.paragraphs?.length ?? 0) !== 1 ? 's' : ''}
                         </div>
                       </div>
                       {canEdit && (
@@ -449,18 +466,6 @@ export default function BankPage() {
                       </p>
                     )}
 
-                    {p.groups && p.groups.length > 0 && (
-                      <div className="flex flex-wrap gap-1" style={{ marginTop: 4, position: 'relative', zIndex: 1 }}>
-                        {p.groups.map(g => {
-                          const gc = DIFF_COLORS[g.difficulty] ?? DIFF_COLORS.medium
-                          return (
-                            <span key={g.id} style={{ fontSize: '0.6rem', padding: '2px 7px', border: `1px solid ${gc.border}`, color: gc.dot, fontFamily: 'Cinzel, serif', background: gc.bg, letterSpacing: '0.06em' }}>
-                              {questionTypeLabel(g.type)} · {g.questions?.length ?? 0}q
-                            </span>
-                          )
-                        })}
-                      </div>
-                    )}
                   </div>
                 )
               })}
@@ -472,12 +477,12 @@ export default function BankPage() {
       )}
 
       {/* ── Generate tab ────────────────────────────────────────── */}
-      {tab === 'generate' && bank && (
+      {activeTab === 'generate' && bank && (
         <GenerateTab bank={bank} categories={categories} passages={passages} />
       )}
 
       {/* ── Tests tab ───────────────────────────────────────────── */}
-      {tab === 'tests' && (
+      {activeTab === 'tests' && (
         <>
           <OrnateDivider />
 
@@ -547,7 +552,7 @@ export default function BankPage() {
       )}
 
       {/* ── Contribute tab (viewers) ────────────────────────────── */}
-      {tab === 'contribute' && !canEdit && (
+      {activeTab === 'contribute' && !canEdit && (
         <>
           <OrnateDivider />
           <ContributeTab bankId={bankId} categories={categories} />
@@ -555,7 +560,7 @@ export default function BankPage() {
       )}
 
       {/* ── Review tab (editors+) ───────────────────────────────── */}
-      {tab === 'review' && canEdit && (
+      {activeTab === 'review' && canEdit && (
         <>
           <OrnateDivider />
           <ReviewTab bankId={bankId} categories={categories} />

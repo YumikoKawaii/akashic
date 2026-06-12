@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { ConnectError, Code } from '@connectrpc/connect'
 import { authClient, getToken, clearToken } from '../api/connect'
 import type { User } from '../types'
 
@@ -33,8 +34,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await authClient.getMe({})
       const u = res.user!
       setUser({ id: u.id, email: u.email, name: u.name, avatar_url: u.avatarUrl })
-    } catch {
-      clearToken()
+    } catch (err) {
+      // Only a rejected token means the session is over. A transient network
+      // failure or backend restart must not destroy a perfectly valid token.
+      if (err instanceof ConnectError && err.code === Code.Unauthenticated) clearToken()
       setUser(null)
     }
   }

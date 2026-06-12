@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Starfield from '../components/ui/Starfield'
 import { authClient } from '../api/connect'
 
@@ -17,6 +17,14 @@ function GoogleIcon() {
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
+
+  // Navigating Back from Google can restore this page from the bfcache exactly
+  // as it was frozen — mid-redirect, with the button stuck on "REDIRECTING…".
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => { if (e.persisted) setLoading(false) }
+    window.addEventListener('pageshow', onPageShow)
+    return () => window.removeEventListener('pageshow', onPageShow)
+  }, [])
 
   const handleGoogleLogin = async () => {
     setLoading(true)

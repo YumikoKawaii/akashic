@@ -8,9 +8,11 @@ import { Spinner, MagicCircleBackground } from '../components/ui/MagicCircle'
 import QuestionCarousel from '../components/results/QuestionCarousel'
 import WaxSeal from '../components/ui/WaxSeal'
 
-function isCorrectAnswer(q: Question, userAns: string | undefined): boolean | null {
+// Mirrors the backend grader (service/attempt.go) so the per-question marks
+// always sum to the official score shown above — including short answers,
+// which the backend grades by case-insensitive exact match.
+function isCorrectAnswer(q: Question, userAns: string | undefined): boolean {
   if (!userAns) return false
-  if (q.type === 'short_answer') return null // not auto-scored
   const got = userAns.trim()
   if (q.choice) {
     const want = [...q.choice.answers].sort()
@@ -24,6 +26,7 @@ function isCorrectAnswer(q: Question, userAns: string | undefined): boolean | nu
     case 'form_completion':
     case 'tf_ng':
     case 'yn_ng':
+    case 'short_answer':
       return got.toLowerCase() === want.toLowerCase()
     default:
       return got === want
@@ -33,7 +36,19 @@ function isCorrectAnswer(q: Question, userAns: string | undefined): boolean | nu
 export default function ResultsPage() {
   const { bankId = '', id = '' } = useParams<{ bankId: string; id: string }>()
   const navigate    = useNavigate()
-  const { data: attempt } = useAttempt(bankId, id)
+  const { data: attempt, isError } = useAttempt(bankId, id)
+
+  if (isError) return (
+    <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
+      <Starfield />
+      <MagicCircleBackground />
+      <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center', position: 'relative', zIndex: 1 }}>
+        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>Attempt Not Found</div>
+        <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>This attempt could not be loaded — it may have been removed, or you may not have access.</div>
+        <button className="btn btn-primary" onClick={() => navigate('/')} style={{ padding: '10px 28px' }}>Go Home</button>
+      </div>
+    </div>
+  )
 
   if (!attempt?.test) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>

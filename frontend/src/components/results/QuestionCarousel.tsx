@@ -104,6 +104,61 @@ function AnswerDetail({ question: q, userAnswer, correct }: Omit<CardData, 'inde
   return null
 }
 
+// ── Card frame ────────────────────────────────────────────────────────────────
+// Module-level on purpose: defined inside the component it would be a new
+// component type every render, so React would unmount/remount every card's DOM
+// on each state change (including every pointer-move while dragging), killing
+// the expand/collapse transitions and restarting the magic-circle animations.
+
+const rulerTicks = (totalH: number) =>
+  Array.from({ length: Math.floor((totalH - 36) / 4) + 1 }, (_, idx) => {
+    const y  = 18 + idx * 4
+    const w  = idx % 15 === 0 ? 5.5 : idx % 5 === 0 ? 3.5 : 1.5
+    const op = idx % 15 === 0 ? 0.65 : idx % 5 === 0 ? 0.5 : 0.3
+    return <line key={idx} x1={8 - w} y1={y} x2={8} y2={y} strokeWidth="0.7" strokeOpacity={op} />
+  })
+
+function CardShell({ h, children, isCenter: center, correct }: { h: number; children: React.ReactNode; isCenter: boolean; correct: boolean | null }) {
+  const frameColor = correct === false ? 'rgba(176,48,48,0.52)' : FRAME
+  const glowFilter = correct === false
+    ? 'drop-shadow(0 0 5px rgba(176,48,48,0.60)) drop-shadow(0 0 14px rgba(176,48,48,0.30))'
+    : 'drop-shadow(0 0 5px rgba(154,112,24,0.55)) drop-shadow(0 0 14px rgba(154,112,24,0.28))'
+  return (
+    <div style={{ filter: center ? glowFilter : undefined }}>
+      <div style={{ clipPath: CHAMFER, background: frameColor, padding: '1px' }}>
+        <div style={{ clipPath: CHAMFER, background: 'var(--bg-card)', height: h, position: 'relative', overflow: 'hidden' }}>
+          {/* Magic circle — 1/4 at BR corner */}
+          <div style={{
+            position: 'absolute', bottom: -204, right: -204,
+            width: 408, height: 408,
+            opacity: center ? 0.22 : 0.09,
+            color: 'var(--gold)', pointerEvents: 'none',
+          }}>
+            <MagicCircle variant="inner" speed={0.45} />
+          </div>
+          {/* Ruler */}
+          <svg aria-hidden="true"
+            style={{ position: 'absolute', top: 0, right: 3, pointerEvents: 'none' }}
+            width="11" height={h} fill="none" stroke={ACCENT} strokeLinecap="round"
+          >
+            <polygon points="5.5,6 8,10 5.5,14 3,10" fill={ACCENT} fillOpacity="0.5" stroke="none" />
+            <line x1="8" y1="16" x2="8" y2={h - 18} strokeWidth="0.65" strokeOpacity="0.4" />
+            {rulerTicks(h)}
+            <polygon points={`5.5,${h - 8} 8,${h - 12} 5.5,${h - 16} 3,${h - 12}`} fill={ACCENT} fillOpacity="0.5" stroke="none" />
+          </svg>
+          {/* Top accent bar */}
+          <div style={{
+            position: 'absolute', top: 0, left: '15%', right: '15%',
+            height: 2, background: `linear-gradient(90deg, transparent, ${ACCENT}, transparent)`,
+            pointerEvents: 'none',
+          }} />
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function QuestionCarousel({ cards }: Props) {
   const [activeIndex, setActiveIndex] = useState(0)
@@ -116,10 +171,13 @@ export default function QuestionCarousel({ cards }: Props) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
       if (isExpanded) {
         if (e.key === 'Escape') setIsExpanded(false)
         return
       }
+      if (n === 0) return
       if (e.key === 'ArrowRight') setActiveIndex(i => mod(i + 1, n))
       if (e.key === 'ArrowLeft')  setActiveIndex(i => mod(i - 1, n))
     }
@@ -173,54 +231,6 @@ export default function QuestionCarousel({ cards }: Props) {
   }
 
   const isLive = dragOffset !== 0
-
-  const rulerTicks = (totalH: number) =>
-    Array.from({ length: Math.floor((totalH - 36) / 4) + 1 }, (_, idx) => {
-      const y  = 18 + idx * 4
-      const w  = idx % 15 === 0 ? 5.5 : idx % 5 === 0 ? 3.5 : 1.5
-      const op = idx % 15 === 0 ? 0.65 : idx % 5 === 0 ? 0.5 : 0.3
-      return <line key={idx} x1={8 - w} y1={y} x2={8} y2={y} strokeWidth="0.7" strokeOpacity={op} />
-    })
-
-  const CardShell = ({ h, children, isCenter: center, correct }: { h: number; children: React.ReactNode; isCenter: boolean; correct: boolean | null }) => {
-    const frameColor = correct === false ? 'rgba(176,48,48,0.52)' : FRAME
-    const glowFilter = correct === false
-      ? 'drop-shadow(0 0 5px rgba(176,48,48,0.60)) drop-shadow(0 0 14px rgba(176,48,48,0.30))'
-      : 'drop-shadow(0 0 5px rgba(154,112,24,0.55)) drop-shadow(0 0 14px rgba(154,112,24,0.28))'
-    return (
-    <div style={{ filter: center ? glowFilter : undefined }}>
-      <div style={{ clipPath: CHAMFER, background: frameColor, padding: '1px' }}>
-        <div style={{ clipPath: CHAMFER, background: 'var(--bg-card)', height: h, position: 'relative', overflow: 'hidden' }}>
-          {/* Magic circle — 1/4 at BR corner */}
-          <div style={{
-            position: 'absolute', bottom: -204, right: -204,
-            width: 408, height: 408,
-            opacity: center ? 0.22 : 0.09,
-            color: 'var(--gold)', pointerEvents: 'none',
-          }}>
-            <MagicCircle variant="inner" speed={0.45} />
-          </div>
-          {/* Ruler */}
-          <svg aria-hidden="true"
-            style={{ position: 'absolute', top: 0, right: 3, pointerEvents: 'none' }}
-            width="11" height={h} fill="none" stroke={ACCENT} strokeLinecap="round"
-          >
-            <polygon points="5.5,6 8,10 5.5,14 3,10" fill={ACCENT} fillOpacity="0.5" stroke="none" />
-            <line x1="8" y1="16" x2="8" y2={h - 18} strokeWidth="0.65" strokeOpacity="0.4" />
-            {rulerTicks(h)}
-            <polygon points={`5.5,${h - 8} 8,${h - 12} 5.5,${h - 16} 3,${h - 12}`} fill={ACCENT} fillOpacity="0.5" stroke="none" />
-          </svg>
-          {/* Top accent bar */}
-          <div style={{
-            position: 'absolute', top: 0, left: '15%', right: '15%',
-            height: 2, background: `linear-gradient(90deg, transparent, ${ACCENT}, transparent)`,
-            pointerEvents: 'none',
-          }} />
-          {children}
-        </div>
-      </div>
-    </div>
-  )}
 
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>

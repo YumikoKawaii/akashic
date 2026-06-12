@@ -24,9 +24,17 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
   // history (all takers) is fetched lazily, only once History is expanded.
   const { data: attempts = [] } = useTestAttempts(bankId, test.id, showHistory)
 
+  const [startError, setStartError] = useState(false)
+
   const handleStart = async () => {
-    const attempt = await start.mutateAsync({ bankId, testId: test.id })
-    navigate(`/attempts/${bankId}/${attempt.id}`)
+    if (start.isPending) return
+    try {
+      setStartError(false)
+      const attempt = await start.mutateAsync({ bankId, testId: test.id })
+      navigate(`/attempts/${bankId}/${attempt.id}`)
+    } catch {
+      setStartError(true)
+    }
   }
 
   const cfg   = test.config
@@ -116,8 +124,14 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
           </>
         ) : (
           <>
-            <button className="btn btn-primary" style={{ fontSize: '0.6rem', padding: '6px 14px' }} onClick={handleStart} disabled={start.isPending}>
-              {start.isPending ? '…' : '▶ Start'}
+            <button
+              className="btn btn-primary"
+              style={{ fontSize: '0.6rem', padding: '6px 14px', borderColor: startError ? '#b03030' : undefined }}
+              title={startError ? 'Starting the attempt failed — try again.' : undefined}
+              onClick={handleStart}
+              disabled={start.isPending}
+            >
+              {start.isPending ? '…' : startError ? '↻ Retry' : '▶ Start'}
             </button>
             {completedCount > 0 && (
               <button

@@ -1,5 +1,5 @@
 import { createConnectTransport } from '@connectrpc/connect-web'
-import { createClient } from '@connectrpc/connect'
+import { createClient, ConnectError, Code } from '@connectrpc/connect'
 import { AuthService }          from '../gen/akashic/v1/auth_connect'
 import { BankService }          from '../gen/akashic/v1/bank_connect'
 import { CategoryService }      from '../gen/akashic/v1/category_connect'
@@ -31,7 +31,18 @@ const transport = createConnectTransport({
     (next) => async (req) => {
       const token = getToken()
       if (token) req.header.set('Authorization', `Bearer ${token}`)
-      return next(req)
+      try {
+        return await next(req)
+      } catch (err) {
+        // An expired/revoked JWT fails every call; without this, pages that
+        // gate rendering on data just spin forever. Drop the dead token and
+        // return to the login page.
+        if (err instanceof ConnectError && err.code === Code.Unauthenticated && token) {
+          clearToken()
+          if (window.location.pathname !== '/login') window.location.assign('/login')
+        }
+        throw err
+      }
     },
   ],
 })

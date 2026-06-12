@@ -46,7 +46,9 @@ export default function ContributionView({ contribution, categories, actions, on
 
   const submit = () => {
     const body = draft.trim()
-    if (!body || !onComment) return
+    // `commenting` guards the Enter path too — only the button is disabled
+    // while the mutation is pending, so Enter could double-post.
+    if (!body || !onComment || commenting) return
     onComment(body)
     setDraft('')
   }

@@ -192,13 +192,17 @@ function StandaloneForm({ bank, categories }: { bank: Bank; categories: Category
     const config = diffMode === 'count'
       ? (() => { const [e, m, h] = autoSplit(totalCount); return { easy_count: e, medium_count: m, hard_count: h, standalone_only: true, ...(categoryIds.length ? { category_ids: categoryIds } : {}), ...(types.length ? { types } : {}), ...(tags.length ? { tags } : {}) } })()
       : { easy_count: easy, medium_count: medium, hard_count: hard, standalone_only: true, ...(categoryIds.length ? { category_ids: categoryIds } : {}), ...(types.length ? { types } : {}), ...(tags.length ? { tags } : {}) }
-    const test = await generate.mutateAsync({ name: name.trim() || `${bank.name} — ${new Date().toLocaleString()}`, config })
-    if (!test.questions?.length) {
-      setGenError('No standalone questions found. Questions organised into passages cannot be used in Standalone mode — switch to Passage mode.')
-      return
+    try {
+      const test = await generate.mutateAsync({ name: name.trim() || `${bank.name} — ${new Date().toLocaleString()}`, config })
+      if (!test.questions?.length) {
+        setGenError('No standalone questions found. Questions organised into passages cannot be used in Standalone mode — switch to Passage mode.')
+        return
+      }
+      const attempt = await start.mutateAsync({ bankId: String(bank.id), testId: test.id })
+      navigate(`/attempts/${bank.id}/${attempt.id}`)
+    } catch {
+      setGenError('Generating the test failed — please try again.')
     }
-    const attempt = await start.mutateAsync({ bankId: String(bank.id), testId: test.id })
-    navigate(`/attempts/${bank.id}/${attempt.id}`)
   }
 
   return (
@@ -289,13 +293,17 @@ function PassageForm({ bank, passages }: { bank: Bank; passages: Passage[] }) {
       passage_ids:  pIds,
     }
 
-    const test = await generate.mutateAsync({ name: name.trim() || toUse.map(p => p.title).join(' + '), config })
-    if (!test.questions?.length) {
-      setGenError('No questions found for the selected passages.')
-      return
+    try {
+      const test = await generate.mutateAsync({ name: name.trim() || toUse.map(p => p.title).join(' + '), config })
+      if (!test.questions?.length) {
+        setGenError('No questions found for the selected passages.')
+        return
+      }
+      const attempt = await start.mutateAsync({ bankId: String(bank.id), testId: test.id })
+      navigate(`/attempts/${bank.id}/${attempt.id}`)
+    } catch {
+      setGenError('Generating the test failed — please try again.')
     }
-    const attempt = await start.mutateAsync({ bankId: String(bank.id), testId: test.id })
-    navigate(`/attempts/${bank.id}/${attempt.id}`)
   }
 
   return (

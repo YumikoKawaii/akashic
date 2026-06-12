@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Category, Question, QuestionDifficulty, QuestionType, MCQOption } from '../../types'
 import { FormField, Input, Textarea } from '../ui/FormField'
@@ -21,6 +21,15 @@ const TYPE_OPTIONS = [
   { value: 'short_answer',         label: 'Short Answer' },
 ]
 
+// Group-bound types can't be created standalone, but an existing question may
+// have one — shown read-only in edit mode.
+const ALL_TYPE_OPTIONS = [
+  ...TYPE_OPTIONS,
+  { value: 'matching_headings',    label: 'Matching Headings' },
+  { value: 'matching_information', label: 'Matching Information' },
+  { value: 'matching_features',    label: 'Matching Features' },
+]
+
 const DIFF_OPTIONS = [
   { value: 'easy',   label: 'Easy' },
   { value: 'medium', label: 'Medium' },
@@ -38,16 +47,34 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
   const update   = useUpdateQuestion(bankId)
   const isEdit   = !!initial
 
+  // Seed each stored option's text at its key's slot (an existing question may
+  // have non-contiguous keys, e.g. [A, C]) — otherwise the texts get re-keyed by
+  // index on save while the stored answer keys don't move, desyncing the two.
+  const seedMcqTexts = (): string[] => {
+    const arr = ['', '', '', '']
+    initial?.choice?.options.forEach(o => {
+      const i = OPTION_KEYS.indexOf(o.key)
+      if (i >= 0) { while (arr.length <= i) arr.push(''); arr[i] = o.text }
+    })
+    return arr
+  }
+
   const [content,      setContent]      = useState(initial?.item?.content ?? initial?.choice?.content ?? '')
   const [type,         setType]         = useState<QuestionType>(initial?.type ?? 'mcq')
   const [difficulty,   setDifficulty]   = useState<QuestionDifficulty>(initial?.difficulty ?? 'medium')
   const [categoryId,   setCategoryId]   = useState<number>(initial?.category_id ?? (categories[0]?.id ?? 0))
   const [tags,         setTags]         = useState(initial?.tags?.join(', ') ?? '')
   const [answer,       setAnswer]       = useState(initial?.item?.answer ?? '')
-  const [mcqTexts,     setMcqTexts]     = useState<string[]>(
-    initial?.choice?.options.map(o => o.text) ?? ['', '', '', '']
-  )
+  const [mcqTexts,     setMcqTexts]     = useState<string[]>(seedMcqTexts)
   const [mcqAnswers,   setMcqAnswers]   = useState<string[]>(initial?.choice?.answers ?? [])
+  const [submitError,  setSubmitError]  = useState<string | null>(null)
+
+  // Categories usually load after mount on the "new" page — adopt the first one
+  // once they arrive so the form doesn't submit category_id 0.
+  useEffect(() => {
+    if (!categoryId && categories.length) setCategoryId(categories[0].id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories])
 
   const handleTypeChange = (t: QuestionType) => {
     setType(t)
@@ -55,28 +82,46 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
     setMcqAnswers([])
   }
 
-  const updateMcqText = (i: number, val: string) =>
+  // Blanking an option's text also retires its answer key — a checked-then-
+  // cleared option must not survive as an invisible (unwinnable) correct answer.
+  const updateMcqText = (i: number, val: string) => {
     setMcqTexts(prev => prev.map((o, idx) => idx === i ? val : o))
+    if (!val.trim()) setMcqAnswers(prev => prev.filter(k => k !== OPTION_KEYS[i]))
+  }
 
   const toggleMcqAnswer = (key: string) =>
     setMcqAnswers(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
 
+  const survivingOptions: MCQOption[] = mcqTexts
+    .map((text, i) => ({ key: OPTION_KEYS[i], text: text.trim() }))
+    .filter(o => o.text)
+  const survivingAnswers = mcqAnswers.filter(k => survivingOptions.some(o => o.key === k))
+
+  const valid = (() => {
+    if (!content.trim() || !categoryId || !type) return false
+    if (isMCQ(type)) return survivingOptions.length > 0 && survivingAnswers.length > 0
+    return !!answer.trim()
+  })()
+
   const handleSubmit = async () => {
+    if (isPending || !valid) return
+    setSubmitError(null)
     const tagList = tags.split(',').map(t => t.trim()).filter(Boolean)
 
-    if (isMCQ(type)) {
-      const options: MCQOption[] = mcqTexts
-        .map((text, i) => ({ key: OPTION_KEYS[i], text }))
-        .filter(o => o.text)
-      const payload = { category_id: categoryId, type, difficulty, tags: tagList, content, options, answers: mcqAnswers }
-      if (isEdit) await update.mutateAsync({ id: String(initial!.id), data: payload })
-      else        await create.mutateAsync(payload)
-    } else {
-      const payload = { category_id: categoryId, type, difficulty, tags: tagList, content, answer }
-      if (isEdit) await update.mutateAsync({ id: String(initial!.id), data: payload })
-      else        await create.mutateAsync(payload)
+    try {
+      if (isMCQ(type)) {
+        const payload = { category_id: categoryId, type, difficulty, tags: tagList, content, options: survivingOptions, answers: survivingAnswers }
+        if (isEdit) await update.mutateAsync({ id: String(initial!.id), data: payload })
+        else        await create.mutateAsync(payload)
+      } else {
+        const payload = { category_id: categoryId, type, difficulty, tags: tagList, content, answer }
+        if (isEdit) await update.mutateAsync({ id: String(initial!.id), data: payload })
+        else        await create.mutateAsync(payload)
+      }
+      navigate(`/banks/${bankId}`)
+    } catch (err: any) {
+      setSubmitError(err?.message ?? 'Saving failed — please try again.')
     }
-    navigate(`/banks/${bankId}`)
   }
 
   const isPending = create.isPending || update.isPending
@@ -107,10 +152,14 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
             />
           </FormField>
           <FormField label="Type">
+            {/* The update RPC cannot change a question's type — the backend
+                writes into the shape the row already has, so a changed type
+                silently corrupted the question. Read-only in edit mode. */}
             <Select
               value={type}
               onChange={v => handleTypeChange(v as QuestionType)}
-              options={TYPE_OPTIONS}
+              options={isEdit ? ALL_TYPE_OPTIONS : TYPE_OPTIONS}
+              disabled={isEdit}
             />
           </FormField>
           <FormField label="Difficulty">
@@ -196,8 +245,14 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
           />
         </FormField>
 
+        {submitError && (
+          <div style={{ padding: '10px 14px', background: 'rgba(176,48,48,0.06)', border: '1px solid rgba(176,48,48,0.3)', fontSize: '0.85rem', color: '#b03030' }}>
+            {submitError}
+          </div>
+        )}
+
         <div className="flex gap-3 mt-2">
-          <button className="btn btn-primary" onClick={handleSubmit} disabled={isPending}>
+          <button className="btn btn-primary" onClick={handleSubmit} disabled={isPending || !valid}>
             {isPending ? '…' : isEdit ? '⚔ Save Changes' : '⚔ Create Question'}
           </button>
           <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}`)}>

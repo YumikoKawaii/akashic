@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useAttempt, useSubmitAttempt, useSaveAttemptProgress } from '../hooks/useAttempts'
 import { Passage, Question, QuestionGroup, TestQuestion } from '../types'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
@@ -309,15 +309,16 @@ function AnswerOptions({ q, selected, onSelect, revealed = false, attemptId = 0 
   }
 
   if (q.type === 'matching_headings' && ctx?.headings?.length) {
-    const correct = q.item?.answer ?? ''
-    const isCorr  = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
+    const correct   = q.item?.answer ?? ''
+    const isCorr    = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
+    const corrLabel = ctx.headings.find(h => h.key.toLowerCase() === correct.toLowerCase())
     return (
       <div style={{ width: '100%' }}>
         <Select value={selected} onChange={val => !locked && onSelect(val)}
-          options={ctx.headings.map(h => ({ value: h.text, label: `${h.key}. ${h.text}` }))}
-          placeholder="— Select a heading —" disabled={locked}
+          options={ctx.headings.map(h => ({ value: h.key, label: `${h.key}. ${h.text}` }))}
+          placeholder="— Select a heading —" disabled={locked} clearable
           triggerStyle={locked ? { borderColor: isCorr ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorr ? '#2a8a3a' : '#b03030' } : undefined} />
-        {locked && !isCorr && <CorrectAnswerBox answer={correct} />}
+        {locked && !isCorr && <CorrectAnswerBox answer={`${correct}${corrLabel ? ` — ${corrLabel.text}` : ''}`} />}
       </div>
     )
   }
@@ -331,7 +332,7 @@ function AnswerOptions({ q, selected, onSelect, revealed = false, attemptId = 0 
       <div style={{ width: '100%' }}>
         <Select value={selected} onChange={val => !locked && onSelect(val)}
           options={opts.map(o => ({ value: o.key, label: `${o.key}. ${o.text}` }))}
-          placeholder="— Select —" disabled={locked}
+          placeholder="— Select —" disabled={locked} clearable
           triggerStyle={locked ? { borderColor: isCorr ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorr ? '#2a8a3a' : '#b03030' } : undefined} />
         {locked && !isCorr && <CorrectAnswerBox answer={`${correct}${corrLabel ? ` — ${corrLabel.text}` : ''}`} />}
       </div>
@@ -375,7 +376,7 @@ function PassageBody({ passage }: { passage: Passage }) {
 
 // ── Passage layout ─────────────────────────────────────────────────────────────
 
-interface GroupedSection { groupId: number; group: QuestionGroup; items: TestQuestion[] }
+interface GroupedSection { groupId: number; group?: QuestionGroup; items: TestQuestion[] }
 
 function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmit, isPending }: {
   attempt: any
@@ -385,17 +386,26 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
   onSubmit: () => void
   isPending: boolean
 }) {
-  const passage = useMemo(() =>
-    questions.find(tq => tq.question?.group?.passage)?.question?.group?.passage,
-  [questions])
+  // A test may span several passages ("Passage A + Passage B") — show all of them.
+  const passages = useMemo(() => {
+    const seen = new Map<number, Passage>()
+    questions.forEach(tq => {
+      const p = tq.question?.group?.passage
+      if (p && !seen.has(p.id)) seen.set(p.id, p)
+    })
+    return [...seen.values()]
+  }, [questions])
 
+  // Group questions into sections; standalone questions (no group) get a
+  // trailing section of their own rather than disappearing from the page.
   const sections: GroupedSection[] = useMemo(() => {
     const map = new Map<number, GroupedSection>()
     questions.forEach(tq => {
       const q = tq.question
-      if (!q?.group_id) return
-      if (!map.has(q.group_id)) map.set(q.group_id, { groupId: q.group_id, group: q.group!, items: [] })
-      map.get(q.group_id)!.items.push(tq)
+      if (!q) return
+      const gid = q.group_id ?? 0
+      if (!map.has(gid)) map.set(gid, { groupId: gid, group: q.group, items: [] })
+      map.get(gid)!.items.push(tq)
     })
     return [...map.values()]
       .map(s => ({ ...s, items: [...s.items].sort((a, b) => a.position - b.position) }))
@@ -438,15 +448,15 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
         <div className="passage-panel-left">
           <OghamBorder side="right" color="var(--gold-dim)" opacity={0.30} />
 
-          {passage && (
-            <>
+          {passages.map((passage, pi) => (
+            <div key={passage.id} style={{ marginTop: pi > 0 ? 36 : 0 }}>
               <div style={{ position: 'relative', marginBottom: 6 }}>
                 {/* accent circle top-right */}
                 <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, color: 'var(--gold)', opacity: 0.20, pointerEvents: 'none' }}>
                   <MagicCircle variant="spark" speed={2} />
                 </div>
                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.18em', color: 'var(--gold-dim)', marginBottom: 8, textTransform: 'uppercase', position: 'relative' }}>
-                  Passage
+                  Passage{passages.length > 1 ? ` ${pi + 1} of ${passages.length}` : ''}
                 </div>
                 <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'var(--ink)', lineHeight: 1.4, position: 'relative', marginBottom: 14 }}>
                   {passage.title}
@@ -456,8 +466,8 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
               <div style={{ marginTop: 18 }}>
                 <PassageBody passage={passage} />
               </div>
-            </>
-          )}
+            </div>
+          ))}
         </div>
 
         {/* Right — questions */}
@@ -478,7 +488,7 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
               <div style={{ position: 'absolute', top: -18, left: -18, width: 42, height: 42, color: 'var(--gold)', opacity: 0.30, pointerEvents: 'none' }}>
                 <MagicCircle variant="sigil" speed={2} />
               </div>
-              <GroupContextBox group={group} />
+              {group && <GroupContextBox group={group} />}
               {items.map((tq) => {
                 const q = tq.question!
                 const sel = answers[String(q.id)] ?? ''
@@ -720,11 +730,12 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
 export default function AttemptPage() {
   const { bankId = '', id = '' } = useParams<{ bankId: string; id: string }>()
   const navigate          = useNavigate()
-  const { data: attempt } = useAttempt(bankId, id)
+  const { data: attempt, isError } = useAttempt(bankId, id)
   const submit            = useSubmitAttempt()
   const saveProgress      = useSaveAttemptProgress()
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [hydrated, setHydrated] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   // Seed local answers from the server once per attempt, so a reload resumes
   // exactly where the taker left off. We hold rendering until this runs (see the
@@ -751,7 +762,9 @@ export default function AttemptPage() {
   useEffect(() => {
     if (!attempt || completed || submittedRef.current) return
     if (seededFor.current !== attempt.id || !dirtyRef.current) return
-    const t = setTimeout(() => { saveProgress.mutate({ bankId, id, answers }) }, 700)
+    // Re-check submittedRef when the timer fires — Submit may have happened
+    // inside the debounce window.
+    const t = setTimeout(() => { if (!submittedRef.current) saveProgress.mutate({ bankId, id, answers }) }, 700)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answers, completed])
@@ -770,6 +783,18 @@ export default function AttemptPage() {
     setAnswers(action)
   }
 
+  if (isError) return (
+    <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
+      <Starfield />
+      <SolarSystemBackground />
+      <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center', position: 'relative', zIndex: 1 }}>
+        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>Attempt Not Found</div>
+        <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>This attempt could not be loaded — it may have been removed, or you may not have access.</div>
+        <button className="btn btn-primary" onClick={() => navigate('/')} style={{ padding: '10px 28px' }}>Go Home</button>
+      </div>
+    </div>
+  )
+
   if (!attempt?.test || !hydrated) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <Starfield />
@@ -777,6 +802,11 @@ export default function AttemptPage() {
       <Spinner size={100} />
     </div>
   )
+
+  // A completed attempt is read-only — navigating back to it (e.g. browser Back
+  // from the results page) shows the results, not a live exam whose Submit
+  // would only be rejected by the server.
+  if (completed) return <Navigate to={`/attempts/${bankId}/${id}/results`} replace />
 
   const questions = attempt.test.questions ?? []
   const total     = questions.length
@@ -795,14 +825,51 @@ export default function AttemptPage() {
   const isPassageTest = questions.some(tq => !!tq.question?.group?.passage_id)
 
   const handleSubmit = async () => {
+    if (submit.isPending || submittedRef.current) return
     submittedRef.current = true
-    await submit.mutateAsync({ bankId, id, answers })
-    navigate(`/attempts/${bankId}/${id}/results`)
+    try {
+      await submit.mutateAsync({ bankId, id, answers })
+      navigate(`/attempts/${bankId}/${id}/results`)
+    } catch {
+      // Re-arm autosave and let the taker retry instead of dying silently.
+      submittedRef.current = false
+      setSubmitError('Submission failed — check your connection and try again.')
+    }
   }
+
+  const errorBanner = submitError && (
+    <div
+      onClick={() => setSubmitError(null)}
+      style={{
+        position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 200,
+        padding: '10px 18px', background: 'rgba(176,48,48,0.95)', color: '#fff',
+        fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+      }}
+    >
+      {submitError} <span style={{ opacity: 0.7 }}>✕</span>
+    </div>
+  )
 
   if (isPassageTest) {
     return (
-      <PassageAttemptLayout
+      <>
+        {errorBanner}
+        <PassageAttemptLayout
+          attempt={attempt}
+          questions={questions}
+          answers={answers}
+          setAnswers={updateAnswers}
+          onSubmit={handleSubmit}
+          isPending={submit.isPending}
+        />
+      </>
+    )
+  }
+
+  return (
+    <>
+      {errorBanner}
+      <ExamLayout
         attempt={attempt}
         questions={questions}
         answers={answers}
@@ -810,17 +877,6 @@ export default function AttemptPage() {
         onSubmit={handleSubmit}
         isPending={submit.isPending}
       />
-    )
-  }
-
-  return (
-    <ExamLayout
-      attempt={attempt}
-      questions={questions}
-      answers={answers}
-      setAnswers={updateAnswers}
-      onSubmit={handleSubmit}
-      isPending={submit.isPending}
-    />
+    </>
   )
 }
