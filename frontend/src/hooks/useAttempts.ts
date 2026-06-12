@@ -42,8 +42,12 @@ export function useStartAttempt() {
     },
     // The response already carries the full attempt (test + questions). Seed the
     // detail cache so the attempt page renders instantly instead of spinning
-    // through a redundant refetch of what we were just handed.
-    onSuccess: (attempt) => qc.setQueryData(attemptKeys.detail(String(attempt.id)), attempt),
+    // through a redundant refetch of what we were just handed. Guarded on
+    // `test`: an older backend returns a bare attempt, and seeding that would
+    // strand the attempt page on its !test gate with a fresh cache entry.
+    onSuccess: (attempt) => {
+      if (attempt.test) qc.setQueryData(attemptKeys.detail(String(attempt.id)), attempt)
+    },
   })
 }
 
