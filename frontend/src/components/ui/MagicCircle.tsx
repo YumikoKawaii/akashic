@@ -170,7 +170,7 @@ export default function MagicCircle({ style, className, variant = 'full', speed 
 
 export function Spinner({ size = 80 }: { size?: number }) {
   return (
-    <div style={{ width: size, height: size, color: 'var(--gold-dim)', flexShrink: 0 }}>
+    <div className="spinner-delayed" style={{ width: size, height: size, color: 'var(--gold-dim)', flexShrink: 0 }}>
       <MagicCircle />
     </div>
   )
