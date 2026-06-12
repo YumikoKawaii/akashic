@@ -11,7 +11,7 @@ import QuestionFormPage from './pages/QuestionFormPage'
 import PassageFormPage from './pages/PassageFormPage'
 import AttemptPage from './pages/AttemptPage'
 import ResultsPage from './pages/ResultsPage'
-import { Spinner, MagicCircleBackground } from './components/ui/MagicCircle'
+import { MagicCircleBackground } from './components/ui/MagicCircle'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -20,10 +20,14 @@ const queryClient = new QueryClient({
 function ProtectedRoutes() {
   const { user, loading } = useAuth()
 
+  // Auth resolves almost instantly (token read from localStorage), so this
+  // splash flashes for only a frame or two on reload. Render the SAME
+  // right-anchored background circle the loaded Layout uses (leftOffset={0}),
+  // with no extra centered spinner — otherwise reload pops a second,
+  // differently-positioned detailed magic circle that then vanishes.
   if (loading) return (
-    <div className="flex items-center justify-center" style={{ minHeight: '100vh', flexDirection: 'column', gap: 20 }}>
-      <MagicCircleBackground />
-      <Spinner size={100} />
+    <div style={{ minHeight: '100vh' }}>
+      <MagicCircleBackground leftOffset={0} />
     </div>
   )
 
