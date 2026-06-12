@@ -33,7 +33,13 @@ func (s *AttemptService) Start(bankID, testID, userID int) (*model.TestAttempt, 
 		Answers:   map[string]string{},
 		StartedAt: time.Now(),
 	}
-	return attempt, s.repo.Create(attempt)
+	if err := s.repo.Create(attempt); err != nil {
+		return nil, err
+	}
+	// Re-read with the full preload chain so the response carries the same
+	// shape GetAttempt serves (test + ordered questions) — the client renders
+	// the exam straight from this response instead of refetching it.
+	return s.repo.FindByID(attempt.ID)
 }
 
 func (s *AttemptService) GetByID(bankID, id int) (*model.TestAttempt, error) {

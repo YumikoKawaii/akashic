@@ -34,11 +34,16 @@ export function useTestAttempts(bankId: string, testId: number | string, enabled
 }
 
 export function useStartAttempt() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ bankId, testId }: { bankId: string; testId: number | string }) => {
       const res = await attemptClient.startAttempt({ bankId: Number(bankId), testId: Number(testId) })
       return fromAttempt(res.attempt!)
     },
+    // The response already carries the full attempt (test + questions). Seed the
+    // detail cache so the attempt page renders instantly instead of spinning
+    // through a redundant refetch of what we were just handed.
+    onSuccess: (attempt) => qc.setQueryData(attemptKeys.detail(String(attempt.id)), attempt),
   })
 }
 
