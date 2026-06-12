@@ -6,7 +6,7 @@ import OrnateDivider from '../components/ui/OrnateDivider'
 import Starfield from '../components/ui/Starfield'
 import { Spinner, MagicCircleBackground } from '../components/ui/MagicCircle'
 import QuestionCarousel from '../components/results/QuestionCarousel'
-import WaxSeal from '../components/ui/WaxSeal'
+import GradeStamp from '../components/ui/GradeStamp'
 
 // Mirrors the backend grader (service/attempt.go) so the per-question marks
 // always sum to the official score shown above — including short answers,
@@ -91,7 +91,7 @@ export default function ResultsPage() {
               {score}<span style={{ fontSize: '2.5rem', color: 'var(--ink-dim)' }}>/{total}</span>
             </div>
             <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
-              <WaxSeal letter={grade} color={gradeColor} />
+              <GradeStamp letter={grade} color={gradeColor} />
             </div>
             <div style={{ marginTop: 8, color: 'var(--ink-dim)', fontSize: '0.9rem' }}>
               {pct}% correct
