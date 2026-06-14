@@ -23,4 +23,10 @@ services:
       GOOGLE_CALLBACK_URL:  ${GOOGLE_CALLBACK_URL}
       JWT_SECRET:           ${JWT_SECRET}
       FRONTEND_URL:         ${FRONTEND_URL}
+    networks:
+      - infra
     restart: unless-stopped
+
+networks:
+  infra:
+    external: true
