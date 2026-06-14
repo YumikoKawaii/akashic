@@ -1,29 +1,6 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER:     ${DB_USER:-akashic}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-akashic}
-      POSTGRES_DB:       ${DB_NAME:-akashic}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "${DB_PORT:-5432}:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-akashic}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-
   app:
     image: yumikokawaii/akashic:latest
     build:
@@ -32,13 +9,13 @@ services:
     ports:
       - "${SERVER_PORT:-8080}:8080"
     environment:
-      DB_HOST:     postgres
-      DB_PORT:     5432
+      DB_HOST:     ${DB_HOST:-postgres}
+      DB_PORT:     ${DB_PORT:-5432}
       DB_USER:     ${DB_USER:-akashic}
       DB_PASSWORD: ${DB_PASSWORD:-akashic}
       DB_NAME:     ${DB_NAME:-akashic}
-      REDIS_HOST:  redis
-      REDIS_PORT:  6379
+      REDIS_HOST:  ${REDIS_HOST:-redis}
+      REDIS_PORT:  ${REDIS_PORT:-6379}
       SERVER_PORT: 8080
       STATIC_DIR:  ./static
       GOOGLE_CLIENT_ID:     ${GOOGLE_CLIENT_ID}
@@ -46,13 +23,4 @@ services:
       GOOGLE_CALLBACK_URL:  ${GOOGLE_CALLBACK_URL}
       JWT_SECRET:           ${JWT_SECRET}
       FRONTEND_URL:         ${FRONTEND_URL}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
     restart: unless-stopped
-
-volumes:
-  postgres_data:
-  redis_data:
