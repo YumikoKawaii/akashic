@@ -4,6 +4,7 @@ import { Test } from '../../types'
 import DifficultyBar from '../ui/DifficultyBar'
 import { useDeleteTest } from '../../hooks/useTests'
 import { useStartAttempt, useTestAttempts } from '../../hooks/useAttempts'
+import { useAuth } from '../../contexts/AuthContext'
 import MagicCircle from '../ui/MagicCircle'
 import RuneCorners from '../ui/RuneCorners'
 import { GRADE_COLOR, gradeForPct } from './grade'
@@ -16,15 +17,21 @@ interface Props { test: Test; bankId: string; canDelete?: boolean }
 
 export default function TestCard({ test, bankId, canDelete }: Props) {
   const navigate    = useNavigate()
+  const { user }    = useAuth()
   const del         = useDeleteTest(bankId)
   const start       = useStartAttempt()
   const [showHistory,  setShowHistory]  = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  // The best-result badge comes from the list response; the per-test attempt
-  // history (all takers) is fetched lazily, only once History is expanded.
-  const { data: attempts = [] } = useTestAttempts(bankId, test.id, showHistory)
+  // Always fetch attempts so we can detect in-progress ones for the current user.
+  // History panel uses the same data — no extra request when expanded.
+  const { data: attempts = [] } = useTestAttempts(bankId, test.id)
 
   const [startError, setStartError] = useState(false)
+
+  // The current user's in-progress attempt, if any (at most one meaningful one).
+  const myInProgress = user
+    ? attempts.find(a => !a.completed_at && a.user_id === user.id)
+    : undefined
 
   const handleStart = async () => {
     if (start.isPending) return
@@ -37,12 +44,16 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
     }
   }
 
+  const handleResume = () => {
+    if (myInProgress) navigate(`/attempts/${bankId}/${myInProgress.id}`)
+  }
+
   const cfg   = test.config
   const total = (cfg.easy_count ?? 0) + (cfg.medium_count ?? 0) + (cfg.hard_count ?? 0)
 
-  const completed     = attempts.filter(a => a.completed_at)
+  const completed      = attempts.filter(a => a.completed_at)
   const completedCount = test.attempt_count ?? 0 // History count from the list response
-  const result        = test.best_result
+  const result         = test.best_result
     ? { ...test.best_result, grade: gradeForPct(test.best_result.pct) }
     : null
 
@@ -124,15 +135,26 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
           </>
         ) : (
           <>
-            <button
-              className="btn btn-primary"
-              style={{ fontSize: '0.6rem', padding: '6px 14px', borderColor: startError ? '#b03030' : undefined }}
-              title={startError ? 'Starting the attempt failed — try again.' : undefined}
-              onClick={handleStart}
-              disabled={start.isPending}
-            >
-              {start.isPending ? '…' : startError ? '↻ Retry' : '▶ Start'}
-            </button>
+            {myInProgress ? (
+              <button
+                className="btn btn-primary"
+                style={{ fontSize: '0.6rem', padding: '6px 14px', borderColor: 'rgba(107,76,138,0.6)', background: 'rgba(107,76,138,0.08)', color: '#6b4c8a' }}
+                onClick={handleResume}
+                title="You have an in-progress attempt — continue where you left off."
+              >
+                ↻ Resume
+              </button>
+            ) : (
+              <button
+                className="btn btn-primary"
+                style={{ fontSize: '0.6rem', padding: '6px 14px', borderColor: startError ? '#b03030' : undefined }}
+                title={startError ? 'Starting the attempt failed — try again.' : undefined}
+                onClick={handleStart}
+                disabled={start.isPending}
+              >
+                {start.isPending ? '…' : startError ? '↻ Retry' : '▶ Start'}
+              </button>
+            )}
             {completedCount > 0 && (
               <button
                 className="btn btn-ghost"
@@ -153,8 +175,35 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
         )}
       </div>
 
-      {showHistory && completed.length > 0 && (
+      {showHistory && (completed.length > 0 || attempts.some(a => !a.completed_at)) && (
         <div style={{ marginTop: 10, borderTop: '1px solid var(--border-dim)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {/* In-progress attempts — shown at top so they're easy to spot */}
+          {attempts.filter(a => !a.completed_at).map(a => {
+            const answered = Object.values(a.answers ?? {}).filter(Boolean).length
+            const date = new Date(a.started_at).toLocaleString('en-GB', {
+              day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+            })
+            return (
+              <div
+                key={a.id}
+                onClick={() => navigate(`/attempts/${bankId}/${a.id}`)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '5px 8px', cursor: 'pointer', borderRadius: 3,
+                  fontSize: '0.75rem', color: 'var(--ink-dim)',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(107,76,138,0.06)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                <span>{a.taker?.name ? `${a.taker.name} · ` : ''}{date}</span>
+                <span style={{ fontFamily: 'Cinzel, serif', color: '#6b4c8a', fontSize: '0.7rem' }}>
+                  {answered} answered · in progress
+                </span>
+              </div>
+            )
+          })}
+          {/* Completed attempts */}
           {completed.map(a => {
             const pct   = a.total ? Math.round((a.score! / a.total) * 100) : 0
             const grade = gradeForPct(pct)
