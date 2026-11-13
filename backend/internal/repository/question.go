@@ -32,6 +32,7 @@ type QuestionRepository interface {
 	ListTags(bankID int) ([]string, error)
 	FindByIDs(ids []int) ([]model.Question, error)
 	FindByID(id int) (*model.Question, error)
+	FindByIDUnscoped(id int) (*model.Question, error)
 	Create(q *model.Question) error
 	Save(q *model.Question) error
 	SoftDelete(id int) error
@@ -79,7 +80,7 @@ func (r *questionRepo) FindAllMeta(bankID int) ([]QuestionMeta, error) {
 	var metas []QuestionMeta
 	err := r.db.Model(&model.Question{}).
 		Select("id, difficulty, type, tags").
-		Where("bank_id = ? AND deleted_at IS NULL", bankID).
+		Where("bank_id = ? AND group_id IS NULL AND deleted_at IS NULL", bankID).
 		Scan(&metas).Error
 	return metas, err
 }
@@ -121,6 +122,15 @@ func (r *questionRepo) FindByIDs(ids []int) ([]model.Question, error) {
 func (r *questionRepo) FindByID(id int) (*model.Question, error) {
 	var q model.Question
 	err := r.db.First(&q, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, ErrNotFound
+	}
+	return &q, err
+}
+
+func (r *questionRepo) FindByIDUnscoped(id int) (*model.Question, error) {
+	var q model.Question
+	err := r.db.Unscoped().First(&q, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
 	}

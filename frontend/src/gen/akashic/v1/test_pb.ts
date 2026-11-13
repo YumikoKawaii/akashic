@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
-import { Question } from "./question_pb.js";
+import { Question, QuestionGroup } from "./question_pb.js";
 import { PageInfo, TestConfig, User } from "./common_pb.js";
 
 /**
@@ -217,6 +217,11 @@ export class Test extends Message<Test> {
    */
   attemptCount = 0;
 
+  /**
+   * @generated from field: repeated akashic.v1.QuestionGroup groups = 13;
+   */
+  groups: QuestionGroup[] = [];
+
   constructor(data?: PartialMessage<Test>) {
     super();
     proto3.util.initPartial(data, this);
@@ -237,6 +242,7 @@ export class Test extends Message<Test> {
     { no: 10, name: "creator", kind: "message", T: User, opt: true },
     { no: 11, name: "best_result", kind: "message", T: BestResult, opt: true },
     { no: 12, name: "attempt_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 13, name: "groups", kind: "message", T: QuestionGroup, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Test {

@@ -4,44 +4,39 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
-const historyTTL = 90 * 24 * time.Hour
+const (
+	historyTTL = 90 * 24 * time.Hour
+	poolTTL    = 24 * time.Hour
+)
 
-// GenerateConfig controls test generation deduplication behavior.
 type GenerateConfig struct {
-	UserCooldownAttempts int // default: 3
+	UserCooldownAttempts int
 }
 
-// CachedQuestion holds the minimal fields needed for pool filtering and selection.
-type CachedQuestion struct {
-	ID         int
-	Difficulty string
-	Type       string
-	Tags       []string
+type PoolUnit struct {
+	GroupID     int      `json:"g,omitempty"`
+	QuestionIDs []int    `json:"q"`
+	Difficulty  string   `json:"d"`
+	Types       []string `json:"ty"`
+	Tags        []string `json:"t,omitempty"`
 }
 
-// GenerateCache is the interface for pool caching and per-user generation history.
+func (u PoolUnit) Size() int { return len(u.QuestionIDs) }
+
 type GenerateCache interface {
-	// Pool
-	WarmupPool(bankID int, pool []CachedQuestion)
-	GetPool(bankID int) ([]CachedQuestion, bool)
-	AddToPool(bankID int, q CachedQuestion)
-	UpdateInPool(bankID int, q CachedQuestion)
-	RemoveFromPool(bankID, questionID int)
-	// History
+	PoolVersion(bankID int) int64
+	GetPool(bankID int) ([]PoolUnit, bool)
+	SetPool(bankID int, version int64, pool []PoolUnit)
+	InvalidatePool(bankID int)
 	BeginGeneration(userID, bankID int) (seq int, excluded map[int]struct{})
 	RecordGeneration(userID, bankID, seq int, questionIDs []int)
 }
-
-// ── Redis implementation ───────────────────────────────────────────────────────
 
 type redisCache struct {
 	rdb    *redis.Client
@@ -55,135 +50,110 @@ func NewRedisCache(rdb *redis.Client, cfg GenerateConfig) GenerateCache {
 	return &redisCache{rdb: rdb, config: cfg}
 }
 
-func (c *redisCache) poolKey(bankID int) string {
-	return fmt.Sprintf("pool:%d", bankID)
+func (c *redisCache) poolKey(bankID int) string { return fmt.Sprintf("pool:v2:%d", bankID) }
+
+func (c *redisCache) seqKey(userID, bankID int) string {
+	return fmt.Sprintf("history-seq:%d:%d", userID, bankID)
 }
 
 func (c *redisCache) historyKey(userID, bankID, seq int) string {
 	return fmt.Sprintf("history:%d:%d:%d", userID, bankID, seq)
 }
 
-func (c *redisCache) historyPattern(userID, bankID int) string {
-	return fmt.Sprintf("history:%d:%d:*", userID, bankID)
+func (c *redisCache) versionKey(bankID int) string { return fmt.Sprintf("pool-ver:%d", bankID) }
+
+type storedPool struct {
+	Version int64      `json:"v"`
+	Units   []PoolUnit `json:"u"`
 }
 
-func (c *redisCache) WarmupPool(bankID int, pool []CachedQuestion) {
-	data, err := json.Marshal(pool)
+func (c *redisCache) PoolVersion(bankID int) int64 {
+	v, err := c.rdb.Get(context.Background(), c.versionKey(bankID)).Int64()
+	if err != nil {
+		return 0
+	}
+	return v
+}
+
+func (c *redisCache) GetPool(bankID int) ([]PoolUnit, bool) {
+	vals, err := c.rdb.MGet(context.Background(), c.poolKey(bankID), c.versionKey(bankID)).Result()
+	if err != nil || len(vals) != 2 {
+		return nil, false
+	}
+	raw, ok := vals[0].(string)
+	if !ok {
+		return nil, false
+	}
+	var current int64
+	if s, ok := vals[1].(string); ok {
+		if _, err := fmt.Sscan(s, &current); err != nil {
+			return nil, false
+		}
+	}
+	var sp storedPool
+	if err := json.Unmarshal([]byte(raw), &sp); err != nil || sp.Version != current {
+		return nil, false
+	}
+	return sp.Units, true
+}
+
+func (c *redisCache) SetPool(bankID int, version int64, pool []PoolUnit) {
+	if c.PoolVersion(bankID) != version {
+		return
+	}
+	data, err := json.Marshal(storedPool{Version: version, Units: pool})
 	if err != nil {
 		return
 	}
-	c.rdb.Set(context.Background(), c.poolKey(bankID), data, 0) //nolint:errcheck
+	c.rdb.Set(context.Background(), c.poolKey(bankID), data, poolTTL) //nolint:errcheck
 }
 
-func (c *redisCache) GetPool(bankID int) ([]CachedQuestion, bool) {
-	data, err := c.rdb.Get(context.Background(), c.poolKey(bankID)).Bytes()
-	if err != nil {
-		return nil, false
-	}
-	var pool []CachedQuestion
-	if err := json.Unmarshal(data, &pool); err != nil {
-		return nil, false
-	}
-	return pool, true
-}
-
-func (c *redisCache) AddToPool(bankID int, q CachedQuestion) {
-	pool, ok := c.GetPool(bankID)
-	if !ok {
-		return
-	}
-	c.WarmupPool(bankID, append(pool, q))
-}
-
-func (c *redisCache) UpdateInPool(bankID int, q CachedQuestion) {
-	pool, ok := c.GetPool(bankID)
-	if !ok {
-		return
-	}
-	for i, existing := range pool {
-		if existing.ID == q.ID {
-			pool[i] = q
-			break
-		}
-	}
-	c.WarmupPool(bankID, pool)
-}
-
-func (c *redisCache) RemoveFromPool(bankID, questionID int) {
-	pool, ok := c.GetPool(bankID)
-	if !ok {
-		return
-	}
-	out := make([]CachedQuestion, 0, len(pool))
-	for _, q := range pool {
-		if q.ID != questionID {
-			out = append(out, q)
-		}
-	}
-	c.WarmupPool(bankID, out)
+func (c *redisCache) InvalidatePool(bankID int) {
+	ctx := context.Background()
+	c.rdb.Incr(ctx, c.versionKey(bankID)) //nolint:errcheck
+	c.rdb.Del(ctx, c.poolKey(bankID))      //nolint:errcheck
 }
 
 func (c *redisCache) BeginGeneration(userID, bankID int) (int, map[int]struct{}) {
+	excluded := make(map[int]struct{})
 	if userID == 0 {
-		return 0, map[int]struct{}{}
+		return 0, excluded
 	}
 	ctx := context.Background()
-
-	// Scan all existing history keys for this user+bank to find max seq.
-	var existingKeys []string
-	iter := c.rdb.Scan(ctx, 0, c.historyPattern(userID, bankID), 0).Iterator()
-	for iter.Next(ctx) {
-		existingKeys = append(existingKeys, iter.Val())
+	seq64, err := c.rdb.Incr(ctx, c.seqKey(userID, bankID)).Result()
+	if err != nil {
+		return 0, excluded
 	}
+	c.rdb.Expire(ctx, c.seqKey(userID, bankID), historyTTL) //nolint:errcheck
+	seq := int(seq64)
 
-	maxSeq := 0
-	for _, key := range existingKeys {
-		parts := strings.Split(key, ":")
-		if seq, err := strconv.Atoi(parts[len(parts)-1]); err == nil && seq > maxSeq {
-			maxSeq = seq
-		}
-	}
-	nextSeq := maxSeq + 1
-	cooldown := c.config.UserCooldownAttempts
-
-	// Delete keys that have fallen outside the cooldown window.
-	for _, key := range existingKeys {
-		parts := strings.Split(key, ":")
-		if seq, err := strconv.Atoi(parts[len(parts)-1]); err == nil && seq <= nextSeq-cooldown-1 {
-			c.rdb.Del(ctx, key) //nolint:errcheck
-		}
-	}
-
-	// MGET the active cooldown window [nextSeq-cooldown, nextSeq-1].
-	keys := make([]string, 0, cooldown)
-	for i := nextSeq - cooldown; i < nextSeq; i++ {
+	keys := make([]string, 0, c.config.UserCooldownAttempts)
+	for i := seq - c.config.UserCooldownAttempts; i < seq; i++ {
 		if i >= 1 {
 			keys = append(keys, c.historyKey(userID, bankID, i))
 		}
 	}
 	if len(keys) == 0 {
-		return nextSeq, map[int]struct{}{}
+		return seq, excluded
 	}
-
 	vals, err := c.rdb.MGet(ctx, keys...).Result()
 	if err != nil {
-		return nextSeq, map[int]struct{}{}
+		return seq, excluded
 	}
-
-	excluded := make(map[int]struct{})
 	for _, v := range vals {
-		if v == nil {
+		s, ok := v.(string)
+		if !ok {
 			continue
 		}
 		var ids []int
-		if err := json.Unmarshal([]byte(v.(string)), &ids); err != nil {
+		if err := json.Unmarshal([]byte(s), &ids); err != nil {
 			continue
 		}
 		for _, id := range ids {
 			excluded[id] = struct{}{}
 		}
 	}
-	return nextSeq, excluded
+	return seq, excluded
 }
 
 func (c *redisCache) RecordGeneration(userID, bankID, seq int, questionIDs []int) {
@@ -197,16 +167,16 @@ func (c *redisCache) RecordGeneration(userID, bankID, seq int, questionIDs []int
 	c.rdb.Set(context.Background(), c.historyKey(userID, bankID, seq), data, historyTTL) //nolint:errcheck
 }
 
-// ── In-memory fallback implementation ─────────────────────────────────────────
-
 type memCache struct {
 	config GenerateConfig
 
 	poolMu sync.RWMutex
-	pools  map[int][]CachedQuestion
+	pools    map[int][]PoolUnit
+	versions map[int]int64
 
 	histMu  sync.Mutex
-	history map[string][]int // "userID:bankID:seq" → question IDs
+	seqs    map[[2]int]int
+	history map[[3]int][]int
 }
 
 func NewMemCache(cfg GenerateConfig) GenerateCache {
@@ -215,101 +185,69 @@ func NewMemCache(cfg GenerateConfig) GenerateCache {
 	}
 	return &memCache{
 		config:  cfg,
-		pools:   make(map[int][]CachedQuestion),
-		history: make(map[string][]int),
+		pools:    make(map[int][]PoolUnit),
+		versions: make(map[int]int64),
+		seqs:    make(map[[2]int]int),
+		history: make(map[[3]int][]int),
 	}
 }
 
-func (c *memCache) WarmupPool(bankID int, pool []CachedQuestion) {
-	stored := make([]CachedQuestion, len(pool))
-	copy(stored, pool)
-	c.poolMu.Lock()
-	c.pools[bankID] = stored
-	c.poolMu.Unlock()
-}
-
-func (c *memCache) GetPool(bankID int) ([]CachedQuestion, bool) {
+func (c *memCache) GetPool(bankID int) ([]PoolUnit, bool) {
 	c.poolMu.RLock()
+	defer c.poolMu.RUnlock()
 	pool, ok := c.pools[bankID]
-	c.poolMu.RUnlock()
 	if !ok {
 		return nil, false
 	}
-	result := make([]CachedQuestion, len(pool))
-	copy(result, pool)
-	return result, true
+	out := make([]PoolUnit, len(pool))
+	copy(out, pool)
+	return out, true
 }
 
-func (c *memCache) AddToPool(bankID int, q CachedQuestion) {
-	c.poolMu.Lock()
-	c.pools[bankID] = append(c.pools[bankID], q)
-	c.poolMu.Unlock()
+func (c *memCache) PoolVersion(bankID int) int64 {
+	c.poolMu.RLock()
+	defer c.poolMu.RUnlock()
+	return c.versions[bankID]
 }
 
-func (c *memCache) UpdateInPool(bankID int, q CachedQuestion) {
+func (c *memCache) SetPool(bankID int, version int64, pool []PoolUnit) {
+	stored := make([]PoolUnit, len(pool))
+	copy(stored, pool)
 	c.poolMu.Lock()
-	for i, existing := range c.pools[bankID] {
-		if existing.ID == q.ID {
-			c.pools[bankID][i] = q
-			break
-		}
+	defer c.poolMu.Unlock()
+	if c.versions[bankID] != version {
+		return
 	}
-	c.poolMu.Unlock()
+	c.pools[bankID] = stored
 }
 
-func (c *memCache) RemoveFromPool(bankID, questionID int) {
+func (c *memCache) InvalidatePool(bankID int) {
 	c.poolMu.Lock()
-	pool := c.pools[bankID]
-	out := make([]CachedQuestion, 0, len(pool))
-	for _, q := range pool {
-		if q.ID != questionID {
-			out = append(out, q)
-		}
-	}
-	c.pools[bankID] = out
+	c.versions[bankID]++
+	delete(c.pools, bankID)
 	c.poolMu.Unlock()
 }
 
 func (c *memCache) BeginGeneration(userID, bankID int) (int, map[int]struct{}) {
+	excluded := make(map[int]struct{})
 	if userID == 0 {
-		return 0, map[int]struct{}{}
+		return 0, excluded
 	}
-
 	c.histMu.Lock()
 	defer c.histMu.Unlock()
 
-	prefix := fmt.Sprintf("%d:%d:", userID, bankID)
-
-	// Find max seq from existing history keys.
-	maxSeq := 0
-	for k := range c.history {
-		if strings.HasPrefix(k, prefix) {
-			if seq, err := strconv.Atoi(k[len(prefix):]); err == nil && seq > maxSeq {
-				maxSeq = seq
-			}
-		}
-	}
-	nextSeq := maxSeq + 1
+	k := [2]int{userID, bankID}
+	c.seqs[k]++
+	seq := c.seqs[k]
 	cooldown := c.config.UserCooldownAttempts
 
-	// Delete keys outside the cooldown window.
-	for k := range c.history {
-		if strings.HasPrefix(k, prefix) {
-			if seq, err := strconv.Atoi(k[len(prefix):]); err == nil && seq <= nextSeq-cooldown-1 {
-				delete(c.history, k)
-			}
+	delete(c.history, [3]int{userID, bankID, seq - cooldown - 1})
+	for i := seq - cooldown; i < seq; i++ {
+		for _, id := range c.history[[3]int{userID, bankID, i}] {
+			excluded[id] = struct{}{}
 		}
 	}
-
-	excluded := make(map[int]struct{})
-	for i := nextSeq - cooldown; i < nextSeq; i++ {
-		if i >= 1 {
-			for _, id := range c.history[fmt.Sprintf("%d:%d:%d", userID, bankID, i)] {
-				excluded[id] = struct{}{}
-			}
-		}
-	}
-	return nextSeq, excluded
+	return seq, excluded
 }
 
 func (c *memCache) RecordGeneration(userID, bankID, seq int, questionIDs []int) {
@@ -319,83 +257,6 @@ func (c *memCache) RecordGeneration(userID, bankID, seq int, questionIDs []int) 
 	stored := make([]int, len(questionIDs))
 	copy(stored, questionIDs)
 	c.histMu.Lock()
-	c.history[fmt.Sprintf("%d:%d:%d", userID, bankID, seq)] = stored
+	c.history[[3]int{userID, bankID, seq}] = stored
 	c.histMu.Unlock()
-}
-
-// ── Pool selection helpers (pure functions) ────────────────────────────────────
-
-func filterPool(pool []CachedQuestion, types []string, tags []string) map[string][]CachedQuestion {
-	out := map[string][]CachedQuestion{"easy": nil, "medium": nil, "hard": nil}
-
-	typeSet := make(map[string]struct{}, len(types))
-	for _, t := range types {
-		typeSet[t] = struct{}{}
-	}
-	tagSet := make(map[string]struct{}, len(tags))
-	for _, t := range tags {
-		tagSet[t] = struct{}{}
-	}
-
-	for _, q := range pool {
-		if len(typeSet) > 0 {
-			if _, ok := typeSet[q.Type]; !ok {
-				continue
-			}
-		}
-		if len(tagSet) > 0 {
-			// AND semantics: the question must carry every selected tag.
-			has := make(map[string]struct{}, len(q.Tags))
-			for _, t := range q.Tags {
-				has[t] = struct{}{}
-			}
-			matched := true
-			for t := range tagSet {
-				if _, ok := has[t]; !ok {
-					matched = false
-					break
-				}
-			}
-			if !matched {
-				continue
-			}
-		}
-		out[q.Difficulty] = append(out[q.Difficulty], q)
-	}
-	return out
-}
-
-func available(pool []CachedQuestion, alreadyPicked map[int]struct{}) []CachedQuestion {
-	out := make([]CachedQuestion, 0, len(pool))
-	for _, q := range pool {
-		if _, ok := alreadyPicked[q.ID]; !ok {
-			out = append(out, q)
-		}
-	}
-	return out
-}
-
-func pickRandom(pool []CachedQuestion, excluded map[int]struct{}, n int) []CachedQuestion {
-	if n <= 0 || len(pool) == 0 {
-		return nil
-	}
-	fresh := make([]CachedQuestion, 0, len(pool))
-	stale := make([]CachedQuestion, 0)
-	for _, q := range pool {
-		if _, ex := excluded[q.ID]; ex {
-			stale = append(stale, q)
-		} else {
-			fresh = append(fresh, q)
-		}
-	}
-	rand.Shuffle(len(fresh), func(i, j int) { fresh[i], fresh[j] = fresh[j], fresh[i] })
-	if len(fresh) >= n {
-		return fresh[:n]
-	}
-	rand.Shuffle(len(stale), func(i, j int) { stale[i], stale[j] = stale[j], stale[i] })
-	result := append(fresh, stale...)
-	if len(result) > n {
-		return result[:n]
-	}
-	return result
 }

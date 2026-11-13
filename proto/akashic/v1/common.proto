@@ -52,6 +52,13 @@ message TestConfig {
   repeated QuestionType types = 6;
   repeated string   tags = 7;
   reserved 8;
+  GroupMode         group_mode = 9;
+}
+
+enum GroupMode {
+  GROUP_MODE_UNSPECIFIED = 0;
+  GROUP_MODE_STANDALONE = 1;
+  GROUP_MODE_GROUPS = 2;
 }
 
 message PageInfo {

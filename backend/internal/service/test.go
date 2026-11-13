@@ -109,96 +109,21 @@ func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTe
 		config = *input.Config
 	}
 
-	var picked []model.Question
-	var seq int
-	var standaloneIDs []int
-
-	// ── Standalone path: pool cache + per-user exclusion ─────────────────
-	{
-		pool, ok := s.cache.GetPool(bankID)
-		if !ok {
-			pool, err = s.loadPool(bankID)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		var excluded map[int]struct{}
-		seq, excluded = s.cache.BeginGeneration(input.UserID, bankID)
-		byDiff := filterPool(pool, config.Types, config.Tags)
-
-		type bucket struct {
-			diff  string
-			count int
-		}
-		buckets := []bucket{
-			{"easy", config.EasyCount},
-			{"medium", config.MediumCount},
-			{"hard", config.HardCount},
-		}
-		backfillOrder := map[string][]string{
-			"easy":   {"medium", "hard"},
-			"medium": {"hard", "easy"},
-			"hard":   {"medium", "easy"},
-		}
-
-		pickedSet := make(map[int]struct{})
-		shortage := map[string]int{}
-
-		// Primary selection per difficulty
-		for _, b := range buckets {
-			if b.count <= 0 {
-				continue
-			}
-			chosen := pickRandom(available(byDiff[b.diff], pickedSet), excluded, b.count)
-			for _, q := range chosen {
-				standaloneIDs = append(standaloneIDs, q.ID)
-				pickedSet[q.ID] = struct{}{}
-			}
-			shortage[b.diff] = b.count - len(chosen)
-		}
-
-		// Backfill shortages from other difficulty buckets
-		for _, b := range buckets {
-			need := shortage[b.diff]
-			for _, bf := range backfillOrder[b.diff] {
-				if need <= 0 {
-					break
-				}
-				chosen := pickRandom(available(byDiff[bf], pickedSet), excluded, need)
-				for _, q := range chosen {
-					standaloneIDs = append(standaloneIDs, q.ID)
-					pickedSet[q.ID] = struct{}{}
-					need--
-				}
-			}
-		}
-
-		if len(standaloneIDs) > 0 {
-			qs, err := s.uow.Store().Questions.FindByIDs(standaloneIDs)
-			if err != nil {
-				return nil, err
-			}
-			picked = append(picked, qs...)
-		}
+	pool, err := s.pool(bankID)
+	if err != nil {
+		return nil, err
 	}
 
-	// ── Persist test ──────────────────────────────────────────────────────
-	// Snapshot the actual difficulty mix of the picked questions: passage
-	// mode requests zero counts and backfill can shift the standalone mix,
-	// so the requested counts may not reflect the test's real composition.
-	var easyN, mediumN, hardN int
-	for i := range picked {
-		switch picked[i].Difficulty {
-		case "easy":
-			easyN++
-		case "medium":
-			mediumN++
-		case "hard":
-			hardN++
-		}
+	seq, excluded := s.cache.BeginGeneration(input.UserID, bankID)
+	units := selectUnits(pool, config, excluded)
+
+	counts := map[string]int{}
+	var ids []int
+	for _, u := range units {
+		counts[u.Difficulty] += u.Size()
+		ids = append(ids, u.QuestionIDs...)
 	}
-	config.EasyCount, config.MediumCount, config.HardCount = easyN, mediumN, hardN
+	config.EasyCount, config.MediumCount, config.HardCount = counts["easy"], counts["medium"], counts["hard"]
 
 	test := &model.Test{
 		BankID:      bankID,
@@ -206,35 +131,62 @@ func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTe
 		Name:        input.Name,
 		Description: input.Description,
 		Config:      config,
+		QuestionIDs: make(pq.Int64Array, len(ids)),
 	}
-
-	test.QuestionIDs = make(pq.Int64Array, len(picked))
-	for i, q := range picked {
-		test.QuestionIDs[i] = int64(q.ID)
+	for i, id := range ids {
+		test.QuestionIDs[i] = int64(id)
 	}
 	if err := s.uow.Store().Tests.Create(test); err != nil {
 		return nil, err
 	}
 
-	// ── Record standalone question history for future exclusion ──────────
-	s.cache.RecordGeneration(input.UserID, bankID, seq, standaloneIDs)
+	s.cache.RecordGeneration(input.UserID, bankID, seq, ids)
 
 	return s.uow.Store().Tests.FindByID(test.ID)
 }
 
-// loadPool loads question metadata from the DB for pool filtering and selection.
-func (s *TestService) loadPool(bankID int) ([]CachedQuestion, error) {
-	metas, err := s.uow.Store().Questions.FindAllMeta(bankID)
+func (s *TestService) pool(bankID int) ([]PoolUnit, error) {
+	if pool, ok := s.cache.GetPool(bankID); ok {
+		return pool, nil
+	}
+	version := s.cache.PoolVersion(bankID)
+	pool, err := LoadPool(s.uow.Store(), bankID)
 	if err != nil {
 		return nil, err
 	}
-	pool := make([]CachedQuestion, 0, len(metas))
-	for _, m := range metas {
-		pool = append(pool, CachedQuestion{
-			ID:         m.ID,
-			Difficulty: m.Difficulty,
-			Type:       m.Type,
-			Tags:       []string(m.Tags),
+	s.cache.SetPool(bankID, version, pool)
+	return pool, nil
+}
+
+func LoadPool(store *uow.Store, bankID int) ([]PoolUnit, error) {
+	qs, err := store.Questions.FindAllMeta(bankID)
+	if err != nil {
+		return nil, err
+	}
+	gs, err := store.Groups.FindAllMeta(bankID)
+	if err != nil {
+		return nil, err
+	}
+	pool := make([]PoolUnit, 0, len(qs)+len(gs))
+	for _, q := range qs {
+		pool = append(pool, PoolUnit{
+			QuestionIDs: []int{q.ID},
+			Difficulty:  q.Difficulty,
+			Types:       []string{q.Type},
+			Tags:        []string(q.Tags),
+		})
+	}
+	for _, g := range gs {
+		ids := make([]int, len(g.QuestionIDs))
+		for i, id := range g.QuestionIDs {
+			ids[i] = int(id)
+		}
+		pool = append(pool, PoolUnit{
+			GroupID:     g.ID,
+			QuestionIDs: ids,
+			Difficulty:  g.Difficulty,
+			Types:       []string(g.Types),
+			Tags:        []string(g.Tags),
 		})
 	}
 	return pool, nil

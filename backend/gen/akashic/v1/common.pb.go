@@ -245,6 +245,55 @@ func (BankVisibility) EnumDescriptor() ([]byte, []int) {
 	return file_akashic_v1_common_proto_rawDescGZIP(), []int{3}
 }
 
+type GroupMode int32
+
+const (
+	GroupMode_GROUP_MODE_UNSPECIFIED GroupMode = 0
+	GroupMode_GROUP_MODE_STANDALONE  GroupMode = 1
+	GroupMode_GROUP_MODE_GROUPS      GroupMode = 2
+)
+
+// Enum value maps for GroupMode.
+var (
+	GroupMode_name = map[int32]string{
+		0: "GROUP_MODE_UNSPECIFIED",
+		1: "GROUP_MODE_STANDALONE",
+		2: "GROUP_MODE_GROUPS",
+	}
+	GroupMode_value = map[string]int32{
+		"GROUP_MODE_UNSPECIFIED": 0,
+		"GROUP_MODE_STANDALONE":  1,
+		"GROUP_MODE_GROUPS":      2,
+	}
+)
+
+func (x GroupMode) Enum() *GroupMode {
+	p := new(GroupMode)
+	*p = x
+	return p
+}
+
+func (x GroupMode) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (GroupMode) Descriptor() protoreflect.EnumDescriptor {
+	return file_akashic_v1_common_proto_enumTypes[4].Descriptor()
+}
+
+func (GroupMode) Type() protoreflect.EnumType {
+	return &file_akashic_v1_common_proto_enumTypes[4]
+}
+
+func (x GroupMode) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use GroupMode.Descriptor instead.
+func (GroupMode) EnumDescriptor() ([]byte, []int) {
+	return file_akashic_v1_common_proto_rawDescGZIP(), []int{4}
+}
+
 type MCQOption struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -304,6 +353,7 @@ type TestConfig struct {
 	HardCount     int32                  `protobuf:"varint,3,opt,name=hard_count,json=hardCount,proto3" json:"hard_count,omitempty"`
 	Types         []QuestionType         `protobuf:"varint,6,rep,packed,name=types,proto3,enum=akashic.v1.QuestionType" json:"types,omitempty"`
 	Tags          []string               `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty"`
+	GroupMode     GroupMode              `protobuf:"varint,9,opt,name=group_mode,json=groupMode,proto3,enum=akashic.v1.GroupMode" json:"group_mode,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -371,6 +421,13 @@ func (x *TestConfig) GetTags() []string {
 		return x.Tags
 	}
 	return nil
+}
+
+func (x *TestConfig) GetGroupMode() GroupMode {
+	if x != nil {
+		return x.GroupMode
+	}
+	return GroupMode_GROUP_MODE_UNSPECIFIED
 }
 
 type PageInfo struct {
@@ -533,7 +590,7 @@ const file_akashic_v1_common_proto_rawDesc = "" +
 	"akashic.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"1\n" +
 	"\tMCQOption\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x12\n" +
-	"\x04text\x18\x02 \x01(\tR\x04text\"\xc3\x01\n" +
+	"\x04text\x18\x02 \x01(\tR\x04text\"\xf9\x01\n" +
 	"\n" +
 	"TestConfig\x12\x1d\n" +
 	"\n" +
@@ -542,7 +599,9 @@ const file_akashic_v1_common_proto_rawDesc = "" +
 	"\n" +
 	"hard_count\x18\x03 \x01(\x05R\thardCount\x12.\n" +
 	"\x05types\x18\x06 \x03(\x0e2\x18.akashic.v1.QuestionTypeR\x05types\x12\x12\n" +
-	"\x04tags\x18\a \x03(\tR\x04tagsJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\b\x10\t\"r\n" +
+	"\x04tags\x18\a \x03(\tR\x04tags\x124\n" +
+	"\n" +
+	"group_mode\x18\t \x01(\x0e2\x15.akashic.v1.GroupModeR\tgroupModeJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\b\x10\t\"r\n" +
 	"\bPageInfo\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x14\n" +
@@ -584,7 +643,11 @@ const file_akashic_v1_common_proto_rawDesc = "" +
 	"\x0eBankVisibility\x12\x1f\n" +
 	"\x1bBANK_VISIBILITY_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17BANK_VISIBILITY_PRIVATE\x10\x01\x12\x1a\n" +
-	"\x16BANK_VISIBILITY_PUBLIC\x10\x02B:Z8github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1b\x06proto3"
+	"\x16BANK_VISIBILITY_PUBLIC\x10\x02*Y\n" +
+	"\tGroupMode\x12\x1a\n" +
+	"\x16GROUP_MODE_UNSPECIFIED\x10\x00\x12\x19\n" +
+	"\x15GROUP_MODE_STANDALONE\x10\x01\x12\x15\n" +
+	"\x11GROUP_MODE_GROUPS\x10\x02B:Z8github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1b\x06proto3"
 
 var (
 	file_akashic_v1_common_proto_rawDescOnce sync.Once
@@ -598,28 +661,30 @@ func file_akashic_v1_common_proto_rawDescGZIP() []byte {
 	return file_akashic_v1_common_proto_rawDescData
 }
 
-var file_akashic_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_akashic_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
 var file_akashic_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_akashic_v1_common_proto_goTypes = []any{
 	(Difficulty)(0),               // 0: akashic.v1.Difficulty
 	(QuestionType)(0),             // 1: akashic.v1.QuestionType
 	(BankRole)(0),                 // 2: akashic.v1.BankRole
 	(BankVisibility)(0),           // 3: akashic.v1.BankVisibility
-	(*MCQOption)(nil),             // 4: akashic.v1.MCQOption
-	(*TestConfig)(nil),            // 5: akashic.v1.TestConfig
-	(*PageInfo)(nil),              // 6: akashic.v1.PageInfo
-	(*User)(nil),                  // 7: akashic.v1.User
-	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
+	(GroupMode)(0),                // 4: akashic.v1.GroupMode
+	(*MCQOption)(nil),             // 5: akashic.v1.MCQOption
+	(*TestConfig)(nil),            // 6: akashic.v1.TestConfig
+	(*PageInfo)(nil),              // 7: akashic.v1.PageInfo
+	(*User)(nil),                  // 8: akashic.v1.User
+	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
 }
 var file_akashic_v1_common_proto_depIdxs = []int32{
 	1, // 0: akashic.v1.TestConfig.types:type_name -> akashic.v1.QuestionType
-	8, // 1: akashic.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	8, // 2: akashic.v1.User.updated_at:type_name -> google.protobuf.Timestamp
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	4, // 1: akashic.v1.TestConfig.group_mode:type_name -> akashic.v1.GroupMode
+	9, // 2: akashic.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	9, // 3: akashic.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_common_proto_init() }
@@ -632,7 +697,7 @@ func file_akashic_v1_common_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_akashic_v1_common_proto_rawDesc), len(file_akashic_v1_common_proto_rawDesc)),
-			NumEnums:      4,
+			NumEnums:      5,
 			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,

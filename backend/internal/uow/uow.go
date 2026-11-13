@@ -13,6 +13,7 @@ type Store struct {
 	Banks     repository.BankRepository
 	Members   repository.MemberRepository
 	Questions repository.QuestionRepository
+	Groups    repository.GroupRepository
 	Tests     repository.TestRepository
 	Attempts  repository.AttemptRepository
 }
@@ -22,7 +23,8 @@ func newStore(db *gorm.DB) *Store {
 		Banks:     repository.NewBankRepo(db),
 		Members:   repository.NewMemberRepo(db),
 		Questions: repository.NewQuestionRepo(db),
-		Tests:     repository.NewTestRepo(db),
+		Groups:    repository.NewGroupRepo(db),
+		Tests:    repository.NewTestRepo(db),
 		Attempts:  repository.NewAttemptRepo(db),
 	}
 }

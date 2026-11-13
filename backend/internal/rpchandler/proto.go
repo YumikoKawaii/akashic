@@ -139,7 +139,28 @@ func testConfigToProto(c model.TestConfig) *pb.TestConfig {
 		HardCount:   int32(c.HardCount),
 		Types:       types,
 		Tags:        c.Tags,
+		GroupMode:   groupModeToProto(c.GroupMode),
 	}
+}
+
+func groupModeToProto(m string) pb.GroupMode {
+	switch m {
+	case model.GroupModeStandalone:
+		return pb.GroupMode_GROUP_MODE_STANDALONE
+	case model.GroupModeGroups:
+		return pb.GroupMode_GROUP_MODE_GROUPS
+	}
+	return pb.GroupMode_GROUP_MODE_UNSPECIFIED
+}
+
+func groupModeFromProto(m pb.GroupMode) string {
+	switch m {
+	case pb.GroupMode_GROUP_MODE_STANDALONE:
+		return model.GroupModeStandalone
+	case pb.GroupMode_GROUP_MODE_GROUPS:
+		return model.GroupModeGroups
+	}
+	return model.GroupModeMixed
 }
 
 func testConfigFromProto(c *pb.TestConfig) model.TestConfig {
@@ -158,6 +179,7 @@ func testConfigFromProto(c *pb.TestConfig) model.TestConfig {
 		HardCount:   int(c.HardCount),
 		Types:       types,
 		Tags:        c.Tags,
+		GroupMode:   groupModeFromProto(c.GroupMode),
 	}
 }
 
@@ -249,6 +271,14 @@ func questionToProto(q *model.Question) *pb.Question {
 		CreatedAt:  timestamppb.New(q.CreatedAt),
 		UpdatedAt:  timestamppb.New(q.UpdatedAt),
 	}
+	if q.GroupID != nil {
+		v := int32(*q.GroupID)
+		pbq.GroupId = &v
+	}
+	if q.Position != nil {
+		v := int32(*q.Position)
+		pbq.Position = &v
+	}
 	if q.Type == "mcq" {
 		opts := make([]*pb.MCQOption, len(q.Content.Options))
 		for i, o := range q.Content.Options {
@@ -267,6 +297,25 @@ func questionToProto(q *model.Question) *pb.Question {
 		}
 	}
 	return pbq
+}
+
+func questionGroupToProto(g *model.QuestionGroup) *pb.QuestionGroup {
+	opts := make([]*pb.MCQOption, len(g.Content.Options))
+	for i, o := range g.Content.Options {
+		opts[i] = &pb.MCQOption{Key: o.Key, Text: o.Text}
+	}
+	return &pb.QuestionGroup{
+		Id:           int32(g.ID),
+		BankId:       int32(g.BankID),
+		Title:        g.Title,
+		Instructions: g.Content.Instructions,
+		Passage:      g.Content.Passage,
+		Options:      opts,
+		Difficulty:   difficultyToProto(g.Difficulty),
+		Tags:         []string(g.Tags),
+		CreatedAt:    timestamppb.New(g.CreatedAt),
+		UpdatedAt:    timestamppb.New(g.UpdatedAt),
+	}
 }
 
 // ── Test ───────────────────────────────────────────────────────────────────────
@@ -292,6 +341,10 @@ func testToProto(t *model.Test) *pb.Test {
 		CreatedAt:   timestamppb.New(t.CreatedAt),
 		UpdatedAt:   timestamppb.New(t.UpdatedAt),
 		Creator:     userToProto(t.Creator),
+		Groups:      make([]*pb.QuestionGroup, len(t.Groups)),
+	}
+	for i := range t.Groups {
+		pt.Groups[i] = questionGroupToProto(&t.Groups[i])
 	}
 	if t.CreatedBy != nil {
 		v := int32(*t.CreatedBy)

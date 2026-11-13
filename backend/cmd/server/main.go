@@ -51,7 +51,6 @@ func main() {
 	// through it (uow.Store() for reads, uow.Do() for writes). The repos below
 	// are only for the non-transactional services and the startup cache warmers.
 	bankRepo := repository.NewBankRepo(db)
-	questionRepo := repository.NewQuestionRepo(db)
 	testRepo := repository.NewTestRepo(db)
 	attemptRepo := repository.NewAttemptRepo(db)
 	userRepo := repository.NewUserRepo(db)
@@ -80,9 +79,9 @@ func main() {
 	questionSvc := service.NewQuestionService(unitOfWork, generateCache)
 	testSvc := service.NewTestService(unitOfWork, generateCache)
 	attemptSvc := service.NewAttemptService(attemptRepo, testRepo)
-	ingestSvc := service.NewIngestService(unitOfWork)
+	ingestSvc := service.NewIngestService(unitOfWork, generateCache)
 
-	warmupPoolCache(bankRepo, questionRepo, generateCache)
+	warmupPoolCache(bankRepo, unitOfWork, generateCache)
 
 	// ── Connect interceptors ───────────────────────────────────────────────────
 	// Authentication runs first (populates claims); authorization runs next and
@@ -155,28 +154,20 @@ func warmupVisibilityCache(bankRepo repository.BankRepository, cache membership.
 	log.Printf("visibility warmup: loaded %d public banks", len(ids))
 }
 
-func warmupPoolCache(bankRepo repository.BankRepository, questionRepo repository.QuestionRepository, cache service.GenerateCache) {
+func warmupPoolCache(bankRepo repository.BankRepository, unitOfWork uow.UnitOfWork, cache service.GenerateCache) {
 	bankIDs, err := bankRepo.FindAllIDs()
 	if err != nil {
 		log.Printf("pool warmup: failed to list banks: %v", err)
 		return
 	}
 	for _, bankID := range bankIDs {
-		metas, err := questionRepo.FindAllMeta(bankID)
+		version := cache.PoolVersion(bankID)
+		pool, err := service.LoadPool(unitOfWork.Store(), bankID)
 		if err != nil {
 			log.Printf("pool warmup: bank %d: %v", bankID, err)
 			continue
 		}
-		pool := make([]service.CachedQuestion, 0, len(metas))
-		for _, m := range metas {
-			pool = append(pool, service.CachedQuestion{
-				ID:         m.ID,
-				Difficulty: m.Difficulty,
-				Type:       m.Type,
-				Tags:       []string(m.Tags),
-			})
-		}
-		cache.WarmupPool(bankID, pool)
+		cache.SetPool(bankID, version, pool)
 	}
 	log.Printf("pool warmup: loaded %d banks", len(bankIDs))
 }

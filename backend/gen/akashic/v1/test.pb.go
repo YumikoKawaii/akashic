@@ -211,6 +211,7 @@ type Test struct {
 	Creator       *User                  `protobuf:"bytes,10,opt,name=creator,proto3,oneof" json:"creator,omitempty"`                          // embedded generator
 	BestResult    *BestResult            `protobuf:"bytes,11,opt,name=best_result,json=bestResult,proto3,oneof" json:"best_result,omitempty"`  // the caller's best completed attempt, if any
 	AttemptCount  int32                  `protobuf:"varint,12,opt,name=attempt_count,json=attemptCount,proto3" json:"attempt_count,omitempty"` // completed attempts by anyone (History count)
+	Groups        []*QuestionGroup       `protobuf:"bytes,13,rep,name=groups,proto3" json:"groups,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -327,6 +328,13 @@ func (x *Test) GetAttemptCount() int32 {
 		return x.AttemptCount
 	}
 	return 0
+}
+
+func (x *Test) GetGroups() []*QuestionGroup {
+	if x != nil {
+		return x.Groups
+	}
+	return nil
 }
 
 // BestResult is the caller's highest-scoring completed attempt on a test.
@@ -991,7 +999,7 @@ const file_akashic_v1_test_proto_rawDesc = "" +
 	"\vquestion_id\x18\x02 \x01(\x05R\n" +
 	"questionId\x12\x1a\n" +
 	"\bposition\x18\x03 \x01(\x05R\bposition\x120\n" +
-	"\bquestion\x18\x04 \x01(\v2\x14.akashic.v1.QuestionR\bquestion\"\xa6\x04\n" +
+	"\bquestion\x18\x04 \x01(\v2\x14.akashic.v1.QuestionR\bquestion\"\xd9\x04\n" +
 	"\x04Test\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x17\n" +
 	"\abank_id\x18\x02 \x01(\x05R\x06bankId\x12\x12\n" +
@@ -1009,7 +1017,8 @@ const file_akashic_v1_test_proto_rawDesc = "" +
 	" \x01(\v2\x10.akashic.v1.UserH\x01R\acreator\x88\x01\x01\x12<\n" +
 	"\vbest_result\x18\v \x01(\v2\x16.akashic.v1.BestResultH\x02R\n" +
 	"bestResult\x88\x01\x01\x12#\n" +
-	"\rattempt_count\x18\f \x01(\x05R\fattemptCountB\r\n" +
+	"\rattempt_count\x18\f \x01(\x05R\fattemptCount\x121\n" +
+	"\x06groups\x18\r \x03(\v2\x19.akashic.v1.QuestionGroupR\x06groupsB\r\n" +
 	"\v_created_byB\n" +
 	"\n" +
 	"\b_creatorB\x0e\n" +
@@ -1109,7 +1118,8 @@ var file_akashic_v1_test_proto_goTypes = []any{
 	(*TestConfig)(nil),            // 17: akashic.v1.TestConfig
 	(*timestamppb.Timestamp)(nil), // 18: google.protobuf.Timestamp
 	(*User)(nil),                  // 19: akashic.v1.User
-	(*PageInfo)(nil),              // 20: akashic.v1.PageInfo
+	(*QuestionGroup)(nil),         // 20: akashic.v1.QuestionGroup
+	(*PageInfo)(nil),              // 21: akashic.v1.PageInfo
 }
 var file_akashic_v1_test_proto_depIdxs = []int32{
 	16, // 0: akashic.v1.TestQuestion.question:type_name -> akashic.v1.Question
@@ -1119,30 +1129,31 @@ var file_akashic_v1_test_proto_depIdxs = []int32{
 	18, // 4: akashic.v1.Test.updated_at:type_name -> google.protobuf.Timestamp
 	19, // 5: akashic.v1.Test.creator:type_name -> akashic.v1.User
 	4,  // 6: akashic.v1.Test.best_result:type_name -> akashic.v1.BestResult
-	0,  // 7: akashic.v1.ListTestsRequest.sort:type_name -> akashic.v1.TestSort
-	1,  // 8: akashic.v1.ListTestsRequest.taken_filter:type_name -> akashic.v1.TakenFilter
-	3,  // 9: akashic.v1.ListTestsResponse.tests:type_name -> akashic.v1.Test
-	20, // 10: akashic.v1.ListTestsResponse.page_info:type_name -> akashic.v1.PageInfo
-	5,  // 11: akashic.v1.ListTestsResponse.summary:type_name -> akashic.v1.TestsSummary
-	17, // 12: akashic.v1.GenerateTestRequest.config:type_name -> akashic.v1.TestConfig
-	3,  // 13: akashic.v1.GenerateTestResponse.test:type_name -> akashic.v1.Test
-	3,  // 14: akashic.v1.GetTestResponse.test:type_name -> akashic.v1.Test
-	3,  // 15: akashic.v1.RestoreTestResponse.test:type_name -> akashic.v1.Test
-	6,  // 16: akashic.v1.TestService.ListTests:input_type -> akashic.v1.ListTestsRequest
-	8,  // 17: akashic.v1.TestService.GenerateTest:input_type -> akashic.v1.GenerateTestRequest
-	10, // 18: akashic.v1.TestService.GetTest:input_type -> akashic.v1.GetTestRequest
-	12, // 19: akashic.v1.TestService.DeleteTest:input_type -> akashic.v1.DeleteTestRequest
-	14, // 20: akashic.v1.TestService.RestoreTest:input_type -> akashic.v1.RestoreTestRequest
-	7,  // 21: akashic.v1.TestService.ListTests:output_type -> akashic.v1.ListTestsResponse
-	9,  // 22: akashic.v1.TestService.GenerateTest:output_type -> akashic.v1.GenerateTestResponse
-	11, // 23: akashic.v1.TestService.GetTest:output_type -> akashic.v1.GetTestResponse
-	13, // 24: akashic.v1.TestService.DeleteTest:output_type -> akashic.v1.DeleteTestResponse
-	15, // 25: akashic.v1.TestService.RestoreTest:output_type -> akashic.v1.RestoreTestResponse
-	21, // [21:26] is the sub-list for method output_type
-	16, // [16:21] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	20, // 7: akashic.v1.Test.groups:type_name -> akashic.v1.QuestionGroup
+	0,  // 8: akashic.v1.ListTestsRequest.sort:type_name -> akashic.v1.TestSort
+	1,  // 9: akashic.v1.ListTestsRequest.taken_filter:type_name -> akashic.v1.TakenFilter
+	3,  // 10: akashic.v1.ListTestsResponse.tests:type_name -> akashic.v1.Test
+	21, // 11: akashic.v1.ListTestsResponse.page_info:type_name -> akashic.v1.PageInfo
+	5,  // 12: akashic.v1.ListTestsResponse.summary:type_name -> akashic.v1.TestsSummary
+	17, // 13: akashic.v1.GenerateTestRequest.config:type_name -> akashic.v1.TestConfig
+	3,  // 14: akashic.v1.GenerateTestResponse.test:type_name -> akashic.v1.Test
+	3,  // 15: akashic.v1.GetTestResponse.test:type_name -> akashic.v1.Test
+	3,  // 16: akashic.v1.RestoreTestResponse.test:type_name -> akashic.v1.Test
+	6,  // 17: akashic.v1.TestService.ListTests:input_type -> akashic.v1.ListTestsRequest
+	8,  // 18: akashic.v1.TestService.GenerateTest:input_type -> akashic.v1.GenerateTestRequest
+	10, // 19: akashic.v1.TestService.GetTest:input_type -> akashic.v1.GetTestRequest
+	12, // 20: akashic.v1.TestService.DeleteTest:input_type -> akashic.v1.DeleteTestRequest
+	14, // 21: akashic.v1.TestService.RestoreTest:input_type -> akashic.v1.RestoreTestRequest
+	7,  // 22: akashic.v1.TestService.ListTests:output_type -> akashic.v1.ListTestsResponse
+	9,  // 23: akashic.v1.TestService.GenerateTest:output_type -> akashic.v1.GenerateTestResponse
+	11, // 24: akashic.v1.TestService.GetTest:output_type -> akashic.v1.GetTestResponse
+	13, // 25: akashic.v1.TestService.DeleteTest:output_type -> akashic.v1.DeleteTestResponse
+	15, // 26: akashic.v1.TestService.RestoreTest:output_type -> akashic.v1.RestoreTestResponse
+	22, // [22:27] is the sub-list for method output_type
+	17, // [17:22] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_test_proto_init() }

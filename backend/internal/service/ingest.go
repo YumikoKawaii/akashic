@@ -50,11 +50,12 @@ type ingestItem struct {
 }
 
 type IngestService struct {
-	uow uow.UnitOfWork
+	uow  uow.UnitOfWork
+	pool GenerateCache
 }
 
-func NewIngestService(u uow.UnitOfWork) *IngestService {
-	return &IngestService{uow: u}
+func NewIngestService(u uow.UnitOfWork, pool GenerateCache) *IngestService {
+	return &IngestService{uow: u, pool: pool}
 }
 
 func (s *IngestService) Ingest(ctx context.Context, bankID int, r io.Reader, ext string) (*IngestResult, error) {
@@ -109,6 +110,7 @@ func (s *IngestService) Ingest(ctx context.Context, bankID int, r io.Reader, ext
 	}); err != nil {
 		return nil, err
 	}
+	s.pool.InvalidatePool(bankID)
 	return &IngestResult{Created: created}, nil
 }
 

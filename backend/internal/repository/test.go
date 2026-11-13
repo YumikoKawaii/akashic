@@ -231,7 +231,7 @@ func loadTestQuestions(db *gorm.DB, t *model.Test) error {
 		return nil
 	}
 	var qs []model.Question
-	if err := db.Where("id IN ?", []int64(t.QuestionIDs)).Find(&qs).Error; err != nil {
+	if err := db.Unscoped().Where("id IN ?", []int64(t.QuestionIDs)).Find(&qs).Error; err != nil {
 		return err
 	}
 	byID := make(map[int]model.Question, len(qs))
@@ -239,9 +239,36 @@ func loadTestQuestions(db *gorm.DB, t *model.Test) error {
 		byID[q.ID] = q
 	}
 	t.Questions = make([]model.Question, 0, len(qs))
+	var groupIDs []int
+	seen := make(map[int]struct{})
 	for _, id := range t.QuestionIDs {
-		if q, ok := byID[int(id)]; ok {
-			t.Questions = append(t.Questions, q)
+		q, ok := byID[int(id)]
+		if !ok {
+			continue
+		}
+		t.Questions = append(t.Questions, q)
+		if q.GroupID != nil {
+			if _, dup := seen[*q.GroupID]; !dup {
+				seen[*q.GroupID] = struct{}{}
+				groupIDs = append(groupIDs, *q.GroupID)
+			}
+		}
+	}
+	if len(groupIDs) == 0 {
+		return nil
+	}
+	var gs []model.QuestionGroup
+	if err := db.Unscoped().Where("id IN ?", groupIDs).Find(&gs).Error; err != nil {
+		return err
+	}
+	byGroup := make(map[int]model.QuestionGroup, len(gs))
+	for _, g := range gs {
+		byGroup[g.ID] = g
+	}
+	t.Groups = make([]model.QuestionGroup, 0, len(gs))
+	for _, id := range groupIDs {
+		if g, ok := byGroup[id]; ok {
+			t.Groups = append(t.Groups, g)
 		}
 	}
 	return nil

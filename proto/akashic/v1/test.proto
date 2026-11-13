@@ -35,6 +35,7 @@ message Test {
   optional User             creator = 10;     // embedded generator
   optional BestResult       best_result = 11; // the caller's best completed attempt, if any
   int32                     attempt_count = 12; // completed attempts by anyone (History count)
+  repeated QuestionGroup    groups = 13;
 }
 
 // BestResult is the caller's highest-scoring completed attempt on a test.

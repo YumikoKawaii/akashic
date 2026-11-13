@@ -165,6 +165,32 @@ proto3.util.setEnumType(BankVisibility, "akashic.v1.BankVisibility", [
 ]);
 
 /**
+ * @generated from enum akashic.v1.GroupMode
+ */
+export enum GroupMode {
+  /**
+   * @generated from enum value: GROUP_MODE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: GROUP_MODE_STANDALONE = 1;
+   */
+  STANDALONE = 1,
+
+  /**
+   * @generated from enum value: GROUP_MODE_GROUPS = 2;
+   */
+  GROUPS = 2,
+}
+// Retrieve enum metadata with: proto3.getEnumType(GroupMode)
+proto3.util.setEnumType(GroupMode, "akashic.v1.GroupMode", [
+  { no: 0, name: "GROUP_MODE_UNSPECIFIED" },
+  { no: 1, name: "GROUP_MODE_STANDALONE" },
+  { no: 2, name: "GROUP_MODE_GROUPS" },
+]);
+
+/**
  * @generated from message akashic.v1.MCQOption
  */
 export class MCQOption extends Message<MCQOption> {
@@ -236,6 +262,11 @@ export class TestConfig extends Message<TestConfig> {
    */
   tags: string[] = [];
 
+  /**
+   * @generated from field: akashic.v1.GroupMode group_mode = 9;
+   */
+  groupMode = GroupMode.UNSPECIFIED;
+
   constructor(data?: PartialMessage<TestConfig>) {
     super();
     proto3.util.initPartial(data, this);
@@ -249,6 +280,7 @@ export class TestConfig extends Message<TestConfig> {
     { no: 3, name: "hard_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 6, name: "types", kind: "enum", T: proto3.getEnumType(QuestionType), repeated: true },
     { no: 7, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 9, name: "group_mode", kind: "enum", T: proto3.getEnumType(GroupMode) },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TestConfig {

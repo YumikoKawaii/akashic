@@ -187,6 +187,16 @@ export class Question extends Message<Question> {
    */
   updatedAt?: Timestamp;
 
+  /**
+   * @generated from field: optional int32 group_id = 14;
+   */
+  groupId?: number;
+
+  /**
+   * @generated from field: optional int32 position = 15;
+   */
+  position?: number;
+
   constructor(data?: PartialMessage<Question>) {
     super();
     proto3.util.initPartial(data, this);
@@ -204,6 +214,8 @@ export class Question extends Message<Question> {
     { no: 10, name: "choice", kind: "message", T: MultipleChoice, oneof: "content" },
     { no: 11, name: "created_at", kind: "message", T: Timestamp },
     { no: 12, name: "updated_at", kind: "message", T: Timestamp },
+    { no: 14, name: "group_id", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
+    { no: 15, name: "position", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Question {
@@ -220,6 +232,97 @@ export class Question extends Message<Question> {
 
   static equals(a: Question | PlainMessage<Question> | undefined, b: Question | PlainMessage<Question> | undefined): boolean {
     return proto3.util.equals(Question, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.QuestionGroup
+ */
+export class QuestionGroup extends Message<QuestionGroup> {
+  /**
+   * @generated from field: int32 id = 1;
+   */
+  id = 0;
+
+  /**
+   * @generated from field: int32 bank_id = 2;
+   */
+  bankId = 0;
+
+  /**
+   * @generated from field: string title = 3;
+   */
+  title = "";
+
+  /**
+   * @generated from field: string instructions = 4;
+   */
+  instructions = "";
+
+  /**
+   * @generated from field: string passage = 5;
+   */
+  passage = "";
+
+  /**
+   * @generated from field: repeated akashic.v1.MCQOption options = 6;
+   */
+  options: MCQOption[] = [];
+
+  /**
+   * @generated from field: akashic.v1.Difficulty difficulty = 7;
+   */
+  difficulty = Difficulty.UNSPECIFIED;
+
+  /**
+   * @generated from field: repeated string tags = 8;
+   */
+  tags: string[] = [];
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 9;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp updated_at = 10;
+   */
+  updatedAt?: Timestamp;
+
+  constructor(data?: PartialMessage<QuestionGroup>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.QuestionGroup";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "title", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "instructions", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "passage", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "options", kind: "message", T: MCQOption, repeated: true },
+    { no: 7, name: "difficulty", kind: "enum", T: proto3.getEnumType(Difficulty) },
+    { no: 8, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 9, name: "created_at", kind: "message", T: Timestamp },
+    { no: 10, name: "updated_at", kind: "message", T: Timestamp },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QuestionGroup {
+    return new QuestionGroup().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QuestionGroup {
+    return new QuestionGroup().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QuestionGroup {
+    return new QuestionGroup().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: QuestionGroup | PlainMessage<QuestionGroup> | undefined, b: QuestionGroup | PlainMessage<QuestionGroup> | undefined): boolean {
+    return proto3.util.equals(QuestionGroup, a, b);
   }
 }
 

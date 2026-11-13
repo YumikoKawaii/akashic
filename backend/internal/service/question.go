@@ -18,15 +18,6 @@ func NewQuestionService(u uow.UnitOfWork, pool GenerateCache) *QuestionService {
 	return &QuestionService{uow: u, pool: pool}
 }
 
-func toCachedQuestion(q *model.Question) CachedQuestion {
-	return CachedQuestion{
-		ID:         q.ID,
-		Difficulty: q.Difficulty,
-		Type:       q.Type,
-		Tags:       []string(q.Tags),
-	}
-}
-
 func (s *QuestionService) List(bankID int, f repository.QuestionFilter) ([]model.Question, error) {
 	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
@@ -101,7 +92,7 @@ func (s *QuestionService) Create(ctx context.Context, bankID int, input CreateQu
 	if err != nil {
 		return nil, err
 	}
-	s.pool.AddToPool(bankID, toCachedQuestion(created))
+	s.pool.InvalidatePool(bankID)
 	return created, nil
 }
 
@@ -149,7 +140,7 @@ func (s *QuestionService) Update(bankID, id int, input UpdateQuestionInput) (*mo
 	if err != nil {
 		return nil, err
 	}
-	s.pool.UpdateInPool(q.BankID, toCachedQuestion(updated))
+	s.pool.InvalidatePool(q.BankID)
 	return updated, nil
 }
 
@@ -164,17 +155,21 @@ func (s *QuestionService) Delete(bankID, id int) error {
 	if err := s.uow.Store().Questions.SoftDelete(id); err != nil {
 		return err
 	}
-	s.pool.RemoveFromPool(bankID, id)
+	s.pool.InvalidatePool(bankID)
 	return nil
 }
 
 func (s *QuestionService) Restore(bankID, id int) (*model.Question, error) {
-	q, err := s.uow.Store().Questions.FindByID(id)
+	q, err := s.uow.Store().Questions.FindByIDUnscoped(id)
 	if err != nil {
 		return nil, err
 	}
 	if q.BankID != bankID {
 		return nil, ErrForbidden
 	}
-	return q, s.uow.Store().Questions.Restore(id)
+	if err := s.uow.Store().Questions.Restore(id); err != nil {
+		return nil, err
+	}
+	s.pool.InvalidatePool(bankID)
+	return s.uow.Store().Questions.FindByID(id)
 }

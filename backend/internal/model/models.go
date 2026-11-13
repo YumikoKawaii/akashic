@@ -15,6 +15,7 @@ type TestConfig struct {
 	HardCount   int      `json:"hard_count"`
 	Types       []string `json:"types,omitempty"`
 	Tags        []string `json:"tags,omitempty"`
+	GroupMode   string   `json:"group_mode,omitempty"`
 }
 
 func (t TestConfig) QuestionCount() int {
@@ -81,6 +82,8 @@ type Question struct {
 	Difficulty string          `gorm:"not null"                 json:"difficulty"`
 	Tags       pq.StringArray  `gorm:"type:text[]"              json:"tags"`
 	Content    QuestionContent `gorm:"serializer:json;type:jsonb;not null" json:"content"`
+	GroupID    *int            `gorm:"index"                    json:"group_id,omitempty"`
+	Position   *int            `                                json:"position,omitempty"`
 	CreatedAt  time.Time       `                                json:"created_at"`
 	UpdatedAt  time.Time       `                                json:"updated_at"`
 	DeletedAt  gorm.DeletedAt  `gorm:"index"                    json:"-"`
@@ -100,6 +103,30 @@ func NewQuestionContent(qType, text, answer string, options []MCQOption, answers
 	return QuestionContent{Text: text, Answer: answer}
 }
 
+type GroupContent struct {
+	Instructions string      `json:"instructions,omitempty"`
+	Passage      string      `json:"passage,omitempty"`
+	Options      []MCQOption `json:"options,omitempty"`
+}
+
+type QuestionGroup struct {
+	ID         int            `gorm:"primaryKey;autoIncrement" json:"id"`
+	BankID     int            `gorm:"not null;index"           json:"bank_id"`
+	Title      string         `gorm:"not null;default:''"      json:"title"`
+	Content    GroupContent   `gorm:"serializer:json;type:jsonb;not null" json:"content"`
+	Difficulty string         `gorm:"not null"                 json:"difficulty"`
+	Tags       pq.StringArray `gorm:"type:text[]"              json:"tags"`
+	CreatedAt  time.Time      `                                json:"created_at"`
+	UpdatedAt  time.Time      `                                json:"updated_at"`
+	DeletedAt  gorm.DeletedAt `gorm:"index"                    json:"-"`
+}
+
+const (
+	GroupModeMixed      = ""
+	GroupModeStandalone = "standalone"
+	GroupModeGroups     = "groups"
+)
+
 type Test struct {
 	ID          int            `gorm:"primaryKey;autoIncrement" json:"id"`
 	BankID      int            `gorm:"not null;index"           json:"bank_id"`
@@ -110,6 +137,7 @@ type Test struct {
 	Config      TestConfig     `gorm:"serializer:json"          json:"config"`
 	QuestionIDs pq.Int64Array  `gorm:"type:integer[];not null"  json:"question_ids"`
 	Questions   []Question     `gorm:"-"                        json:"questions,omitempty"`
+	Groups      []QuestionGroup `gorm:"-"                       json:"groups,omitempty"`
 	CreatedAt   time.Time      `                                json:"created_at"`
 	UpdatedAt   time.Time      `                                json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"                    json:"-"`
