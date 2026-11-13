@@ -11,7 +11,7 @@ export default function QuestionFormPage() {
 
   if (isEdit && isError) return (
     <div className="flex items-center justify-center h-full" style={{ flexDirection: 'column', gap: 12, textAlign: 'center' }}>
-      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1rem', color: 'var(--ink)' }}>Question Not Found</div>
+      <div style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '1rem', color: 'var(--ink)' }}>Question Not Found</div>
       <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>This question could not be loaded — it may have been removed.</div>
     </div>
   )

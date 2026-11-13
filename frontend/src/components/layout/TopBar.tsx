@@ -72,12 +72,12 @@ export default function TopBar() {
         {user && (
           <div className="flex items-center gap-2" style={{ marginLeft: 8, paddingLeft: 12, borderLeft: '1px solid var(--border-dim)' }}>
             {user.avatar_url && (
-              <img src={user.avatar_url} alt={user.name} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid var(--border-dim)', flexShrink: 0 }} />
+              <img src={user.avatar_url} alt={user.name} style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid var(--border-dim)', flexShrink: 0 }} />
             )}
-            <span className="hidden sm:block" style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.1em', color: 'var(--ink-dim)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span className="hidden sm:block" style={{ fontSize: '0.88rem', fontWeight: 500, color: 'var(--ink)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {user.name}
             </span>
-            <button className="btn btn-ghost" style={{ padding: '4px 8px', fontSize: '0.6rem' }} onClick={logout}>
+            <button className="btn btn-ghost" onClick={logout}>
               <span className="hidden sm:inline">Sign Out</span>
               <span className="sm:hidden">✕</span>
             </button>

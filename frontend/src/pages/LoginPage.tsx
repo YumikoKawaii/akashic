@@ -43,11 +43,12 @@ export default function LoginPage() {
         minHeight: '100vh', gap: 40,
       }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '2.2rem', letterSpacing: '0.3em', color: 'var(--gold)', marginBottom: 8 }}>
-            AKASHIC
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 10 }}>
+            <svg width="34" height="34" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6.5 1.5v4.2L2.9 12.6a1.3 1.3 0 0 0 1.1 1.9h8a1.3 1.3 0 0 0 1.1-1.9L9.5 5.7V1.5M5.5 1.5h5" stroke="var(--gold)" strokeLinejoin="round" strokeLinecap="round" /><circle cx="7" cy="11.8" r="0.8" fill="var(--gold)" /><circle cx="9.4" cy="12.6" r="0.55" fill="var(--gold)" /></svg>
+            <span style={{ fontFamily: 'Newsreader, serif', fontSize: '2.8rem', fontWeight: 600, color: 'var(--ink)', lineHeight: 1 }}>Akashic</span>
           </div>
-          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.7rem', letterSpacing: '0.25em', color: 'var(--ink-dim)' }}>
-            QUESTION ARCHIVE
+          <div style={{ fontSize: '1rem', color: 'var(--ink-dim)' }}>
+            Your question archive
           </div>
         </div>
 
@@ -56,23 +57,24 @@ export default function LoginPage() {
           disabled={loading}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-            padding: '12px 28px',
-            border: '1px solid var(--border-dim)',
-            background: 'var(--surface)',
+            padding: '12px 24px',
+            border: '1px solid var(--border)',
+            borderRadius: 8,
+            background: 'var(--bg-elevated)',
             color: 'var(--ink)',
-            fontFamily: 'IBM Plex Mono, monospace',
-            fontSize: '0.75rem',
-            letterSpacing: '0.15em',
+            fontFamily: 'IBM Plex Sans, sans-serif',
+            fontSize: '0.95rem',
+            fontWeight: 500,
             textDecoration: 'none',
             cursor: loading ? 'not-allowed' : 'pointer',
             transition: 'border-color 0.2s',
             opacity: loading ? 0.6 : 1,
           }}
-          onMouseEnter={e => { if (!loading) e.currentTarget.style.borderColor = 'var(--gold-dim)' }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-dim)' }}
+          onMouseEnter={e => { if (!loading) e.currentTarget.style.borderColor = 'var(--ink-dim)' }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)' }}
         >
           <GoogleIcon />
-          {loading ? 'REDIRECTING…' : 'SIGN IN WITH GOOGLE'}
+          {loading ? 'Redirecting…' : 'Sign in with Google'}
         </button>
       </div>
     </>

@@ -41,7 +41,7 @@ function AnswerDetail({ question: q, userAnswer, correct }: Omit<CardData, 'inde
             fontSize: '0.8rem', color: 'var(--ink)',
             display: 'flex', gap: 8, alignItems: 'center',
           }}>
-            <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.62rem', color: 'var(--gold-dim)', minWidth: 12, flexShrink: 0 }}>
+            <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 12, flexShrink: 0 }}>
               {opt.key}
             </span>
             <span style={{ flex: 1, lineHeight: 1.45 }}>{opt.text}</span>
@@ -279,11 +279,11 @@ export default function QuestionCarousel({ cards }: Props) {
                     display: 'flex', flexDirection: 'column',
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, marginBottom: 8 }}>
-                      <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', color: 'var(--gold-dim)', letterSpacing: '0.18em' }}>
+                      <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)' }}>
                         {String(card.index + 1).padStart(2, '0')}
                       </span>
                       <span style={{ color: symbolColor, fontSize: '0.88rem', fontWeight: 700, lineHeight: 1 }}>
-                        {card.correct === null ? '◈' : card.correct ? '✓' : '✕'}
+                        {card.correct === null ? '•' : card.correct ? '✓' : '✕'}
                       </span>
                     </div>
 
@@ -303,11 +303,11 @@ export default function QuestionCarousel({ cards }: Props) {
                     {isCenter && !isLive && (
                       <div style={{
                         flexShrink: 0, textAlign: 'center',
-                        fontSize: '0.52rem', letterSpacing: '0.22em',
-                        fontFamily: 'IBM Plex Mono, monospace', color: 'var(--gold-dim)',
+                        fontSize: '0.8rem',
+                        fontFamily: 'IBM Plex Sans, sans-serif', color: 'var(--gold-dim)',
                         opacity: 0.6, marginTop: 8,
                       }}>
-                        {cardIsExpanded ? '✦ TAP TO CLOSE ✦' : '✦ TAP TO REVEAL ✦'}
+                        {cardIsExpanded ? 'Tap to close' : 'Tap to reveal'}
                       </div>
                     )}
                   </div>
@@ -335,11 +335,10 @@ export default function QuestionCarousel({ cards }: Props) {
                         <DifficultyTag difficulty={card.question.difficulty} />
                         {card.correct !== null && (
                           <span style={{
-                            fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.52rem', letterSpacing: '0.1em',
+                            fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem',
                             padding: '2px 7px', border: '1px solid',
                             borderColor: card.correct ? 'rgba(31,122,114,0.4)' : 'rgba(163,34,45,0.4)',
-                            color: card.correct ? '#1F7A72' : '#A3222D',
-                            textTransform: 'uppercase' as const,
+                            color: card.correct ? '#1F7A72' : '#A3222D' as const,
                           }}>
                             {card.correct ? '✓ Correct' : '✕ Wrong'}
                           </span>
@@ -359,7 +358,7 @@ export default function QuestionCarousel({ cards }: Props) {
       </div>
 
       {/* Counter */}
-      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.22em', color: 'var(--gold-dim)' }}>
+      <div style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)' }}>
         {String(activeIndex + 1).padStart(2, '0')} / {String(n).padStart(2, '0')}
       </div>
     </div>

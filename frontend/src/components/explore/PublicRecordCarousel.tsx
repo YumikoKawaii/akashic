@@ -137,10 +137,10 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
 
                 {/* Cover content */}
                 <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-                  <div style={{ textAlign: 'center', color: 'var(--gold)', fontSize: '1.05rem', lineHeight: 1, marginBottom: 10 }}>◈</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--gold)', marginBottom: 10 }}><svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6.5 1.5v4.2L2.9 12.6a1.3 1.3 0 0 0 1.1 1.9h8a1.3 1.3 0 0 0 1.1-1.9L9.5 5.7V1.5M5.5 1.5h5" stroke="currentColor" strokeLinejoin="round" strokeLinecap="round" /></svg></div>
 
                   <div style={{
-                    fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.92rem', color: 'var(--ink)',
+                    fontFamily: 'Newsreader, serif', fontSize: '1.15rem', fontWeight: 600, color: 'var(--ink)',
                     textAlign: 'center', lineHeight: 1.3, marginBottom: 10,
                     overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
                   } as React.CSSProperties}>

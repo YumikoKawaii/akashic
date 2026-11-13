@@ -104,8 +104,7 @@ export default function MultiSelect({ value, onChange, options, placeholder = 'A
           <div
             onClick={() => onChange(value.length === options.length ? [] : options.map(o => o.value))}
             style={{
-              padding: '7px 12px', fontSize: '0.78rem', fontFamily: 'IBM Plex Mono, monospace',
-              letterSpacing: '0.08em', color: 'var(--gold-dim)', cursor: 'pointer',
+              padding: '7px 12px', fontSize: '0.78rem', fontFamily: 'IBM Plex Sans, sans-serif', color: 'var(--gold-dim)', cursor: 'pointer',
               borderBottom: '1px solid var(--border-dim)',
               background: 'rgba(163,34,45,0.04)',
             }}

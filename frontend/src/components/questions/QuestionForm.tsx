@@ -159,7 +159,7 @@ export default function QuestionForm({ bankId, initial }: Props) {
             <div className="section-title">Answer Options</div>
             {mcqTexts.map((opt, i) => (
               <div key={i} className="flex gap-3 items-center">
-                <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.7rem', color: 'var(--gold-dim)', minWidth: 20 }}>
+                <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 20 }}>
                   {OPTION_KEYS[i]}
                 </span>
                 <Input

@@ -20,18 +20,10 @@ export default function HomePage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 24 }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
-          <span style={{ color: 'var(--gold-dim)', fontSize: '0.85rem' }}>✦</span>
-          <h1 style={{
-            fontFamily: 'Newsreader, serif', fontWeight: 700,
-            letterSpacing: '0.22em', textIndent: '0.22em',  // textIndent re-centers the trailing letter-spacing
-            color: 'var(--gold)', fontSize: '1.75rem', margin: 0, lineHeight: 1,
-          }}>
-            THE ARCHIVE
-          </h1>
-          <span style={{ color: 'var(--gold-dim)', fontSize: '0.85rem' }}>✦</span>
-        </div>
-        <p style={{ color: 'var(--ink-dim)', fontSize: '0.85rem', letterSpacing: '0.04em', marginTop: 12 }}>
+        <h1 style={{ fontFamily: 'Newsreader, serif', fontWeight: 600, color: 'var(--ink)', fontSize: '2.6rem', margin: 0, lineHeight: 1.1 }}>
+          The Archive
+        </h1>
+        <p style={{ color: 'var(--ink-dim)', fontSize: '1rem', marginTop: 10 }}>
           Search the community's public records
         </p>
       </div>
@@ -39,7 +31,7 @@ export default function HomePage() {
       <div style={{ width: 'min(560px, 92%)', marginTop: 20, marginBottom: 30, position: 'relative' }}>
         <span style={{
           position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
-          display: 'flex', color: 'var(--gold-dim)', pointerEvents: 'none',
+          display: 'flex', color: 'var(--ink-dim)', pointerEvents: 'none',
         }}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
             <circle cx="7" cy="7" r="5" />
@@ -67,8 +59,8 @@ export default function HomePage() {
           <div className="flex justify-center" style={{ padding: 60 }}><Spinner /></div>
         ) : records.length === 0 ? (
           <div style={{ textAlign: 'center', color: 'var(--ink-dim)', padding: '56px 0', lineHeight: 1.8 }}>
-            <div style={{ color: 'var(--gold-dim)', fontSize: '1.3rem', marginBottom: 10 }}>✦</div>
-            No public records found.<br />
+            <div style={{ color: 'var(--border)', display: 'flex', justifyContent: 'center', marginBottom: 12 }}><svg width="28" height="28" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6.5 1.5v4.2L2.9 12.6a1.3 1.3 0 0 0 1.1 1.9h8a1.3 1.3 0 0 0 1.1-1.9L9.5 5.7V1.5M5.5 1.5h5" stroke="currentColor" strokeLinejoin="round" strokeLinecap="round" /></svg></div>
+            <div style={{ fontFamily: 'Newsreader, serif', fontSize: '1.25rem', fontWeight: 600, color: 'var(--ink)' }}>No public records found</div>
             Try a different search — or create a record and make it public to share with the community.
           </div>
         ) : (

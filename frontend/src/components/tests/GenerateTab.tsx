@@ -84,7 +84,7 @@ function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium
 
       {diffMode === 'difficulty' ? (
         <div className="flex gap-2 items-center" style={{ overflowX: 'auto' }}>
-          <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.12em', color: 'var(--ink-dim)', whiteSpace: 'nowrap' }}>
+          <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--ink-dim)', whiteSpace: 'nowrap' }}>
             Total
           </span>
           <input type="number" min={0} max={200} value={diffTotal}
@@ -98,7 +98,7 @@ function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium
             return (
               <div key={d} className="flex items-center gap-1">
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: DIFF[d].dot, boxShadow: `0 0 4px ${DIFF[d].dot}`, display: 'inline-block', flexShrink: 0 }} />
-                <span style={{ fontSize: '0.6rem', color: 'var(--ink-dim)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: '0.12em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--ink-dim)', fontFamily: 'IBM Plex Sans, sans-serif', whiteSpace: 'nowrap' }}>
                   {d}
                 </span>
                 <input type="number" min={0} max={100} value={val}
@@ -110,7 +110,7 @@ function DifficultyRow({ diffMode, setDiffMode, easy, setEasy, medium, setMedium
         </div>
       ) : (
         <div className="flex items-center gap-2">
-          <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.12em', color: 'var(--ink-dim)' }}>Questions</span>
+          <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--ink-dim)' }}>Questions</span>
           <input type="number" min={0} max={200} value={totalCount || ''}
             onChange={e => setTotalCount(e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)))}
             onBlur={e => { if (!e.target.value || Number(e.target.value) < 1) setTotalCount(1) }}

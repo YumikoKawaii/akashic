@@ -29,16 +29,16 @@ export default function RecordSwitcher() {
         title="Switch record"
         style={{
           display: 'flex', alignItems: 'center', gap: 7,
-          background: 'none', border: '1px solid var(--border-dim)', borderRadius: 4,
-          padding: '5px 12px', cursor: 'pointer',
-          fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.72rem', letterSpacing: '0.08em',
-          color: active ? 'var(--gold)' : 'var(--ink-dim)',
+          background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)', borderRadius: 6,
+          height: 36, padding: '0 12px', cursor: 'pointer',
+          fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.88rem', fontWeight: 500,
+          color: 'var(--ink)',
         }}
       >
         <span style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {active?.name ?? 'Records'}
         </span>
-        <span style={{ fontSize: '0.6rem', color: 'var(--gold-dim)' }}>▾</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5l3 3 3-3" stroke="var(--ink-dim)" strokeWidth="1.4" strokeLinecap="round" /></svg>
       </button>
 
       {open && (
@@ -46,7 +46,7 @@ export default function RecordSwitcher() {
           position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 60,
           minWidth: 200, maxHeight: 360, overflowY: 'auto',
           background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
-          borderRadius: 5, boxShadow: '0 8px 24px rgba(163,34,45,0.18)', padding: 4,
+          borderRadius: 8, boxShadow: '0 10px 28px rgba(43,29,31,0.12)', padding: 6,
         }}>
           {banks.length === 0 ? (
             <div style={{ padding: '10px 12px', fontSize: '0.8rem', color: 'var(--ink-dim)' }}>No records yet</div>
@@ -59,13 +59,13 @@ export default function RecordSwitcher() {
                   onClick={() => { navigate(`/banks/${b.id}`); setOpen(false) }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-                    background: isActive ? 'linear-gradient(90deg, rgba(163,34,45,0.10), transparent)' : 'none',
+                    background: isActive ? 'var(--rose-soft)' : 'none', borderRadius: 5,
                     border: 'none', textAlign: 'left', cursor: 'pointer',
-                    padding: '8px 12px', fontSize: '0.85rem', fontFamily: 'IBM Plex Sans, sans-serif',
+                    padding: '9px 12px', fontSize: '0.9rem', fontFamily: 'IBM Plex Sans, sans-serif', fontWeight: isActive ? 500 : 400,
                     color: isActive ? 'var(--gold)' : 'var(--ink)',
                   }}
                 >
-                  <span style={{ width: 12, flexShrink: 0, color: 'var(--gold)' }}>{isActive ? '✦' : ''}</span>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: isActive ? 'var(--gold)' : 'transparent' }} />
                   <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name}</span>
                 </button>
               </div>

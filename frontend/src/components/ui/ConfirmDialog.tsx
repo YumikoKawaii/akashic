@@ -47,11 +47,9 @@ export default function ConfirmDialog({ message, confirmLabel = 'Delete', onConf
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <p style={{
-            fontFamily: 'IBM Plex Mono, monospace',
-            fontSize: '0.6rem',
-            letterSpacing: '0.28em',
+            fontFamily: 'IBM Plex Sans, sans-serif',
+            fontSize: '0.8rem',
             color: 'var(--gold-dim)',
-            textTransform: 'uppercase',
             marginBottom: 14,
           }}>
             Confirmation

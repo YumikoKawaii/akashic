@@ -60,12 +60,12 @@ function PageInput({ page, totalPages, onChange }: {
           onKeyDown={e => e.key === 'Enter' && commit(val)}
           style={{
             width: 44, height: 28, textAlign: 'center',
-            fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.65rem',
+            fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem',
             border: '1px solid var(--gold)', background: 'transparent',
             color: 'var(--ink)', outline: 'none', borderRadius: 2,
           }}
         />
-        <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.65rem', color: 'var(--ink-dim)' }}>/ {totalPages}</span>
+        <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--ink-dim)' }}>/ {totalPages}</span>
       </div>
       <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '5px 14px' }}
         onClick={() => onChange(page + 1)} disabled={page >= totalPages}>Next →</button>
@@ -182,7 +182,7 @@ export default function BankPage() {
 
   if (bankError) return (
     <div className="flex items-center justify-center h-full" style={{ flexDirection: 'column', gap: 16, textAlign: 'center' }}>
-      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1rem', color: 'var(--ink)' }}>Record Unavailable</div>
+      <div style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '1rem', color: 'var(--ink)' }}>Record Unavailable</div>
       <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>This record could not be loaded — it may have been removed, or you may not have access.</div>
       <button className="btn btn-primary" onClick={() => navigate('/')} style={{ padding: '10px 28px' }}>Go Home</button>
     </div>
@@ -203,9 +203,9 @@ export default function BankPage() {
   const Chip = ({ text, on }: { text: string; on: boolean }) => (
     <span style={{
       marginLeft: 10,
-      fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.55rem', letterSpacing: '0.12em',
+      fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem',
       padding: '2px 7px', border: '1px solid var(--border-dim)',
-      color: on ? 'var(--gold)' : 'var(--ink-dim)', textTransform: 'uppercase',
+      color: on ? 'var(--gold)' : 'var(--ink-dim)',
     }}>
       {text}
     </span>
@@ -299,7 +299,7 @@ export default function BankPage() {
       {activeTab === 'questions' && (
         <>
           <div className="flex gap-3 items-center flex-wrap">
-            <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>Filter</span>
+            <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)' }}>Filter</span>
             <div style={{ width: 170 }}>
               <Select
                 value={filter.type ?? ''}
@@ -372,7 +372,7 @@ export default function BankPage() {
 
           {totalTests > 0 && (
             <div className="flex gap-3 items-center flex-wrap">
-              <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>Sort</span>
+              <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)' }}>Sort</span>
               <div style={{ width: 170 }}>
                 <Select
                   value={testSort}
@@ -406,7 +406,7 @@ export default function BankPage() {
           </div>
 
           {totalTests > 0 && (
-            <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.62rem', letterSpacing: '0.14em', color: 'var(--ink-dim)', textTransform: 'uppercase', marginTop: -4 }}>
+            <div style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--ink-dim)', marginTop: -4 }}>
               {takenCount} of {totalTests} taken
               {overallBestPct >= 0 && <> · best <span style={{ color: GRADE_COLOR[gradeForPct(overallBestPct)] }}>{gradeForPct(overallBestPct)}</span></>}
             </div>

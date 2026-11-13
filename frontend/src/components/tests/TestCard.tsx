@@ -61,7 +61,7 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
             title={`Best result: ${result.score}/${result.total}`}
             style={{
               flexShrink: 0, display: 'inline-flex', alignItems: 'baseline', gap: 5,
-              fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em',
+              fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem',
               padding: '3px 9px', border: `1px solid ${GRADE_COLOR[result.grade]}66`,
               color: GRADE_COLOR[result.grade], background: `${GRADE_COLOR[result.grade]}12`,
             }}
@@ -70,11 +70,10 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
           </span>
         ) : (
           <span style={{
-            flexShrink: 0, fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.55rem', letterSpacing: '0.14em',
+            flexShrink: 0, fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem',
             padding: '3px 9px', border: '1px solid var(--border-dim)', color: 'var(--ink-dim)',
-            textTransform: 'uppercase',
           }}>
-            ✦ New
+            New
           </span>
         )}
       </div>
@@ -94,7 +93,7 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
       <div className="test-card-footer">
         {confirmDelete ? (
           <>
-            <span style={{ fontSize: '0.68rem', color: 'var(--ink-dim)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--ink-dim)', fontFamily: 'IBM Plex Sans, sans-serif' }}>
               Delete?
             </span>
             <button
@@ -177,7 +176,7 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <span>{a.taker?.name ? `${a.taker.name} · ` : ''}{date}</span>
-                <span style={{ fontFamily: 'IBM Plex Mono, monospace', color: '#6b4c8a', fontSize: '0.7rem' }}>
+                <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', color: '#6b4c8a', fontSize: '0.8rem' }}>
                   {answered} answered · in progress
                 </span>
               </div>
@@ -205,7 +204,7 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <span>{a.taker?.name ? `${a.taker.name} · ` : ''}{date}</span>
-                <span style={{ fontFamily: 'IBM Plex Mono, monospace', color, fontSize: '0.7rem' }}>
+                <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', color, fontSize: '0.8rem' }}>
                   {a.score}/{a.total} · {grade}
                 </span>
               </div>

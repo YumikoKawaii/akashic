@@ -107,11 +107,9 @@ body {
 }
 
 .topbar-subtitle {
-  font-family: var(--font-mono);
-  font-size: 0.69rem;
-  letter-spacing: 0.08em;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
   color: var(--ink-dim);
-  text-transform: uppercase;
 }
 
 .sidebar {
@@ -126,11 +124,10 @@ body {
 
 .sidebar-section {
   padding: 12px 10px 6px;
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.12em;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
   color: var(--ink-dim);
-  text-transform: uppercase;
 }
 
 .sidebar-item {
@@ -197,11 +194,10 @@ body {
 .page-meta { font-size: 0.82rem; color: var(--ink-dim); margin-top: 6px; }
 
 .section-title {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  color: var(--ink-dim);
-  text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -603,7 +599,7 @@ input[type=number].form-input { -moz-appearance: textfield; }
   flex-shrink: 0;
   text-align: center;
   padding: 10px;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 0.72rem;
   color: var(--ink-dim);
   border-top: 1px solid var(--border-dim);
@@ -766,10 +762,10 @@ input[type=number].form-input { -moz-appearance: textfield; }
 }
 .word-bank-label {
   width: 100%;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.58rem;
-  letter-spacing: 0.18em;
-  color: var(--gold-dim);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink-dim);
   margin-bottom: 2px;
 }
 .word-bank-pill {

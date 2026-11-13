@@ -32,7 +32,7 @@ export default function QuestionCard({ question, index, bankId, canEdit }: Props
       onClick={() => canEdit && navigate(`/banks/${bankId}/questions/${question.id}/edit`)}
     >
       <div className="flex items-start gap-4" style={{ position: 'relative', zIndex: 1 }}>
-        <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.68rem', color: 'var(--gold-dim)', paddingTop: 3, minWidth: 28, textAlign: 'right' }}>
+        <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)', paddingTop: 3, minWidth: 28, textAlign: 'right' }}>
           {String(index + 1).padStart(3, '0')}
         </span>
 

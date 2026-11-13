@@ -47,7 +47,7 @@ function checkAnswer(q: Question, answer: string): boolean {
 function CorrectAnswerBox({ answer }: { answer: string }) {
   return (
     <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(163,34,45,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
-      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>CORRECT ANSWER</div>
+      <div style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)', marginBottom: 6 }}>Correct answer</div>
       <div style={{ color: '#1F7A72' }}>{answer}</div>
     </div>
   )
@@ -151,13 +151,13 @@ function GroupContextBox({ group, type }: { group: QuestionGroup; type?: Questio
       )}
       {options.length > 0 && (
         <>
-          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.68rem', letterSpacing: '0.1em', color: 'var(--ink-dim)', marginBottom: 8, textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--ink-dim)', marginBottom: 8 }}>
             {(type && GROUP_OPTION_LABEL[type]) ?? 'Options'}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {options.map(item => (
               <div key={item.key} style={{ display: 'flex', gap: 10, fontSize: '0.9rem', color: 'var(--ink)' }}>
-                <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.78rem', color: 'var(--gold)', minWidth: 22 }}>{item.key}.</span>
+                <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.78rem', color: 'var(--gold)', minWidth: 22 }}>{item.key}.</span>
                 <span>{item.text}</span>
               </div>
             ))}
@@ -350,7 +350,7 @@ function PassageAttemptLayout({ attempt, questions, groups, answers, setAnswers,
 
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.95rem', color: 'var(--ink)' }}>{attempt.test.name}</div>
+          <div style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.95rem', color: 'var(--ink)' }}>{attempt.test.name}</div>
           <div style={{ fontSize: '0.72rem', color: 'var(--ink-dim)', marginTop: 2 }}>
             {answered} / {questions.length} answered
           </div>
@@ -370,10 +370,10 @@ function PassageAttemptLayout({ attempt, questions, groups, answers, setAnswers,
           {passages.map((passage, pi) => (
             <div key={passage.id} style={{ marginTop: pi > 0 ? 36 : 0 }}>
               <div style={{ position: 'relative', marginBottom: 6 }}>
-                <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.18em', color: 'var(--gold-dim)', marginBottom: 8, textTransform: 'uppercase', position: 'relative' }}>
+                <div style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)', marginBottom: 8, position: 'relative' }}>
                   Passage{passages.length > 1 ? ` ${pi + 1} of ${passages.length}` : ''}
                 </div>
-                <h2 style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1.1rem', color: 'var(--ink)', lineHeight: 1.4, position: 'relative', marginBottom: 14 }}>
+                <h2 style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '1.1rem', color: 'var(--ink)', lineHeight: 1.4, position: 'relative', marginBottom: 14 }}>
                   {passage.title || 'Untitled passage'}
                 </h2>
               </div>
@@ -408,7 +408,7 @@ function PassageAttemptLayout({ attempt, questions, groups, answers, setAnswers,
                   <div key={q.id} id={`attempt-q-${q.id}`} style={{ marginBottom: 20, scrollMarginTop: 80 }}>
                     {isFillBlank ? (
                       <div style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
-                        <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 28, flexShrink: 0 }}>
+                        <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 28, flexShrink: 0 }}>
                           {tq.position}.
                         </span>
                         <div style={{ flex: 1 }}>
@@ -418,7 +418,7 @@ function PassageAttemptLayout({ attempt, questions, groups, answers, setAnswers,
                     ) : (
                       <>
                         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
-                          <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 28, paddingTop: 2 }}>
+                          <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 28, paddingTop: 2 }}>
                             {tq.position}.
                           </span>
                           <p style={{ flex: 1, margin: 0, fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '1rem', color: 'var(--ink)', lineHeight: 1.5 }}>
@@ -523,7 +523,7 @@ function ExamLayout({ attempt, questions, groups, answers, setAnswers, onSubmit,
         <div className="attempt-header">
 
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1rem', color: 'var(--ink)' }}>{attempt.test.name}</div>
+            <div style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '1rem', color: 'var(--ink)' }}>{attempt.test.name}</div>
             <div style={{ fontSize: '0.78rem', color: 'var(--ink-dim)', marginTop: 2 }}>
               Question {idx + 1} / {total} · {answered} answered
             </div>
@@ -532,10 +532,10 @@ function ExamLayout({ attempt, questions, groups, answers, setAnswers, onSubmit,
           <div style={{ display: 'flex', alignItems: 'center', gap: 20, position: 'relative', zIndex: 1 }}>
             {scorable > 0 && (
               <div style={{ textAlign: 'right', position: 'relative' }}>
-                <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1.4rem', color: 'var(--gold)', lineHeight: 1, position: 'relative' }}>
+                <div style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '1.4rem', color: 'var(--gold)', lineHeight: 1, position: 'relative' }}>
                   {score}<span style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', marginLeft: 2 }}>/ {scorable}</span>
                 </div>
-                <div style={{ fontSize: '0.68rem', color: 'var(--ink-dim)', letterSpacing: '0.12em', fontFamily: 'IBM Plex Mono, monospace' }}>SCORE</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--ink-dim)', fontFamily: 'IBM Plex Sans, sans-serif' }}>Score</div>
               </div>
             )}
             <button className="btn btn-primary" onClick={onSubmit} disabled={isPending} style={{ padding: '9px 26px' }}>
@@ -552,7 +552,7 @@ function ExamLayout({ attempt, questions, groups, answers, setAnswers, onSubmit,
 
             <div className="book-page-inner">
               {group?.title && (
-                <div style={{ marginBottom: 12, fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.72rem', letterSpacing: '0.08em', color: 'var(--ink-dim)', textTransform: 'uppercase' }}>
+                <div style={{ marginBottom: 12, fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--ink-dim)' }}>
                   {group.title}
                 </div>
               )}
@@ -561,13 +561,13 @@ function ExamLayout({ attempt, questions, groups, answers, setAnswers, onSubmit,
 
               {/* Page head — chapter-style number + tags + verdict */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
-                <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.62rem', letterSpacing: '0.22em', color: 'var(--gold-dim)' }}>
-                  QUESTION {String(idx + 1).padStart(2, '0')}
+                <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)' }}>
+                  Question {idx + 1}
                 </span>
                 <TypeTag type={q.type} />
                 <DifficultyTag difficulty={q.difficulty} />
                 {revealed && isScoreable && (
-                  <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.56rem', letterSpacing: '0.1em', padding: '2px 8px', border: '1px solid', borderColor: isCorrect ? 'rgba(31,122,114,0.5)' : 'rgba(163,34,45,0.5)', color: isCorrect ? '#1F7A72' : '#A3222D', textTransform: 'uppercase' }}>
+                  <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', padding: '2px 8px', border: '1px solid', borderColor: isCorrect ? 'rgba(31,122,114,0.5)' : 'rgba(163,34,45,0.5)', color: isCorrect ? '#1F7A72' : '#A3222D' }}>
                     {isCorrect ? '✓ Correct' : '✕ Wrong'}
                   </span>
                 )}
@@ -681,7 +681,7 @@ export default function AttemptPage() {
   if (isError) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center', position: 'relative', zIndex: 1 }}>
-        <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1rem', color: 'var(--ink)' }}>Attempt Not Found</div>
+        <div style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '1rem', color: 'var(--ink)' }}>Attempt Not Found</div>
         <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>This attempt could not be loaded — it may have been removed, or you may not have access.</div>
         <button className="btn btn-primary" onClick={() => navigate('/')} style={{ padding: '10px 28px' }}>Go Home</button>
       </div>
@@ -705,7 +705,7 @@ export default function AttemptPage() {
   if (total === 0) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
-        <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1rem', color: 'var(--ink)' }}>No Questions</div>
+        <div style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '1rem', color: 'var(--ink)' }}>No Questions</div>
         <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>This test was generated with no matching questions.</div>
         <button className="btn btn-primary" onClick={() => navigate(-1)} style={{ padding: '10px 28px' }}>Go Back</button>
       </div>

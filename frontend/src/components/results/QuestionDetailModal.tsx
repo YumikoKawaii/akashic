@@ -59,8 +59,7 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
             color: 'var(--gold-dim)',
             cursor: 'pointer',
             fontSize: '0.8rem',
-            fontFamily: 'IBM Plex Mono, monospace',
-            letterSpacing: '0.1em',
+            fontFamily: 'IBM Plex Sans, sans-serif',
             padding: '4px 8px',
             opacity: 0.75,
           }}
@@ -70,7 +69,7 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-          <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.62rem', color: 'var(--gold-dim)', letterSpacing: '0.18em' }}>
+          <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)' }}>
             {String(index + 1).padStart(2, '0')}
           </span>
           <div style={{ width: 1, height: 14, background: 'var(--border-dim)', flexShrink: 0 }} />
@@ -78,14 +77,12 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
           <DifficultyTag difficulty={q.difficulty} />
           {correct !== null && (
             <span style={{
-              fontFamily: 'IBM Plex Mono, monospace',
-              fontSize: '0.56rem',
-              letterSpacing: '0.1em',
+              fontFamily: 'IBM Plex Sans, sans-serif',
+              fontSize: '0.8rem',
               padding: '2px 8px',
               border: '1px solid',
               borderColor: correct ? 'rgba(31,122,114,0.4)' : 'rgba(163,34,45,0.4)',
-              color: correct ? '#1F7A72' : '#A3222D',
-              textTransform: 'uppercase' as const,
+              color: correct ? '#1F7A72' : '#A3222D' as const,
             }}>
               {correct ? '✓ Correct' : '✕ Wrong'}
             </span>
@@ -115,7 +112,7 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
                   gap: 10,
                   alignItems: 'center',
                 }}>
-                  <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.68rem', color: 'var(--gold-dim)', minWidth: 16 }}>
+                  <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 16 }}>
                     {opt.key}
                   </span>
                   {opt.text}
