@@ -39,24 +39,28 @@ var procedureMinRole = map[string]string{
 	akashicv1connect.BankServiceSetBankVisibilityProcedure:       membership.RoleOwner,
 
 	// Questions
-	akashicv1connect.QuestionServiceListQuestionsProcedure:   membership.RoleViewer,
-	akashicv1connect.QuestionServiceListTagsProcedure:        membership.RoleViewer,
-	akashicv1connect.QuestionServiceGetQuestionProcedure:     membership.RoleViewer,
-	akashicv1connect.QuestionServiceCreateQuestionProcedure:  membership.RoleEditor,
-	akashicv1connect.QuestionServiceUpdateQuestionProcedure:  membership.RoleEditor,
-	akashicv1connect.QuestionServiceDeleteQuestionProcedure:  membership.RoleEditor,
-	akashicv1connect.QuestionServiceRestoreQuestionProcedure: membership.RoleEditor,
-	akashicv1connect.QuestionServiceIngestQuestionsProcedure: membership.RoleEditor,
+	akashicv1connect.QuestionServiceListQuestionsProcedure:        membership.RoleViewer,
+	akashicv1connect.QuestionServiceListTagsProcedure:             membership.RoleViewer,
+	akashicv1connect.QuestionServiceGetQuestionProcedure:          membership.RoleViewer,
+	akashicv1connect.QuestionServiceCreateQuestionProcedure:       membership.RoleEditor,
+	akashicv1connect.QuestionServiceUpdateQuestionProcedure:       membership.RoleEditor,
+	akashicv1connect.QuestionServiceDeleteQuestionProcedure:       membership.RoleEditor,
+	akashicv1connect.QuestionServiceRestoreQuestionProcedure:      membership.RoleEditor,
+	akashicv1connect.QuestionServiceIngestQuestionsProcedure:      membership.RoleEditor,
+	akashicv1connect.QuestionServiceListDeletedQuestionsProcedure: membership.RoleEditor,
+	akashicv1connect.QuestionServiceListQuestionGroupsProcedure:   membership.RoleViewer,
+	akashicv1connect.QuestionServiceUpdateQuestionGroupProcedure:  membership.RoleEditor,
 
 	// Tests
 	// Tests are bank-wide shared, so generating/listing/taking them is a viewer
 	// capability (a public visitor can generate + take any test). Delete/restore
 	// is creator-or-editor, enforced in the service via the role from context.
-	akashicv1connect.TestServiceListTestsProcedure:    membership.RoleViewer,
-	akashicv1connect.TestServiceGetTestProcedure:      membership.RoleViewer,
-	akashicv1connect.TestServiceGenerateTestProcedure: membership.RoleViewer,
-	akashicv1connect.TestServiceDeleteTestProcedure:   membership.RoleViewer,
-	akashicv1connect.TestServiceRestoreTestProcedure:  membership.RoleViewer,
+	akashicv1connect.TestServiceListTestsProcedure:        membership.RoleViewer,
+	akashicv1connect.TestServiceGetTestProcedure:          membership.RoleViewer,
+	akashicv1connect.TestServiceGenerateTestProcedure:     membership.RoleViewer,
+	akashicv1connect.TestServiceDeleteTestProcedure:       membership.RoleViewer,
+	akashicv1connect.TestServiceRestoreTestProcedure:      membership.RoleViewer,
+	akashicv1connect.TestServiceListDeletedTestsProcedure: membership.RoleViewer,
 
 	// Attempts — running a test reads bank content, so viewer suffices.
 	akashicv1connect.AttemptServiceListAttemptsByTestProcedure:  membership.RoleViewer,

@@ -1294,3 +1294,71 @@ export class SetBankVisibilityResponse extends Message<SetBankVisibilityResponse
   }
 }
 
+/**
+ * @generated from message akashic.v1.ListDeletedBanksRequest
+ */
+export class ListDeletedBanksRequest extends Message<ListDeletedBanksRequest> {
+  constructor(data?: PartialMessage<ListDeletedBanksRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.ListDeletedBanksRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListDeletedBanksRequest {
+    return new ListDeletedBanksRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListDeletedBanksRequest {
+    return new ListDeletedBanksRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListDeletedBanksRequest {
+    return new ListDeletedBanksRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListDeletedBanksRequest | PlainMessage<ListDeletedBanksRequest> | undefined, b: ListDeletedBanksRequest | PlainMessage<ListDeletedBanksRequest> | undefined): boolean {
+    return proto3.util.equals(ListDeletedBanksRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.ListDeletedBanksResponse
+ */
+export class ListDeletedBanksResponse extends Message<ListDeletedBanksResponse> {
+  /**
+   * @generated from field: repeated akashic.v1.Bank banks = 1;
+   */
+  banks: Bank[] = [];
+
+  constructor(data?: PartialMessage<ListDeletedBanksResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.ListDeletedBanksResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "banks", kind: "message", T: Bank, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListDeletedBanksResponse {
+    return new ListDeletedBanksResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListDeletedBanksResponse {
+    return new ListDeletedBanksResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListDeletedBanksResponse {
+    return new ListDeletedBanksResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListDeletedBanksResponse | PlainMessage<ListDeletedBanksResponse> | undefined, b: ListDeletedBanksResponse | PlainMessage<ListDeletedBanksResponse> | undefined): boolean {
+    return proto3.util.equals(ListDeletedBanksResponse, a, b);
+  }
+}
+

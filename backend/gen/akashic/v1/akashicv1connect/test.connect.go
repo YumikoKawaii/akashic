@@ -44,6 +44,9 @@ const (
 	TestServiceDeleteTestProcedure = "/akashic.v1.TestService/DeleteTest"
 	// TestServiceRestoreTestProcedure is the fully-qualified name of the TestService's RestoreTest RPC.
 	TestServiceRestoreTestProcedure = "/akashic.v1.TestService/RestoreTest"
+	// TestServiceListDeletedTestsProcedure is the fully-qualified name of the TestService's
+	// ListDeletedTests RPC.
+	TestServiceListDeletedTestsProcedure = "/akashic.v1.TestService/ListDeletedTests"
 )
 
 // TestServiceClient is a client for the akashic.v1.TestService service.
@@ -53,6 +56,7 @@ type TestServiceClient interface {
 	GetTest(context.Context, *connect.Request[v1.GetTestRequest]) (*connect.Response[v1.GetTestResponse], error)
 	DeleteTest(context.Context, *connect.Request[v1.DeleteTestRequest]) (*connect.Response[v1.DeleteTestResponse], error)
 	RestoreTest(context.Context, *connect.Request[v1.RestoreTestRequest]) (*connect.Response[v1.RestoreTestResponse], error)
+	ListDeletedTests(context.Context, *connect.Request[v1.ListDeletedTestsRequest]) (*connect.Response[v1.ListDeletedTestsResponse], error)
 }
 
 // NewTestServiceClient constructs a client for the akashic.v1.TestService service. By default, it
@@ -96,16 +100,23 @@ func NewTestServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(testServiceMethods.ByName("RestoreTest")),
 			connect.WithClientOptions(opts...),
 		),
+		listDeletedTests: connect.NewClient[v1.ListDeletedTestsRequest, v1.ListDeletedTestsResponse](
+			httpClient,
+			baseURL+TestServiceListDeletedTestsProcedure,
+			connect.WithSchema(testServiceMethods.ByName("ListDeletedTests")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // testServiceClient implements TestServiceClient.
 type testServiceClient struct {
-	listTests    *connect.Client[v1.ListTestsRequest, v1.ListTestsResponse]
-	generateTest *connect.Client[v1.GenerateTestRequest, v1.GenerateTestResponse]
-	getTest      *connect.Client[v1.GetTestRequest, v1.GetTestResponse]
-	deleteTest   *connect.Client[v1.DeleteTestRequest, v1.DeleteTestResponse]
-	restoreTest  *connect.Client[v1.RestoreTestRequest, v1.RestoreTestResponse]
+	listTests        *connect.Client[v1.ListTestsRequest, v1.ListTestsResponse]
+	generateTest     *connect.Client[v1.GenerateTestRequest, v1.GenerateTestResponse]
+	getTest          *connect.Client[v1.GetTestRequest, v1.GetTestResponse]
+	deleteTest       *connect.Client[v1.DeleteTestRequest, v1.DeleteTestResponse]
+	restoreTest      *connect.Client[v1.RestoreTestRequest, v1.RestoreTestResponse]
+	listDeletedTests *connect.Client[v1.ListDeletedTestsRequest, v1.ListDeletedTestsResponse]
 }
 
 // ListTests calls akashic.v1.TestService.ListTests.
@@ -133,6 +144,11 @@ func (c *testServiceClient) RestoreTest(ctx context.Context, req *connect.Reques
 	return c.restoreTest.CallUnary(ctx, req)
 }
 
+// ListDeletedTests calls akashic.v1.TestService.ListDeletedTests.
+func (c *testServiceClient) ListDeletedTests(ctx context.Context, req *connect.Request[v1.ListDeletedTestsRequest]) (*connect.Response[v1.ListDeletedTestsResponse], error) {
+	return c.listDeletedTests.CallUnary(ctx, req)
+}
+
 // TestServiceHandler is an implementation of the akashic.v1.TestService service.
 type TestServiceHandler interface {
 	ListTests(context.Context, *connect.Request[v1.ListTestsRequest]) (*connect.Response[v1.ListTestsResponse], error)
@@ -140,6 +156,7 @@ type TestServiceHandler interface {
 	GetTest(context.Context, *connect.Request[v1.GetTestRequest]) (*connect.Response[v1.GetTestResponse], error)
 	DeleteTest(context.Context, *connect.Request[v1.DeleteTestRequest]) (*connect.Response[v1.DeleteTestResponse], error)
 	RestoreTest(context.Context, *connect.Request[v1.RestoreTestRequest]) (*connect.Response[v1.RestoreTestResponse], error)
+	ListDeletedTests(context.Context, *connect.Request[v1.ListDeletedTestsRequest]) (*connect.Response[v1.ListDeletedTestsResponse], error)
 }
 
 // NewTestServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -179,6 +196,12 @@ func NewTestServiceHandler(svc TestServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(testServiceMethods.ByName("RestoreTest")),
 		connect.WithHandlerOptions(opts...),
 	)
+	testServiceListDeletedTestsHandler := connect.NewUnaryHandler(
+		TestServiceListDeletedTestsProcedure,
+		svc.ListDeletedTests,
+		connect.WithSchema(testServiceMethods.ByName("ListDeletedTests")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/akashic.v1.TestService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case TestServiceListTestsProcedure:
@@ -191,6 +214,8 @@ func NewTestServiceHandler(svc TestServiceHandler, opts ...connect.HandlerOption
 			testServiceDeleteTestHandler.ServeHTTP(w, r)
 		case TestServiceRestoreTestProcedure:
 			testServiceRestoreTestHandler.ServeHTTP(w, r)
+		case TestServiceListDeletedTestsProcedure:
+			testServiceListDeletedTestsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -218,4 +243,8 @@ func (UnimplementedTestServiceHandler) DeleteTest(context.Context, *connect.Requ
 
 func (UnimplementedTestServiceHandler) RestoreTest(context.Context, *connect.Request[v1.RestoreTestRequest]) (*connect.Response[v1.RestoreTestResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.TestService.RestoreTest is not implemented"))
+}
+
+func (UnimplementedTestServiceHandler) ListDeletedTests(context.Context, *connect.Request[v1.ListDeletedTestsRequest]) (*connect.Response[v1.ListDeletedTestsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.TestService.ListDeletedTests is not implemented"))
 }

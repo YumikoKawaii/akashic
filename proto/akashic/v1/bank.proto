@@ -20,6 +20,7 @@ service BankService {
   rpc RemoveBankMember         (RemoveBankMemberRequest)         returns (RemoveBankMemberResponse);
   rpc UpdateBankMemberRole     (UpdateBankMemberRoleRequest)     returns (UpdateBankMemberRoleResponse);
   rpc SetBankVisibility        (SetBankVisibilityRequest)        returns (SetBankVisibilityResponse);
+  rpc ListDeletedBanks         (ListDeletedBanksRequest)         returns (ListDeletedBanksResponse);
 }
 
 message Bank {
@@ -132,3 +133,7 @@ message SetBankVisibilityRequest {
   BankVisibility visibility = 2;
 }
 message SetBankVisibilityResponse {Bank bank = 1;}
+
+
+message ListDeletedBanksRequest  {}
+message ListDeletedBanksResponse {repeated Bank banks = 1;}

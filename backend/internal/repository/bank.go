@@ -29,6 +29,7 @@ type BankRepository interface {
 	Save(b *model.Bank) error
 	SoftDelete(id int) error
 	Restore(id int) error
+	FindDeletedOwnedBy(userID int) ([]model.Bank, error)
 }
 
 type bankRepo struct{ db *gorm.DB }
@@ -127,5 +128,18 @@ func (r *bankRepo) SoftDelete(id int) error {
 }
 
 func (r *bankRepo) Restore(id int) error {
-	return r.db.Unscoped().Model(&model.Bank{}).Where("id = ?", id).Update("deleted_at", nil).Error
+	return conflict(r.db.Unscoped().Model(&model.Bank{}).Where("id = ?", id).Update("deleted_at", nil).Error)
+}
+
+// FindDeletedOwnedBy lists soft-deleted banks the user still holds the owner
+// membership on, most recently deleted first.
+func (r *bankRepo) FindDeletedOwnedBy(userID int) ([]model.Bank, error) {
+	var banks []model.Bank
+	err := r.db.Unscoped().
+		Joins("JOIN bank_members bm ON bm.bank_id = banks.id AND bm.user_id = ? AND bm.role = ? AND bm.deleted_at IS NULL", userID, "owner").
+		Where("banks.deleted_at IS NOT NULL").
+		Order("banks.deleted_at DESC").
+		Limit(100).
+		Find(&banks).Error
+	return banks, err
 }

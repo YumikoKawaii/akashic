@@ -141,3 +141,28 @@ export function useRemoveMember(bankId: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: memberKeys.list(bankId) }),
   })
 }
+
+export function useDeletedBanks(enabled = true) {
+  return useQuery({
+    queryKey: ['banks', 'deleted'] as const,
+    queryFn:  async () => {
+      const res = await bankClient.listDeletedBanks({})
+      return res.banks.map(fromBank)
+    },
+    enabled,
+  })
+}
+
+export function useRestoreBank() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await bankClient.restoreBank({ bankId: id })
+      return fromBank(res.bank!)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: bankKeys.all() })
+      qc.invalidateQueries({ queryKey: ['explore'] })
+    },
+  })
+}

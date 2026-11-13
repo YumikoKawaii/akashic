@@ -196,3 +196,18 @@ func (h *BankServiceHandler) SetBankVisibility(
 	}
 	return connect.NewResponse(&pb.SetBankVisibilityResponse{Bank: bankToProto(&bank.Bank)}), nil
 }
+
+func (h *BankServiceHandler) ListDeletedBanks(
+	ctx context.Context,
+	req *connect.Request[pb.ListDeletedBanksRequest],
+) (*connect.Response[pb.ListDeletedBanksResponse], error) {
+	banks, err := h.svc.ListDeleted(userIDFromContext(ctx))
+	if err != nil {
+		return nil, toConnectError(err)
+	}
+	out := make([]*pb.Bank, len(banks))
+	for i := range banks {
+		out[i] = bankToProto(&banks[i])
+	}
+	return connect.NewResponse(&pb.ListDeletedBanksResponse{Banks: out}), nil
+}

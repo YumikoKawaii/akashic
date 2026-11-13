@@ -37,6 +37,7 @@ type QuestionRepository interface {
 	Save(q *model.Question) error
 	SoftDelete(id int) error
 	Restore(id int) error
+	FindDeletedByBank(bankID int) ([]model.Question, error)
 }
 
 type questionRepo struct{ db *gorm.DB }
@@ -165,4 +166,15 @@ func applyQuestionFilter(q *gorm.DB, f QuestionFilter) *gorm.DB {
 		q = q.Where("id NOT IN ?", f.ExcludeIDs)
 	}
 	return q
+}
+
+// FindDeletedByBank lists a bank's soft-deleted questions, most recently deleted first.
+func (r *questionRepo) FindDeletedByBank(bankID int) ([]model.Question, error) {
+	var qs []model.Question
+	err := r.db.Unscoped().
+		Where("bank_id = ? AND deleted_at IS NOT NULL", bankID).
+		Order("deleted_at DESC").
+		Limit(200).
+		Find(&qs).Error
+	return qs, err
 }

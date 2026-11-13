@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useBanks } from '../../hooks/useBanks'
+import DeletedRecordsDialog from '../banks/DeletedRecordsDialog'
 
 // Top-bar dropdown that lists the user's records and jumps between them —
 // the navigation half of the old sidebar. Creation lives in TopBar's "New Record".
@@ -9,6 +10,7 @@ export default function RecordSwitcher() {
   const { bankId }  = useParams<{ bankId: string }>()
   const { data: banks = [] } = useBanks()
   const [open, setOpen] = useState(false)
+  const [trashOpen, setTrashOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -71,8 +73,19 @@ export default function RecordSwitcher() {
               </div>
             )
           })}
+          <div className="dropdown-sep" />
+          <button
+            onClick={() => { setOpen(false); setTrashOpen(true) }}
+            style={{
+              display: 'block', width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer',
+              padding: '9px 12px', borderRadius: 5, fontSize: '0.85rem', fontFamily: 'IBM Plex Sans, sans-serif', color: 'var(--ink-dim)',
+            }}
+          >
+            Deleted records…
+          </button>
         </div>
       )}
+      {trashOpen && <DeletedRecordsDialog onClose={() => setTrashOpen(false)} />}
     </div>
   )
 }

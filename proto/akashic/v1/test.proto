@@ -13,6 +13,7 @@ service TestService {
   rpc GetTest      (GetTestRequest)      returns (GetTestResponse);
   rpc DeleteTest   (DeleteTestRequest)   returns (DeleteTestResponse);
   rpc RestoreTest  (RestoreTestRequest)  returns (RestoreTestResponse);
+  rpc ListDeletedTests (ListDeletedTestsRequest) returns (ListDeletedTestsResponse);
 }
 
 message TestQuestion {
@@ -97,3 +98,6 @@ message DeleteTestResponse {}
 
 message RestoreTestRequest  {int32 bank_id = 1; int32 id = 2;}
 message RestoreTestResponse {Test test = 1;}
+
+message ListDeletedTestsRequest  {int32 bank_id = 1;}
+message ListDeletedTestsResponse {repeated Test tests = 1;}

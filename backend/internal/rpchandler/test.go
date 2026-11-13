@@ -146,3 +146,18 @@ func (h *TestServiceHandler) RestoreTest(
 	}
 	return connect.NewResponse(&pb.RestoreTestResponse{Test: testToProto(test)}), nil
 }
+
+func (h *TestServiceHandler) ListDeletedTests(
+	ctx context.Context,
+	req *connect.Request[pb.ListDeletedTestsRequest],
+) (*connect.Response[pb.ListDeletedTestsResponse], error) {
+	tests, err := h.svc.ListDeleted(int(req.Msg.BankId), userIDFromContext(ctx), roleFromContext(ctx))
+	if err != nil {
+		return nil, toConnectError(err)
+	}
+	out := make([]*pb.Test, len(tests))
+	for i := range tests {
+		out[i] = testToProto(&tests[i])
+	}
+	return connect.NewResponse(&pb.ListDeletedTestsResponse{Tests: out}), nil
+}

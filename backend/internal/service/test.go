@@ -207,7 +207,7 @@ func (s *TestService) Delete(bankID, id, userID int, callerRole string) error {
 }
 
 func (s *TestService) Restore(bankID, id, userID int, callerRole string) (*model.Test, error) {
-	test, err := s.uow.Store().Tests.FindByBankAndID(bankID, id)
+	test, err := s.uow.Store().Tests.FindByBankAndIDUnscoped(bankID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -218,4 +218,20 @@ func (s *TestService) Restore(bankID, id, userID int, callerRole string) (*model
 		return nil, err
 	}
 	return s.uow.Store().Tests.FindByBankAndID(bankID, id)
+}
+
+// ListDeleted returns the bank's soft-deleted tests the caller may restore:
+// their own, or all of them for an editor+.
+func (s *TestService) ListDeleted(bankID, userID int, callerRole string) ([]model.Test, error) {
+	tests, err := s.uow.Store().Tests.FindDeletedByBank(bankID)
+	if err != nil {
+		return nil, err
+	}
+	out := tests[:0]
+	for i := range tests {
+		if canManageTest(&tests[i], userID, callerRole) {
+			out = append(out, tests[i])
+		}
+	}
+	return out, nil
 }

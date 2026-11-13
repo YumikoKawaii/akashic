@@ -28,6 +28,7 @@ Akashic is a personal question archive. Keep questions in **records** (English, 
 - **Import** — bulk-load questions from JSON, YAML or CSV, including grouped passages (see [`samples/group_sample.json`](samples/group_sample.json)). A file is saved only if every row is valid; otherwise each bad row is listed.
 - **Test generator** — pick counts per difficulty, filter by type and tags, and choose mixed, standalone-only or grouped questions. Questions from your last three tests are held back until fresh ones run out.
 - **Attempts** — answers autosave, can be checked one by one, and every attempt is kept in the test's history.
+- **Groups and trash** — edit a group's passage, instructions and options after import; restore deleted questions, tests and records.
 
 ## Stack
 

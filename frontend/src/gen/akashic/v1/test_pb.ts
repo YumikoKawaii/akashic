@@ -809,3 +809,77 @@ export class RestoreTestResponse extends Message<RestoreTestResponse> {
   }
 }
 
+/**
+ * @generated from message akashic.v1.ListDeletedTestsRequest
+ */
+export class ListDeletedTestsRequest extends Message<ListDeletedTestsRequest> {
+  /**
+   * @generated from field: int32 bank_id = 1;
+   */
+  bankId = 0;
+
+  constructor(data?: PartialMessage<ListDeletedTestsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.ListDeletedTestsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListDeletedTestsRequest {
+    return new ListDeletedTestsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListDeletedTestsRequest {
+    return new ListDeletedTestsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListDeletedTestsRequest {
+    return new ListDeletedTestsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListDeletedTestsRequest | PlainMessage<ListDeletedTestsRequest> | undefined, b: ListDeletedTestsRequest | PlainMessage<ListDeletedTestsRequest> | undefined): boolean {
+    return proto3.util.equals(ListDeletedTestsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.ListDeletedTestsResponse
+ */
+export class ListDeletedTestsResponse extends Message<ListDeletedTestsResponse> {
+  /**
+   * @generated from field: repeated akashic.v1.Test tests = 1;
+   */
+  tests: Test[] = [];
+
+  constructor(data?: PartialMessage<ListDeletedTestsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.ListDeletedTestsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "tests", kind: "message", T: Test, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListDeletedTestsResponse {
+    return new ListDeletedTestsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListDeletedTestsResponse {
+    return new ListDeletedTestsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListDeletedTestsResponse {
+    return new ListDeletedTestsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListDeletedTestsResponse | PlainMessage<ListDeletedTestsResponse> | undefined, b: ListDeletedTestsResponse | PlainMessage<ListDeletedTestsResponse> | undefined): boolean {
+    return proto3.util.equals(ListDeletedTestsResponse, a, b);
+  }
+}
+

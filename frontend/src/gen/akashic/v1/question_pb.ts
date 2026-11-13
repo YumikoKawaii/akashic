@@ -1150,3 +1150,310 @@ export class ListTagsResponse extends Message<ListTagsResponse> {
   }
 }
 
+/**
+ * @generated from message akashic.v1.ListDeletedQuestionsRequest
+ */
+export class ListDeletedQuestionsRequest extends Message<ListDeletedQuestionsRequest> {
+  /**
+   * @generated from field: int32 bank_id = 1;
+   */
+  bankId = 0;
+
+  constructor(data?: PartialMessage<ListDeletedQuestionsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.ListDeletedQuestionsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListDeletedQuestionsRequest {
+    return new ListDeletedQuestionsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListDeletedQuestionsRequest {
+    return new ListDeletedQuestionsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListDeletedQuestionsRequest {
+    return new ListDeletedQuestionsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListDeletedQuestionsRequest | PlainMessage<ListDeletedQuestionsRequest> | undefined, b: ListDeletedQuestionsRequest | PlainMessage<ListDeletedQuestionsRequest> | undefined): boolean {
+    return proto3.util.equals(ListDeletedQuestionsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.ListDeletedQuestionsResponse
+ */
+export class ListDeletedQuestionsResponse extends Message<ListDeletedQuestionsResponse> {
+  /**
+   * @generated from field: repeated akashic.v1.Question questions = 1;
+   */
+  questions: Question[] = [];
+
+  constructor(data?: PartialMessage<ListDeletedQuestionsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.ListDeletedQuestionsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "questions", kind: "message", T: Question, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListDeletedQuestionsResponse {
+    return new ListDeletedQuestionsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListDeletedQuestionsResponse {
+    return new ListDeletedQuestionsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListDeletedQuestionsResponse {
+    return new ListDeletedQuestionsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListDeletedQuestionsResponse | PlainMessage<ListDeletedQuestionsResponse> | undefined, b: ListDeletedQuestionsResponse | PlainMessage<ListDeletedQuestionsResponse> | undefined): boolean {
+    return proto3.util.equals(ListDeletedQuestionsResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.QuestionGroupSummary
+ */
+export class QuestionGroupSummary extends Message<QuestionGroupSummary> {
+  /**
+   * @generated from field: akashic.v1.QuestionGroup group = 1;
+   */
+  group?: QuestionGroup;
+
+  /**
+   * @generated from field: int32 question_count = 2;
+   */
+  questionCount = 0;
+
+  constructor(data?: PartialMessage<QuestionGroupSummary>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.QuestionGroupSummary";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "group", kind: "message", T: QuestionGroup },
+    { no: 2, name: "question_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QuestionGroupSummary {
+    return new QuestionGroupSummary().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QuestionGroupSummary {
+    return new QuestionGroupSummary().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QuestionGroupSummary {
+    return new QuestionGroupSummary().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: QuestionGroupSummary | PlainMessage<QuestionGroupSummary> | undefined, b: QuestionGroupSummary | PlainMessage<QuestionGroupSummary> | undefined): boolean {
+    return proto3.util.equals(QuestionGroupSummary, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.ListQuestionGroupsRequest
+ */
+export class ListQuestionGroupsRequest extends Message<ListQuestionGroupsRequest> {
+  /**
+   * @generated from field: int32 bank_id = 1;
+   */
+  bankId = 0;
+
+  constructor(data?: PartialMessage<ListQuestionGroupsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.ListQuestionGroupsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListQuestionGroupsRequest {
+    return new ListQuestionGroupsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListQuestionGroupsRequest {
+    return new ListQuestionGroupsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListQuestionGroupsRequest {
+    return new ListQuestionGroupsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListQuestionGroupsRequest | PlainMessage<ListQuestionGroupsRequest> | undefined, b: ListQuestionGroupsRequest | PlainMessage<ListQuestionGroupsRequest> | undefined): boolean {
+    return proto3.util.equals(ListQuestionGroupsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.ListQuestionGroupsResponse
+ */
+export class ListQuestionGroupsResponse extends Message<ListQuestionGroupsResponse> {
+  /**
+   * @generated from field: repeated akashic.v1.QuestionGroupSummary groups = 1;
+   */
+  groups: QuestionGroupSummary[] = [];
+
+  constructor(data?: PartialMessage<ListQuestionGroupsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.ListQuestionGroupsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "groups", kind: "message", T: QuestionGroupSummary, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListQuestionGroupsResponse {
+    return new ListQuestionGroupsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListQuestionGroupsResponse {
+    return new ListQuestionGroupsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListQuestionGroupsResponse {
+    return new ListQuestionGroupsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListQuestionGroupsResponse | PlainMessage<ListQuestionGroupsResponse> | undefined, b: ListQuestionGroupsResponse | PlainMessage<ListQuestionGroupsResponse> | undefined): boolean {
+    return proto3.util.equals(ListQuestionGroupsResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.UpdateQuestionGroupRequest
+ */
+export class UpdateQuestionGroupRequest extends Message<UpdateQuestionGroupRequest> {
+  /**
+   * @generated from field: int32 bank_id = 1;
+   */
+  bankId = 0;
+
+  /**
+   * @generated from field: int32 id = 2;
+   */
+  id = 0;
+
+  /**
+   * @generated from field: string title = 3;
+   */
+  title = "";
+
+  /**
+   * @generated from field: string instructions = 4;
+   */
+  instructions = "";
+
+  /**
+   * @generated from field: string passage = 5;
+   */
+  passage = "";
+
+  /**
+   * @generated from field: repeated akashic.v1.MCQOption options = 6;
+   */
+  options: MCQOption[] = [];
+
+  /**
+   * @generated from field: akashic.v1.Difficulty difficulty = 7;
+   */
+  difficulty = Difficulty.UNSPECIFIED;
+
+  /**
+   * @generated from field: repeated string tags = 8;
+   */
+  tags: string[] = [];
+
+  constructor(data?: PartialMessage<UpdateQuestionGroupRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.UpdateQuestionGroupRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "title", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "instructions", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "passage", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "options", kind: "message", T: MCQOption, repeated: true },
+    { no: 7, name: "difficulty", kind: "enum", T: proto3.getEnumType(Difficulty) },
+    { no: 8, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdateQuestionGroupRequest {
+    return new UpdateQuestionGroupRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UpdateQuestionGroupRequest {
+    return new UpdateQuestionGroupRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UpdateQuestionGroupRequest {
+    return new UpdateQuestionGroupRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: UpdateQuestionGroupRequest | PlainMessage<UpdateQuestionGroupRequest> | undefined, b: UpdateQuestionGroupRequest | PlainMessage<UpdateQuestionGroupRequest> | undefined): boolean {
+    return proto3.util.equals(UpdateQuestionGroupRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message akashic.v1.UpdateQuestionGroupResponse
+ */
+export class UpdateQuestionGroupResponse extends Message<UpdateQuestionGroupResponse> {
+  /**
+   * @generated from field: akashic.v1.QuestionGroup group = 1;
+   */
+  group?: QuestionGroup;
+
+  constructor(data?: PartialMessage<UpdateQuestionGroupResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "akashic.v1.UpdateQuestionGroupResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "group", kind: "message", T: QuestionGroup },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdateQuestionGroupResponse {
+    return new UpdateQuestionGroupResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UpdateQuestionGroupResponse {
+    return new UpdateQuestionGroupResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UpdateQuestionGroupResponse {
+    return new UpdateQuestionGroupResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: UpdateQuestionGroupResponse | PlainMessage<UpdateQuestionGroupResponse> | undefined, b: UpdateQuestionGroupResponse | PlainMessage<UpdateQuestionGroupResponse> | undefined): boolean {
+    return proto3.util.equals(UpdateQuestionGroupResponse, a, b);
+  }
+}
+

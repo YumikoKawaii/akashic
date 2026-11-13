@@ -15,6 +15,8 @@ type TestRepository interface {
 	TestsSummary(bankID, userID int) (TestsSummary, error)
 	FindByID(id int) (*model.Test, error)
 	FindByBankAndID(bankID, id int) (*model.Test, error)
+	FindByBankAndIDUnscoped(bankID, id int) (*model.Test, error)
+	FindDeletedByBank(bankID int) ([]model.Test, error)
 	RecentlyUsedQuestionIDs(bankID, lastN int) ([]int, error)
 	Create(t *model.Test) error
 	SoftDelete(id int) error
@@ -306,4 +308,24 @@ func (r *testRepo) RecentlyUsedQuestionIDs(bankID, lastN int) ([]int, error) {
 		) recent
 	`, bankID, lastN).Scan(&ids).Error
 	return ids, err
+}
+
+func (r *testRepo) FindByBankAndIDUnscoped(bankID, id int) (*model.Test, error) {
+	var t model.Test
+	err := r.db.Unscoped().Where("bank_id = ?", bankID).First(&t, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, ErrNotFound
+	}
+	return &t, err
+}
+
+// FindDeletedByBank lists a bank's soft-deleted tests, most recently deleted first.
+func (r *testRepo) FindDeletedByBank(bankID int) ([]model.Test, error) {
+	var tests []model.Test
+	err := r.db.Unscoped().Preload("Creator").
+		Where("bank_id = ? AND deleted_at IS NOT NULL", bankID).
+		Order("deleted_at DESC").
+		Limit(100).
+		Find(&tests).Error
+	return tests, err
 }

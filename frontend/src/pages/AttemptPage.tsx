@@ -6,43 +6,8 @@ import { TypeTag, DifficultyTag } from '../components/ui/Tag'
 import Spinner from '../components/ui/Spinner'
 import OrnateDivider from '../components/ui/OrnateDivider'
 import Select from '../components/ui/Select'
+import { questionContent, seededShuffle, checkAnswer } from '../components/tests/answers'
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function questionContent(q: Question): string {
-  return q.item?.content ?? q.choice?.content ?? ''
-}
-
-// Deterministic shuffle: the same seed always yields the same order, so an MCQ's
-// options stay put when you leave a question and come back (no reshuffle-on-
-// revisit confusion). Seeded by (attemptId, questionId) — stable across reloads
-// and devices, with no stored state. mulberry32 PRNG + seeded Fisher-Yates.
-function seededShuffle<T>(arr: readonly T[], seed: number): T[] {
-  const out = [...arr]
-  let s = seed >>> 0
-  const rand = () => {
-    s = (s + 0x6d2b79f5) | 0
-    let t = Math.imul(s ^ (s >>> 15), 1 | s)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1))
-    ;[out[i], out[j]] = [out[j], out[i]]
-  }
-  return out
-}
-
-function checkAnswer(q: Question, answer: string): boolean {
-  const got = answer.trim()
-  if (q.choice) {
-    const want = [...q.choice.answers].sort()
-    const got2 = got.split('|').map(s => s.trim()).filter(Boolean).sort()
-    return got2.length === want.length && got2.every((v, i) => v === want[i])
-  }
-  if (!q.item) return false
-  return got.toLowerCase() === q.item.answer.trim().toLowerCase()
-}
 
 function CorrectAnswerBox({ answer }: { answer: string }) {
   return (
@@ -486,29 +451,24 @@ function ExamLayout({ attempt, questions, groups, answers, setAnswers, onSubmit,
   const answered = Object.values(answers).filter(v => v?.trim()).length
   const isLast   = idx === total - 1
 
-  // Running score over the checked questions (short-answer is open-ended, so it
-  // is revealed for reference but never auto-scored — mirrors the old behaviour).
   let score = 0, scorable = 0
   questions.forEach(t => {
     const qq = t.question
-    if (!qq || !revealedIds.has(qq.id) || qq.type === 'short_answer') return
+    if (!qq || !revealedIds.has(qq.id)) return
     scorable++
     if (checkAnswer(qq, answers[String(qq.id)] ?? '')) score++
   })
 
   const revealed    = revealedIds.has(q.id)
-  const isScoreable = q.type !== 'short_answer'
   const isSkippable = q.type === 'sentence_completion' || q.type === 'form_completion' || q.type === 'short_answer'
-  const isCorrect   = revealed && isScoreable && checkAnswer(q, sel)
+  const isCorrect   = revealed && checkAnswer(q, sel)
 
   const setAnswer = (val: string) => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))
 
   const reveal = (markWrong: boolean) => {
     setRevealedIds(prev => new Set(prev).add(q.id))
-    if (isScoreable) {
-      const correct = !markWrong && checkAnswer(q, sel)
-      setFlash({ key: Date.now(), type: correct ? 'correct' : 'wrong' })
-    }
+    const correct = !markWrong && checkAnswer(q, sel)
+    setFlash({ key: Date.now(), type: correct ? 'correct' : 'wrong' })
   }
   const handleCheck = () => { if (sel) reveal(false) }
   const handleSkip  = () => { setAnswer(''); reveal(true) }
@@ -566,7 +526,7 @@ function ExamLayout({ attempt, questions, groups, answers, setAnswers, onSubmit,
                 </span>
                 <TypeTag type={q.type} />
                 <DifficultyTag difficulty={q.difficulty} />
-                {revealed && isScoreable && (
+                {revealed && (
                   <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', padding: '2px 8px', border: '1px solid', borderColor: isCorrect ? 'rgba(31,122,114,0.5)' : 'rgba(163,34,45,0.5)', color: isCorrect ? '#1F7A72' : '#A3222D' }}>
                     {isCorrect ? '✓ Correct' : '✕ Wrong'}
                   </span>
@@ -586,15 +546,7 @@ function ExamLayout({ attempt, questions, groups, answers, setAnswers, onSubmit,
                 </button>
                 {!revealed ? (
                   <>
-                    {/* Scoreable questions auto-grade on Check; open answers have
-                        nothing to check, so they just advance (and stay editable). */}
-                    {isScoreable ? (
-                      <button className="btn btn-primary" onClick={handleCheck} disabled={!sel} style={{ padding: '10px 32px' }}>Check</button>
-                    ) : isLast ? (
-                      <button className="btn btn-primary pulse" onClick={onSubmit} disabled={isPending} style={{ padding: '10px 32px' }}>{isPending ? '…' : 'Finish ›'}</button>
-                    ) : (
-                      <button className="btn btn-primary" onClick={() => setCurrentIdx(i => Math.min(total - 1, i + 1))} disabled={!sel} style={{ padding: '10px 32px' }}>Next ›</button>
-                    )}
+                    <button className="btn btn-primary" onClick={handleCheck} disabled={!sel} style={{ padding: '10px 32px' }}>Check</button>
                     {isSkippable && (
                       <button className="btn" onClick={handleSkip} style={{ padding: '10px 22px', color: 'var(--ink-dim)', borderColor: 'var(--border-dim)' }}>Skip</button>
                     )}

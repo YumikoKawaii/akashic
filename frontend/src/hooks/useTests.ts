@@ -94,3 +94,24 @@ export function useDeleteTest(bankId: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: testKeys.lists(bankId) }),
   })
 }
+
+export function useDeletedTests(bankId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['tests', bankId, 'deleted'] as const,
+    queryFn:  async () => {
+      const res = await testClient.listDeletedTests({ bankId: Number(bankId) })
+      return res.tests.map(fromTest)
+    },
+    enabled: !!bankId && enabled,
+  })
+}
+
+export function useRestoreTest(bankId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => testClient.restoreTest({ bankId: Number(bankId), id }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tests', bankId] })
+    },
+  })
+}

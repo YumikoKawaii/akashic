@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreateQuestionRequest, CreateQuestionResponse, DeleteQuestionRequest, DeleteQuestionResponse, GetQuestionRequest, GetQuestionResponse, IngestQuestionsRequest, IngestQuestionsResponse, ListQuestionsRequest, ListQuestionsResponse, ListTagsRequest, ListTagsResponse, RestoreQuestionRequest, RestoreQuestionResponse, UpdateQuestionRequest, UpdateQuestionResponse } from "./question_pb.js";
+import { CreateQuestionRequest, CreateQuestionResponse, DeleteQuestionRequest, DeleteQuestionResponse, GetQuestionRequest, GetQuestionResponse, IngestQuestionsRequest, IngestQuestionsResponse, ListDeletedQuestionsRequest, ListDeletedQuestionsResponse, ListQuestionGroupsRequest, ListQuestionGroupsResponse, ListQuestionsRequest, ListQuestionsResponse, ListTagsRequest, ListTagsResponse, RestoreQuestionRequest, RestoreQuestionResponse, UpdateQuestionGroupRequest, UpdateQuestionGroupResponse, UpdateQuestionRequest, UpdateQuestionResponse } from "./question_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -82,6 +82,33 @@ export const QuestionService = {
       name: "ListTags",
       I: ListTagsRequest,
       O: ListTagsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc akashic.v1.QuestionService.ListDeletedQuestions
+     */
+    listDeletedQuestions: {
+      name: "ListDeletedQuestions",
+      I: ListDeletedQuestionsRequest,
+      O: ListDeletedQuestionsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc akashic.v1.QuestionService.ListQuestionGroups
+     */
+    listQuestionGroups: {
+      name: "ListQuestionGroups",
+      I: ListQuestionGroupsRequest,
+      O: ListQuestionGroupsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc akashic.v1.QuestionService.UpdateQuestionGroup
+     */
+    updateQuestionGroup: {
+      name: "UpdateQuestionGroup",
+      I: UpdateQuestionGroupRequest,
+      O: UpdateQuestionGroupResponse,
       kind: MethodKind.Unary,
     },
   }

@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Difficulty } from '../gen/akashic/v1/common_pb'
 import { questionClient } from '../api/connect'
-import { fromQuestion, toQuestionType } from '../api/adapters'
-import type { QuestionFilter, MCQOption } from '../types'
+import { fromQuestion, fromQuestionGroup, toQuestionType } from '../api/adapters'
+import type { QuestionFilter, MCQOption, QuestionGroup } from '../types'
 
 export const PAGE_SIZE = 20
 
@@ -151,5 +151,72 @@ export function useIngestQuestions(bankId: string) {
       return res
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['questions', bankId] }),
+  })
+}
+
+export function useDeletedQuestions(bankId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['questions', bankId, 'deleted'] as const,
+    queryFn:  async () => {
+      const res = await questionClient.listDeletedQuestions({ bankId: Number(bankId) })
+      return res.questions.map(fromQuestion)
+    },
+    enabled: !!bankId && enabled,
+  })
+}
+
+export function useRestoreQuestion(bankId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => questionClient.restoreQuestion({ bankId: Number(bankId), id }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['questions', bankId] })
+      qc.invalidateQueries({ queryKey: ['groups', bankId] })
+    },
+  })
+}
+
+export interface GroupSummary { group: QuestionGroup; question_count: number }
+
+export function useQuestionGroups(bankId: string) {
+  return useQuery({
+    queryKey: ['groups', bankId] as const,
+    queryFn:  async (): Promise<GroupSummary[]> => {
+      const res = await questionClient.listQuestionGroups({ bankId: Number(bankId) })
+      return res.groups.map(g => ({ group: fromQuestionGroup(g.group!), question_count: g.questionCount }))
+    },
+    enabled: !!bankId,
+  })
+}
+
+export interface UpdateGroupPayload {
+  title: string
+  instructions: string
+  passage: string
+  options: MCQOption[]
+  difficulty: string
+  tags: string[]
+}
+
+export function useUpdateQuestionGroup(bankId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: UpdateGroupPayload }) => {
+      const res = await questionClient.updateQuestionGroup({
+        bankId:       Number(bankId),
+        id,
+        title:        data.title,
+        instructions: data.instructions,
+        passage:      data.passage,
+        options:      data.options,
+        difficulty:   toDifficulty(data.difficulty),
+        tags:         data.tags,
+      })
+      return fromQuestionGroup(res.group!)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['groups', bankId] })
+      qc.invalidateQueries({ queryKey: ['tests', bankId] })
+    },
   })
 }

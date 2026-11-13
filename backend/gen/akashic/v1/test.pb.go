@@ -988,6 +988,94 @@ func (x *RestoreTestResponse) GetTest() *Test {
 	return nil
 }
 
+type ListDeletedTestsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BankId        int32                  `protobuf:"varint,1,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListDeletedTestsRequest) Reset() {
+	*x = ListDeletedTestsRequest{}
+	mi := &file_akashic_v1_test_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListDeletedTestsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListDeletedTestsRequest) ProtoMessage() {}
+
+func (x *ListDeletedTestsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_test_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListDeletedTestsRequest.ProtoReflect.Descriptor instead.
+func (*ListDeletedTestsRequest) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ListDeletedTestsRequest) GetBankId() int32 {
+	if x != nil {
+		return x.BankId
+	}
+	return 0
+}
+
+type ListDeletedTestsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tests         []*Test                `protobuf:"bytes,1,rep,name=tests,proto3" json:"tests,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListDeletedTestsResponse) Reset() {
+	*x = ListDeletedTestsResponse{}
+	mi := &file_akashic_v1_test_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListDeletedTestsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListDeletedTestsResponse) ProtoMessage() {}
+
+func (x *ListDeletedTestsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_akashic_v1_test_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListDeletedTestsResponse.ProtoReflect.Descriptor instead.
+func (*ListDeletedTestsResponse) Descriptor() ([]byte, []int) {
+	return file_akashic_v1_test_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ListDeletedTestsResponse) GetTests() []*Test {
+	if x != nil {
+		return x.Tests
+	}
+	return nil
+}
+
 var File_akashic_v1_test_proto protoreflect.FileDescriptor
 
 const file_akashic_v1_test_proto_rawDesc = "" +
@@ -1063,7 +1151,11 @@ const file_akashic_v1_test_proto_rawDesc = "" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\x05R\x02id\";\n" +
 	"\x13RestoreTestResponse\x12$\n" +
-	"\x04test\x18\x01 \x01(\v2\x10.akashic.v1.TestR\x04test*y\n" +
+	"\x04test\x18\x01 \x01(\v2\x10.akashic.v1.TestR\x04test\"2\n" +
+	"\x17ListDeletedTestsRequest\x12\x17\n" +
+	"\abank_id\x18\x01 \x01(\x05R\x06bankId\"B\n" +
+	"\x18ListDeletedTestsResponse\x12&\n" +
+	"\x05tests\x18\x01 \x03(\v2\x10.akashic.v1.TestR\x05tests*y\n" +
 	"\bTestSort\x12\x19\n" +
 	"\x15TEST_SORT_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10TEST_SORT_NEWEST\x10\x01\x12\x14\n" +
@@ -1074,14 +1166,15 @@ const file_akashic_v1_test_proto_rawDesc = "" +
 	"\x18TAKEN_FILTER_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10TAKEN_FILTER_ALL\x10\x01\x12\x16\n" +
 	"\x12TAKEN_FILTER_TAKEN\x10\x02\x12\x18\n" +
-	"\x14TAKEN_FILTER_UNTAKEN\x10\x032\x8b\x03\n" +
+	"\x14TAKEN_FILTER_UNTAKEN\x10\x032\xea\x03\n" +
 	"\vTestService\x12H\n" +
 	"\tListTests\x12\x1c.akashic.v1.ListTestsRequest\x1a\x1d.akashic.v1.ListTestsResponse\x12Q\n" +
 	"\fGenerateTest\x12\x1f.akashic.v1.GenerateTestRequest\x1a .akashic.v1.GenerateTestResponse\x12B\n" +
 	"\aGetTest\x12\x1a.akashic.v1.GetTestRequest\x1a\x1b.akashic.v1.GetTestResponse\x12K\n" +
 	"\n" +
 	"DeleteTest\x12\x1d.akashic.v1.DeleteTestRequest\x1a\x1e.akashic.v1.DeleteTestResponse\x12N\n" +
-	"\vRestoreTest\x12\x1e.akashic.v1.RestoreTestRequest\x1a\x1f.akashic.v1.RestoreTestResponseB:Z8github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1b\x06proto3"
+	"\vRestoreTest\x12\x1e.akashic.v1.RestoreTestRequest\x1a\x1f.akashic.v1.RestoreTestResponse\x12]\n" +
+	"\x10ListDeletedTests\x12#.akashic.v1.ListDeletedTestsRequest\x1a$.akashic.v1.ListDeletedTestsResponseB:Z8github.com/yumikokawaii/akashic/gen/akashic/v1;akashicv1b\x06proto3"
 
 var (
 	file_akashic_v1_test_proto_rawDescOnce sync.Once
@@ -1096,64 +1189,69 @@ func file_akashic_v1_test_proto_rawDescGZIP() []byte {
 }
 
 var file_akashic_v1_test_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_akashic_v1_test_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_akashic_v1_test_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_akashic_v1_test_proto_goTypes = []any{
-	(TestSort)(0),                 // 0: akashic.v1.TestSort
-	(TakenFilter)(0),              // 1: akashic.v1.TakenFilter
-	(*TestQuestion)(nil),          // 2: akashic.v1.TestQuestion
-	(*Test)(nil),                  // 3: akashic.v1.Test
-	(*BestResult)(nil),            // 4: akashic.v1.BestResult
-	(*TestsSummary)(nil),          // 5: akashic.v1.TestsSummary
-	(*ListTestsRequest)(nil),      // 6: akashic.v1.ListTestsRequest
-	(*ListTestsResponse)(nil),     // 7: akashic.v1.ListTestsResponse
-	(*GenerateTestRequest)(nil),   // 8: akashic.v1.GenerateTestRequest
-	(*GenerateTestResponse)(nil),  // 9: akashic.v1.GenerateTestResponse
-	(*GetTestRequest)(nil),        // 10: akashic.v1.GetTestRequest
-	(*GetTestResponse)(nil),       // 11: akashic.v1.GetTestResponse
-	(*DeleteTestRequest)(nil),     // 12: akashic.v1.DeleteTestRequest
-	(*DeleteTestResponse)(nil),    // 13: akashic.v1.DeleteTestResponse
-	(*RestoreTestRequest)(nil),    // 14: akashic.v1.RestoreTestRequest
-	(*RestoreTestResponse)(nil),   // 15: akashic.v1.RestoreTestResponse
-	(*Question)(nil),              // 16: akashic.v1.Question
-	(*TestConfig)(nil),            // 17: akashic.v1.TestConfig
-	(*timestamppb.Timestamp)(nil), // 18: google.protobuf.Timestamp
-	(*User)(nil),                  // 19: akashic.v1.User
-	(*QuestionGroup)(nil),         // 20: akashic.v1.QuestionGroup
-	(*PageInfo)(nil),              // 21: akashic.v1.PageInfo
+	(TestSort)(0),                    // 0: akashic.v1.TestSort
+	(TakenFilter)(0),                 // 1: akashic.v1.TakenFilter
+	(*TestQuestion)(nil),             // 2: akashic.v1.TestQuestion
+	(*Test)(nil),                     // 3: akashic.v1.Test
+	(*BestResult)(nil),               // 4: akashic.v1.BestResult
+	(*TestsSummary)(nil),             // 5: akashic.v1.TestsSummary
+	(*ListTestsRequest)(nil),         // 6: akashic.v1.ListTestsRequest
+	(*ListTestsResponse)(nil),        // 7: akashic.v1.ListTestsResponse
+	(*GenerateTestRequest)(nil),      // 8: akashic.v1.GenerateTestRequest
+	(*GenerateTestResponse)(nil),     // 9: akashic.v1.GenerateTestResponse
+	(*GetTestRequest)(nil),           // 10: akashic.v1.GetTestRequest
+	(*GetTestResponse)(nil),          // 11: akashic.v1.GetTestResponse
+	(*DeleteTestRequest)(nil),        // 12: akashic.v1.DeleteTestRequest
+	(*DeleteTestResponse)(nil),       // 13: akashic.v1.DeleteTestResponse
+	(*RestoreTestRequest)(nil),       // 14: akashic.v1.RestoreTestRequest
+	(*RestoreTestResponse)(nil),      // 15: akashic.v1.RestoreTestResponse
+	(*ListDeletedTestsRequest)(nil),  // 16: akashic.v1.ListDeletedTestsRequest
+	(*ListDeletedTestsResponse)(nil), // 17: akashic.v1.ListDeletedTestsResponse
+	(*Question)(nil),                 // 18: akashic.v1.Question
+	(*TestConfig)(nil),               // 19: akashic.v1.TestConfig
+	(*timestamppb.Timestamp)(nil),    // 20: google.protobuf.Timestamp
+	(*User)(nil),                     // 21: akashic.v1.User
+	(*QuestionGroup)(nil),            // 22: akashic.v1.QuestionGroup
+	(*PageInfo)(nil),                 // 23: akashic.v1.PageInfo
 }
 var file_akashic_v1_test_proto_depIdxs = []int32{
-	16, // 0: akashic.v1.TestQuestion.question:type_name -> akashic.v1.Question
-	17, // 1: akashic.v1.Test.config:type_name -> akashic.v1.TestConfig
+	18, // 0: akashic.v1.TestQuestion.question:type_name -> akashic.v1.Question
+	19, // 1: akashic.v1.Test.config:type_name -> akashic.v1.TestConfig
 	2,  // 2: akashic.v1.Test.questions:type_name -> akashic.v1.TestQuestion
-	18, // 3: akashic.v1.Test.created_at:type_name -> google.protobuf.Timestamp
-	18, // 4: akashic.v1.Test.updated_at:type_name -> google.protobuf.Timestamp
-	19, // 5: akashic.v1.Test.creator:type_name -> akashic.v1.User
+	20, // 3: akashic.v1.Test.created_at:type_name -> google.protobuf.Timestamp
+	20, // 4: akashic.v1.Test.updated_at:type_name -> google.protobuf.Timestamp
+	21, // 5: akashic.v1.Test.creator:type_name -> akashic.v1.User
 	4,  // 6: akashic.v1.Test.best_result:type_name -> akashic.v1.BestResult
-	20, // 7: akashic.v1.Test.groups:type_name -> akashic.v1.QuestionGroup
+	22, // 7: akashic.v1.Test.groups:type_name -> akashic.v1.QuestionGroup
 	0,  // 8: akashic.v1.ListTestsRequest.sort:type_name -> akashic.v1.TestSort
 	1,  // 9: akashic.v1.ListTestsRequest.taken_filter:type_name -> akashic.v1.TakenFilter
 	3,  // 10: akashic.v1.ListTestsResponse.tests:type_name -> akashic.v1.Test
-	21, // 11: akashic.v1.ListTestsResponse.page_info:type_name -> akashic.v1.PageInfo
+	23, // 11: akashic.v1.ListTestsResponse.page_info:type_name -> akashic.v1.PageInfo
 	5,  // 12: akashic.v1.ListTestsResponse.summary:type_name -> akashic.v1.TestsSummary
-	17, // 13: akashic.v1.GenerateTestRequest.config:type_name -> akashic.v1.TestConfig
+	19, // 13: akashic.v1.GenerateTestRequest.config:type_name -> akashic.v1.TestConfig
 	3,  // 14: akashic.v1.GenerateTestResponse.test:type_name -> akashic.v1.Test
 	3,  // 15: akashic.v1.GetTestResponse.test:type_name -> akashic.v1.Test
 	3,  // 16: akashic.v1.RestoreTestResponse.test:type_name -> akashic.v1.Test
-	6,  // 17: akashic.v1.TestService.ListTests:input_type -> akashic.v1.ListTestsRequest
-	8,  // 18: akashic.v1.TestService.GenerateTest:input_type -> akashic.v1.GenerateTestRequest
-	10, // 19: akashic.v1.TestService.GetTest:input_type -> akashic.v1.GetTestRequest
-	12, // 20: akashic.v1.TestService.DeleteTest:input_type -> akashic.v1.DeleteTestRequest
-	14, // 21: akashic.v1.TestService.RestoreTest:input_type -> akashic.v1.RestoreTestRequest
-	7,  // 22: akashic.v1.TestService.ListTests:output_type -> akashic.v1.ListTestsResponse
-	9,  // 23: akashic.v1.TestService.GenerateTest:output_type -> akashic.v1.GenerateTestResponse
-	11, // 24: akashic.v1.TestService.GetTest:output_type -> akashic.v1.GetTestResponse
-	13, // 25: akashic.v1.TestService.DeleteTest:output_type -> akashic.v1.DeleteTestResponse
-	15, // 26: akashic.v1.TestService.RestoreTest:output_type -> akashic.v1.RestoreTestResponse
-	22, // [22:27] is the sub-list for method output_type
-	17, // [17:22] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	3,  // 17: akashic.v1.ListDeletedTestsResponse.tests:type_name -> akashic.v1.Test
+	6,  // 18: akashic.v1.TestService.ListTests:input_type -> akashic.v1.ListTestsRequest
+	8,  // 19: akashic.v1.TestService.GenerateTest:input_type -> akashic.v1.GenerateTestRequest
+	10, // 20: akashic.v1.TestService.GetTest:input_type -> akashic.v1.GetTestRequest
+	12, // 21: akashic.v1.TestService.DeleteTest:input_type -> akashic.v1.DeleteTestRequest
+	14, // 22: akashic.v1.TestService.RestoreTest:input_type -> akashic.v1.RestoreTestRequest
+	16, // 23: akashic.v1.TestService.ListDeletedTests:input_type -> akashic.v1.ListDeletedTestsRequest
+	7,  // 24: akashic.v1.TestService.ListTests:output_type -> akashic.v1.ListTestsResponse
+	9,  // 25: akashic.v1.TestService.GenerateTest:output_type -> akashic.v1.GenerateTestResponse
+	11, // 26: akashic.v1.TestService.GetTest:output_type -> akashic.v1.GetTestResponse
+	13, // 27: akashic.v1.TestService.DeleteTest:output_type -> akashic.v1.DeleteTestResponse
+	15, // 28: akashic.v1.TestService.RestoreTest:output_type -> akashic.v1.RestoreTestResponse
+	17, // 29: akashic.v1.TestService.ListDeletedTests:output_type -> akashic.v1.ListDeletedTestsResponse
+	24, // [24:30] is the sub-list for method output_type
+	18, // [18:24] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_test_proto_init() }
@@ -1170,7 +1268,7 @@ func file_akashic_v1_test_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_akashic_v1_test_proto_rawDesc), len(file_akashic_v1_test_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   14,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

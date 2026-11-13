@@ -98,6 +98,18 @@ Child questions take the group's difficulty unless they set their own, get the g
 
  The import is all-or-nothing: if any row fails parsing or validation, nothing is created and every failing row is returned with its row number. Otherwise all rows are created in one transaction.
 
-## Soft delete
+## Groups
 
-Banks, questions and tests support delete + restore RPCs; deleted rows are hidden from every list and lookup. Deleting a bank hides it for all members.
+`ListQuestionGroups` returns each live group with its live question count. `UpdateQuestionGroup` (editor) replaces a group's title, instructions, passage, options, difficulty and tags, then drops the bank's cached pool so the next generation sees the change. A group's questions are edited individually; there is no way to add or reorder them after import.
+
+## Soft delete and trash
+
+Banks, questions and tests are soft-deleted and hidden from every list and lookup. Each has a restore RPC and a way to list what can be restored:
+
+| What | List | Who |
+|---|---|---|
+| Banks | `ListDeletedBanks` | the caller's own (owner membership), newest first, up to 100 |
+| Questions | `ListDeletedQuestions` | editors of the bank, up to 200 |
+| Tests | `ListDeletedTests` | the test's creator or an editor+, up to 100 |
+
+Restoring a bank re-registers it as public in the visibility cache if it was public, and fails with AlreadyExists if the owner has since made another live bank with the same name.

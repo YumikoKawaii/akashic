@@ -165,7 +165,19 @@ func (s *BankService) Restore(bankID, userID int) (*model.BankWithRole, error) {
 	if err := s.repo.Restore(bankID); err != nil {
 		return nil, err
 	}
-	return s.GetByID(bankID, userID)
+	bank, err := s.GetByID(bankID, userID)
+	if err != nil {
+		return nil, err
+	}
+	if bank.Visibility == model.VisibilityPublic {
+		s.visibility.SetPublic(bankID)
+	}
+	return bank, nil
+}
+
+// ListDeleted returns the caller's own soft-deleted banks (owner membership).
+func (s *BankService) ListDeleted(userID int) ([]model.Bank, error) {
+	return s.repo.FindDeletedOwnedBy(userID)
 }
 
 // ── Members ────────────────────────────────────────────────────────────────────

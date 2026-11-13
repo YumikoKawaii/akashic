@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { DeleteTestRequest, DeleteTestResponse, GenerateTestRequest, GenerateTestResponse, GetTestRequest, GetTestResponse, ListTestsRequest, ListTestsResponse, RestoreTestRequest, RestoreTestResponse } from "./test_pb.js";
+import { DeleteTestRequest, DeleteTestResponse, GenerateTestRequest, GenerateTestResponse, GetTestRequest, GetTestResponse, ListDeletedTestsRequest, ListDeletedTestsResponse, ListTestsRequest, ListTestsResponse, RestoreTestRequest, RestoreTestResponse } from "./test_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -55,6 +55,15 @@ export const TestService = {
       name: "RestoreTest",
       I: RestoreTestRequest,
       O: RestoreTestResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc akashic.v1.TestService.ListDeletedTests
+     */
+    listDeletedTests: {
+      name: "ListDeletedTests",
+      I: ListDeletedTestsRequest,
+      O: ListDeletedTestsResponse,
       kind: MethodKind.Unary,
     },
   }

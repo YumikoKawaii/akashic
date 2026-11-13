@@ -66,6 +66,9 @@ const (
 	// BankServiceSetBankVisibilityProcedure is the fully-qualified name of the BankService's
 	// SetBankVisibility RPC.
 	BankServiceSetBankVisibilityProcedure = "/akashic.v1.BankService/SetBankVisibility"
+	// BankServiceListDeletedBanksProcedure is the fully-qualified name of the BankService's
+	// ListDeletedBanks RPC.
+	BankServiceListDeletedBanksProcedure = "/akashic.v1.BankService/ListDeletedBanks"
 )
 
 // BankServiceClient is a client for the akashic.v1.BankService service.
@@ -83,6 +86,7 @@ type BankServiceClient interface {
 	RemoveBankMember(context.Context, *connect.Request[v1.RemoveBankMemberRequest]) (*connect.Response[v1.RemoveBankMemberResponse], error)
 	UpdateBankMemberRole(context.Context, *connect.Request[v1.UpdateBankMemberRoleRequest]) (*connect.Response[v1.UpdateBankMemberRoleResponse], error)
 	SetBankVisibility(context.Context, *connect.Request[v1.SetBankVisibilityRequest]) (*connect.Response[v1.SetBankVisibilityResponse], error)
+	ListDeletedBanks(context.Context, *connect.Request[v1.ListDeletedBanksRequest]) (*connect.Response[v1.ListDeletedBanksResponse], error)
 }
 
 // NewBankServiceClient constructs a client for the akashic.v1.BankService service. By default, it
@@ -174,6 +178,12 @@ func NewBankServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(bankServiceMethods.ByName("SetBankVisibility")),
 			connect.WithClientOptions(opts...),
 		),
+		listDeletedBanks: connect.NewClient[v1.ListDeletedBanksRequest, v1.ListDeletedBanksResponse](
+			httpClient,
+			baseURL+BankServiceListDeletedBanksProcedure,
+			connect.WithSchema(bankServiceMethods.ByName("ListDeletedBanks")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -192,6 +202,7 @@ type bankServiceClient struct {
 	removeBankMember        *connect.Client[v1.RemoveBankMemberRequest, v1.RemoveBankMemberResponse]
 	updateBankMemberRole    *connect.Client[v1.UpdateBankMemberRoleRequest, v1.UpdateBankMemberRoleResponse]
 	setBankVisibility       *connect.Client[v1.SetBankVisibilityRequest, v1.SetBankVisibilityResponse]
+	listDeletedBanks        *connect.Client[v1.ListDeletedBanksRequest, v1.ListDeletedBanksResponse]
 }
 
 // ListBanks calls akashic.v1.BankService.ListBanks.
@@ -259,6 +270,11 @@ func (c *bankServiceClient) SetBankVisibility(ctx context.Context, req *connect.
 	return c.setBankVisibility.CallUnary(ctx, req)
 }
 
+// ListDeletedBanks calls akashic.v1.BankService.ListDeletedBanks.
+func (c *bankServiceClient) ListDeletedBanks(ctx context.Context, req *connect.Request[v1.ListDeletedBanksRequest]) (*connect.Response[v1.ListDeletedBanksResponse], error) {
+	return c.listDeletedBanks.CallUnary(ctx, req)
+}
+
 // BankServiceHandler is an implementation of the akashic.v1.BankService service.
 type BankServiceHandler interface {
 	ListBanks(context.Context, *connect.Request[v1.ListBanksRequest]) (*connect.Response[v1.ListBanksResponse], error)
@@ -274,6 +290,7 @@ type BankServiceHandler interface {
 	RemoveBankMember(context.Context, *connect.Request[v1.RemoveBankMemberRequest]) (*connect.Response[v1.RemoveBankMemberResponse], error)
 	UpdateBankMemberRole(context.Context, *connect.Request[v1.UpdateBankMemberRoleRequest]) (*connect.Response[v1.UpdateBankMemberRoleResponse], error)
 	SetBankVisibility(context.Context, *connect.Request[v1.SetBankVisibilityRequest]) (*connect.Response[v1.SetBankVisibilityResponse], error)
+	ListDeletedBanks(context.Context, *connect.Request[v1.ListDeletedBanksRequest]) (*connect.Response[v1.ListDeletedBanksResponse], error)
 }
 
 // NewBankServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -361,6 +378,12 @@ func NewBankServiceHandler(svc BankServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(bankServiceMethods.ByName("SetBankVisibility")),
 		connect.WithHandlerOptions(opts...),
 	)
+	bankServiceListDeletedBanksHandler := connect.NewUnaryHandler(
+		BankServiceListDeletedBanksProcedure,
+		svc.ListDeletedBanks,
+		connect.WithSchema(bankServiceMethods.ByName("ListDeletedBanks")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/akashic.v1.BankService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case BankServiceListBanksProcedure:
@@ -389,6 +412,8 @@ func NewBankServiceHandler(svc BankServiceHandler, opts ...connect.HandlerOption
 			bankServiceUpdateBankMemberRoleHandler.ServeHTTP(w, r)
 		case BankServiceSetBankVisibilityProcedure:
 			bankServiceSetBankVisibilityHandler.ServeHTTP(w, r)
+		case BankServiceListDeletedBanksProcedure:
+			bankServiceListDeletedBanksHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -448,4 +473,8 @@ func (UnimplementedBankServiceHandler) UpdateBankMemberRole(context.Context, *co
 
 func (UnimplementedBankServiceHandler) SetBankVisibility(context.Context, *connect.Request[v1.SetBankVisibilityRequest]) (*connect.Response[v1.SetBankVisibilityResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.BankService.SetBankVisibility is not implemented"))
+}
+
+func (UnimplementedBankServiceHandler) ListDeletedBanks(context.Context, *connect.Request[v1.ListDeletedBanksRequest]) (*connect.Response[v1.ListDeletedBanksResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.BankService.ListDeletedBanks is not implemented"))
 }

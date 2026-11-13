@@ -196,3 +196,58 @@ func ingestFormatToExt(f pb.IngestFormat) string {
 	}
 	return ""
 }
+
+func (h *QuestionServiceHandler) ListDeletedQuestions(
+	ctx context.Context,
+	req *connect.Request[pb.ListDeletedQuestionsRequest],
+) (*connect.Response[pb.ListDeletedQuestionsResponse], error) {
+	qs, err := h.svc.ListDeleted(int(req.Msg.BankId))
+	if err != nil {
+		return nil, toConnectError(err)
+	}
+	out := make([]*pb.Question, len(qs))
+	for i := range qs {
+		out[i] = questionToProto(&qs[i])
+	}
+	return connect.NewResponse(&pb.ListDeletedQuestionsResponse{Questions: out}), nil
+}
+
+func (h *QuestionServiceHandler) ListQuestionGroups(
+	ctx context.Context,
+	req *connect.Request[pb.ListQuestionGroupsRequest],
+) (*connect.Response[pb.ListQuestionGroupsResponse], error) {
+	groups, err := h.svc.ListGroups(int(req.Msg.BankId))
+	if err != nil {
+		return nil, toConnectError(err)
+	}
+	out := make([]*pb.QuestionGroupSummary, len(groups))
+	for i := range groups {
+		out[i] = &pb.QuestionGroupSummary{
+			Group:         questionGroupToProto(&groups[i].QuestionGroup),
+			QuestionCount: int32(groups[i].QuestionCount),
+		}
+	}
+	return connect.NewResponse(&pb.ListQuestionGroupsResponse{Groups: out}), nil
+}
+
+func (h *QuestionServiceHandler) UpdateQuestionGroup(
+	ctx context.Context,
+	req *connect.Request[pb.UpdateQuestionGroupRequest],
+) (*connect.Response[pb.UpdateQuestionGroupResponse], error) {
+	opts := make([]model.MCQOption, len(req.Msg.Options))
+	for i, o := range req.Msg.Options {
+		opts[i] = model.MCQOption{Key: o.Key, Text: o.Text}
+	}
+	g, err := h.svc.UpdateGroup(int(req.Msg.BankId), int(req.Msg.Id), service.UpdateGroupInput{
+		Title:        req.Msg.Title,
+		Instructions: req.Msg.Instructions,
+		Passage:      req.Msg.Passage,
+		Options:      opts,
+		Difficulty:   difficultyFromProto(req.Msg.Difficulty),
+		Tags:         req.Msg.Tags,
+	})
+	if err != nil {
+		return nil, toConnectError(err)
+	}
+	return connect.NewResponse(&pb.UpdateQuestionGroupResponse{Group: questionGroupToProto(g)}), nil
+}

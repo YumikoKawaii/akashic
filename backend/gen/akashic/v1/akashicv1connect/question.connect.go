@@ -57,6 +57,15 @@ const (
 	// QuestionServiceListTagsProcedure is the fully-qualified name of the QuestionService's ListTags
 	// RPC.
 	QuestionServiceListTagsProcedure = "/akashic.v1.QuestionService/ListTags"
+	// QuestionServiceListDeletedQuestionsProcedure is the fully-qualified name of the QuestionService's
+	// ListDeletedQuestions RPC.
+	QuestionServiceListDeletedQuestionsProcedure = "/akashic.v1.QuestionService/ListDeletedQuestions"
+	// QuestionServiceListQuestionGroupsProcedure is the fully-qualified name of the QuestionService's
+	// ListQuestionGroups RPC.
+	QuestionServiceListQuestionGroupsProcedure = "/akashic.v1.QuestionService/ListQuestionGroups"
+	// QuestionServiceUpdateQuestionGroupProcedure is the fully-qualified name of the QuestionService's
+	// UpdateQuestionGroup RPC.
+	QuestionServiceUpdateQuestionGroupProcedure = "/akashic.v1.QuestionService/UpdateQuestionGroup"
 )
 
 // QuestionServiceClient is a client for the akashic.v1.QuestionService service.
@@ -69,6 +78,9 @@ type QuestionServiceClient interface {
 	RestoreQuestion(context.Context, *connect.Request[v1.RestoreQuestionRequest]) (*connect.Response[v1.RestoreQuestionResponse], error)
 	IngestQuestions(context.Context, *connect.Request[v1.IngestQuestionsRequest]) (*connect.Response[v1.IngestQuestionsResponse], error)
 	ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error)
+	ListDeletedQuestions(context.Context, *connect.Request[v1.ListDeletedQuestionsRequest]) (*connect.Response[v1.ListDeletedQuestionsResponse], error)
+	ListQuestionGroups(context.Context, *connect.Request[v1.ListQuestionGroupsRequest]) (*connect.Response[v1.ListQuestionGroupsResponse], error)
+	UpdateQuestionGroup(context.Context, *connect.Request[v1.UpdateQuestionGroupRequest]) (*connect.Response[v1.UpdateQuestionGroupResponse], error)
 }
 
 // NewQuestionServiceClient constructs a client for the akashic.v1.QuestionService service. By
@@ -130,19 +142,40 @@ func NewQuestionServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(questionServiceMethods.ByName("ListTags")),
 			connect.WithClientOptions(opts...),
 		),
+		listDeletedQuestions: connect.NewClient[v1.ListDeletedQuestionsRequest, v1.ListDeletedQuestionsResponse](
+			httpClient,
+			baseURL+QuestionServiceListDeletedQuestionsProcedure,
+			connect.WithSchema(questionServiceMethods.ByName("ListDeletedQuestions")),
+			connect.WithClientOptions(opts...),
+		),
+		listQuestionGroups: connect.NewClient[v1.ListQuestionGroupsRequest, v1.ListQuestionGroupsResponse](
+			httpClient,
+			baseURL+QuestionServiceListQuestionGroupsProcedure,
+			connect.WithSchema(questionServiceMethods.ByName("ListQuestionGroups")),
+			connect.WithClientOptions(opts...),
+		),
+		updateQuestionGroup: connect.NewClient[v1.UpdateQuestionGroupRequest, v1.UpdateQuestionGroupResponse](
+			httpClient,
+			baseURL+QuestionServiceUpdateQuestionGroupProcedure,
+			connect.WithSchema(questionServiceMethods.ByName("UpdateQuestionGroup")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // questionServiceClient implements QuestionServiceClient.
 type questionServiceClient struct {
-	listQuestions   *connect.Client[v1.ListQuestionsRequest, v1.ListQuestionsResponse]
-	createQuestion  *connect.Client[v1.CreateQuestionRequest, v1.CreateQuestionResponse]
-	getQuestion     *connect.Client[v1.GetQuestionRequest, v1.GetQuestionResponse]
-	updateQuestion  *connect.Client[v1.UpdateQuestionRequest, v1.UpdateQuestionResponse]
-	deleteQuestion  *connect.Client[v1.DeleteQuestionRequest, v1.DeleteQuestionResponse]
-	restoreQuestion *connect.Client[v1.RestoreQuestionRequest, v1.RestoreQuestionResponse]
-	ingestQuestions *connect.Client[v1.IngestQuestionsRequest, v1.IngestQuestionsResponse]
-	listTags        *connect.Client[v1.ListTagsRequest, v1.ListTagsResponse]
+	listQuestions        *connect.Client[v1.ListQuestionsRequest, v1.ListQuestionsResponse]
+	createQuestion       *connect.Client[v1.CreateQuestionRequest, v1.CreateQuestionResponse]
+	getQuestion          *connect.Client[v1.GetQuestionRequest, v1.GetQuestionResponse]
+	updateQuestion       *connect.Client[v1.UpdateQuestionRequest, v1.UpdateQuestionResponse]
+	deleteQuestion       *connect.Client[v1.DeleteQuestionRequest, v1.DeleteQuestionResponse]
+	restoreQuestion      *connect.Client[v1.RestoreQuestionRequest, v1.RestoreQuestionResponse]
+	ingestQuestions      *connect.Client[v1.IngestQuestionsRequest, v1.IngestQuestionsResponse]
+	listTags             *connect.Client[v1.ListTagsRequest, v1.ListTagsResponse]
+	listDeletedQuestions *connect.Client[v1.ListDeletedQuestionsRequest, v1.ListDeletedQuestionsResponse]
+	listQuestionGroups   *connect.Client[v1.ListQuestionGroupsRequest, v1.ListQuestionGroupsResponse]
+	updateQuestionGroup  *connect.Client[v1.UpdateQuestionGroupRequest, v1.UpdateQuestionGroupResponse]
 }
 
 // ListQuestions calls akashic.v1.QuestionService.ListQuestions.
@@ -185,6 +218,21 @@ func (c *questionServiceClient) ListTags(ctx context.Context, req *connect.Reque
 	return c.listTags.CallUnary(ctx, req)
 }
 
+// ListDeletedQuestions calls akashic.v1.QuestionService.ListDeletedQuestions.
+func (c *questionServiceClient) ListDeletedQuestions(ctx context.Context, req *connect.Request[v1.ListDeletedQuestionsRequest]) (*connect.Response[v1.ListDeletedQuestionsResponse], error) {
+	return c.listDeletedQuestions.CallUnary(ctx, req)
+}
+
+// ListQuestionGroups calls akashic.v1.QuestionService.ListQuestionGroups.
+func (c *questionServiceClient) ListQuestionGroups(ctx context.Context, req *connect.Request[v1.ListQuestionGroupsRequest]) (*connect.Response[v1.ListQuestionGroupsResponse], error) {
+	return c.listQuestionGroups.CallUnary(ctx, req)
+}
+
+// UpdateQuestionGroup calls akashic.v1.QuestionService.UpdateQuestionGroup.
+func (c *questionServiceClient) UpdateQuestionGroup(ctx context.Context, req *connect.Request[v1.UpdateQuestionGroupRequest]) (*connect.Response[v1.UpdateQuestionGroupResponse], error) {
+	return c.updateQuestionGroup.CallUnary(ctx, req)
+}
+
 // QuestionServiceHandler is an implementation of the akashic.v1.QuestionService service.
 type QuestionServiceHandler interface {
 	ListQuestions(context.Context, *connect.Request[v1.ListQuestionsRequest]) (*connect.Response[v1.ListQuestionsResponse], error)
@@ -195,6 +243,9 @@ type QuestionServiceHandler interface {
 	RestoreQuestion(context.Context, *connect.Request[v1.RestoreQuestionRequest]) (*connect.Response[v1.RestoreQuestionResponse], error)
 	IngestQuestions(context.Context, *connect.Request[v1.IngestQuestionsRequest]) (*connect.Response[v1.IngestQuestionsResponse], error)
 	ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error)
+	ListDeletedQuestions(context.Context, *connect.Request[v1.ListDeletedQuestionsRequest]) (*connect.Response[v1.ListDeletedQuestionsResponse], error)
+	ListQuestionGroups(context.Context, *connect.Request[v1.ListQuestionGroupsRequest]) (*connect.Response[v1.ListQuestionGroupsResponse], error)
+	UpdateQuestionGroup(context.Context, *connect.Request[v1.UpdateQuestionGroupRequest]) (*connect.Response[v1.UpdateQuestionGroupResponse], error)
 }
 
 // NewQuestionServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -252,6 +303,24 @@ func NewQuestionServiceHandler(svc QuestionServiceHandler, opts ...connect.Handl
 		connect.WithSchema(questionServiceMethods.ByName("ListTags")),
 		connect.WithHandlerOptions(opts...),
 	)
+	questionServiceListDeletedQuestionsHandler := connect.NewUnaryHandler(
+		QuestionServiceListDeletedQuestionsProcedure,
+		svc.ListDeletedQuestions,
+		connect.WithSchema(questionServiceMethods.ByName("ListDeletedQuestions")),
+		connect.WithHandlerOptions(opts...),
+	)
+	questionServiceListQuestionGroupsHandler := connect.NewUnaryHandler(
+		QuestionServiceListQuestionGroupsProcedure,
+		svc.ListQuestionGroups,
+		connect.WithSchema(questionServiceMethods.ByName("ListQuestionGroups")),
+		connect.WithHandlerOptions(opts...),
+	)
+	questionServiceUpdateQuestionGroupHandler := connect.NewUnaryHandler(
+		QuestionServiceUpdateQuestionGroupProcedure,
+		svc.UpdateQuestionGroup,
+		connect.WithSchema(questionServiceMethods.ByName("UpdateQuestionGroup")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/akashic.v1.QuestionService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case QuestionServiceListQuestionsProcedure:
@@ -270,6 +339,12 @@ func NewQuestionServiceHandler(svc QuestionServiceHandler, opts ...connect.Handl
 			questionServiceIngestQuestionsHandler.ServeHTTP(w, r)
 		case QuestionServiceListTagsProcedure:
 			questionServiceListTagsHandler.ServeHTTP(w, r)
+		case QuestionServiceListDeletedQuestionsProcedure:
+			questionServiceListDeletedQuestionsHandler.ServeHTTP(w, r)
+		case QuestionServiceListQuestionGroupsProcedure:
+			questionServiceListQuestionGroupsHandler.ServeHTTP(w, r)
+		case QuestionServiceUpdateQuestionGroupProcedure:
+			questionServiceUpdateQuestionGroupHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -309,4 +384,16 @@ func (UnimplementedQuestionServiceHandler) IngestQuestions(context.Context, *con
 
 func (UnimplementedQuestionServiceHandler) ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.QuestionService.ListTags is not implemented"))
+}
+
+func (UnimplementedQuestionServiceHandler) ListDeletedQuestions(context.Context, *connect.Request[v1.ListDeletedQuestionsRequest]) (*connect.Response[v1.ListDeletedQuestionsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.QuestionService.ListDeletedQuestions is not implemented"))
+}
+
+func (UnimplementedQuestionServiceHandler) ListQuestionGroups(context.Context, *connect.Request[v1.ListQuestionGroupsRequest]) (*connect.Response[v1.ListQuestionGroupsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.QuestionService.ListQuestionGroups is not implemented"))
+}
+
+func (UnimplementedQuestionServiceHandler) UpdateQuestionGroup(context.Context, *connect.Request[v1.UpdateQuestionGroupRequest]) (*connect.Response[v1.UpdateQuestionGroupResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("akashic.v1.QuestionService.UpdateQuestionGroup is not implemented"))
 }

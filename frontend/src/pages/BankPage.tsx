@@ -13,16 +13,20 @@ import TestCard from '../components/tests/TestCard'
 import GenerateTab from '../components/tests/GenerateTab'
 import ShareRecordDialog from '../components/banks/ShareRecordDialog'
 import EditRecordDialog from '../components/banks/EditRecordDialog'
+import GroupsTab from '../components/banks/GroupsTab'
+import TrashTab from '../components/banks/TrashTab'
 import OrnateDivider from '../components/ui/OrnateDivider'
 import Spinner from '../components/ui/Spinner'
 import Select from '../components/ui/Select'
 
-type Tab = 'questions' | 'generate' | 'tests'
+type Tab = 'questions' | 'groups' | 'generate' | 'tests' | 'trash'
 
 const TAB_LABELS: Record<Tab, string> = {
   questions: 'Questions',
+  groups:    'Groups',
   generate:  'Generate',
   tests:     'Tests',
+  trash:     'Trash',
 }
 
 const QUESTION_TYPES = [
@@ -91,7 +95,7 @@ export default function BankPage() {
   const canEdit = myRole === 'owner' || myRole === 'editor'
   const isOwner = myRole === 'owner'
 
-  const visibleTabs: Tab[] = ['questions', 'generate', 'tests']
+  const visibleTabs: Tab[] = ['questions', 'groups', 'generate', 'tests', 'trash']
 
   const [tab,           setTab]           = useState<Tab>((searchParams.get('tab') as Tab) ?? 'questions')
   const activeTab: Tab = visibleTabs.includes(tab) ? tab : 'questions'
@@ -383,6 +387,10 @@ export default function BankPage() {
 
         </>
       )}
+
+      {activeTab === 'groups' && <GroupsTab bankId={bankId} canEdit={canEdit} />}
+
+      {activeTab === 'trash' && <TrashTab bankId={bankId} canEdit={canEdit} />}
 
       {/* ── Generate tab ────────────────────────────────────────── */}
       {activeTab === 'generate' && bank && (

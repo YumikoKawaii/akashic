@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/lib/pq"
 	"github.com/yumikokawaii/akashic/internal/model"
@@ -172,4 +174,54 @@ func (s *QuestionService) Restore(bankID, id int) (*model.Question, error) {
 	}
 	s.pool.InvalidatePool(bankID)
 	return s.uow.Store().Questions.FindByID(id)
+}
+
+func (s *QuestionService) ListDeleted(bankID int) ([]model.Question, error) {
+	return s.uow.Store().Questions.FindDeletedByBank(bankID)
+}
+
+func (s *QuestionService) ListGroups(bankID int) ([]repository.GroupSummary, error) {
+	return s.uow.Store().Groups.FindSummaries(bankID)
+}
+
+type UpdateGroupInput struct {
+	Title        string
+	Instructions string
+	Passage      string
+	Options      []model.MCQOption
+	Difficulty   string
+	Tags         []string
+}
+
+func (s *QuestionService) UpdateGroup(bankID, id int, input UpdateGroupInput) (*model.QuestionGroup, error) {
+	if !validDifficultyLevels[input.Difficulty] {
+		return nil, fmt.Errorf("%w: difficulty must be easy, medium or hard", ErrBadRequest)
+	}
+	options := make([]model.MCQOption, len(input.Options))
+	for i, o := range input.Options {
+		options[i] = model.MCQOption{Key: strings.TrimSpace(o.Key), Text: strings.TrimSpace(o.Text)}
+		if options[i].Key == "" || options[i].Text == "" {
+			return nil, fmt.Errorf("%w: every option needs a key and text", ErrBadRequest)
+		}
+	}
+	g, err := s.uow.Store().Groups.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if g.BankID != bankID {
+		return nil, ErrForbidden
+	}
+	g.Title = strings.TrimSpace(input.Title)
+	g.Content = model.GroupContent{
+		Instructions: strings.TrimSpace(input.Instructions),
+		Passage:      strings.TrimSpace(input.Passage),
+		Options:      options,
+	}
+	g.Difficulty = input.Difficulty
+	g.Tags = pq.StringArray(nonNilSlice(input.Tags))
+	if err := s.uow.Store().Groups.Save(g); err != nil {
+		return nil, err
+	}
+	s.pool.InvalidatePool(bankID)
+	return g, nil
 }
