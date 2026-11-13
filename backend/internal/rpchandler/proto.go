@@ -133,23 +133,12 @@ func testConfigToProto(c model.TestConfig) *pb.TestConfig {
 	for _, t := range c.Types {
 		types = append(types, questionTypeToProto(t))
 	}
-	catIDs := make([]int32, len(c.CategoryIDs))
-	for i, id := range c.CategoryIDs {
-		catIDs[i] = int32(id)
-	}
-	passIDs := make([]int32, len(c.PassageIDs))
-	for i, id := range c.PassageIDs {
-		passIDs[i] = int32(id)
-	}
 	return &pb.TestConfig{
-		EasyCount:      int32(c.EasyCount),
-		MediumCount:    int32(c.MediumCount),
-		HardCount:      int32(c.HardCount),
-		CategoryIds:    catIDs,
-		PassageIds:     passIDs,
-		Types:          types,
-		Tags:           c.Tags,
-		StandaloneOnly: c.StandaloneOnly,
+		EasyCount:   int32(c.EasyCount),
+		MediumCount: int32(c.MediumCount),
+		HardCount:   int32(c.HardCount),
+		Types:       types,
+		Tags:        c.Tags,
 	}
 }
 
@@ -163,23 +152,12 @@ func testConfigFromProto(c *pb.TestConfig) model.TestConfig {
 			types = append(types, s)
 		}
 	}
-	catIDs := make([]int, len(c.CategoryIds))
-	for i, id := range c.CategoryIds {
-		catIDs[i] = int(id)
-	}
-	passIDs := make([]int, len(c.PassageIds))
-	for i, id := range c.PassageIds {
-		passIDs[i] = int(id)
-	}
 	return model.TestConfig{
-		EasyCount:      int(c.EasyCount),
-		MediumCount:    int(c.MediumCount),
-		HardCount:      int(c.HardCount),
-		CategoryIDs:    catIDs,
-		PassageIDs:     passIDs,
-		Types:          types,
-		Tags:           c.Tags,
-		StandaloneOnly: c.StandaloneOnly,
+		EasyCount:   int(c.EasyCount),
+		MediumCount: int(c.MediumCount),
+		HardCount:   int(c.HardCount),
+		Types:       types,
+		Tags:        c.Tags,
 	}
 }
 
@@ -225,7 +203,6 @@ func publicBankCardToProto(c *repository.PublicBankCard) *pb.PublicBankCard {
 		Name:          c.Name,
 		Description:   c.Description,
 		QuestionCount: int32(c.QuestionCount),
-		CategoryCount: int32(c.CategoryCount),
 	}
 	if c.OwnerID != nil {
 		pc.Owner = &pb.User{
@@ -260,207 +237,34 @@ func bankMemberToProto(m *model.BankMember) *pb.BankMember {
 	return pbm
 }
 
-// ── Category ───────────────────────────────────────────────────────────────────
-
-func categoryToProto(c *model.Category) *pb.Category {
-	return &pb.Category{
-		Id:          int32(c.ID),
-		BankId:      int32(c.BankID),
-		Name:        c.Name,
-		Description: c.Description,
-		CreatedAt:   timestamppb.New(c.CreatedAt),
-		UpdatedAt:   timestamppb.New(c.UpdatedAt),
-	}
-}
-
-// ── Passage ────────────────────────────────────────────────────────────────────
-
-func passageToProto(p *model.Passage) *pb.Passage {
-	paragraphs := make([]*pb.PassageParagraph, len(p.Paragraphs))
-	for i, pp := range p.Paragraphs {
-		paragraphs[i] = &pb.PassageParagraph{Label: pp.Label, Text: pp.Text}
-	}
-	return &pb.Passage{
-		Id:         int32(p.ID),
-		BankId:     int32(p.BankID),
-		CategoryId: int32(p.CategoryID),
-		Title:      p.Title,
-		Paragraphs: paragraphs,
-		Difficulty: difficultyToProto(p.Difficulty),
-		CreatedAt:  timestamppb.New(p.CreatedAt),
-		UpdatedAt:  timestamppb.New(p.UpdatedAt),
-	}
-}
-
-// paragraphsFromProto returns nil for an empty list: proto3 cannot tell an
-// absent repeated field from an empty one, and Update treats nil as "keep" —
-// so an edit that omits paragraphs must not wipe them.
-func paragraphsFromProto(pbs []*pb.PassageParagraph) []model.PassageParagraph {
-	if len(pbs) == 0 {
-		return nil
-	}
-	out := make([]model.PassageParagraph, len(pbs))
-	for i, p := range pbs {
-		out[i] = model.PassageParagraph{Label: p.Label, Text: p.Text}
-	}
-	return out
-}
-
-// ── QuestionGroup ──────────────────────────────────────────────────────────────
-
-func groupContextToProto(c model.GroupContext, groupType string) *pb.GroupContext {
-	pbCtx := &pb.GroupContext{}
-	switch groupType {
-	case "matching_headings":
-		sections := make([]*pb.SectionItem, len(c.Sections))
-		for i, s := range c.Sections {
-			sections[i] = &pb.SectionItem{Key: s.Key, Label: s.Label}
-		}
-		headings := make([]*pb.OptionItem, len(c.Headings))
-		for i, h := range c.Headings {
-			headings[i] = &pb.OptionItem{Key: h.Key, Text: h.Text}
-		}
-		pbCtx.Context = &pb.GroupContext_MatchingHeadings{
-			MatchingHeadings: &pb.MatchingHeadingsContext{Sections: sections, Headings: headings},
-		}
-	case "matching_information":
-		paragraphs := make([]*pb.OptionItem, len(c.Paragraphs))
-		for i, p := range c.Paragraphs {
-			paragraphs[i] = &pb.OptionItem{Key: p.Key, Text: p.Text}
-		}
-		pbCtx.Context = &pb.GroupContext_MatchingInformation{
-			MatchingInformation: &pb.MatchingInformationContext{Paragraphs: paragraphs},
-		}
-	case "matching_features":
-		options := make([]*pb.OptionItem, len(c.Options))
-		for i, o := range c.Options {
-			options[i] = &pb.OptionItem{Key: o.Key, Text: o.Text}
-		}
-		pbCtx.Context = &pb.GroupContext_MatchingFeatures{
-			MatchingFeatures: &pb.MatchingFeaturesContext{Options: options},
-		}
-	case "sentence_completion", "short_answer":
-		pbCtx.Context = &pb.GroupContext_WordGroup{
-			WordGroup: &pb.WordGroupContext{
-				WordLimit: int32(c.WordLimit),
-				WordBank:  c.WordBank,
-			},
-		}
-	case "form_completion":
-		pbCtx.Context = &pb.GroupContext_FormCompletion{
-			FormCompletion: &pb.FormCompletionContext{
-				WordLimit: int32(c.WordLimit),
-				WordBank:  c.WordBank,
-				FormType:  c.FormType,
-				Title:     c.Title,
-				Template:  c.Template,
-			},
-		}
-	}
-	return pbCtx
-}
-
-func groupContextFromProto(pbCtx *pb.GroupContext) model.GroupContext {
-	if pbCtx == nil {
-		return model.GroupContext{}
-	}
-	c := model.GroupContext{}
-	switch v := pbCtx.Context.(type) {
-	case *pb.GroupContext_MatchingHeadings:
-		for _, s := range v.MatchingHeadings.Sections {
-			c.Sections = append(c.Sections, model.SectionItem{Key: s.Key, Label: s.Label})
-		}
-		for _, h := range v.MatchingHeadings.Headings {
-			c.Headings = append(c.Headings, model.OptionItem{Key: h.Key, Text: h.Text})
-		}
-	case *pb.GroupContext_MatchingInformation:
-		for _, p := range v.MatchingInformation.Paragraphs {
-			c.Paragraphs = append(c.Paragraphs, model.OptionItem{Key: p.Key, Text: p.Text})
-		}
-	case *pb.GroupContext_MatchingFeatures:
-		for _, o := range v.MatchingFeatures.Options {
-			c.Options = append(c.Options, model.OptionItem{Key: o.Key, Text: o.Text})
-		}
-	case *pb.GroupContext_WordGroup:
-		c.WordLimit = int(v.WordGroup.WordLimit)
-		c.WordBank = v.WordGroup.WordBank
-	case *pb.GroupContext_FormCompletion:
-		c.WordLimit = int(v.FormCompletion.WordLimit)
-		c.WordBank = v.FormCompletion.WordBank
-		c.FormType = v.FormCompletion.FormType
-		c.Title = v.FormCompletion.Title
-		c.Template = v.FormCompletion.Template
-	}
-	return c
-}
-
-func questionGroupToProto(g *model.QuestionGroup) *pb.QuestionGroup {
-	var passageID *int32
-	if g.PassageID != nil {
-		v := int32(*g.PassageID)
-		passageID = &v
-	}
-	pg := &pb.QuestionGroup{
-		Id:         int32(g.ID),
-		BankId:     int32(g.BankID),
-		CategoryId: int32(g.CategoryID),
-		PassageId:  passageID,
-		Type:       questionTypeToProto(g.Type),
-		Difficulty: difficultyToProto(g.Difficulty),
-		Context:    groupContextToProto(g.Context, g.Type),
-		CreatedAt:  timestamppb.New(g.CreatedAt),
-		UpdatedAt:  timestamppb.New(g.UpdatedAt),
-	}
-	if g.Passage != nil {
-		pg.Passage = passageToProto(g.Passage)
-	}
-	return pg
-}
-
 // ── Question ───────────────────────────────────────────────────────────────────
 
 func questionToProto(q *model.Question) *pb.Question {
-	var groupID *int32
-	if q.GroupID != nil {
-		v := int32(*q.GroupID)
-		groupID = &v
-	}
-	var position *int32
-	if q.Position != nil {
-		v := int32(*q.Position)
-		position = &v
-	}
 	pbq := &pb.Question{
 		Id:         int32(q.ID),
 		BankId:     int32(q.BankID),
-		CategoryId: int32(q.CategoryID),
-		GroupId:    groupID,
 		Type:       questionTypeToProto(q.Type),
 		Difficulty: difficultyToProto(q.Difficulty),
 		Tags:       []string(q.Tags),
-		Position:   position,
 		CreatedAt:  timestamppb.New(q.CreatedAt),
 		UpdatedAt:  timestamppb.New(q.UpdatedAt),
 	}
-	if q.Choice != nil {
-		opts := make([]*pb.MCQOption, len(q.Choice.Options))
-		for i, o := range q.Choice.Options {
+	if q.Type == "mcq" {
+		opts := make([]*pb.MCQOption, len(q.Content.Options))
+		for i, o := range q.Content.Options {
 			opts[i] = &pb.MCQOption{Key: o.Key, Text: o.Text}
 		}
 		pbq.Content = &pb.Question_Choice{
 			Choice: &pb.MultipleChoice{
-				Content: q.Choice.Content,
+				Content: q.Content.Text,
 				Options: opts,
-				Answers: []string(q.Choice.Answers),
+				Answers: q.Content.Answers,
 			},
 		}
-	} else if q.Item != nil {
+	} else {
 		pbq.Content = &pb.Question_Item{
-			Item: &pb.QuestionItem{Content: q.Item.Content, Answer: q.Item.Answer},
+			Item: &pb.QuestionItem{Content: q.Content.Text, Answer: q.Content.Answer},
 		}
-	}
-	if q.Group != nil {
-		pbq.Group = questionGroupToProto(q.Group)
 	}
 	return pbq
 }
@@ -468,17 +272,15 @@ func questionToProto(q *model.Question) *pb.Question {
 // ── Test ───────────────────────────────────────────────────────────────────────
 
 func testToProto(t *model.Test) *pb.Test {
-	qs := make([]*pb.TestQuestion, len(t.TestQuestions))
-	for i, tq := range t.TestQuestions {
-		pbTQ := &pb.TestQuestion{
-			TestId:     int32(tq.TestID),
-			QuestionId: int32(tq.QuestionID),
-			Position:   int32(tq.Position),
+	qs := make([]*pb.TestQuestion, len(t.Questions))
+	for i := range t.Questions {
+		q := &t.Questions[i]
+		qs[i] = &pb.TestQuestion{
+			TestId:     int32(t.ID),
+			QuestionId: int32(q.ID),
+			Position:   int32(i + 1),
+			Question:   questionToProto(q),
 		}
-		if tq.Question != nil {
-			pbTQ.Question = questionToProto(tq.Question)
-		}
-		qs[i] = pbTQ
 	}
 	pt := &pb.Test{
 		Id:          int32(t.ID),

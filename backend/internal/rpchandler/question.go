@@ -29,17 +29,9 @@ func (h *QuestionServiceHandler) ListQuestions(
 ) (*connect.Response[pb.ListQuestionsResponse], error) {
 	f := repository.QuestionFilter{}
 	if req.Msg.Filter != nil {
-		for _, id := range req.Msg.Filter.CategoryIds {
-			f.CategoryIDs = append(f.CategoryIDs, int(id))
-		}
 		f.Difficulty = difficultyFromProto(req.Msg.Filter.Difficulty)
 		f.Type = questionTypeFromProto(req.Msg.Filter.Type)
 		f.Tags = req.Msg.Filter.Tags
-		f.StandaloneOnly = req.Msg.Filter.StandaloneOnly
-		if req.Msg.Filter.PassageId != nil {
-			pid := int(*req.Msg.Filter.PassageId)
-			f.PassageID = &pid
-		}
 	}
 	page, pageSize := int(req.Msg.Page), int(req.Msg.PageSize)
 	if page <= 0 {
@@ -73,7 +65,6 @@ func (h *QuestionServiceHandler) CreateQuestion(
 	req *connect.Request[pb.CreateQuestionRequest],
 ) (*connect.Response[pb.CreateQuestionResponse], error) {
 	input := service.CreateQuestionInput{
-		CategoryID: int(req.Msg.CategoryId),
 		Type:       questionTypeFromProto(req.Msg.Type),
 		Difficulty: difficultyFromProto(req.Msg.Difficulty),
 		Tags:       req.Msg.Tags,
@@ -114,9 +105,7 @@ func (h *QuestionServiceHandler) UpdateQuestion(
 	ctx context.Context,
 	req *connect.Request[pb.UpdateQuestionRequest],
 ) (*connect.Response[pb.UpdateQuestionResponse], error) {
-	catID := int(req.Msg.CategoryId)
 	input := service.UpdateQuestionInput{
-		CategoryID: &catID,
 		Difficulty: difficultyFromProto(req.Msg.Difficulty),
 		Tags:       req.Msg.Tags,
 	}

@@ -23,18 +23,19 @@ func NewAttemptRepo(db *gorm.DB) AttemptRepository { return &attemptRepo{db} }
 
 func (r *attemptRepo) FindByID(id int) (*model.TestAttempt, error) {
 	var a model.TestAttempt
-	err := r.db.
-		Preload("Taker").
-		Preload("Test.TestQuestions", func(db *gorm.DB) *gorm.DB { return db.Order("position ASC") }).
-		Preload("Test.TestQuestions.Question.Item").
-		Preload("Test.TestQuestions.Question.Choice").
-		Preload("Test.TestQuestions.Question.Group").
-		Preload("Test.TestQuestions.Question.Group.Passage").
-		First(&a, id).Error
+	err := r.db.Preload("Taker").Preload("Test").First(&a, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
 	}
-	return &a, err
+	if err != nil {
+		return nil, err
+	}
+	if a.Test != nil {
+		if err := loadTestQuestions(r.db, a.Test); err != nil {
+			return nil, err
+		}
+	}
+	return &a, nil
 }
 
 // FindByIDLite loads the attempt and its parent test row only (no question

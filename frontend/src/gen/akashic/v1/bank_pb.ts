@@ -302,11 +302,6 @@ export class PublicBankCard extends Message<PublicBankCard> {
    */
   questionCount = 0;
 
-  /**
-   * @generated from field: int32 category_count = 6;
-   */
-  categoryCount = 0;
-
   constructor(data?: PartialMessage<PublicBankCard>) {
     super();
     proto3.util.initPartial(data, this);
@@ -320,7 +315,6 @@ export class PublicBankCard extends Message<PublicBankCard> {
     { no: 3, name: "description", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "owner", kind: "message", T: User, opt: true },
     { no: 5, name: "question_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 6, name: "category_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PublicBankCard {

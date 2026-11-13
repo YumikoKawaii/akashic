@@ -208,135 +208,6 @@ export class MCQOption extends Message<MCQOption> {
 }
 
 /**
- * @generated from message akashic.v1.PassageParagraph
- */
-export class PassageParagraph extends Message<PassageParagraph> {
-  /**
-   * @generated from field: string label = 1;
-   */
-  label = "";
-
-  /**
-   * @generated from field: string text = 2;
-   */
-  text = "";
-
-  constructor(data?: PartialMessage<PassageParagraph>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "akashic.v1.PassageParagraph";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "label", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "text", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PassageParagraph {
-    return new PassageParagraph().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PassageParagraph {
-    return new PassageParagraph().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PassageParagraph {
-    return new PassageParagraph().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: PassageParagraph | PlainMessage<PassageParagraph> | undefined, b: PassageParagraph | PlainMessage<PassageParagraph> | undefined): boolean {
-    return proto3.util.equals(PassageParagraph, a, b);
-  }
-}
-
-/**
- * @generated from message akashic.v1.OptionItem
- */
-export class OptionItem extends Message<OptionItem> {
-  /**
-   * @generated from field: string key = 1;
-   */
-  key = "";
-
-  /**
-   * @generated from field: string text = 2;
-   */
-  text = "";
-
-  constructor(data?: PartialMessage<OptionItem>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "akashic.v1.OptionItem";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "key", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "text", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): OptionItem {
-    return new OptionItem().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): OptionItem {
-    return new OptionItem().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): OptionItem {
-    return new OptionItem().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: OptionItem | PlainMessage<OptionItem> | undefined, b: OptionItem | PlainMessage<OptionItem> | undefined): boolean {
-    return proto3.util.equals(OptionItem, a, b);
-  }
-}
-
-/**
- * @generated from message akashic.v1.SectionItem
- */
-export class SectionItem extends Message<SectionItem> {
-  /**
-   * @generated from field: string key = 1;
-   */
-  key = "";
-
-  /**
-   * @generated from field: string label = 2;
-   */
-  label = "";
-
-  constructor(data?: PartialMessage<SectionItem>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "akashic.v1.SectionItem";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "key", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "label", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SectionItem {
-    return new SectionItem().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SectionItem {
-    return new SectionItem().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SectionItem {
-    return new SectionItem().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: SectionItem | PlainMessage<SectionItem> | undefined, b: SectionItem | PlainMessage<SectionItem> | undefined): boolean {
-    return proto3.util.equals(SectionItem, a, b);
-  }
-}
-
-/**
  * @generated from message akashic.v1.TestConfig
  */
 export class TestConfig extends Message<TestConfig> {
@@ -356,16 +227,6 @@ export class TestConfig extends Message<TestConfig> {
   hardCount = 0;
 
   /**
-   * @generated from field: repeated int32 category_ids = 4;
-   */
-  categoryIds: number[] = [];
-
-  /**
-   * @generated from field: repeated int32 passage_ids = 5;
-   */
-  passageIds: number[] = [];
-
-  /**
    * @generated from field: repeated akashic.v1.QuestionType types = 6;
    */
   types: QuestionType[] = [];
@@ -374,11 +235,6 @@ export class TestConfig extends Message<TestConfig> {
    * @generated from field: repeated string tags = 7;
    */
   tags: string[] = [];
-
-  /**
-   * @generated from field: bool standalone_only = 8;
-   */
-  standaloneOnly = false;
 
   constructor(data?: PartialMessage<TestConfig>) {
     super();
@@ -391,11 +247,8 @@ export class TestConfig extends Message<TestConfig> {
     { no: 1, name: "easy_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 2, name: "medium_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 3, name: "hard_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 4, name: "category_ids", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
-    { no: 5, name: "passage_ids", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 6, name: "types", kind: "enum", T: proto3.getEnumType(QuestionType), repeated: true },
     { no: 7, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
-    { no: 8, name: "standalone_only", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TestConfig {

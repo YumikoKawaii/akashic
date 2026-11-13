@@ -297,179 +297,20 @@ func (x *MCQOption) GetText() string {
 	return ""
 }
 
-type PassageParagraph struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Label         string                 `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
-	Text          string                 `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *PassageParagraph) Reset() {
-	*x = PassageParagraph{}
-	mi := &file_akashic_v1_common_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *PassageParagraph) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*PassageParagraph) ProtoMessage() {}
-
-func (x *PassageParagraph) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_common_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use PassageParagraph.ProtoReflect.Descriptor instead.
-func (*PassageParagraph) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_common_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *PassageParagraph) GetLabel() string {
-	if x != nil {
-		return x.Label
-	}
-	return ""
-}
-
-func (x *PassageParagraph) GetText() string {
-	if x != nil {
-		return x.Text
-	}
-	return ""
-}
-
-type OptionItem struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Text          string                 `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *OptionItem) Reset() {
-	*x = OptionItem{}
-	mi := &file_akashic_v1_common_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *OptionItem) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OptionItem) ProtoMessage() {}
-
-func (x *OptionItem) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_common_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use OptionItem.ProtoReflect.Descriptor instead.
-func (*OptionItem) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_common_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *OptionItem) GetKey() string {
-	if x != nil {
-		return x.Key
-	}
-	return ""
-}
-
-func (x *OptionItem) GetText() string {
-	if x != nil {
-		return x.Text
-	}
-	return ""
-}
-
-type SectionItem struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Label         string                 `protobuf:"bytes,2,opt,name=label,proto3" json:"label,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SectionItem) Reset() {
-	*x = SectionItem{}
-	mi := &file_akashic_v1_common_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SectionItem) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SectionItem) ProtoMessage() {}
-
-func (x *SectionItem) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_common_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SectionItem.ProtoReflect.Descriptor instead.
-func (*SectionItem) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_common_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *SectionItem) GetKey() string {
-	if x != nil {
-		return x.Key
-	}
-	return ""
-}
-
-func (x *SectionItem) GetLabel() string {
-	if x != nil {
-		return x.Label
-	}
-	return ""
-}
-
 type TestConfig struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	EasyCount      int32                  `protobuf:"varint,1,opt,name=easy_count,json=easyCount,proto3" json:"easy_count,omitempty"`
-	MediumCount    int32                  `protobuf:"varint,2,opt,name=medium_count,json=mediumCount,proto3" json:"medium_count,omitempty"`
-	HardCount      int32                  `protobuf:"varint,3,opt,name=hard_count,json=hardCount,proto3" json:"hard_count,omitempty"`
-	CategoryIds    []int32                `protobuf:"varint,4,rep,packed,name=category_ids,json=categoryIds,proto3" json:"category_ids,omitempty"`
-	PassageIds     []int32                `protobuf:"varint,5,rep,packed,name=passage_ids,json=passageIds,proto3" json:"passage_ids,omitempty"`
-	Types          []QuestionType         `protobuf:"varint,6,rep,packed,name=types,proto3,enum=akashic.v1.QuestionType" json:"types,omitempty"`
-	Tags           []string               `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty"`
-	StandaloneOnly bool                   `protobuf:"varint,8,opt,name=standalone_only,json=standaloneOnly,proto3" json:"standalone_only,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EasyCount     int32                  `protobuf:"varint,1,opt,name=easy_count,json=easyCount,proto3" json:"easy_count,omitempty"`
+	MediumCount   int32                  `protobuf:"varint,2,opt,name=medium_count,json=mediumCount,proto3" json:"medium_count,omitempty"`
+	HardCount     int32                  `protobuf:"varint,3,opt,name=hard_count,json=hardCount,proto3" json:"hard_count,omitempty"`
+	Types         []QuestionType         `protobuf:"varint,6,rep,packed,name=types,proto3,enum=akashic.v1.QuestionType" json:"types,omitempty"`
+	Tags          []string               `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *TestConfig) Reset() {
 	*x = TestConfig{}
-	mi := &file_akashic_v1_common_proto_msgTypes[4]
+	mi := &file_akashic_v1_common_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -481,7 +322,7 @@ func (x *TestConfig) String() string {
 func (*TestConfig) ProtoMessage() {}
 
 func (x *TestConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_common_proto_msgTypes[4]
+	mi := &file_akashic_v1_common_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -494,7 +335,7 @@ func (x *TestConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TestConfig.ProtoReflect.Descriptor instead.
 func (*TestConfig) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_common_proto_rawDescGZIP(), []int{4}
+	return file_akashic_v1_common_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *TestConfig) GetEasyCount() int32 {
@@ -518,20 +359,6 @@ func (x *TestConfig) GetHardCount() int32 {
 	return 0
 }
 
-func (x *TestConfig) GetCategoryIds() []int32 {
-	if x != nil {
-		return x.CategoryIds
-	}
-	return nil
-}
-
-func (x *TestConfig) GetPassageIds() []int32 {
-	if x != nil {
-		return x.PassageIds
-	}
-	return nil
-}
-
 func (x *TestConfig) GetTypes() []QuestionType {
 	if x != nil {
 		return x.Types
@@ -546,13 +373,6 @@ func (x *TestConfig) GetTags() []string {
 	return nil
 }
 
-func (x *TestConfig) GetStandaloneOnly() bool {
-	if x != nil {
-		return x.StandaloneOnly
-	}
-	return false
-}
-
 type PageInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
@@ -565,7 +385,7 @@ type PageInfo struct {
 
 func (x *PageInfo) Reset() {
 	*x = PageInfo{}
-	mi := &file_akashic_v1_common_proto_msgTypes[5]
+	mi := &file_akashic_v1_common_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -577,7 +397,7 @@ func (x *PageInfo) String() string {
 func (*PageInfo) ProtoMessage() {}
 
 func (x *PageInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_common_proto_msgTypes[5]
+	mi := &file_akashic_v1_common_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -590,7 +410,7 @@ func (x *PageInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PageInfo.ProtoReflect.Descriptor instead.
 func (*PageInfo) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_common_proto_rawDescGZIP(), []int{5}
+	return file_akashic_v1_common_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *PageInfo) GetPage() int32 {
@@ -635,7 +455,7 @@ type User struct {
 
 func (x *User) Reset() {
 	*x = User{}
-	mi := &file_akashic_v1_common_proto_msgTypes[6]
+	mi := &file_akashic_v1_common_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -647,7 +467,7 @@ func (x *User) String() string {
 func (*User) ProtoMessage() {}
 
 func (x *User) ProtoReflect() protoreflect.Message {
-	mi := &file_akashic_v1_common_proto_msgTypes[6]
+	mi := &file_akashic_v1_common_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -660,7 +480,7 @@ func (x *User) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use User.ProtoReflect.Descriptor instead.
 func (*User) Descriptor() ([]byte, []int) {
-	return file_akashic_v1_common_proto_rawDescGZIP(), []int{6}
+	return file_akashic_v1_common_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *User) GetId() int32 {
@@ -713,30 +533,16 @@ const file_akashic_v1_common_proto_rawDesc = "" +
 	"akashic.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"1\n" +
 	"\tMCQOption\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x12\n" +
-	"\x04text\x18\x02 \x01(\tR\x04text\"<\n" +
-	"\x10PassageParagraph\x12\x14\n" +
-	"\x05label\x18\x01 \x01(\tR\x05label\x12\x12\n" +
-	"\x04text\x18\x02 \x01(\tR\x04text\"2\n" +
-	"\n" +
-	"OptionItem\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x12\n" +
-	"\x04text\x18\x02 \x01(\tR\x04text\"5\n" +
-	"\vSectionItem\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05label\x18\x02 \x01(\tR\x05label\"\x9e\x02\n" +
+	"\x04text\x18\x02 \x01(\tR\x04text\"\xc3\x01\n" +
 	"\n" +
 	"TestConfig\x12\x1d\n" +
 	"\n" +
 	"easy_count\x18\x01 \x01(\x05R\teasyCount\x12!\n" +
 	"\fmedium_count\x18\x02 \x01(\x05R\vmediumCount\x12\x1d\n" +
 	"\n" +
-	"hard_count\x18\x03 \x01(\x05R\thardCount\x12!\n" +
-	"\fcategory_ids\x18\x04 \x03(\x05R\vcategoryIds\x12\x1f\n" +
-	"\vpassage_ids\x18\x05 \x03(\x05R\n" +
-	"passageIds\x12.\n" +
+	"hard_count\x18\x03 \x01(\x05R\thardCount\x12.\n" +
 	"\x05types\x18\x06 \x03(\x0e2\x18.akashic.v1.QuestionTypeR\x05types\x12\x12\n" +
-	"\x04tags\x18\a \x03(\tR\x04tags\x12'\n" +
-	"\x0fstandalone_only\x18\b \x01(\bR\x0estandaloneOnly\"r\n" +
+	"\x04tags\x18\a \x03(\tR\x04tagsJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\b\x10\t\"r\n" +
 	"\bPageInfo\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x14\n" +
@@ -793,30 +599,27 @@ func file_akashic_v1_common_proto_rawDescGZIP() []byte {
 }
 
 var file_akashic_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_akashic_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_akashic_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_akashic_v1_common_proto_goTypes = []any{
 	(Difficulty)(0),               // 0: akashic.v1.Difficulty
 	(QuestionType)(0),             // 1: akashic.v1.QuestionType
 	(BankRole)(0),                 // 2: akashic.v1.BankRole
 	(BankVisibility)(0),           // 3: akashic.v1.BankVisibility
 	(*MCQOption)(nil),             // 4: akashic.v1.MCQOption
-	(*PassageParagraph)(nil),      // 5: akashic.v1.PassageParagraph
-	(*OptionItem)(nil),            // 6: akashic.v1.OptionItem
-	(*SectionItem)(nil),           // 7: akashic.v1.SectionItem
-	(*TestConfig)(nil),            // 8: akashic.v1.TestConfig
-	(*PageInfo)(nil),              // 9: akashic.v1.PageInfo
-	(*User)(nil),                  // 10: akashic.v1.User
-	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
+	(*TestConfig)(nil),            // 5: akashic.v1.TestConfig
+	(*PageInfo)(nil),              // 6: akashic.v1.PageInfo
+	(*User)(nil),                  // 7: akashic.v1.User
+	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
 }
 var file_akashic_v1_common_proto_depIdxs = []int32{
-	1,  // 0: akashic.v1.TestConfig.types:type_name -> akashic.v1.QuestionType
-	11, // 1: akashic.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	11, // 2: akashic.v1.User.updated_at:type_name -> google.protobuf.Timestamp
-	3,  // [3:3] is the sub-list for method output_type
-	3,  // [3:3] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	1, // 0: akashic.v1.TestConfig.types:type_name -> akashic.v1.QuestionType
+	8, // 1: akashic.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	8, // 2: akashic.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_common_proto_init() }
@@ -830,7 +633,7 @@ func file_akashic_v1_common_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_akashic_v1_common_proto_rawDesc), len(file_akashic_v1_common_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   7,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

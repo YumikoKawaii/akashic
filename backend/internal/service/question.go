@@ -19,11 +19,9 @@ func NewQuestionService(u uow.UnitOfWork, pool GenerateCache) *QuestionService {
 }
 
 func toCachedQuestion(q *model.Question) CachedQuestion {
-	catID := q.CategoryID
 	return CachedQuestion{
 		ID:         q.ID,
 		Difficulty: q.Difficulty,
-		CategoryID: &catID,
 		Type:       q.Type,
 		Tags:       []string(q.Tags),
 	}
@@ -74,7 +72,6 @@ func (s *QuestionService) GetByID(bankID, id int) (*model.Question, error) {
 }
 
 type CreateQuestionInput struct {
-	CategoryID int               `json:"category_id" binding:"required"`
 	Type       string            `json:"type"        binding:"required"`
 	Difficulty string            `json:"difficulty"  binding:"required"`
 	Tags       []string          `json:"tags"`
@@ -88,40 +85,15 @@ func (s *QuestionService) Create(ctx context.Context, bankID int, input CreateQu
 	if _, err := s.uow.Store().Banks.FindByID(bankID); err != nil {
 		return nil, err
 	}
-	cat, err := s.uow.Store().Categories.FindByID(input.CategoryID)
-	if err != nil {
-		return nil, err
-	}
-	if cat.BankID != bankID {
-		return nil, ErrForbidden
-	}
-
 	q := &model.Question{
 		BankID:     bankID,
-		CategoryID: input.CategoryID,
 		Type:       input.Type,
 		Difficulty: input.Difficulty,
 		Tags:       pq.StringArray(input.Tags),
+		Content:    model.NewQuestionContent(input.Type, input.Content, input.Answer, input.Options, input.Answers),
 	}
 
-	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
-		if err := tx.Questions.Create(q); err != nil {
-			return err
-		}
-		if input.Type == "mcq" {
-			return tx.Questions.CreateChoice(&model.QMultipleChoice{
-				QuestionID: q.ID,
-				Content:    input.Content,
-				Options:    input.Options,
-				Answers:    pq.StringArray(input.Answers),
-			})
-		}
-		return tx.Questions.CreateItem(&model.QQuestionItem{
-			QuestionID: q.ID,
-			Content:    input.Content,
-			Answer:     input.Answer,
-		})
-	}); err != nil {
+	if err := s.uow.Store().Questions.Create(q); err != nil {
 		return nil, err
 	}
 
@@ -134,7 +106,6 @@ func (s *QuestionService) Create(ctx context.Context, bankID int, input CreateQu
 }
 
 type UpdateQuestionInput struct {
-	CategoryID *int              `json:"category_id"`
 	Difficulty string            `json:"difficulty"`
 	Tags       []string          `json:"tags"`
 	Content    string            `json:"content"`
@@ -151,45 +122,27 @@ func (s *QuestionService) Update(bankID, id int, input UpdateQuestionInput) (*mo
 	if q.BankID != bankID {
 		return nil, ErrForbidden
 	}
-	if input.CategoryID != nil {
-		cat, err := s.uow.Store().Categories.FindByID(*input.CategoryID)
-		if err != nil {
-			return nil, err
-		}
-		if cat.BankID != bankID {
-			return nil, ErrForbidden
-		}
-		q.CategoryID = *input.CategoryID
-	}
 	if input.Difficulty != "" {
 		q.Difficulty = input.Difficulty
 	}
 	if input.Tags != nil {
 		q.Tags = pq.StringArray(input.Tags)
 	}
+	if input.Content != "" {
+		q.Content.Text = input.Content
+		if q.Type == "mcq" {
+			if input.Options != nil {
+				q.Content.Options = input.Options
+			}
+			if input.Answers != nil {
+				q.Content.Answers = input.Answers
+			}
+		} else if input.Answer != "" {
+			q.Content.Answer = input.Answer
+		}
+	}
 	if err := s.uow.Store().Questions.Save(q); err != nil {
 		return nil, err
-	}
-
-	if q.Choice != nil && input.Content != "" {
-		q.Choice.Content = input.Content
-		if input.Options != nil {
-			q.Choice.Options = input.Options
-		}
-		if input.Answers != nil {
-			q.Choice.Answers = pq.StringArray(input.Answers)
-		}
-		if err := s.uow.Store().Questions.SaveChoice(q.Choice); err != nil {
-			return nil, err
-		}
-	} else if q.Item != nil && input.Content != "" {
-		q.Item.Content = input.Content
-		if input.Answer != "" {
-			q.Item.Answer = input.Answer
-		}
-		if err := s.uow.Store().Questions.SaveItem(q.Item); err != nil {
-			return nil, err
-		}
 	}
 
 	updated, err := s.uow.Store().Questions.FindByID(q.ID)

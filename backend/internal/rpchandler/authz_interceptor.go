@@ -38,13 +38,6 @@ var procedureMinRole = map[string]string{
 	akashicv1connect.BankServiceUpdateBankMemberRoleProcedure:    membership.RoleOwner,
 	akashicv1connect.BankServiceSetBankVisibilityProcedure:       membership.RoleOwner,
 
-	// Categories
-	akashicv1connect.CategoryServiceListCategoriesProcedure:  membership.RoleViewer,
-	akashicv1connect.CategoryServiceCreateCategoryProcedure:  membership.RoleEditor,
-	akashicv1connect.CategoryServiceUpdateCategoryProcedure:  membership.RoleEditor,
-	akashicv1connect.CategoryServiceDeleteCategoryProcedure:  membership.RoleEditor,
-	akashicv1connect.CategoryServiceRestoreCategoryProcedure: membership.RoleEditor,
-
 	// Questions
 	akashicv1connect.QuestionServiceListQuestionsProcedure:   membership.RoleViewer,
 	akashicv1connect.QuestionServiceListTagsProcedure:        membership.RoleViewer,
@@ -54,22 +47,6 @@ var procedureMinRole = map[string]string{
 	akashicv1connect.QuestionServiceDeleteQuestionProcedure:  membership.RoleEditor,
 	akashicv1connect.QuestionServiceRestoreQuestionProcedure: membership.RoleEditor,
 	akashicv1connect.QuestionServiceIngestQuestionsProcedure: membership.RoleEditor,
-
-	// Passages
-	akashicv1connect.PassageServiceListPassagesProcedure:   membership.RoleViewer,
-	akashicv1connect.PassageServiceGetPassageProcedure:     membership.RoleViewer,
-	akashicv1connect.PassageServiceCreatePassageProcedure:  membership.RoleEditor,
-	akashicv1connect.PassageServiceUpdatePassageProcedure:  membership.RoleEditor,
-	akashicv1connect.PassageServiceDeletePassageProcedure:  membership.RoleEditor,
-	akashicv1connect.PassageServiceRestorePassageProcedure: membership.RoleEditor,
-
-	// Question groups
-	akashicv1connect.QuestionGroupServiceListQuestionGroupsProcedure:   membership.RoleViewer,
-	akashicv1connect.QuestionGroupServiceGetQuestionGroupProcedure:     membership.RoleViewer,
-	akashicv1connect.QuestionGroupServiceCreateQuestionGroupProcedure:  membership.RoleEditor,
-	akashicv1connect.QuestionGroupServiceUpdateQuestionGroupProcedure:  membership.RoleEditor,
-	akashicv1connect.QuestionGroupServiceDeleteQuestionGroupProcedure:  membership.RoleEditor,
-	akashicv1connect.QuestionGroupServiceRestoreQuestionGroupProcedure: membership.RoleEditor,
 
 	// Tests
 	// Tests are bank-wide shared, so generating/listing/taking them is a viewer
@@ -87,24 +64,6 @@ var procedureMinRole = map[string]string{
 	akashicv1connect.AttemptServiceGetAttemptProcedure:          membership.RoleViewer,
 	akashicv1connect.AttemptServiceSaveAttemptProgressProcedure: membership.RoleViewer,
 	akashicv1connect.AttemptServiceSubmitAttemptProcedure:       membership.RoleViewer,
-
-	// Contributions — proposing, revising, contributor transitions (resubmit/
-	// withdraw/reopen/close) and merging are viewer capabilities (public visitors
-	// may contribute). Merge is viewer-floor but creates a question; that is safe
-	// because the service gates it on status==approved, which only an editor's
-	// review can produce. Reviewing the queue (list/approve/reject/request_changes)
-	// is an editor capability. The contribution state machine (which transition is
-	// legal from which status) lives in the service's nextStatus.
-	akashicv1connect.ContributionServiceSubmitContributionProcedure:     membership.RoleViewer,
-	akashicv1connect.ContributionServiceUpdateContributionProcedure:     membership.RoleViewer,
-	akashicv1connect.ContributionServiceListMyContributionsProcedure:    membership.RoleViewer,
-	akashicv1connect.ContributionServiceTransitionContributionProcedure: membership.RoleViewer,
-	akashicv1connect.ContributionServiceMergeContributionProcedure:      membership.RoleViewer,
-	akashicv1connect.ContributionServiceListContributionsProcedure:      membership.RoleEditor,
-	akashicv1connect.ContributionServiceReviewContributionProcedure:     membership.RoleEditor,
-	// Commenting is open to any viewer (the contributor defends their idea; the
-	// thread is shared discussion). Service binds the comment to the bank.
-	akashicv1connect.ContributionServiceAddContributionCommentProcedure: membership.RoleViewer,
 }
 
 var errBankIDRequired = errors.New("request is registered as bank-scoped but carries no bank_id")

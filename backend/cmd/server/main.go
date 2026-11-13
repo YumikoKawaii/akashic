@@ -51,9 +51,7 @@ func main() {
 	// through it (uow.Store() for reads, uow.Do() for writes). The repos below
 	// are only for the non-transactional services and the startup cache warmers.
 	bankRepo := repository.NewBankRepo(db)
-	categoryRepo := repository.NewCategoryRepo(db)
 	questionRepo := repository.NewQuestionRepo(db)
-	passageRepo := repository.NewPassageRepo(db)
 	testRepo := repository.NewTestRepo(db)
 	attemptRepo := repository.NewAttemptRepo(db)
 	userRepo := repository.NewUserRepo(db)
@@ -79,14 +77,10 @@ func main() {
 
 	authSvc := service.NewAuthService(userRepo, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleCallbackURL, cfg.JWTSecret)
 	bankSvc := service.NewBankService(bankRepo, memberRepo, userRepo, roleCache, visibilityCache)
-	categorySvc := service.NewCategoryService(categoryRepo, bankRepo)
-	passageSvc := service.NewPassageService(passageRepo, bankRepo, categoryRepo)
-	questionGroupSvc := service.NewQuestionGroupService(unitOfWork)
 	questionSvc := service.NewQuestionService(unitOfWork, generateCache)
 	testSvc := service.NewTestService(unitOfWork, generateCache)
 	attemptSvc := service.NewAttemptService(attemptRepo, testRepo)
 	ingestSvc := service.NewIngestService(unitOfWork)
-	contributionSvc := service.NewContributionService(unitOfWork, generateCache)
 
 	warmupPoolCache(bankRepo, questionRepo, generateCache)
 
@@ -107,20 +101,12 @@ func main() {
 		rpchandler.NewAuthServiceHandler(authSvc), interceptor))
 	mux.Handle(akashicv1connect.NewBankServiceHandler(
 		rpchandler.NewBankServiceHandler(bankSvc), interceptor))
-	mux.Handle(akashicv1connect.NewCategoryServiceHandler(
-		rpchandler.NewCategoryServiceHandler(categorySvc), interceptor))
-	mux.Handle(akashicv1connect.NewPassageServiceHandler(
-		rpchandler.NewPassageServiceHandler(passageSvc), interceptor))
-	mux.Handle(akashicv1connect.NewQuestionGroupServiceHandler(
-		rpchandler.NewQuestionGroupServiceHandler(questionGroupSvc), interceptor))
 	mux.Handle(akashicv1connect.NewQuestionServiceHandler(
 		rpchandler.NewQuestionServiceHandler(questionSvc, ingestSvc), interceptor))
 	mux.Handle(akashicv1connect.NewTestServiceHandler(
 		rpchandler.NewTestServiceHandler(testSvc), interceptor))
 	mux.Handle(akashicv1connect.NewAttemptServiceHandler(
 		rpchandler.NewAttemptServiceHandler(attemptSvc), interceptor))
-	mux.Handle(akashicv1connect.NewContributionServiceHandler(
-		rpchandler.NewContributionServiceHandler(contributionSvc), interceptor))
 
 	// ── Static frontend ────────────────────────────────────────────────────────
 	if cfg.StaticDir != "" {
@@ -183,13 +169,9 @@ func warmupPoolCache(bankRepo repository.BankRepository, questionRepo repository
 		}
 		pool := make([]service.CachedQuestion, 0, len(metas))
 		for _, m := range metas {
-			if m.GroupID != nil {
-				continue
-			}
 			pool = append(pool, service.CachedQuestion{
 				ID:         m.ID,
 				Difficulty: m.Difficulty,
-				CategoryID: m.CategoryID,
 				Type:       m.Type,
 				Tags:       []string(m.Tags),
 			})

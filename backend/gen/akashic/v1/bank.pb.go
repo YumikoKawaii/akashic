@@ -355,7 +355,6 @@ type PublicBankCard struct {
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	Owner         *User                  `protobuf:"bytes,4,opt,name=owner,proto3,oneof" json:"owner,omitempty"`
 	QuestionCount int32                  `protobuf:"varint,5,opt,name=question_count,json=questionCount,proto3" json:"question_count,omitempty"`
-	CategoryCount int32                  `protobuf:"varint,6,opt,name=category_count,json=categoryCount,proto3" json:"category_count,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -421,13 +420,6 @@ func (x *PublicBankCard) GetOwner() *User {
 func (x *PublicBankCard) GetQuestionCount() int32 {
 	if x != nil {
 		return x.QuestionCount
-	}
-	return 0
-}
-
-func (x *PublicBankCard) GetCategoryCount() int32 {
-	if x != nil {
-		return x.CategoryCount
 	}
 	return 0
 }
@@ -1620,15 +1612,14 @@ const file_akashic_v1_bank_proto_rawDesc = "" +
 	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x12\n" +
 	"\x10ListBanksRequest\"C\n" +
 	"\x11ListBanksResponse\x12.\n" +
-	"\x05banks\x18\x01 \x03(\v2\x18.akashic.v1.BankWithRoleR\x05banks\"\xdb\x01\n" +
+	"\x05banks\x18\x01 \x03(\v2\x18.akashic.v1.BankWithRoleR\x05banks\"\xba\x01\n" +
 	"\x0ePublicBankCard\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12+\n" +
 	"\x05owner\x18\x04 \x01(\v2\x10.akashic.v1.UserH\x00R\x05owner\x88\x01\x01\x12%\n" +
-	"\x0equestion_count\x18\x05 \x01(\x05R\rquestionCount\x12%\n" +
-	"\x0ecategory_count\x18\x06 \x01(\x05R\rcategoryCountB\b\n" +
-	"\x06_owner\"_\n" +
+	"\x0equestion_count\x18\x05 \x01(\x05R\rquestionCountB\b\n" +
+	"\x06_ownerJ\x04\b\x06\x10\a\"_\n" +
 	"\x16ListPublicBanksRequest\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +

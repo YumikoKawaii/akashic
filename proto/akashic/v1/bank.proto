@@ -61,7 +61,7 @@ message PublicBankCard {
   string        description = 3;
   optional User owner = 4;
   int32         question_count = 5;
-  int32         category_count = 6;
+  reserved 6;
 }
 message ListPublicBanksRequest  {string query = 1; int32 page = 2; int32 page_size = 3;}
 message ListPublicBanksResponse {repeated PublicBankCard banks = 1; PageInfo page_info = 2;}

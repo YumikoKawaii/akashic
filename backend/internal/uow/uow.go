@@ -10,28 +10,20 @@ import (
 // Store exposes every repository bound to one gorm session — either a
 // transaction (the Store passed to Do) or the base connection (UnitOfWork.Store).
 type Store struct {
-	Banks          repository.BankRepository
-	Members        repository.MemberRepository
-	Categories     repository.CategoryRepository
-	Passages       repository.PassageRepository
-	QuestionGroups repository.QuestionGroupRepository
-	Questions      repository.QuestionRepository
-	Tests          repository.TestRepository
-	Attempts       repository.AttemptRepository
-	Contributions  repository.ContributionRepository
+	Banks     repository.BankRepository
+	Members   repository.MemberRepository
+	Questions repository.QuestionRepository
+	Tests     repository.TestRepository
+	Attempts  repository.AttemptRepository
 }
 
 func newStore(db *gorm.DB) *Store {
 	return &Store{
-		Banks:          repository.NewBankRepo(db),
-		Members:        repository.NewMemberRepo(db),
-		Categories:     repository.NewCategoryRepo(db),
-		Passages:       repository.NewPassageRepo(db),
-		QuestionGroups: repository.NewQuestionGroupRepo(db),
-		Questions:      repository.NewQuestionRepo(db),
-		Tests:          repository.NewTestRepo(db),
-		Attempts:       repository.NewAttemptRepo(db),
-		Contributions:  repository.NewContributionRepo(db),
+		Banks:     repository.NewBankRepo(db),
+		Members:   repository.NewMemberRepo(db),
+		Questions: repository.NewQuestionRepo(db),
+		Tests:     repository.NewTestRepo(db),
+		Attempts:  repository.NewAttemptRepo(db),
 	}
 }
 

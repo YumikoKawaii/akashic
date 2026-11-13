@@ -17,7 +17,6 @@ type PublicBankCard struct {
 	OwnerEmail    string
 	OwnerAvatar   string
 	QuestionCount int
-	CategoryCount int
 }
 
 type BankRepository interface {
@@ -72,8 +71,7 @@ func (r *bankRepo) FindPublicPaged(query string, page, pageSize int) ([]PublicBa
 	err := r.db.Table("banks b").
 		Select(`b.id, b.name, b.description, b.owner_id,
 			u.name AS owner_name, u.email AS owner_email, u.avatar_url AS owner_avatar,
-			(SELECT COUNT(*) FROM questions q WHERE q.bank_id = b.id AND q.deleted_at IS NULL) AS question_count,
-			(SELECT COUNT(*) FROM categories c WHERE c.bank_id = b.id AND c.deleted_at IS NULL) AS category_count`).
+			(SELECT COUNT(*) FROM questions q WHERE q.bank_id = b.id AND q.deleted_at IS NULL) AS question_count`).
 		Joins("LEFT JOIN users u ON u.id = b.owner_id").
 		Where(where, args...).
 		Order("b.created_at DESC").

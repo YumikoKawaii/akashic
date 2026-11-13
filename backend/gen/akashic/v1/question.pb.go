@@ -190,12 +190,9 @@ type Question struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	Id         int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	BankId     int32                  `protobuf:"varint,2,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
-	CategoryId int32                  `protobuf:"varint,3,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
-	GroupId    *int32                 `protobuf:"varint,4,opt,name=group_id,json=groupId,proto3,oneof" json:"group_id,omitempty"`
 	Type       QuestionType           `protobuf:"varint,5,opt,name=type,proto3,enum=akashic.v1.QuestionType" json:"type,omitempty"`
 	Difficulty Difficulty             `protobuf:"varint,6,opt,name=difficulty,proto3,enum=akashic.v1.Difficulty" json:"difficulty,omitempty"`
 	Tags       []string               `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty"`
-	Position   *int32                 `protobuf:"varint,8,opt,name=position,proto3,oneof" json:"position,omitempty"`
 	// Types that are valid to be assigned to Content:
 	//
 	//	*Question_Item
@@ -203,7 +200,6 @@ type Question struct {
 	Content       isQuestion_Content     `protobuf_oneof:"content"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Group         *QuestionGroup         `protobuf:"bytes,13,opt,name=group,proto3,oneof" json:"group,omitempty"` // embedded when the question belongs to a group
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -252,20 +248,6 @@ func (x *Question) GetBankId() int32 {
 	return 0
 }
 
-func (x *Question) GetCategoryId() int32 {
-	if x != nil {
-		return x.CategoryId
-	}
-	return 0
-}
-
-func (x *Question) GetGroupId() int32 {
-	if x != nil && x.GroupId != nil {
-		return *x.GroupId
-	}
-	return 0
-}
-
 func (x *Question) GetType() QuestionType {
 	if x != nil {
 		return x.Type
@@ -285,13 +267,6 @@ func (x *Question) GetTags() []string {
 		return x.Tags
 	}
 	return nil
-}
-
-func (x *Question) GetPosition() int32 {
-	if x != nil && x.Position != nil {
-		return *x.Position
-	}
-	return 0
 }
 
 func (x *Question) GetContent() isQuestion_Content {
@@ -333,13 +308,6 @@ func (x *Question) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *Question) GetGroup() *QuestionGroup {
-	if x != nil {
-		return x.Group
-	}
-	return nil
-}
-
 type isQuestion_Content interface {
 	isQuestion_Content()
 }
@@ -357,15 +325,12 @@ func (*Question_Item) isQuestion_Content() {}
 func (*Question_Choice) isQuestion_Content() {}
 
 type QuestionFilter struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	CategoryIds    []int32                `protobuf:"varint,1,rep,packed,name=category_ids,json=categoryIds,proto3" json:"category_ids,omitempty"`
-	Difficulty     Difficulty             `protobuf:"varint,2,opt,name=difficulty,proto3,enum=akashic.v1.Difficulty" json:"difficulty,omitempty"`
-	Type           QuestionType           `protobuf:"varint,3,opt,name=type,proto3,enum=akashic.v1.QuestionType" json:"type,omitempty"`
-	Tags           []string               `protobuf:"bytes,4,rep,name=tags,proto3" json:"tags,omitempty"`
-	StandaloneOnly bool                   `protobuf:"varint,5,opt,name=standalone_only,json=standaloneOnly,proto3" json:"standalone_only,omitempty"`
-	PassageId      *int32                 `protobuf:"varint,6,opt,name=passage_id,json=passageId,proto3,oneof" json:"passage_id,omitempty"` // questions whose group belongs to this passage
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Difficulty    Difficulty             `protobuf:"varint,2,opt,name=difficulty,proto3,enum=akashic.v1.Difficulty" json:"difficulty,omitempty"`
+	Type          QuestionType           `protobuf:"varint,3,opt,name=type,proto3,enum=akashic.v1.QuestionType" json:"type,omitempty"`
+	Tags          []string               `protobuf:"bytes,4,rep,name=tags,proto3" json:"tags,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *QuestionFilter) Reset() {
@@ -398,13 +363,6 @@ func (*QuestionFilter) Descriptor() ([]byte, []int) {
 	return file_akashic_v1_question_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *QuestionFilter) GetCategoryIds() []int32 {
-	if x != nil {
-		return x.CategoryIds
-	}
-	return nil
-}
-
 func (x *QuestionFilter) GetDifficulty() Difficulty {
 	if x != nil {
 		return x.Difficulty
@@ -424,20 +382,6 @@ func (x *QuestionFilter) GetTags() []string {
 		return x.Tags
 	}
 	return nil
-}
-
-func (x *QuestionFilter) GetStandaloneOnly() bool {
-	if x != nil {
-		return x.StandaloneOnly
-	}
-	return false
-}
-
-func (x *QuestionFilter) GetPassageId() int32 {
-	if x != nil && x.PassageId != nil {
-		return *x.PassageId
-	}
-	return 0
 }
 
 type ListQuestionsRequest struct {
@@ -563,8 +507,6 @@ func (x *ListQuestionsResponse) GetPageInfo() *PageInfo {
 type CreateQuestionRequest struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	BankId     int32                  `protobuf:"varint,1,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
-	CategoryId int32                  `protobuf:"varint,2,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
-	GroupId    *int32                 `protobuf:"varint,3,opt,name=group_id,json=groupId,proto3,oneof" json:"group_id,omitempty"`
 	Type       QuestionType           `protobuf:"varint,4,opt,name=type,proto3,enum=akashic.v1.QuestionType" json:"type,omitempty"`
 	Difficulty Difficulty             `protobuf:"varint,5,opt,name=difficulty,proto3,enum=akashic.v1.Difficulty" json:"difficulty,omitempty"`
 	Tags       []string               `protobuf:"bytes,6,rep,name=tags,proto3" json:"tags,omitempty"`
@@ -610,20 +552,6 @@ func (*CreateQuestionRequest) Descriptor() ([]byte, []int) {
 func (x *CreateQuestionRequest) GetBankId() int32 {
 	if x != nil {
 		return x.BankId
-	}
-	return 0
-}
-
-func (x *CreateQuestionRequest) GetCategoryId() int32 {
-	if x != nil {
-		return x.CategoryId
-	}
-	return 0
-}
-
-func (x *CreateQuestionRequest) GetGroupId() int32 {
-	if x != nil && x.GroupId != nil {
-		return *x.GroupId
 	}
 	return 0
 }
@@ -834,7 +762,6 @@ type UpdateQuestionRequest struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	BankId     int32                  `protobuf:"varint,1,opt,name=bank_id,json=bankId,proto3" json:"bank_id,omitempty"`
 	Id         int32                  `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
-	CategoryId int32                  `protobuf:"varint,3,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	Difficulty Difficulty             `protobuf:"varint,4,opt,name=difficulty,proto3,enum=akashic.v1.Difficulty" json:"difficulty,omitempty"`
 	Tags       []string               `protobuf:"bytes,5,rep,name=tags,proto3" json:"tags,omitempty"`
 	// Types that are valid to be assigned to Content:
@@ -886,13 +813,6 @@ func (x *UpdateQuestionRequest) GetBankId() int32 {
 func (x *UpdateQuestionRequest) GetId() int32 {
 	if x != nil {
 		return x.Id
-	}
-	return 0
-}
-
-func (x *UpdateQuestionRequest) GetCategoryId() int32 {
-	if x != nil {
-		return x.CategoryId
 	}
 	return 0
 }
@@ -1453,49 +1373,36 @@ var File_akashic_v1_question_proto protoreflect.FileDescriptor
 const file_akashic_v1_question_proto_rawDesc = "" +
 	"\n" +
 	"\x19akashic/v1/question.proto\x12\n" +
-	"akashic.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17akashic/v1/common.proto\x1a\x1fakashic/v1/question_group.proto\"@\n" +
+	"akashic.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17akashic/v1/common.proto\"@\n" +
 	"\fQuestionItem\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\tR\acontent\x12\x16\n" +
 	"\x06answer\x18\x02 \x01(\tR\x06answer\"u\n" +
 	"\x0eMultipleChoice\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\tR\acontent\x12/\n" +
 	"\aoptions\x18\x02 \x03(\v2\x15.akashic.v1.MCQOptionR\aoptions\x12\x18\n" +
-	"\aanswers\x18\x03 \x03(\tR\aanswers\"\xd0\x04\n" +
+	"\aanswers\x18\x03 \x03(\tR\aanswers\"\xac\x03\n" +
 	"\bQuestion\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x17\n" +
-	"\abank_id\x18\x02 \x01(\x05R\x06bankId\x12\x1f\n" +
-	"\vcategory_id\x18\x03 \x01(\x05R\n" +
-	"categoryId\x12\x1e\n" +
-	"\bgroup_id\x18\x04 \x01(\x05H\x01R\agroupId\x88\x01\x01\x12,\n" +
+	"\abank_id\x18\x02 \x01(\x05R\x06bankId\x12,\n" +
 	"\x04type\x18\x05 \x01(\x0e2\x18.akashic.v1.QuestionTypeR\x04type\x126\n" +
 	"\n" +
 	"difficulty\x18\x06 \x01(\x0e2\x16.akashic.v1.DifficultyR\n" +
 	"difficulty\x12\x12\n" +
-	"\x04tags\x18\a \x03(\tR\x04tags\x12\x1f\n" +
-	"\bposition\x18\b \x01(\x05H\x02R\bposition\x88\x01\x01\x12.\n" +
+	"\x04tags\x18\a \x03(\tR\x04tags\x12.\n" +
 	"\x04item\x18\t \x01(\v2\x18.akashic.v1.QuestionItemH\x00R\x04item\x124\n" +
 	"\x06choice\x18\n" +
 	" \x01(\v2\x1a.akashic.v1.MultipleChoiceH\x00R\x06choice\x129\n" +
 	"\n" +
 	"created_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x124\n" +
-	"\x05group\x18\r \x01(\v2\x19.akashic.v1.QuestionGroupH\x03R\x05group\x88\x01\x01B\t\n" +
-	"\acontentB\v\n" +
-	"\t_group_idB\v\n" +
-	"\t_positionB\b\n" +
-	"\x06_group\"\x89\x02\n" +
-	"\x0eQuestionFilter\x12!\n" +
-	"\fcategory_ids\x18\x01 \x03(\x05R\vcategoryIds\x126\n" +
+	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\t\n" +
+	"\acontentJ\x04\b\x03\x10\x04J\x04\b\x04\x10\x05J\x04\b\b\x10\tJ\x04\b\r\x10\x0e\"\x9c\x01\n" +
+	"\x0eQuestionFilter\x126\n" +
 	"\n" +
 	"difficulty\x18\x02 \x01(\x0e2\x16.akashic.v1.DifficultyR\n" +
 	"difficulty\x12,\n" +
 	"\x04type\x18\x03 \x01(\x0e2\x18.akashic.v1.QuestionTypeR\x04type\x12\x12\n" +
-	"\x04tags\x18\x04 \x03(\tR\x04tags\x12'\n" +
-	"\x0fstandalone_only\x18\x05 \x01(\bR\x0estandaloneOnly\x12\"\n" +
-	"\n" +
-	"passage_id\x18\x06 \x01(\x05H\x00R\tpassageId\x88\x01\x01B\r\n" +
-	"\v_passage_id\"\x94\x01\n" +
+	"\x04tags\x18\x04 \x03(\tR\x04tagsJ\x04\b\x01\x10\x02J\x04\b\x05\x10\x06J\x04\b\x06\x10\a\"\x94\x01\n" +
 	"\x14ListQuestionsRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x122\n" +
 	"\x06filter\x18\x02 \x01(\v2\x1a.akashic.v1.QuestionFilterR\x06filter\x12\x12\n" +
@@ -1503,12 +1410,9 @@ const file_akashic_v1_question_proto_rawDesc = "" +
 	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\"~\n" +
 	"\x15ListQuestionsResponse\x122\n" +
 	"\tquestions\x18\x01 \x03(\v2\x14.akashic.v1.QuestionR\tquestions\x121\n" +
-	"\tpage_info\x18\x02 \x01(\v2\x14.akashic.v1.PageInfoR\bpageInfo\"\xe9\x02\n" +
+	"\tpage_info\x18\x02 \x01(\v2\x14.akashic.v1.PageInfoR\bpageInfo\"\xa7\x02\n" +
 	"\x15CreateQuestionRequest\x12\x17\n" +
-	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x1f\n" +
-	"\vcategory_id\x18\x02 \x01(\x05R\n" +
-	"categoryId\x12\x1e\n" +
-	"\bgroup_id\x18\x03 \x01(\x05H\x01R\agroupId\x88\x01\x01\x12,\n" +
+	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12,\n" +
 	"\x04type\x18\x04 \x01(\x0e2\x18.akashic.v1.QuestionTypeR\x04type\x126\n" +
 	"\n" +
 	"difficulty\x18\x05 \x01(\x0e2\x16.akashic.v1.DifficultyR\n" +
@@ -1516,27 +1420,24 @@ const file_akashic_v1_question_proto_rawDesc = "" +
 	"\x04tags\x18\x06 \x03(\tR\x04tags\x12.\n" +
 	"\x04item\x18\a \x01(\v2\x18.akashic.v1.QuestionItemH\x00R\x04item\x124\n" +
 	"\x06choice\x18\b \x01(\v2\x1a.akashic.v1.MultipleChoiceH\x00R\x06choiceB\t\n" +
-	"\acontentB\v\n" +
-	"\t_group_id\"J\n" +
+	"\acontentJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04\"J\n" +
 	"\x16CreateQuestionResponse\x120\n" +
 	"\bquestion\x18\x01 \x01(\v2\x14.akashic.v1.QuestionR\bquestion\"=\n" +
 	"\x12GetQuestionRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\x05R\x02id\"G\n" +
 	"\x13GetQuestionResponse\x120\n" +
-	"\bquestion\x18\x01 \x01(\v2\x14.akashic.v1.QuestionR\bquestion\"\x9e\x02\n" +
+	"\bquestion\x18\x01 \x01(\v2\x14.akashic.v1.QuestionR\bquestion\"\x83\x02\n" +
 	"\x15UpdateQuestionRequest\x12\x17\n" +
 	"\abank_id\x18\x01 \x01(\x05R\x06bankId\x12\x0e\n" +
-	"\x02id\x18\x02 \x01(\x05R\x02id\x12\x1f\n" +
-	"\vcategory_id\x18\x03 \x01(\x05R\n" +
-	"categoryId\x126\n" +
+	"\x02id\x18\x02 \x01(\x05R\x02id\x126\n" +
 	"\n" +
 	"difficulty\x18\x04 \x01(\x0e2\x16.akashic.v1.DifficultyR\n" +
 	"difficulty\x12\x12\n" +
 	"\x04tags\x18\x05 \x03(\tR\x04tags\x12.\n" +
 	"\x04item\x18\x06 \x01(\v2\x18.akashic.v1.QuestionItemH\x00R\x04item\x124\n" +
 	"\x06choice\x18\a \x01(\v2\x1a.akashic.v1.MultipleChoiceH\x00R\x06choiceB\t\n" +
-	"\acontent\"J\n" +
+	"\acontentJ\x04\b\x03\x10\x04\"J\n" +
 	"\x16UpdateQuestionResponse\x120\n" +
 	"\bquestion\x18\x01 \x01(\v2\x14.akashic.v1.QuestionR\bquestion\"@\n" +
 	"\x15DeleteQuestionRequest\x12\x17\n" +
@@ -1620,8 +1521,7 @@ var file_akashic_v1_question_proto_goTypes = []any{
 	(QuestionType)(0),               // 23: akashic.v1.QuestionType
 	(Difficulty)(0),                 // 24: akashic.v1.Difficulty
 	(*timestamppb.Timestamp)(nil),   // 25: google.protobuf.Timestamp
-	(*QuestionGroup)(nil),           // 26: akashic.v1.QuestionGroup
-	(*PageInfo)(nil),                // 27: akashic.v1.PageInfo
+	(*PageInfo)(nil),                // 26: akashic.v1.PageInfo
 }
 var file_akashic_v1_question_proto_depIdxs = []int32{
 	22, // 0: akashic.v1.MultipleChoice.options:type_name -> akashic.v1.MCQOption
@@ -1631,46 +1531,45 @@ var file_akashic_v1_question_proto_depIdxs = []int32{
 	2,  // 4: akashic.v1.Question.choice:type_name -> akashic.v1.MultipleChoice
 	25, // 5: akashic.v1.Question.created_at:type_name -> google.protobuf.Timestamp
 	25, // 6: akashic.v1.Question.updated_at:type_name -> google.protobuf.Timestamp
-	26, // 7: akashic.v1.Question.group:type_name -> akashic.v1.QuestionGroup
-	24, // 8: akashic.v1.QuestionFilter.difficulty:type_name -> akashic.v1.Difficulty
-	23, // 9: akashic.v1.QuestionFilter.type:type_name -> akashic.v1.QuestionType
-	4,  // 10: akashic.v1.ListQuestionsRequest.filter:type_name -> akashic.v1.QuestionFilter
-	3,  // 11: akashic.v1.ListQuestionsResponse.questions:type_name -> akashic.v1.Question
-	27, // 12: akashic.v1.ListQuestionsResponse.page_info:type_name -> akashic.v1.PageInfo
-	23, // 13: akashic.v1.CreateQuestionRequest.type:type_name -> akashic.v1.QuestionType
-	24, // 14: akashic.v1.CreateQuestionRequest.difficulty:type_name -> akashic.v1.Difficulty
-	1,  // 15: akashic.v1.CreateQuestionRequest.item:type_name -> akashic.v1.QuestionItem
-	2,  // 16: akashic.v1.CreateQuestionRequest.choice:type_name -> akashic.v1.MultipleChoice
-	3,  // 17: akashic.v1.CreateQuestionResponse.question:type_name -> akashic.v1.Question
-	3,  // 18: akashic.v1.GetQuestionResponse.question:type_name -> akashic.v1.Question
-	24, // 19: akashic.v1.UpdateQuestionRequest.difficulty:type_name -> akashic.v1.Difficulty
-	1,  // 20: akashic.v1.UpdateQuestionRequest.item:type_name -> akashic.v1.QuestionItem
-	2,  // 21: akashic.v1.UpdateQuestionRequest.choice:type_name -> akashic.v1.MultipleChoice
-	3,  // 22: akashic.v1.UpdateQuestionResponse.question:type_name -> akashic.v1.Question
-	3,  // 23: akashic.v1.RestoreQuestionResponse.question:type_name -> akashic.v1.Question
-	0,  // 24: akashic.v1.IngestQuestionsRequest.format:type_name -> akashic.v1.IngestFormat
-	18, // 25: akashic.v1.IngestQuestionsResponse.errors:type_name -> akashic.v1.IngestError
-	5,  // 26: akashic.v1.QuestionService.ListQuestions:input_type -> akashic.v1.ListQuestionsRequest
-	7,  // 27: akashic.v1.QuestionService.CreateQuestion:input_type -> akashic.v1.CreateQuestionRequest
-	9,  // 28: akashic.v1.QuestionService.GetQuestion:input_type -> akashic.v1.GetQuestionRequest
-	11, // 29: akashic.v1.QuestionService.UpdateQuestion:input_type -> akashic.v1.UpdateQuestionRequest
-	13, // 30: akashic.v1.QuestionService.DeleteQuestion:input_type -> akashic.v1.DeleteQuestionRequest
-	15, // 31: akashic.v1.QuestionService.RestoreQuestion:input_type -> akashic.v1.RestoreQuestionRequest
-	17, // 32: akashic.v1.QuestionService.IngestQuestions:input_type -> akashic.v1.IngestQuestionsRequest
-	20, // 33: akashic.v1.QuestionService.ListTags:input_type -> akashic.v1.ListTagsRequest
-	6,  // 34: akashic.v1.QuestionService.ListQuestions:output_type -> akashic.v1.ListQuestionsResponse
-	8,  // 35: akashic.v1.QuestionService.CreateQuestion:output_type -> akashic.v1.CreateQuestionResponse
-	10, // 36: akashic.v1.QuestionService.GetQuestion:output_type -> akashic.v1.GetQuestionResponse
-	12, // 37: akashic.v1.QuestionService.UpdateQuestion:output_type -> akashic.v1.UpdateQuestionResponse
-	14, // 38: akashic.v1.QuestionService.DeleteQuestion:output_type -> akashic.v1.DeleteQuestionResponse
-	16, // 39: akashic.v1.QuestionService.RestoreQuestion:output_type -> akashic.v1.RestoreQuestionResponse
-	19, // 40: akashic.v1.QuestionService.IngestQuestions:output_type -> akashic.v1.IngestQuestionsResponse
-	21, // 41: akashic.v1.QuestionService.ListTags:output_type -> akashic.v1.ListTagsResponse
-	34, // [34:42] is the sub-list for method output_type
-	26, // [26:34] is the sub-list for method input_type
-	26, // [26:26] is the sub-list for extension type_name
-	26, // [26:26] is the sub-list for extension extendee
-	0,  // [0:26] is the sub-list for field type_name
+	24, // 7: akashic.v1.QuestionFilter.difficulty:type_name -> akashic.v1.Difficulty
+	23, // 8: akashic.v1.QuestionFilter.type:type_name -> akashic.v1.QuestionType
+	4,  // 9: akashic.v1.ListQuestionsRequest.filter:type_name -> akashic.v1.QuestionFilter
+	3,  // 10: akashic.v1.ListQuestionsResponse.questions:type_name -> akashic.v1.Question
+	26, // 11: akashic.v1.ListQuestionsResponse.page_info:type_name -> akashic.v1.PageInfo
+	23, // 12: akashic.v1.CreateQuestionRequest.type:type_name -> akashic.v1.QuestionType
+	24, // 13: akashic.v1.CreateQuestionRequest.difficulty:type_name -> akashic.v1.Difficulty
+	1,  // 14: akashic.v1.CreateQuestionRequest.item:type_name -> akashic.v1.QuestionItem
+	2,  // 15: akashic.v1.CreateQuestionRequest.choice:type_name -> akashic.v1.MultipleChoice
+	3,  // 16: akashic.v1.CreateQuestionResponse.question:type_name -> akashic.v1.Question
+	3,  // 17: akashic.v1.GetQuestionResponse.question:type_name -> akashic.v1.Question
+	24, // 18: akashic.v1.UpdateQuestionRequest.difficulty:type_name -> akashic.v1.Difficulty
+	1,  // 19: akashic.v1.UpdateQuestionRequest.item:type_name -> akashic.v1.QuestionItem
+	2,  // 20: akashic.v1.UpdateQuestionRequest.choice:type_name -> akashic.v1.MultipleChoice
+	3,  // 21: akashic.v1.UpdateQuestionResponse.question:type_name -> akashic.v1.Question
+	3,  // 22: akashic.v1.RestoreQuestionResponse.question:type_name -> akashic.v1.Question
+	0,  // 23: akashic.v1.IngestQuestionsRequest.format:type_name -> akashic.v1.IngestFormat
+	18, // 24: akashic.v1.IngestQuestionsResponse.errors:type_name -> akashic.v1.IngestError
+	5,  // 25: akashic.v1.QuestionService.ListQuestions:input_type -> akashic.v1.ListQuestionsRequest
+	7,  // 26: akashic.v1.QuestionService.CreateQuestion:input_type -> akashic.v1.CreateQuestionRequest
+	9,  // 27: akashic.v1.QuestionService.GetQuestion:input_type -> akashic.v1.GetQuestionRequest
+	11, // 28: akashic.v1.QuestionService.UpdateQuestion:input_type -> akashic.v1.UpdateQuestionRequest
+	13, // 29: akashic.v1.QuestionService.DeleteQuestion:input_type -> akashic.v1.DeleteQuestionRequest
+	15, // 30: akashic.v1.QuestionService.RestoreQuestion:input_type -> akashic.v1.RestoreQuestionRequest
+	17, // 31: akashic.v1.QuestionService.IngestQuestions:input_type -> akashic.v1.IngestQuestionsRequest
+	20, // 32: akashic.v1.QuestionService.ListTags:input_type -> akashic.v1.ListTagsRequest
+	6,  // 33: akashic.v1.QuestionService.ListQuestions:output_type -> akashic.v1.ListQuestionsResponse
+	8,  // 34: akashic.v1.QuestionService.CreateQuestion:output_type -> akashic.v1.CreateQuestionResponse
+	10, // 35: akashic.v1.QuestionService.GetQuestion:output_type -> akashic.v1.GetQuestionResponse
+	12, // 36: akashic.v1.QuestionService.UpdateQuestion:output_type -> akashic.v1.UpdateQuestionResponse
+	14, // 37: akashic.v1.QuestionService.DeleteQuestion:output_type -> akashic.v1.DeleteQuestionResponse
+	16, // 38: akashic.v1.QuestionService.RestoreQuestion:output_type -> akashic.v1.RestoreQuestionResponse
+	19, // 39: akashic.v1.QuestionService.IngestQuestions:output_type -> akashic.v1.IngestQuestionsResponse
+	21, // 40: akashic.v1.QuestionService.ListTags:output_type -> akashic.v1.ListTagsResponse
+	33, // [33:41] is the sub-list for method output_type
+	25, // [25:33] is the sub-list for method input_type
+	25, // [25:25] is the sub-list for extension type_name
+	25, // [25:25] is the sub-list for extension extendee
+	0,  // [0:25] is the sub-list for field type_name
 }
 
 func init() { file_akashic_v1_question_proto_init() }
@@ -1679,12 +1578,10 @@ func file_akashic_v1_question_proto_init() {
 		return
 	}
 	file_akashic_v1_common_proto_init()
-	file_akashic_v1_question_group_proto_init()
 	file_akashic_v1_question_proto_msgTypes[2].OneofWrappers = []any{
 		(*Question_Item)(nil),
 		(*Question_Choice)(nil),
 	}
-	file_akashic_v1_question_proto_msgTypes[3].OneofWrappers = []any{}
 	file_akashic_v1_question_proto_msgTypes[6].OneofWrappers = []any{
 		(*CreateQuestionRequest_Item)(nil),
 		(*CreateQuestionRequest_Choice)(nil),

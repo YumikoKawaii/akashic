@@ -43,30 +43,15 @@ message MCQOption {
   string text = 2;
 }
 
-message PassageParagraph {
-  string label = 1;
-  string text = 2;
-}
-
-message OptionItem {
-  string key = 1;
-  string text = 2;
-}
-
-message SectionItem {
-  string key = 1;
-  string label = 2;
-}
-
 message TestConfig {
   int32             easy_count = 1;
   int32             medium_count = 2;
   int32             hard_count = 3;
-  repeated int32    category_ids = 4;
-  repeated int32    passage_ids = 5;
+  reserved 4;
+  reserved 5;
   repeated QuestionType types = 6;
   repeated string   tags = 7;
-  bool              standalone_only = 8;
+  reserved 8;
 }
 
 message PageInfo {

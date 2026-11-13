@@ -24,7 +24,6 @@ type GenerateConfig struct {
 type CachedQuestion struct {
 	ID         int
 	Difficulty string
-	CategoryID *int
 	Type       string
 	Tags       []string
 }
@@ -326,13 +325,9 @@ func (c *memCache) RecordGeneration(userID, bankID, seq int, questionIDs []int) 
 
 // ── Pool selection helpers (pure functions) ────────────────────────────────────
 
-func filterPool(pool []CachedQuestion, categoryIDs []int, types []string, tags []string) map[string][]CachedQuestion {
+func filterPool(pool []CachedQuestion, types []string, tags []string) map[string][]CachedQuestion {
 	out := map[string][]CachedQuestion{"easy": nil, "medium": nil, "hard": nil}
 
-	catSet := make(map[int]struct{}, len(categoryIDs))
-	for _, id := range categoryIDs {
-		catSet[id] = struct{}{}
-	}
 	typeSet := make(map[string]struct{}, len(types))
 	for _, t := range types {
 		typeSet[t] = struct{}{}
@@ -343,14 +338,6 @@ func filterPool(pool []CachedQuestion, categoryIDs []int, types []string, tags [
 	}
 
 	for _, q := range pool {
-		if len(catSet) > 0 {
-			if q.CategoryID == nil {
-				continue
-			}
-			if _, ok := catSet[*q.CategoryID]; !ok {
-				continue
-			}
-		}
 		if len(typeSet) > 0 {
 			if _, ok := typeSet[q.Type]; !ok {
 				continue

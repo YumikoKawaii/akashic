@@ -6,7 +6,6 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
 import { Difficulty, MCQOption, PageInfo, QuestionType } from "./common_pb.js";
-import { QuestionGroup } from "./question_group_pb.js";
 
 /**
  * @generated from enum akashic.v1.IngestFormat
@@ -147,16 +146,6 @@ export class Question extends Message<Question> {
   bankId = 0;
 
   /**
-   * @generated from field: int32 category_id = 3;
-   */
-  categoryId = 0;
-
-  /**
-   * @generated from field: optional int32 group_id = 4;
-   */
-  groupId?: number;
-
-  /**
    * @generated from field: akashic.v1.QuestionType type = 5;
    */
   type = QuestionType.UNSPECIFIED;
@@ -170,11 +159,6 @@ export class Question extends Message<Question> {
    * @generated from field: repeated string tags = 7;
    */
   tags: string[] = [];
-
-  /**
-   * @generated from field: optional int32 position = 8;
-   */
-  position?: number;
 
   /**
    * @generated from oneof akashic.v1.Question.content
@@ -203,13 +187,6 @@ export class Question extends Message<Question> {
    */
   updatedAt?: Timestamp;
 
-  /**
-   * embedded when the question belongs to a group
-   *
-   * @generated from field: optional akashic.v1.QuestionGroup group = 13;
-   */
-  group?: QuestionGroup;
-
   constructor(data?: PartialMessage<Question>) {
     super();
     proto3.util.initPartial(data, this);
@@ -220,17 +197,13 @@ export class Question extends Message<Question> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 2, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 3, name: "category_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 4, name: "group_id", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
     { no: 5, name: "type", kind: "enum", T: proto3.getEnumType(QuestionType) },
     { no: 6, name: "difficulty", kind: "enum", T: proto3.getEnumType(Difficulty) },
     { no: 7, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
-    { no: 8, name: "position", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
     { no: 9, name: "item", kind: "message", T: QuestionItem, oneof: "content" },
     { no: 10, name: "choice", kind: "message", T: MultipleChoice, oneof: "content" },
     { no: 11, name: "created_at", kind: "message", T: Timestamp },
     { no: 12, name: "updated_at", kind: "message", T: Timestamp },
-    { no: 13, name: "group", kind: "message", T: QuestionGroup, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Question {
@@ -255,11 +228,6 @@ export class Question extends Message<Question> {
  */
 export class QuestionFilter extends Message<QuestionFilter> {
   /**
-   * @generated from field: repeated int32 category_ids = 1;
-   */
-  categoryIds: number[] = [];
-
-  /**
    * @generated from field: akashic.v1.Difficulty difficulty = 2;
    */
   difficulty = Difficulty.UNSPECIFIED;
@@ -274,18 +242,6 @@ export class QuestionFilter extends Message<QuestionFilter> {
    */
   tags: string[] = [];
 
-  /**
-   * @generated from field: bool standalone_only = 5;
-   */
-  standaloneOnly = false;
-
-  /**
-   * questions whose group belongs to this passage
-   *
-   * @generated from field: optional int32 passage_id = 6;
-   */
-  passageId?: number;
-
   constructor(data?: PartialMessage<QuestionFilter>) {
     super();
     proto3.util.initPartial(data, this);
@@ -294,12 +250,9 @@ export class QuestionFilter extends Message<QuestionFilter> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "akashic.v1.QuestionFilter";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "category_ids", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 2, name: "difficulty", kind: "enum", T: proto3.getEnumType(Difficulty) },
     { no: 3, name: "type", kind: "enum", T: proto3.getEnumType(QuestionType) },
     { no: 4, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
-    { no: 5, name: "standalone_only", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 6, name: "passage_id", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QuestionFilter {
@@ -427,16 +380,6 @@ export class CreateQuestionRequest extends Message<CreateQuestionRequest> {
   bankId = 0;
 
   /**
-   * @generated from field: int32 category_id = 2;
-   */
-  categoryId = 0;
-
-  /**
-   * @generated from field: optional int32 group_id = 3;
-   */
-  groupId?: number;
-
-  /**
    * @generated from field: akashic.v1.QuestionType type = 4;
    */
   type = QuestionType.UNSPECIFIED;
@@ -477,8 +420,6 @@ export class CreateQuestionRequest extends Message<CreateQuestionRequest> {
   static readonly typeName = "akashic.v1.CreateQuestionRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 2, name: "category_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 3, name: "group_id", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
     { no: 4, name: "type", kind: "enum", T: proto3.getEnumType(QuestionType) },
     { no: 5, name: "difficulty", kind: "enum", T: proto3.getEnumType(Difficulty) },
     { no: 6, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
@@ -635,11 +576,6 @@ export class UpdateQuestionRequest extends Message<UpdateQuestionRequest> {
   id = 0;
 
   /**
-   * @generated from field: int32 category_id = 3;
-   */
-  categoryId = 0;
-
-  /**
    * @generated from field: akashic.v1.Difficulty difficulty = 4;
    */
   difficulty = Difficulty.UNSPECIFIED;
@@ -676,7 +612,6 @@ export class UpdateQuestionRequest extends Message<UpdateQuestionRequest> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "bank_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 2, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 3, name: "category_id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 4, name: "difficulty", kind: "enum", T: proto3.getEnumType(Difficulty) },
     { no: 5, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
     { no: 6, name: "item", kind: "message", T: QuestionItem, oneof: "content" },

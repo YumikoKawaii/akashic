@@ -9,25 +9,19 @@ import (
 )
 
 type QuestionFilter struct {
-	CategoryIDs    []int
-	GroupID        *int
-	PassageID      *int // questions whose group belongs to this passage
-	Type           string
-	Types          []string
-	Difficulty     string
-	Tags           []string
-	StandaloneOnly bool
-	ExcludeIDs     []int
+	Type       string
+	Types      []string
+	Difficulty string
+	Tags       []string
+	ExcludeIDs []int
 }
 
 // QuestionMeta holds the minimal fields needed for pool building.
 type QuestionMeta struct {
 	ID         int            `gorm:"column:id"`
 	Difficulty string         `gorm:"column:difficulty"`
-	CategoryID *int           `gorm:"column:category_id"`
 	Type       string         `gorm:"column:type"`
 	Tags       pq.StringArray `gorm:"column:tags;type:text[]"`
-	GroupID    *int           `gorm:"column:group_id"`
 }
 
 type QuestionRepository interface {
@@ -37,16 +31,11 @@ type QuestionRepository interface {
 	FindAllMeta(bankID int) ([]QuestionMeta, error)
 	ListTags(bankID int) ([]string, error)
 	FindByIDs(ids []int) ([]model.Question, error)
-	FindByGroup(groupID int) ([]model.Question, error)
 	FindByID(id int) (*model.Question, error)
 	Create(q *model.Question) error
 	Save(q *model.Question) error
 	SoftDelete(id int) error
 	Restore(id int) error
-	CreateItem(item *model.QQuestionItem) error
-	SaveItem(item *model.QQuestionItem) error
-	CreateChoice(choice *model.QMultipleChoice) error
-	SaveChoice(choice *model.QMultipleChoice) error
 }
 
 type questionRepo struct{ db *gorm.DB }
@@ -57,7 +46,7 @@ func (r *questionRepo) FindByBank(bankID int, f QuestionFilter) ([]model.Questio
 	var qs []model.Question
 	q := r.db.Where("bank_id = ?", bankID)
 	q = applyQuestionFilter(q, f)
-	err := q.Preload("Item").Preload("Choice").Order("created_at DESC").Find(&qs).Error
+	err := q.Order("created_at DESC").Find(&qs).Error
 	return qs, err
 }
 
@@ -70,15 +59,9 @@ func (r *questionRepo) FindByBankPaged(bankID int, f QuestionFilter, page, pageS
 		return nil, 0, err
 	}
 
-	order := "created_at DESC"
-	if f.PassageID != nil {
-		// Passage view reads in document order, not recency.
-		order = "group_id ASC, position ASC, id ASC"
-	}
-
 	var qs []model.Question
-	err := base.Preload("Item").Preload("Choice").Preload("Group").
-		Order(order).
+	err := base.
+		Order("created_at DESC").
 		Limit(pageSize).Offset((page - 1) * pageSize).
 		Find(&qs).Error
 	return qs, total, err
@@ -88,14 +71,14 @@ func (r *questionRepo) FindByBankAndDifficulty(bankID int, difficulty string, f 
 	var qs []model.Question
 	q := r.db.Where("bank_id = ? AND difficulty = ?", bankID, difficulty)
 	q = applyQuestionFilter(q, f)
-	err := q.Preload("Item").Preload("Choice").Order("RANDOM()").Find(&qs).Error
+	err := q.Order("RANDOM()").Find(&qs).Error
 	return qs, err
 }
 
 func (r *questionRepo) FindAllMeta(bankID int) ([]QuestionMeta, error) {
 	var metas []QuestionMeta
 	err := r.db.Model(&model.Question{}).
-		Select("id, difficulty, category_id, type, tags, group_id").
+		Select("id, difficulty, type, tags").
 		Where("bank_id = ? AND deleted_at IS NULL", bankID).
 		Scan(&metas).Error
 	return metas, err
@@ -118,7 +101,7 @@ func (r *questionRepo) FindByIDs(ids []int) ([]model.Question, error) {
 		return nil, nil
 	}
 	var qs []model.Question
-	if err := r.db.Where("id IN ?", ids).Preload("Item").Preload("Choice").Find(&qs).Error; err != nil {
+	if err := r.db.Where("id IN ?", ids).Find(&qs).Error; err != nil {
 		return nil, err
 	}
 	// Reorder to match the requested ID order (preserves test question positions).
@@ -135,17 +118,9 @@ func (r *questionRepo) FindByIDs(ids []int) ([]model.Question, error) {
 	return result, nil
 }
 
-func (r *questionRepo) FindByGroup(groupID int) ([]model.Question, error) {
-	var qs []model.Question
-	err := r.db.Where("group_id = ?", groupID).
-		Preload("Item").Preload("Choice").
-		Order("position ASC").Find(&qs).Error
-	return qs, err
-}
-
 func (r *questionRepo) FindByID(id int) (*model.Question, error) {
 	var q model.Question
-	err := r.db.Preload("Item").Preload("Choice").First(&q, id).Error
+	err := r.db.First(&q, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
 	}
@@ -163,26 +138,7 @@ func (r *questionRepo) Restore(id int) error {
 	return r.db.Unscoped().Model(&model.Question{}).Where("id = ?", id).Update("deleted_at", nil).Error
 }
 
-func (r *questionRepo) CreateItem(item *model.QQuestionItem) error { return r.db.Create(item).Error }
-func (r *questionRepo) SaveItem(item *model.QQuestionItem) error   { return r.db.Save(item).Error }
-
-func (r *questionRepo) CreateChoice(choice *model.QMultipleChoice) error {
-	return r.db.Create(choice).Error
-}
-func (r *questionRepo) SaveChoice(choice *model.QMultipleChoice) error {
-	return r.db.Save(choice).Error
-}
-
 func applyQuestionFilter(q *gorm.DB, f QuestionFilter) *gorm.DB {
-	if len(f.CategoryIDs) > 0 {
-		q = q.Where("category_id IN ?", f.CategoryIDs)
-	}
-	if f.GroupID != nil {
-		q = q.Where("group_id = ?", *f.GroupID)
-	}
-	if f.PassageID != nil {
-		q = q.Where("group_id IN (SELECT id FROM question_groups WHERE passage_id = ? AND deleted_at IS NULL)", *f.PassageID)
-	}
 	if f.Type != "" {
 		q = q.Where("type = ?", f.Type)
 	}
@@ -194,9 +150,6 @@ func applyQuestionFilter(q *gorm.DB, f QuestionFilter) *gorm.DB {
 	}
 	if len(f.Tags) > 0 {
 		q = q.Where("tags && ?", pq.Array(f.Tags))
-	}
-	if f.StandaloneOnly {
-		q = q.Where("group_id IS NULL")
 	}
 	if len(f.ExcludeIDs) > 0 {
 		q = q.Where("id NOT IN ?", f.ExcludeIDs)

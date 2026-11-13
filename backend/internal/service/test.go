@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/lib/pq"
 	"github.com/yumikokawaii/akashic/internal/membership"
 	"github.com/yumikokawaii/akashic/internal/model"
 	"github.com/yumikokawaii/akashic/internal/repository"
@@ -97,11 +98,6 @@ type GenerateTestInput struct {
 	UserID      int               `json:"-"` // set by handler from auth context
 }
 
-// selUnit is a selection unit for the passage/group path.
-type selUnit struct {
-	groupID int
-}
-
 func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTestInput) (*model.Test, error) {
 	bank, err := s.uow.Store().Banks.FindByID(bankID)
 	if err != nil {
@@ -113,15 +109,12 @@ func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTe
 		config = *input.Config
 	}
 
-	skipGroups := config.StandaloneOnly
-	skipStandalone := len(config.PassageIDs) > 0 && !config.StandaloneOnly
-
 	var picked []model.Question
 	var seq int
 	var standaloneIDs []int
 
 	// ── Standalone path: pool cache + per-user exclusion ─────────────────
-	if !skipStandalone {
+	{
 		pool, ok := s.cache.GetPool(bankID)
 		if !ok {
 			pool, err = s.loadPool(bankID)
@@ -132,7 +125,7 @@ func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTe
 
 		var excluded map[int]struct{}
 		seq, excluded = s.cache.BeginGeneration(input.UserID, bankID)
-		byDiff := filterPool(pool, config.CategoryIDs, config.Types, config.Tags)
+		byDiff := filterPool(pool, config.Types, config.Tags)
 
 		type bucket struct {
 			diff  string
@@ -190,86 +183,6 @@ func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTe
 		}
 	}
 
-	// ── Passage/group path: DB-backed ────────────────────────────────────
-	if !skipGroups {
-		gFilter := repository.GroupFilter{
-			CategoryIDs: config.CategoryIDs,
-			PassageIDs:  config.PassageIDs,
-			Types:       config.Types,
-		}
-		groupPools := map[string][]selUnit{}
-		for _, diff := range []string{"easy", "medium", "hard"} {
-			groupPools[diff], err = s.buildGroupPool(bankID, diff, gFilter)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		backfillOrder := map[string][]string{
-			"easy":   {"medium", "hard"},
-			"medium": {"hard", "easy"},
-			"hard":   {"medium", "easy"},
-		}
-
-		// Explicit passages with no per-difficulty counts means "the whole
-		// passage": take every group the selected passages contain.
-		easyCount, mediumCount, hardCount := config.EasyCount, config.MediumCount, config.HardCount
-		if len(config.PassageIDs) > 0 && easyCount+mediumCount+hardCount <= 0 {
-			easyCount = len(groupPools["easy"])
-			mediumCount = len(groupPools["medium"])
-			hardCount = len(groupPools["hard"])
-		}
-
-		var groupUnits []selUnit
-		shortage := map[string]int{}
-
-		for _, b := range []struct {
-			diff  string
-			count int
-		}{
-			{"easy", easyCount},
-			{"medium", mediumCount},
-			{"hard", hardCount},
-		} {
-			if b.count <= 0 {
-				continue
-			}
-			pool := groupPools[b.diff]
-			n := min(b.count, len(pool))
-			groupUnits = append(groupUnits, pool[:n]...)
-			groupPools[b.diff] = pool[n:]
-			shortage[b.diff] = b.count - n
-		}
-		for _, b := range []struct {
-			diff  string
-			count int
-		}{
-			{"easy", easyCount},
-			{"medium", mediumCount},
-			{"hard", hardCount},
-		} {
-			need := shortage[b.diff]
-			for _, bf := range backfillOrder[b.diff] {
-				if need <= 0 {
-					break
-				}
-				pool := groupPools[bf]
-				take := min(need, len(pool))
-				groupUnits = append(groupUnits, pool[:take]...)
-				groupPools[bf] = pool[take:]
-				need -= take
-			}
-		}
-
-		for _, u := range groupUnits {
-			qs, err := s.uow.Store().Questions.FindByGroup(u.groupID)
-			if err != nil {
-				return nil, err
-			}
-			picked = append(picked, qs...)
-		}
-	}
-
 	// ── Persist test ──────────────────────────────────────────────────────
 	// Snapshot the actual difficulty mix of the picked questions: passage
 	// mode requests zero counts and backfill can shift the standalone mix,
@@ -295,21 +208,11 @@ func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTe
 		Config:      config,
 	}
 
-	if err := s.uow.Do(ctx, func(tx *uow.Store) error {
-		if err := tx.Tests.Create(test); err != nil {
-			return err
-		}
-		for i, q := range picked {
-			if err := tx.Tests.CreateTestQuestion(&model.TestQuestion{
-				TestID:     test.ID,
-				QuestionID: q.ID,
-				Position:   i + 1,
-			}); err != nil {
-				return err
-			}
-		}
-		return nil
-	}); err != nil {
+	test.QuestionIDs = make(pq.Int64Array, len(picked))
+	for i, q := range picked {
+		test.QuestionIDs[i] = int64(q.ID)
+	}
+	if err := s.uow.Store().Tests.Create(test); err != nil {
 		return nil, err
 	}
 
@@ -327,30 +230,12 @@ func (s *TestService) loadPool(bankID int) ([]CachedQuestion, error) {
 	}
 	pool := make([]CachedQuestion, 0, len(metas))
 	for _, m := range metas {
-		if m.GroupID != nil {
-			continue
-		}
 		pool = append(pool, CachedQuestion{
 			ID:         m.ID,
 			Difficulty: m.Difficulty,
-			CategoryID: m.CategoryID,
 			Type:       m.Type,
 			Tags:       []string(m.Tags),
 		})
-	}
-	return pool, nil
-}
-
-// buildGroupPool fetches question groups from the DB for the passage path.
-func (s *TestService) buildGroupPool(bankID int, diff string, gf repository.GroupFilter) ([]selUnit, error) {
-	gf.Difficulty = diff
-	groups, err := s.uow.Store().QuestionGroups.FindByBank(bankID, gf)
-	if err != nil {
-		return nil, err
-	}
-	pool := make([]selUnit, len(groups))
-	for i, g := range groups {
-		pool[i] = selUnit{groupID: g.ID}
 	}
 	return pool, nil
 }

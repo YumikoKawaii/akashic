@@ -121,11 +121,8 @@ func grade(attempt *model.TestAttempt) (score, total int) {
 	if attempt.Test == nil {
 		return 0, 0
 	}
-	for _, tq := range attempt.Test.TestQuestions {
-		q := tq.Question
-		if q == nil || (q.Item == nil && q.Choice == nil) {
-			continue
-		}
+	for i := range attempt.Test.Questions {
+		q := &attempt.Test.Questions[i]
 		total++
 		submitted, ok := attempt.Answers[strconv.Itoa(q.ID)]
 		if !ok {
@@ -133,12 +130,12 @@ func grade(attempt *model.TestAttempt) (score, total int) {
 		}
 		got := strings.TrimSpace(submitted)
 
-		if q.Choice != nil {
-			if mcqMatch(got, q.Choice.Answers) {
+		if q.Type == "mcq" {
+			if mcqMatch(got, q.Content.Answers) {
 				score++
 			}
 		} else {
-			want := strings.TrimSpace(q.Item.Answer)
+			want := strings.TrimSpace(q.Content.Answer)
 			switch q.Type {
 			case "sentence_completion", "form_completion", "short_answer", "tf_ng", "yn_ng":
 				if strings.EqualFold(got, want) {

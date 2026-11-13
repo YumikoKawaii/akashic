@@ -19,7 +19,6 @@ type TestRepository interface {
 	Create(t *model.Test) error
 	SoftDelete(id int) error
 	Restore(id int) error
-	CreateTestQuestion(tq *model.TestQuestion) error
 }
 
 // TestSort selects the page ordering. Zero value is "newest".
@@ -217,30 +216,47 @@ func (r *testRepo) TestsSummary(bankID, userID int) (TestsSummary, error) {
 
 func (r *testRepo) FindByID(id int) (*model.Test, error) {
 	var t model.Test
-	err := r.db.
-		Preload("Creator").
-		Preload("TestQuestions", func(db *gorm.DB) *gorm.DB { return db.Order("position ASC") }).
-		Preload("TestQuestions.Question.Item").
-		Preload("TestQuestions.Question.Choice").
-		First(&t, id).Error
+	err := r.db.Preload("Creator").First(&t, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
 	}
-	return &t, err
+	if err != nil {
+		return nil, err
+	}
+	return &t, loadTestQuestions(r.db, &t)
+}
+
+func loadTestQuestions(db *gorm.DB, t *model.Test) error {
+	if len(t.QuestionIDs) == 0 {
+		return nil
+	}
+	var qs []model.Question
+	if err := db.Where("id IN ?", []int64(t.QuestionIDs)).Find(&qs).Error; err != nil {
+		return err
+	}
+	byID := make(map[int]model.Question, len(qs))
+	for _, q := range qs {
+		byID[q.ID] = q
+	}
+	t.Questions = make([]model.Question, 0, len(qs))
+	for _, id := range t.QuestionIDs {
+		if q, ok := byID[int(id)]; ok {
+			t.Questions = append(t.Questions, q)
+		}
+	}
+	return nil
 }
 
 func (r *testRepo) FindByBankAndID(bankID, id int) (*model.Test, error) {
 	var t model.Test
-	err := r.db.
-		Preload("Creator").
-		Preload("TestQuestions", func(db *gorm.DB) *gorm.DB { return db.Order("position ASC") }).
-		Preload("TestQuestions.Question.Item").
-		Preload("TestQuestions.Question.Choice").
-		Where("bank_id = ?", bankID).First(&t, id).Error
+	err := r.db.Preload("Creator").Where("bank_id = ?", bankID).First(&t, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
 	}
-	return &t, err
+	if err != nil {
+		return nil, err
+	}
+	return &t, loadTestQuestions(r.db, &t)
 }
 
 func (r *testRepo) Create(t *model.Test) error { return r.db.Create(t).Error }
@@ -253,19 +269,14 @@ func (r *testRepo) Restore(id int) error {
 	return r.db.Unscoped().Model(&model.Test{}).Where("id = ?", id).Update("deleted_at", nil).Error
 }
 
-func (r *testRepo) CreateTestQuestion(tq *model.TestQuestion) error {
-	return r.db.Create(tq).Error
-}
-
 // RecentlyUsedQuestionIDs returns distinct question IDs from the last N tests in a bank.
 func (r *testRepo) RecentlyUsedQuestionIDs(bankID, lastN int) ([]int, error) {
 	var ids []int
 	err := r.db.Raw(`
-		SELECT DISTINCT question_id FROM test_questions
-		WHERE test_id IN (
-			SELECT id FROM tests WHERE bank_id = ? AND deleted_at IS NULL
+		SELECT DISTINCT unnest(question_ids) FROM (
+			SELECT question_ids FROM tests WHERE bank_id = ? AND deleted_at IS NULL
 			ORDER BY created_at DESC LIMIT ?
-		)
+		) recent
 	`, bankID, lastN).Scan(&ids).Error
 	return ids, err
 }

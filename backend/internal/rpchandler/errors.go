@@ -21,10 +21,6 @@ func toConnectError(err error) error {
 		return connect.NewError(connect.CodeInvalidArgument, err)
 	case errors.Is(err, service.ErrAttemptAlreadyCompleted):
 		return connect.NewError(connect.CodeFailedPrecondition, err)
-	case errors.Is(err, service.ErrEmailTaken):
-		return connect.NewError(connect.CodeAlreadyExists, err)
-	case errors.Is(err, service.ErrInvalidCreds), errors.Is(err, service.ErrPasswordLogin):
-		return connect.NewError(connect.CodeUnauthenticated, err)
 	default:
 		return connect.NewError(connect.CodeInternal, err)
 	}
