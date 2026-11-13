@@ -48,8 +48,6 @@ docker compose up -d --build
 
 The app is served on `http://localhost:${SERVER_PORT:-8080}`. Postgres and Redis run inside the same compose stack. Postgres is tuned for a small disk (compact WAL, lz4 compression), and Redis is cache-only. Google sign-in needs `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `GOOGLE_CALLBACK_URL=<origin>/auth/callback` in `.env`.
 
-How data, generation and grading work: [`technical_design.md`](technical_design.md).
-
 ## Deploy
 
 Pushing to `master` runs [`.github/workflows/docker.yml`](.github/workflows/docker.yml): it builds the image, copies it and `docker-compose.yml` to the server, and runs `docker compose up -d` in `~/akashic`.
