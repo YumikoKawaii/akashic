@@ -2,4 +2,7 @@ package repository
 
 import "errors"
 
-var ErrNotFound = errors.New("record not found")
+var (
+	ErrNotFound = errors.New("record not found")
+	ErrConflict = errors.New("already exists")
+)

@@ -373,7 +373,7 @@ function PassageAttemptLayout({ attempt, questions, groups, answers, setAnswers,
                 <div style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '0.8rem', color: 'var(--gold-dim)', marginBottom: 8, position: 'relative' }}>
                   Passage{passages.length > 1 ? ` ${pi + 1} of ${passages.length}` : ''}
                 </div>
-                <h2 style={{ fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '1.1rem', color: 'var(--ink)', lineHeight: 1.4, position: 'relative', marginBottom: 14 }}>
+                <h2 style={{ fontFamily: 'Newsreader, serif', fontSize: '1.6rem', fontWeight: 600, color: 'var(--ink)', lineHeight: 1.25, position: 'relative', marginBottom: 14 }}>
                   {passage.title || 'Untitled passage'}
                 </h2>
               </div>

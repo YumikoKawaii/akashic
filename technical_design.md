@@ -20,7 +20,7 @@ All tables carry `id SERIAL`, `created_at`, `updated_at`, and a nullable `delete
 | Table | Columns | Notes |
 |---|---|---|
 | `users` | `google_id`, `email`, `name`, `avatar_url` | `email` and `google_id` unique. Google is the only sign-in. |
-| `banks` | `name`, `description`, `owner_id`, `default_config` JSONB, `visibility` | `name` is unique among live banks (`idx_banks_name_active`). Shown as "Record" in the UI. |
+| `banks` | `name`, `description`, `owner_id`, `default_config` JSONB, `visibility` | `name` is unique per owner among live banks (`idx_banks_owner_name_active`); a clash returns AlreadyExists. Shown as "Record" in the UI. |
 | `bank_members` | `bank_id`, `user_id`, `role` | One live row per `(bank_id, user_id)`. Roles: `owner` / `editor` / `viewer`. Source of truth for authorization. |
 | `question_groups` | `bank_id`, `title`, `content` JSONB, `difficulty`, `tags[]` | `content` = `{instructions, passage, options[]}`. |
 | `questions` | `bank_id`, `type`, `difficulty`, `tags[]`, `content` JSONB, `group_id`, `position` | `content` = `{content, answer}` or `{content, options[], answers[]}` (MCQ). `(group_id, position)` unique among live grouped questions. |
@@ -59,7 +59,7 @@ All tables carry `id SERIAL`, `created_at`, `updated_at`, and a nullable `delete
 5. **Backfill.** Any shortfall is filled from the other difficulties (easy ← medium, hard; medium ← hard, easy; hard ← medium, easy).
 6. **Record.** The picked question ids are saved on the test and written to the user's draw history for that bank (Redis, 90-day TTL, in-memory when Redis is down), which feeds step 4 next time. Redis runs without persistence, so a Redis restart clears this history.
 
-When the request has no config, the bank's `default_config` is used. The saved config's counts are rewritten to what was actually picked. A test with no matching units is still saved, with no questions; the client reports "no questions match".
+When the request has no config, the bank's `default_config` is used. The saved config's counts are rewritten to what was actually picked. If no unit matches, nothing is saved and the RPC fails with FailedPrecondition (`ErrNoQuestions`); the client reports "no questions match".
 
 ## Attempts and grading
 
@@ -67,14 +67,15 @@ When the request has no config, the bank's `default_config` is used. The saved c
 - `SaveAttemptProgress` stores answers while the test is in progress (the client autosaves ~0.7s after each edit).
 - `SubmitAttempt` (taker only, once) grades and completes:
   - `mcq` — the submitted key set must equal the correct key set.
-  - `tf_ng`, `yn_ng`, `sentence_completion`, `form_completion`, `short_answer` — trimmed, case-insensitive exact match against the stored answer.
-  - matching types — trimmed, case-sensitive match on the option key.
+  - every other type — trimmed, case-insensitive exact match against the stored answer (an option key for the matching types).
   - `total` is the number of questions in the test; unanswered questions score 0.
 - The client also checks answers one by one during the test for a running score; `short_answer` is shown for reference there but not scored.
 
 ## Import
 
-`IngestQuestions` accepts JSON, YAML or CSV (`samples/`). Each row is one standalone question:
+`IngestQuestions` accepts JSON, YAML or CSV (`samples/`). Each JSON/YAML item is either a standalone question or a group; CSV rows are always standalone.
+
+Standalone question:
 
 ```json
 { "type": "mcq", "difficulty": "easy", "content": "What is the capital of Japan?",
@@ -82,7 +83,20 @@ When the request has no config, the bank's `default_config` is used. The saved c
   "answers": ["A"], "tags": ["japan"] }
 ```
 
-Non-MCQ rows use `answer` instead of `options`/`answers`. The import is all-or-nothing: if any row fails parsing or validation, nothing is created and every failing row is returned with its row number. Otherwise all rows are created in one transaction.
+Non-MCQ rows use `answer` instead of `options`/`answers`.
+
+Group (any item with a `questions` array, full example in `samples/group_sample.json`):
+
+```json
+{ "title": "Urban Green Spaces", "instructions": "Choose the correct heading…",
+  "passage": "A. …\n\nB. …", "difficulty": "medium", "tags": ["ielts"],
+  "options": [{"key": "i", "text": "Cooler streets"}, {"key": "ii", "text": "A quieter city"}],
+  "questions": [{"type": "matching_headings", "content": "Paragraph A", "answer": "i"}] }
+```
+
+Child questions take the group's difficulty unless they set their own, get the group's tags merged into theirs, and are numbered by their order (`position`). Matching-type children must answer with one of the group's option keys.
+
+ The import is all-or-nothing: if any row fails parsing or validation, nothing is created and every failing row is returned with its row number. Otherwise all rows are created in one transaction.
 
 ## Soft delete
 

@@ -12,7 +12,10 @@ import (
 	"github.com/yumikokawaii/akashic/internal/repository"
 )
 
-var ErrAttemptAlreadyCompleted = errors.New("attempt already completed")
+var (
+	ErrAttemptAlreadyCompleted = errors.New("attempt already completed")
+	ErrNoQuestions             = errors.New("no questions match the test settings")
+)
 
 type AttemptService struct {
 	repo     repository.AttemptRepository
@@ -134,18 +137,8 @@ func grade(attempt *model.TestAttempt) (score, total int) {
 			if mcqMatch(got, q.Content.Answers) {
 				score++
 			}
-		} else {
-			want := strings.TrimSpace(q.Content.Answer)
-			switch q.Type {
-			case "sentence_completion", "form_completion", "short_answer", "tf_ng", "yn_ng":
-				if strings.EqualFold(got, want) {
-					score++
-				}
-			default:
-				if got == want {
-					score++
-				}
-			}
+		} else if strings.EqualFold(got, strings.TrimSpace(q.Content.Answer)) {
+			score++
 		}
 	}
 	return score, total

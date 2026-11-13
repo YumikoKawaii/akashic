@@ -1,0 +1,22 @@
+[
+  {
+    "title": "Urban Green Spaces",
+    "instructions": "The passage has three paragraphs, A–C. Choose the correct heading for each paragraph from the list of headings.",
+    "passage": "A. Cities are often several degrees warmer than the surrounding countryside. Trees and parks shade streets and release water vapour, lowering local temperatures on hot days.\n\nB. Traffic noise is one of the most common complaints in dense neighbourhoods. Belts of vegetation absorb and scatter sound, making nearby homes noticeably quieter.\n\nC. Access to green space has been linked to lower stress and more physical activity. Residents who live within a short walk of a park report better overall wellbeing.",
+    "options": [
+      { "key": "i", "text": "Cooler streets" },
+      { "key": "ii", "text": "A quieter city" },
+      { "key": "iii", "text": "Healthier residents" },
+      { "key": "iv", "text": "The cost of maintenance" }
+    ],
+    "difficulty": "medium",
+    "tags": ["ielts", "environment"],
+    "questions": [
+      { "type": "matching_headings", "content": "Paragraph A", "answer": "i" },
+      { "type": "matching_headings", "content": "Paragraph B", "answer": "ii" },
+      { "type": "matching_headings", "content": "Paragraph C", "answer": "iii" },
+      { "type": "tf_ng", "content": "Green spaces make cities warmer on hot days.", "answer": "False" },
+      { "type": "sentence_completion", "content": "Vegetation can absorb and ___ traffic noise.", "answer": "scatter", "difficulty": "hard" }
+    ]
+  }
+]

@@ -116,6 +116,9 @@ func (s *TestService) Generate(ctx context.Context, bankID int, input GenerateTe
 
 	seq, excluded := s.cache.BeginGeneration(input.UserID, bankID)
 	units := selectUnits(pool, config, excluded)
+	if len(units) == 0 {
+		return nil, ErrNoQuestions
+	}
 
 	counts := map[string]int{}
 	var ids []int

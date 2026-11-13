@@ -112,8 +112,15 @@ func (r *bankRepo) FindByID(id int) (*model.Bank, error) {
 	return &b, err
 }
 
-func (r *bankRepo) Create(b *model.Bank) error { return r.db.Create(b).Error }
-func (r *bankRepo) Save(b *model.Bank) error   { return r.db.Save(b).Error }
+func (r *bankRepo) Create(b *model.Bank) error { return conflict(r.db.Create(b).Error) }
+func (r *bankRepo) Save(b *model.Bank) error   { return conflict(r.db.Save(b).Error) }
+
+func conflict(err error) error {
+	if errors.Is(err, gorm.ErrDuplicatedKey) {
+		return ErrConflict
+	}
+	return err
+}
 
 func (r *bankRepo) SoftDelete(id int) error {
 	return r.db.Delete(&model.Bank{}, id).Error

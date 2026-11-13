@@ -26,7 +26,7 @@ export default function QuestionFormPage() {
     <>
       <div className="page-header">
         <div>
-          <h1 className="page-title">{isEdit ? 'Edit' : 'New'} — <span>Question</span></h1>
+          <h1 className="page-title">{isEdit ? 'Edit question' : 'New question'}</h1>
         </div>
       </div>
       {/* Keyed so back/forward between two cached edit routes re-seeds the form

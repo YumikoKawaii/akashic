@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/lib/pq"
+	"github.com/yumikokawaii/akashic/internal/model"
 	"gorm.io/gorm"
 )
 
@@ -15,11 +16,14 @@ type GroupMeta struct {
 
 type GroupRepository interface {
 	FindAllMeta(bankID int) ([]GroupMeta, error)
+	Create(g *model.QuestionGroup) error
 }
 
 type groupRepo struct{ db *gorm.DB }
 
 func NewGroupRepo(db *gorm.DB) GroupRepository { return &groupRepo{db} }
+
+func (r *groupRepo) Create(g *model.QuestionGroup) error { return r.db.Create(g).Error }
 
 func (r *groupRepo) FindAllMeta(bankID int) ([]GroupMeta, error) {
 	var metas []GroupMeta

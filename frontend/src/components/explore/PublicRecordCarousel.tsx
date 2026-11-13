@@ -6,12 +6,11 @@ import { PublicBank } from '../../types'
 // the right. Thinner than they are tall, so the carousel packs them tighter.
 const SPACING  = 172
 const CARD_W   = 210
-const CARD_H   = 344
-const FRAME    = 'rgba(163,34,45,0.55)'
-const ACCENT   = 'rgba(163,34,45,0.55)'
+const CARD_H   = 280
+const FRAME    = 'var(--border-dim)'
 const ROTATE_MS = 4000
 // Radiant gold aura for the centre card — same treatment as the results carousel.
-const GLOW = 'drop-shadow(0 0 5px rgba(163,34,45,0.55)) drop-shadow(0 0 14px rgba(163,34,45,0.28))'
+const GLOW = 'drop-shadow(0 10px 24px rgba(43,29,31,0.14))'
 
 function mod(n: number, m: number) { return ((n % m) + m) % m }
 
@@ -129,10 +128,10 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
                 height: CARD_H, position: 'relative', overflow: 'hidden',
                 background: 'var(--bg-card)',
                 border: `1px solid ${FRAME}`,
-                borderRadius: '5px',
-                padding: '20px 16px 16px',
+                borderRadius: '10px',
+                padding: '22px 18px 18px',
                 display: 'flex', flexDirection: 'column',
-                boxShadow: isCenter ? 'none' : '0 5px 16px rgba(0,0,0,0.12)',
+                boxShadow: isCenter ? 'none' : '0 4px 12px rgba(43,29,31,0.08)',
               }}>
 
                 {/* Cover content */}
@@ -147,22 +146,15 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
                     {rec.name}
                   </div>
 
-                  {/* Ornate divider */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 10 }}>
-                    <div style={{ flex: 1, height: 1, background: `linear-gradient(90deg, transparent, ${ACCENT})` }} />
-                    <div style={{ width: 3, height: 3, border: `1px solid ${ACCENT}`, transform: 'rotate(45deg)', flexShrink: 0 }} />
-                    <div style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${ACCENT}, transparent)` }} />
-                  </div>
-
                   <p style={{
-                    fontSize: '0.76rem', color: 'var(--ink-dim)', lineHeight: 1.5, margin: 0, flex: 1,
+                    fontSize: '0.85rem', color: 'var(--ink-dim)', lineHeight: 1.5, margin: 0, flex: 1,
                     textAlign: 'center', overflow: 'hidden',
                     display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical',
                   } as React.CSSProperties}>
-                    {rec.description || <span style={{ fontStyle: 'italic', opacity: 0.6 }}>No description.</span>}
+                    {rec.description}
                   </p>
 
-                  <div style={{ marginTop: 10, textAlign: 'center', fontSize: '0.7rem', color: 'var(--ink-dim)', lineHeight: 1.6 }}>
+                  <div style={{ marginTop: 10, paddingTop: 12, borderTop: '1px solid var(--border-dim)', textAlign: 'center', fontSize: '0.8rem', color: 'var(--ink-dim)', lineHeight: 1.6 }}>
                     <div>{rec.question_count.toLocaleString()} questions</div>
                     {rec.owner && <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 4 }}>by {rec.owner.name}</div>}
                   </div>

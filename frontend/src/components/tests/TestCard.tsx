@@ -117,30 +117,27 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
             {myInProgress ? (
               <button
                 className="btn btn-primary"
-                style={{ fontSize: '0.6rem', padding: '6px 14px', borderColor: 'rgba(107,76,138,0.6)', background: 'rgba(107,76,138,0.08)', color: '#6b4c8a' }}
                 onClick={handleResume}
                 title="You have an in-progress attempt — continue where you left off."
               >
-                ↻ Resume
+                Resume
               </button>
             ) : (
               <button
                 className="btn btn-primary"
-                style={{ fontSize: '0.6rem', padding: '6px 14px', borderColor: startError ? '#A3222D' : undefined }}
                 title={startError ? 'Starting the attempt failed — try again.' : undefined}
                 onClick={handleStart}
                 disabled={start.isPending}
               >
-                {start.isPending ? '…' : startError ? '↻ Retry' : '▶ Start'}
+                {start.isPending ? 'Starting…' : startError ? 'Retry' : 'Start'}
               </button>
             )}
             {completedCount > 0 && (
               <button
                 className="btn btn-ghost"
-                style={{ fontSize: '0.6rem', padding: '6px 14px' }}
                 onClick={() => setShowHistory(v => !v)}
               >
-                {showHistory ? '▴ History' : `▾ History (${completedCount})`}
+                {showHistory ? 'Hide history' : `History (${completedCount})`}
               </button>
             )}
             {canDelete && (
@@ -172,11 +169,11 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
                   fontSize: '0.75rem', color: 'var(--ink-dim)',
                   transition: 'background 0.15s',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(107,76,138,0.06)')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-muted)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <span>{a.taker?.name ? `${a.taker.name} · ` : ''}{date}</span>
-                <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', color: '#6b4c8a', fontSize: '0.8rem' }}>
+                <span style={{ fontFamily: 'IBM Plex Sans, sans-serif', color: 'var(--medium)', fontSize: '0.8rem' }}>
                   {answered} answered · in progress
                 </span>
               </div>

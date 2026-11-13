@@ -190,7 +190,6 @@ body {
   line-height: 1.1;
   color: var(--ink);
 }
-.page-title span { color: var(--gold); font-style: italic; font-weight: 500; }
 .page-meta { font-size: 0.82rem; color: var(--ink-dim); margin-top: 6px; }
 
 .section-title {

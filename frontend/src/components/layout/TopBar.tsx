@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ConnectError, Code } from '@connectrpc/connect'
 import { useCreateBank } from '../../hooks/useBanks'
 import { useAuth } from '../../contexts/AuthContext'
 import RecordSwitcher from './RecordSwitcher'
@@ -10,7 +11,7 @@ export default function TopBar() {
   const { user, logout } = useAuth()
   const [creating, setCreating] = useState(false)
   const [name, setName]         = useState('')
-  const [createError, setCreateError] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
 
   const handleCreate = async () => {
     // Guard re-entry: Enter in the input isn't disabled by isPending the way
@@ -20,10 +21,12 @@ export default function TopBar() {
       const bank = await createBank.mutateAsync({ name: name.trim() })
       setName('')
       setCreating(false)
-      setCreateError(false)
+      setCreateError(null)
       navigate(`/banks/${bank.id}`)
-    } catch {
-      setCreateError(true)
+    } catch (err) {
+      setCreateError(err instanceof ConnectError && err.code === Code.AlreadyExists
+        ? 'You already have a record with this name.'
+        : 'Creating the record failed — try again.')
     }
   }
 
@@ -47,20 +50,32 @@ export default function TopBar() {
       <div className="ml-auto flex items-center gap-3">
         {creating ? (
           <>
-            <input
-              className="form-input"
-              style={{ width: 160, padding: '6px 10px', borderColor: createError ? '#A3222D' : undefined }}
-              placeholder="Record name…"
-              title={createError ? 'Creating the record failed — try again.' : undefined}
-              value={name}
-              onChange={e => { setName(e.target.value); setCreateError(false) }}
-              onKeyDown={e => e.key === 'Enter' && handleCreate()}
-              autoFocus
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                className="form-input"
+                style={{ width: 180, padding: '6px 10px', borderColor: createError ? 'var(--red)' : undefined }}
+                placeholder="Record name…"
+                aria-label="Record name"
+                aria-invalid={!!createError}
+                value={name}
+                onChange={e => { setName(e.target.value); setCreateError(null) }}
+                onKeyDown={e => e.key === 'Enter' && handleCreate()}
+                autoFocus
+              />
+              {createError && (
+                <div role="alert" style={{
+                  position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 70, width: 240,
+                  padding: '8px 10px', borderRadius: 6, fontSize: '0.8rem',
+                  background: 'var(--rose-soft)', border: '1px solid var(--rose-border)', color: 'var(--red)',
+                }}>
+                  {createError}
+                </div>
+              )}
+            </div>
             <button className="btn btn-primary" onClick={handleCreate} disabled={createBank.isPending}>
               {createBank.isPending ? '…' : 'Confirm'}
             </button>
-            <button className="btn btn-ghost" onClick={() => { setCreating(false); setCreateError(false) }}>✕</button>
+            <button className="btn btn-ghost" onClick={() => { setCreating(false); setCreateError(null) }}>✕</button>
           </>
         ) : (
           <button className="btn btn-primary" onClick={() => setCreating(true)}>

@@ -15,6 +15,10 @@ func toConnectError(err error) error {
 	switch {
 	case errors.Is(err, repository.ErrNotFound):
 		return connect.NewError(connect.CodeNotFound, err)
+	case errors.Is(err, repository.ErrConflict):
+		return connect.NewError(connect.CodeAlreadyExists, err)
+	case errors.Is(err, service.ErrNoQuestions):
+		return connect.NewError(connect.CodeFailedPrecondition, err)
 	case errors.Is(err, service.ErrForbidden):
 		return connect.NewError(connect.CodePermissionDenied, err)
 	case errors.Is(err, service.ErrBadRequest):

@@ -12,6 +12,7 @@ import QuestionCard from '../components/questions/QuestionCard'
 import TestCard from '../components/tests/TestCard'
 import GenerateTab from '../components/tests/GenerateTab'
 import ShareRecordDialog from '../components/banks/ShareRecordDialog'
+import EditRecordDialog from '../components/banks/EditRecordDialog'
 import OrnateDivider from '../components/ui/OrnateDivider'
 import Spinner from '../components/ui/Spinner'
 import Select from '../components/ui/Select'
@@ -35,6 +36,8 @@ const QUESTION_TYPES = [
   { value: 'matching_information', label: 'Match Info' },
   { value: 'matching_features',    label: 'Match Features' },
 ]
+
+interface ImportNotice { tone: 'ok' | 'error'; text: string; details: string[] }
 
 function PageInput({ page, totalPages, onChange }: {
   page: number; totalPages: number; onChange: (p: number) => void
@@ -109,9 +112,10 @@ export default function BankPage() {
   const overallBestPct = testPageData?.summary.best_pct    ?? -1
   const totalTestPages = Math.max(1, Math.ceil(filteredTotal / (testPageData?.page_size ?? TEST_PAGE_SIZE)))
   const [importing,     setImporting]     = useState(false)
-  const [importMessage, setImportMessage] = useState<string | null>(null)
+  const [importNotice,  setImportNotice]  = useState<ImportNotice | null>(null)
 
   const [shareOpen,   setShareOpen]   = useState(false)
+  const [editOpen,    setEditOpen]    = useState(false)
   const [manageOpen,  setManageOpen]  = useState(false)
   const [confirmDel,  setConfirmDel]  = useState(false)
   const manageRef = useRef<HTMLDivElement>(null)
@@ -131,10 +135,10 @@ export default function BankPage() {
     if (!files.length) return
     e.target.value = ''
     setImporting(true)
-    setImportMessage(null)
+    setImportNotice(null)
 
     let totalCreated = 0
-    const fileErrors: string[] = []
+    const details: string[] = []
 
     for (const file of files) {
       try {
@@ -145,21 +149,26 @@ export default function BankPage() {
           bankId: Number(bankId), format: fmtMap[ext] ?? 0, fileData,
         })
         totalCreated += result.created
+        result.errors.forEach(e => {
+          const where = e.row > 0 ? `row ${e.row}` : 'file'
+          const label = e.label ? ` (“${e.label.length > 40 ? e.label.slice(0, 40) + '…' : e.label}”)` : ''
+          details.push(`${file.name}, ${where}${label}: ${e.message}`)
+        })
       } catch (err: any) {
-        const detail = err?.message ?? 'invalid format'
-        fileErrors.push(`${file.name}: ${detail}`)
+        details.push(`${file.name}: ${err?.rawMessage ?? err?.message ?? 'import failed'}`)
       }
     }
 
     queryClient.invalidateQueries({ queryKey: ['questions', bankId] })
     queryClient.invalidateQueries({ queryKey: ['tags', bankId] })
 
-    if (fileErrors.length === 0) {
-      setImportMessage(`Imported ${totalCreated} item${totalCreated !== 1 ? 's' : ''} from ${files.length} file${files.length !== 1 ? 's' : ''}.`)
+    const plural = (n: number, w: string) => `${n} ${w}${n !== 1 ? 's' : ''}`
+    if (details.length === 0) {
+      setImportNotice({ tone: 'ok', text: `Imported ${plural(totalCreated, 'question')} from ${plural(files.length, 'file')}.`, details })
     } else if (totalCreated > 0) {
-      setImportMessage(`Imported ${totalCreated} item${totalCreated !== 1 ? 's' : ''}. Errors: ${fileErrors.join(' | ')}`)
+      setImportNotice({ tone: 'error', text: `Imported ${plural(totalCreated, 'question')}. Some files were rejected — nothing from them was saved:`, details })
     } else {
-      setImportMessage(`Import failed — ${fileErrors.join(' | ')}`)
+      setImportNotice({ tone: 'error', text: 'Nothing was imported. Fix these and try again — a file is only saved when every row is valid:', details })
     }
 
     setImporting(false)
@@ -216,7 +225,10 @@ export default function BankPage() {
       {/* ── Page header ─────────────────────────────────────────── */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">{bank.name} — <span>Record</span></h1>
+          <h1 className="page-title">{bank.name}</h1>
+          {bank.description && (
+            <p style={{ margin: '8px 0 0', maxWidth: 680, fontSize: '0.95rem', lineHeight: 1.55, color: 'var(--ink)' }}>{bank.description}</p>
+          )}
           <p className="page-meta">
             {totalQ} questions · {totalTests} tests
             <Chip text={myRole} on={myRole === 'owner'} />
@@ -229,6 +241,9 @@ export default function BankPage() {
           )}
           {/* Editors get Import inline; owners get the full Manage menu. */}
           {canEdit && !isOwner && (
+            <button className="btn btn-ghost" onClick={() => setEditOpen(true)}>Edit</button>
+          )}
+          {canEdit && !isOwner && (
             <button className="btn btn-ghost" disabled={importing} onClick={triggerImport}>
               <span className="hidden sm:inline">{importing ? 'Importing…' : '⬆ Import'}</span>
               <span className="sm:hidden">⬆</span>
@@ -240,9 +255,10 @@ export default function BankPage() {
               {manageOpen && (
                 <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 50, textAlign: 'left' }}>
                   {[
+                    { glyph: '✎', label: 'Edit Record', onClick: () => setEditOpen(true), disabled: false, danger: false },
                     { glyph: '↑', label: importing ? 'Importing…' : 'Import', onClick: triggerImport, disabled: importing, danger: false },
                     { glyph: '⇄', label: 'Share Record', onClick: () => setShareOpen(true), disabled: false, danger: false },
-                    { glyph: '◈', label: bank.visibility === 'public' ? 'Make Private' : 'Make Public', onClick: toggleVisibility, disabled: setVisibility.isPending, danger: false },
+                    { glyph: '◐', label: bank.visibility === 'public' ? 'Make Private' : 'Make Public', onClick: toggleVisibility, disabled: setVisibility.isPending, danger: false },
                     { glyph: '✕', label: 'Delete Record', onClick: () => setConfirmDel(true), disabled: deleteBank.isPending, danger: true },
                   ].map((item, idx) => (
                     <div key={item.label}>
@@ -279,19 +295,27 @@ export default function BankPage() {
         ))}
       </nav>
 
-      {/* ── Import message ──────────────────────────────────────── */}
-      {importMessage && (
+      {importNotice && (
         <div
+          role={importNotice.tone === 'error' ? 'alert' : 'status'}
           style={{
-            padding: '10px 16px',
-            border: `1px solid ${importMessage.startsWith('Import failed') ? '#A3222D' : '#1F7A72'}`,
-            background: importMessage.startsWith('Import failed') ? 'rgba(163,34,45,0.08)' : 'rgba(31,122,114,0.08)',
-            color: importMessage.startsWith('Import failed') ? '#A3222D' : '#1F7A72',
-            fontSize: '0.85rem', cursor: 'pointer',
+            padding: '12px 16px', borderRadius: 'var(--radius)',
+            border: `1px solid ${importNotice.tone === 'error' ? 'var(--rose-border)' : 'rgba(31,122,114,0.35)'}`,
+            background: importNotice.tone === 'error' ? 'var(--rose-soft)' : 'rgba(31,122,114,0.08)',
+            color: importNotice.tone === 'error' ? 'var(--red)' : 'var(--easy)',
+            fontSize: '0.88rem', display: 'flex', gap: 12, alignItems: 'flex-start',
           }}
-          onClick={() => setImportMessage(null)}
         >
-          {importMessage} <span style={{ opacity: 0.6 }}>✕</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 500 }}>{importNotice.text}</div>
+            {importNotice.details.length > 0 && (
+              <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: 'var(--ink)', lineHeight: 1.6 }}>
+                {importNotice.details.slice(0, 8).map((d, i) => <li key={i}>{d}</li>)}
+                {importNotice.details.length > 8 && <li>…and {importNotice.details.length - 8} more</li>}
+              </ul>
+            )}
+          </div>
+          <button className="btn-icon" aria-label="Dismiss" onClick={() => setImportNotice(null)}>✕</button>
         </div>
       )}
 
@@ -438,6 +462,7 @@ export default function BankPage() {
       <div style={{ height: 32 }} />
 
       {shareOpen && <ShareRecordDialog bankId={bankId} onClose={() => setShareOpen(false)} />}
+      {editOpen && <EditRecordDialog bank={bank} onClose={() => setEditOpen(false)} />}
 
       {/* ── Delete confirmation ─────────────────────────────────── */}
       {confirmDel && (

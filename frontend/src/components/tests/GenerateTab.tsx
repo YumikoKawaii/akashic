@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ConnectError, Code } from '@connectrpc/connect'
 import { Bank, GroupMode } from '../../types'
 import OrnatePanel from '../ui/OrnatePanel'
 import { FormField, Input } from '../ui/FormField'
@@ -168,14 +169,12 @@ export default function GenerateTab({ bank }: Props) {
     }
     try {
       const test = await generate.mutateAsync({ name: name.trim() || `${bank.name} — ${new Date().toLocaleString()}`, config })
-      if (!test.questions?.length) {
-        setGenError('No questions match these settings. Try another group mode, fewer filters, or different counts.')
-        return
-      }
       const attempt = await start.mutateAsync({ bankId: String(bank.id), testId: test.id })
       navigate(`/attempts/${bank.id}/${attempt.id}`)
-    } catch {
-      setGenError('Generating the test failed — please try again.')
+    } catch (err) {
+      setGenError(err instanceof ConnectError && err.code === Code.FailedPrecondition
+        ? 'No questions match these settings. Try another group mode, fewer filters, or different counts.'
+        : 'Generating the test failed — please try again.')
     }
   }
 

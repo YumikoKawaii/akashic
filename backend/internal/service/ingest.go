@@ -44,8 +44,21 @@ type IngestError struct {
 	Message string `json:"message"`
 }
 
+// IngestGroup is a set of questions sharing a passage, instructions and options.
+// A child question without a difficulty inherits the group's.
+type IngestGroup struct {
+	Title        string                `json:"title"        yaml:"title"`
+	Instructions string                `json:"instructions" yaml:"instructions"`
+	Passage      string                `json:"passage"      yaml:"passage"`
+	Options      []model.MCQOption     `json:"options"      yaml:"options"`
+	Difficulty   string                `json:"difficulty"   yaml:"difficulty"`
+	Tags         []string              `json:"tags"         yaml:"tags"`
+	Questions    []IngestStandaloneRow `json:"questions"    yaml:"questions"`
+}
+
 type ingestItem struct {
 	standalone *IngestStandaloneRow
+	group      *IngestGroup
 	rowNum     int
 }
 
@@ -78,6 +91,9 @@ func (s *IngestService) Ingest(ctx context.Context, bankID int, r io.Reader, ext
 		case item.standalone != nil:
 			err = validateStandalone(*item.standalone)
 			label = item.standalone.Content
+		case item.group != nil:
+			err = validateGroup(item.group)
+			label = item.group.Title
 		}
 		if err != nil {
 			validationErrors = append(validationErrors, IngestError{Row: item.rowNum, Label: label, Message: err.Error()})
@@ -105,6 +121,13 @@ func (s *IngestService) Ingest(ctx context.Context, bankID int, r io.Reader, ext
 				}
 				created++
 			}
+			if item.group != nil {
+				n, err := createGroup(tx, bankID, item.group)
+				if err != nil {
+					return fmt.Errorf("row %d: %w", item.rowNum, err)
+				}
+				created += n
+			}
 		}
 		return nil
 	}); err != nil {
@@ -112,6 +135,43 @@ func (s *IngestService) Ingest(ctx context.Context, bankID int, r io.Reader, ext
 	}
 	s.pool.InvalidatePool(bankID)
 	return &IngestResult{Created: created}, nil
+}
+
+func createGroup(tx *uow.Store, bankID int, g *IngestGroup) (int, error) {
+	group := &model.QuestionGroup{
+		BankID: bankID,
+		Title:  strings.TrimSpace(g.Title),
+		Content: model.GroupContent{
+			Instructions: strings.TrimSpace(g.Instructions),
+			Passage:      strings.TrimSpace(g.Passage),
+			Options:      g.Options,
+		},
+		Difficulty: g.Difficulty,
+		Tags:       pq.StringArray(nonNilSlice(g.Tags)),
+	}
+	if err := tx.Groups.Create(group); err != nil {
+		return 0, err
+	}
+	for i, row := range g.Questions {
+		groupID, position := group.ID, i+1
+		difficulty := row.Difficulty
+		if difficulty == "" {
+			difficulty = g.Difficulty
+		}
+		q := &model.Question{
+			BankID:     bankID,
+			Type:       row.Type,
+			Difficulty: difficulty,
+			Tags:       pq.StringArray(mergeTags(g.Tags, row.Tags)),
+			Content:    model.NewQuestionContent(row.Type, row.Content, row.Answer, row.Options, row.Answers),
+			GroupID:    &groupID,
+			Position:   &position,
+		}
+		if err := tx.Questions.Create(q); err != nil {
+			return 0, fmt.Errorf("question %d: %w", position, err)
+		}
+	}
+	return len(g.Questions), nil
 }
 
 func nonNilSlice(s []string) []string {
@@ -169,6 +229,20 @@ func parseJSONIngest(r io.Reader) ([]ingestItem, []IngestError) {
 	var items []ingestItem
 	for i, msg := range raw {
 		rowNum := i + 1
+		var probe struct {
+			Questions json.RawMessage `json:"questions"`
+		}
+		if err := json.Unmarshal(msg, &probe); err != nil {
+			return nil, []IngestError{{Row: rowNum, Message: "item must be an object: " + err.Error()}}
+		}
+		if len(probe.Questions) > 0 {
+			var g IngestGroup
+			if err := json.Unmarshal(msg, &g); err != nil {
+				return nil, []IngestError{{Row: rowNum, Message: "invalid group: " + err.Error()}}
+			}
+			items = append(items, ingestItem{group: &g, rowNum: rowNum})
+			continue
+		}
 		var q IngestStandaloneRow
 		if err := json.Unmarshal(msg, &q); err != nil {
 			return nil, []IngestError{{Row: rowNum, Message: "invalid question: " + err.Error()}}
@@ -198,6 +272,14 @@ func parseYAMLIngest(r io.Reader) ([]ingestItem, []IngestError) {
 		b, err := yaml.Marshal(raw)
 		if err != nil {
 			return nil, []IngestError{{Row: rowNum, Message: "cannot re-encode: " + err.Error()}}
+		}
+		if _, isGroup := raw["questions"]; isGroup {
+			var g IngestGroup
+			if err := yaml.Unmarshal(b, &g); err != nil {
+				return nil, []IngestError{{Row: rowNum, Message: "invalid group: " + err.Error()}}
+			}
+			items = append(items, ingestItem{group: &g, rowNum: rowNum})
+			continue
 		}
 		var q IngestStandaloneRow
 		if err := yaml.Unmarshal(b, &q); err != nil {
@@ -346,6 +428,47 @@ func validateStandalone(row IngestStandaloneRow) error {
 				return fmt.Errorf("field 'correct_answer' is not recognized — use 'answer' for the correct answer string")
 			}
 			return fmt.Errorf("field 'answer' is required for type %q", row.Type)
+		}
+	}
+	return nil
+}
+
+var matchingTypes = map[string]bool{
+	"matching_headings": true, "matching_information": true, "matching_features": true,
+}
+
+func validateGroup(g *IngestGroup) error {
+	if !validDifficultyLevels[g.Difficulty] {
+		if g.Difficulty == "" {
+			return fmt.Errorf("group field 'difficulty' is required — valid values: easy, medium, hard")
+		}
+		return fmt.Errorf("invalid group difficulty %q — valid values: easy, medium, hard", g.Difficulty)
+	}
+	if len(g.Questions) == 0 {
+		return fmt.Errorf("group field 'questions' must contain at least one question")
+	}
+	keys := make(map[string]bool, len(g.Options))
+	for _, o := range g.Options {
+		if strings.TrimSpace(o.Key) == "" || strings.TrimSpace(o.Text) == "" {
+			return fmt.Errorf("group options need both 'key' and 'text'")
+		}
+		keys[strings.ToLower(strings.TrimSpace(o.Key))] = true
+	}
+	for i, row := range g.Questions {
+		if row.Difficulty == "" {
+			row.Difficulty = g.Difficulty
+		}
+		if err := validateStandalone(row); err != nil {
+			return fmt.Errorf("question %d: %w", i+1, err)
+		}
+		if !matchingTypes[row.Type] {
+			continue
+		}
+		if len(keys) == 0 {
+			return fmt.Errorf("question %d: type %q needs the group's 'options' to choose from", i+1, row.Type)
+		}
+		if !keys[strings.ToLower(strings.TrimSpace(row.Answer))] {
+			return fmt.Errorf("question %d: answer %q is not one of the group's option keys", i+1, row.Answer)
 		}
 	}
 	return nil

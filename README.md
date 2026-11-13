@@ -23,9 +23,9 @@ Akashic is a personal question archive. Keep questions in **records** (English, 
 
 ## Features
 
-- **Records** — private by default, shareable with owner / editor / viewer roles, or published to the community home.
-- **Nine question types** — MCQ, True/False/Not Given, Yes/No/Not Given, sentence and form completion, short answer, and three matching types. Tests can also show grouped questions with a shared passage, instructions and options.
-- **Import** — bulk-load standalone questions from JSON, YAML or CSV (see [`samples/`](samples)).
+- **Records** — with a name, description and default test settings; private by default, shareable with owner / editor / viewer roles, or published to the community home.
+- **Nine question types** — MCQ, True/False/Not Given, Yes/No/Not Given, sentence and form completion, short answer, and three matching types. Questions can be grouped with a shared passage, instructions and options.
+- **Import** — bulk-load questions from JSON, YAML or CSV, including grouped passages (see [`samples/group_sample.json`](samples/group_sample.json)). A file is saved only if every row is valid; otherwise each bad row is listed.
 - **Test generator** — pick counts per difficulty, filter by type and tags, and choose mixed, standalone-only or grouped questions. Questions from your last three tests are held back until fresh ones run out.
 - **Attempts** — answers autosave, can be checked one by one, and every attempt is kept in the test's history.
 
