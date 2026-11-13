@@ -5,6 +5,10 @@ on:
     branches:
       - master
 
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -20,6 +24,18 @@ jobs:
         run: |
           docker save yumikokawaii/akashic:latest -o akashic.tar
           chmod 644 akashic.tar
+
+      - name: Find runner IP
+        id: runner
+        run: echo "ip=$(curl -fsS --retry 3 https://api.ipify.org)" >> "$GITHUB_OUTPUT"
+
+      - name: Allow runner through the SSH rate limit
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: sudo -n ufw insert 1 allow from ${{ steps.runner.outputs.ip }} to any port 22 proto tcp comment 'github-actions-deploy'
 
       - name: Copy image and compose file to server
         uses: appleboy/scp-action@v0.1.7
@@ -47,3 +63,12 @@ jobs:
             docker compose up -d
 
             docker image prune -f
+
+      - name: Remove runner firewall rule
+        if: always() && steps.runner.outputs.ip != ''
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: sudo -n ufw delete allow from ${{ steps.runner.outputs.ip }} to any port 22 proto tcp || true
