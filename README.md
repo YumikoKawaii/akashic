@@ -24,9 +24,9 @@ Akashic is a personal question archive. Keep questions in **records** (English, 
 ## Features
 
 - **Records** — private by default, shareable with owner / editor / viewer roles, or published to the community home.
-- **Nine question types** — MCQ, True/False/Not Given, Yes/No/Not Given, sentence and form completion, short answer, and three matching types. Questions can be grouped with a shared passage, instructions and options.
-- **Import** — bulk-load JSON, YAML or CSV (see [`samples/`](samples)).
-- **Test generator** — pick counts per difficulty, filter by type and tags, and choose mixed, standalone-only or grouped questions. Unseen questions are picked first.
+- **Nine question types** — MCQ, True/False/Not Given, Yes/No/Not Given, sentence and form completion, short answer, and three matching types. Tests can also show grouped questions with a shared passage, instructions and options.
+- **Import** — bulk-load standalone questions from JSON, YAML or CSV (see [`samples/`](samples)).
+- **Test generator** — pick counts per difficulty, filter by type and tags, and choose mixed, standalone-only or grouped questions. Questions from your last three tests are held back until fresh ones run out.
 - **Attempts** — answers autosave, can be checked one by one, and every attempt is kept in the test's history.
 
 ## Stack
@@ -46,6 +46,8 @@ docker compose up -d --build
 ```
 
 The app is served on `http://localhost:${SERVER_PORT:-8080}`. Postgres and Redis run inside the same compose stack. Postgres is tuned for a small disk (compact WAL, lz4 compression), and Redis is cache-only. Google sign-in needs `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `GOOGLE_CALLBACK_URL=<origin>/auth/callback` in `.env`.
+
+How data, generation and grading work: [`technical_design.md`](technical_design.md).
 
 ## Deploy
 
