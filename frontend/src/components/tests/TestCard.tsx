@@ -5,13 +5,7 @@ import DifficultyBar from '../ui/DifficultyBar'
 import { useDeleteTest } from '../../hooks/useTests'
 import { useStartAttempt, useTestAttempts } from '../../hooks/useAttempts'
 import { useAuth } from '../../contexts/AuthContext'
-import MagicCircle from '../ui/MagicCircle'
-import RuneCorners from '../ui/RuneCorners'
 import { GRADE_COLOR, gradeForPct } from './grade'
-
-const DIFF_COLOR: Record<string, string> = {
-  easy: '#2a8a3a', medium: '#9a7018', hard: '#b03030',
-}
 
 interface Props { test: Test; bankId: string; canDelete?: boolean }
 
@@ -57,22 +51,8 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
     ? { ...test.best_result, grade: gradeForPct(test.best_result.pct) }
     : null
 
-  const dominant = cfg.hard_count >= cfg.medium_count && cfg.hard_count >= cfg.easy_count
-    ? 'hard' : cfg.medium_count >= cfg.easy_count ? 'medium' : 'easy'
-  const diffColor = DIFF_COLOR[dominant]
-
   return (
     <div className="test-card">
-      <RuneCorners color="var(--gold-dim)" opacity={0.55} />
-      {/* Top-left — dominant difficulty color */}
-      <div style={{ position: 'absolute', top: -44, left: -44, width: 110, height: 110, color: diffColor, opacity: 0.55, pointerEvents: 'none', zIndex: 0 }}>
-        <MagicCircle variant="full" speed={5} />
-      </div>
-      {/* Bottom-right — purple */}
-      <div style={{ position: 'absolute', bottom: -44, right: -44, width: 110, height: 110, color: '#6b4c8a', opacity: 0.45, pointerEvents: 'none', zIndex: 0 }}>
-        <MagicCircle variant="full" speed={5} />
-      </div>
-
       <div style={{ position: 'relative', zIndex: 1 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
         <div className="test-card-title">{test.name}</div>
@@ -81,7 +61,7 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
             title={`Best result: ${result.score}/${result.total}`}
             style={{
               flexShrink: 0, display: 'inline-flex', alignItems: 'baseline', gap: 5,
-              fontFamily: 'Cinzel, serif', fontSize: '0.62rem', letterSpacing: '0.06em',
+              fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em',
               padding: '3px 9px', border: `1px solid ${GRADE_COLOR[result.grade]}66`,
               color: GRADE_COLOR[result.grade], background: `${GRADE_COLOR[result.grade]}12`,
             }}
@@ -90,7 +70,7 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
           </span>
         ) : (
           <span style={{
-            flexShrink: 0, fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.14em',
+            flexShrink: 0, fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.55rem', letterSpacing: '0.14em',
             padding: '3px 9px', border: '1px solid var(--border-dim)', color: 'var(--ink-dim)',
             textTransform: 'uppercase',
           }}>
@@ -114,12 +94,12 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
       <div className="test-card-footer">
         {confirmDelete ? (
           <>
-            <span style={{ fontSize: '0.68rem', color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: '0.68rem', color: 'var(--ink-dim)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: '0.05em' }}>
               Delete?
             </span>
             <button
               className="btn btn-ghost"
-              style={{ fontSize: '0.6rem', padding: '4px 10px', color: '#b03030', borderColor: 'rgba(176,48,48,0.4)' }}
+              style={{ fontSize: '0.6rem', padding: '4px 10px', color: '#A3222D', borderColor: 'rgba(163,34,45,0.4)' }}
               onClick={() => del.mutate(test.id)}
               disabled={del.isPending}
             >
@@ -147,7 +127,7 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
             ) : (
               <button
                 className="btn btn-primary"
-                style={{ fontSize: '0.6rem', padding: '6px 14px', borderColor: startError ? '#b03030' : undefined }}
+                style={{ fontSize: '0.6rem', padding: '6px 14px', borderColor: startError ? '#A3222D' : undefined }}
                 title={startError ? 'Starting the attempt failed — try again.' : undefined}
                 onClick={handleStart}
                 disabled={start.isPending}
@@ -197,7 +177,7 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <span>{a.taker?.name ? `${a.taker.name} · ` : ''}{date}</span>
-                <span style={{ fontFamily: 'Cinzel, serif', color: '#6b4c8a', fontSize: '0.7rem' }}>
+                <span style={{ fontFamily: 'IBM Plex Mono, monospace', color: '#6b4c8a', fontSize: '0.7rem' }}>
                   {answered} answered · in progress
                 </span>
               </div>
@@ -221,11 +201,11 @@ export default function TestCard({ test, bankId, canDelete }: Props) {
                   fontSize: '0.75rem', color: 'var(--ink-dim)',
                   transition: 'background 0.15s',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(154,112,24,0.06)')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(163,34,45,0.06)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <span>{a.taker?.name ? `${a.taker.name} · ` : ''}{date}</span>
-                <span style={{ fontFamily: 'Cinzel, serif', color, fontSize: '0.7rem' }}>
+                <span style={{ fontFamily: 'IBM Plex Mono, monospace', color, fontSize: '0.7rem' }}>
                   {a.score}/{a.total} · {grade}
                 </span>
               </div>

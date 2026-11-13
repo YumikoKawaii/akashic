@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authClient, setToken } from '../api/connect'
 import { useAuth } from '../contexts/AuthContext'
-import { Spinner } from '../components/ui/MagicCircle'
+import Spinner from '../components/ui/Spinner'
 
 const STATE_KEY = 'oauth_state'
 

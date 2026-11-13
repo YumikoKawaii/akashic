@@ -77,7 +77,7 @@ export default function MultiSelect({ value, onChange, options, placeholder = 'A
           cursor: 'pointer', textAlign: 'left',
           color: value.length ? 'var(--ink)' : 'var(--ink-dim)',
           borderColor: open ? 'var(--gold)' : undefined,
-          boxShadow: open ? '0 0 8px rgba(154,112,24,0.15)' : undefined,
+          boxShadow: open ? '0 0 8px rgba(163,34,45,0.15)' : undefined,
         }}
       >
         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -104,13 +104,13 @@ export default function MultiSelect({ value, onChange, options, placeholder = 'A
           <div
             onClick={() => onChange(value.length === options.length ? [] : options.map(o => o.value))}
             style={{
-              padding: '7px 12px', fontSize: '0.78rem', fontFamily: 'Cinzel, serif',
+              padding: '7px 12px', fontSize: '0.78rem', fontFamily: 'IBM Plex Mono, monospace',
               letterSpacing: '0.08em', color: 'var(--gold-dim)', cursor: 'pointer',
               borderBottom: '1px solid var(--border-dim)',
-              background: 'rgba(154,112,24,0.04)',
+              background: 'rgba(163,34,45,0.04)',
             }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(154,112,24,0.1)'}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(154,112,24,0.04)'}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(163,34,45,0.1)'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(163,34,45,0.04)'}
           >
             {value.length === options.length ? '− Deselect All' : '＋ Select All'}
           </div>
@@ -122,15 +122,15 @@ export default function MultiSelect({ value, onChange, options, placeholder = 'A
                 key={opt.value}
                 onClick={() => toggle(opt.value)}
                 style={{
-                  padding: '8px 12px', fontSize: '0.9rem', fontFamily: 'EB Garamond, serif',
+                  padding: '8px 12px', fontSize: '0.9rem', fontFamily: 'IBM Plex Sans, sans-serif',
                   color: checked ? 'var(--gold)' : 'var(--ink)',
-                  background: checked ? 'rgba(154,112,24,0.08)' : 'transparent',
+                  background: checked ? 'rgba(163,34,45,0.08)' : 'transparent',
                   cursor: 'pointer',
                   borderLeft: checked ? '2px solid var(--gold)' : '2px solid transparent',
                   display: 'flex', alignItems: 'center', gap: 10,
                   transition: 'background 0.12s',
                 }}
-                onMouseEnter={e => { if (!checked) (e.currentTarget as HTMLElement).style.background = 'rgba(154,112,24,0.05)' }}
+                onMouseEnter={e => { if (!checked) (e.currentTarget as HTMLElement).style.background = 'rgba(163,34,45,0.05)' }}
                 onMouseLeave={e => { if (!checked) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
               >
                 <span style={{

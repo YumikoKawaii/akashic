@@ -4,8 +4,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useBank, useSetBankVisibility, useDeleteBank } from '../hooks/useBanks'
 import { useQuestions } from '../hooks/useQuestions'
 import { useTestsPaged, TEST_PAGE_SIZE } from '../hooks/useTests'
-import { useCategories } from '../hooks/useCategories'
-import { usePassages, usePassagesPaged, useDeletePassage } from '../hooks/usePassages'
 import { useAuth } from '../contexts/AuthContext'
 import { gradeForPct, GRADE_COLOR } from '../components/tests/grade'
 import { QuestionFilter, TestSort, TestTaken } from '../types'
@@ -13,23 +11,17 @@ import { questionClient } from '../api/connect'
 import QuestionCard from '../components/questions/QuestionCard'
 import TestCard from '../components/tests/TestCard'
 import GenerateTab from '../components/tests/GenerateTab'
-import ContributeTab from '../components/contributions/ContributeTab'
-import ReviewTab from '../components/contributions/ReviewTab'
 import ShareRecordDialog from '../components/banks/ShareRecordDialog'
 import OrnateDivider from '../components/ui/OrnateDivider'
-import { Spinner } from '../components/ui/MagicCircle'
-import MagicCircle from '../components/ui/MagicCircle'
+import Spinner from '../components/ui/Spinner'
 import Select from '../components/ui/Select'
 
-type Tab = 'questions' | 'passages' | 'generate' | 'tests' | 'contribute' | 'review'
+type Tab = 'questions' | 'generate' | 'tests'
 
 const TAB_LABELS: Record<Tab, string> = {
-  questions:  'Questions',
-  passages:   'Passages',
-  generate:   'Generate',
-  tests:      'Tests',
-  contribute: 'Contribute',
-  review:     'Review',
+  questions: 'Questions',
+  generate:  'Generate',
+  tests:     'Tests',
 }
 
 const QUESTION_TYPES = [
@@ -43,12 +35,6 @@ const QUESTION_TYPES = [
   { value: 'matching_information', label: 'Match Info' },
   { value: 'matching_features',    label: 'Match Features' },
 ]
-
-const DIFF_COLORS = {
-  easy:   { dot: '#2a8a3a', border: 'rgba(42,138,58,0.45)',   bg: 'rgba(42,138,58,0.07)' },
-  medium: { dot: '#9a7018', border: 'rgba(154,112,24,0.45)',  bg: 'rgba(154,112,24,0.07)' },
-  hard:   { dot: '#b03030', border: 'rgba(176,48,48,0.45)',   bg: 'rgba(176,48,48,0.07)' },
-}
 
 function PageInput({ page, totalPages, onChange }: {
   page: number; totalPages: number; onChange: (p: number) => void
@@ -74,12 +60,12 @@ function PageInput({ page, totalPages, onChange }: {
           onKeyDown={e => e.key === 'Enter' && commit(val)}
           style={{
             width: 44, height: 28, textAlign: 'center',
-            fontFamily: 'Cinzel, serif', fontSize: '0.65rem',
+            fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.65rem',
             border: '1px solid var(--gold)', background: 'transparent',
             color: 'var(--ink)', outline: 'none', borderRadius: 2,
           }}
         />
-        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'var(--ink-dim)' }}>/ {totalPages}</span>
+        <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.65rem', color: 'var(--ink-dim)' }}>/ {totalPages}</span>
       </div>
       <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '5px 14px' }}
         onClick={() => onChange(page + 1)} disabled={page >= totalPages}>Next →</button>
@@ -95,9 +81,6 @@ export default function BankPage() {
 
   const { user }                   = useAuth()
   const { data: bank, isError: bankError } = useBank(bankId)
-  const { data: categories = [] }  = useCategories(bankId)
-  const { data: passages = [] }    = usePassages(bankId)   // full list for GenerateTab
-  const deletePassage              = useDeletePassage(bankId)
   const setVisibility              = useSetBankVisibility()
   const deleteBank                 = useDeleteBank()
 
@@ -105,28 +88,15 @@ export default function BankPage() {
   const canEdit = myRole === 'owner' || myRole === 'editor'
   const isOwner = myRole === 'owner'
 
-  // Editors review the contribution queue; pure viewers (incl. public visitors)
-  // get a Contribute tab to propose questions.
-  const visibleTabs: Tab[] = [
-    'questions', 'passages', 'generate', 'tests',
-    ...(canEdit ? (['review'] as Tab[]) : (['contribute'] as Tab[])),
-  ]
+  const visibleTabs: Tab[] = ['questions', 'generate', 'tests']
 
   const [tab,           setTab]           = useState<Tab>((searchParams.get('tab') as Tab) ?? 'questions')
-  // The URL param is unvalidated, and a role-mismatched tab (e.g. ?tab=review as
-  // a viewer) would otherwise render a blank content area with no active tab.
   const activeTab: Tab = visibleTabs.includes(tab) ? tab : 'questions'
   const [filter,        setFilter]        = useState<QuestionFilter>({})
   const [page,          setPage]          = useState(1)
-  const [passagePage,   setPassagePage]   = useState(1)
   const [testPage,      setTestPage]      = useState(1)
   const [testSort,      setTestSort]      = useState<TestSort>('newest')
   const [testTaken,     setTestTaken]     = useState<TestTaken>('all')
-
-  const { data: passagePageData }  = usePassagesPaged(bankId, passagePage)
-  const pagedPassages      = passagePageData?.data      ?? []
-  const totalPassages      = passagePageData?.total     ?? passages.length
-  const totalPassagePages  = Math.max(1, Math.ceil(totalPassages / (passagePageData?.page_size ?? 10)))
 
   // Tests are sorted, filtered, and paginated server-side: each page carries the
   // caller's best result per test inline, and a bank-wide summary that stays
@@ -140,7 +110,6 @@ export default function BankPage() {
   const totalTestPages = Math.max(1, Math.ceil(filteredTotal / (testPageData?.page_size ?? TEST_PAGE_SIZE)))
   const [importing,     setImporting]     = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
-  const [pConfirmDel,   setPConfirmDel]   = useState<number | null>(null)
 
   const [shareOpen,   setShareOpen]   = useState(false)
   const [manageOpen,  setManageOpen]  = useState(false)
@@ -183,7 +152,7 @@ export default function BankPage() {
     }
 
     queryClient.invalidateQueries({ queryKey: ['questions', bankId] })
-    queryClient.invalidateQueries({ queryKey: ['passages', bankId] })
+    queryClient.invalidateQueries({ queryKey: ['tags', bankId] })
 
     if (fileErrors.length === 0) {
       setImportMessage(`Imported ${totalCreated} item${totalCreated !== 1 ? 's' : ''} from ${files.length} file${files.length !== 1 ? 's' : ''}.`)
@@ -208,13 +177,12 @@ export default function BankPage() {
 
   const tabCount: Partial<Record<Tab, number>> = {
     questions: totalQ,
-    passages:  totalPassages,
     tests:     totalTests,
   }
 
   if (bankError) return (
     <div className="flex items-center justify-center h-full" style={{ flexDirection: 'column', gap: 16, textAlign: 'center' }}>
-      <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>Record Unavailable</div>
+      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1rem', color: 'var(--ink)' }}>Record Unavailable</div>
       <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>This record could not be loaded — it may have been removed, or you may not have access.</div>
       <button className="btn btn-primary" onClick={() => navigate('/')} style={{ padding: '10px 28px' }}>Go Home</button>
     </div>
@@ -235,7 +203,7 @@ export default function BankPage() {
   const Chip = ({ text, on }: { text: string; on: boolean }) => (
     <span style={{
       marginLeft: 10,
-      fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.12em',
+      fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.55rem', letterSpacing: '0.12em',
       padding: '2px 7px', border: '1px solid var(--border-dim)',
       color: on ? 'var(--gold)' : 'var(--ink-dim)', textTransform: 'uppercase',
     }}>
@@ -250,7 +218,7 @@ export default function BankPage() {
         <div>
           <h1 className="page-title">{bank.name} — <span>Record</span></h1>
           <p className="page-meta">
-            {totalQ} questions · {categories.length} categories · {totalPassages} passages · {totalTests} tests
+            {totalQ} questions · {totalTests} tests
             <Chip text={myRole} on={myRole === 'owner'} />
             <Chip text={bank.visibility} on={bank.visibility === 'public'} />
           </p>
@@ -283,7 +251,7 @@ export default function BankPage() {
                         className="dropdown-item"
                         disabled={item.disabled}
                         onClick={() => { item.onClick(); setManageOpen(false) }}
-                        style={item.danger ? { color: '#b03030' } : undefined}
+                        style={item.danger ? { color: '#A3222D' } : undefined}
                       >
                         <span className="dropdown-glyph">{item.glyph}</span>
                         {item.label}
@@ -316,9 +284,9 @@ export default function BankPage() {
         <div
           style={{
             padding: '10px 16px',
-            border: `1px solid ${importMessage.startsWith('Import failed') ? '#b03030' : '#2a8a3a'}`,
-            background: importMessage.startsWith('Import failed') ? 'rgba(176,48,48,0.08)' : 'rgba(42,138,58,0.08)',
-            color: importMessage.startsWith('Import failed') ? '#b03030' : '#2a8a3a',
+            border: `1px solid ${importMessage.startsWith('Import failed') ? '#A3222D' : '#1F7A72'}`,
+            background: importMessage.startsWith('Import failed') ? 'rgba(163,34,45,0.08)' : 'rgba(31,122,114,0.08)',
+            color: importMessage.startsWith('Import failed') ? '#A3222D' : '#1F7A72',
             fontSize: '0.85rem', cursor: 'pointer',
           }}
           onClick={() => setImportMessage(null)}
@@ -331,7 +299,7 @@ export default function BankPage() {
       {activeTab === 'questions' && (
         <>
           <div className="flex gap-3 items-center flex-wrap">
-            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>Filter</span>
+            <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>Filter</span>
             <div style={{ width: 170 }}>
               <Select
                 value={filter.type ?? ''}
@@ -392,93 +360,9 @@ export default function BankPage() {
         </>
       )}
 
-      {/* ── Passages tab ────────────────────────────────────────── */}
-      {activeTab === 'passages' && (
-        <>
-          <OrnateDivider />
-          <div className="flex items-center justify-between">
-            <div className="section-title" style={{ marginBottom: 0 }}>
-              Passages ({totalPassages}
-              {totalPassagePages > 1 && <span style={{ fontWeight: 400, fontSize: '0.7rem', color: 'var(--ink-dim)', letterSpacing: '0.05em' }}> — page {passagePage}/{totalPassagePages}</span>}
-              )
-            </div>
-            {canEdit && (
-              <button className="btn btn-ghost" onClick={() => navigate(`/banks/${bankId}/passages/new`)}>＋ Add Passage</button>
-            )}
-          </div>
-
-          {pagedPassages.length === 0 ? (
-            <div style={{ color: 'var(--ink-dim)', fontSize: '0.88rem', padding: '24px 0', textAlign: 'center' }}>
-              No passages yet. Import a JSON/YAML file or add one manually.
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3" style={{ maxWidth: 760 }}>
-              {pagedPassages.map(p => {
-                const dc = DIFF_COLORS[p.difficulty] ?? DIFF_COLORS.medium
-                return (
-                  <div key={p.id} style={{ position: 'relative', overflow: 'hidden', border: '1px solid var(--border-dim)', padding: '16px 20px', background: 'var(--bg-card)' }}>
-                    {/* Top-left — difficulty color */}
-                    <div style={{ position: 'absolute', top: -44, left: -44, width: 110, height: 110, color: dc.dot, opacity: 0.55, pointerEvents: 'none', zIndex: 0 }}>
-                      <MagicCircle variant="full" speed={5} />
-                    </div>
-                    {/* Bottom-right — purple */}
-                    <div style={{ position: 'absolute', bottom: -44, right: -44, width: 110, height: 110, color: '#6b4c8a', opacity: 0.45, pointerEvents: 'none', zIndex: 0 }}>
-                      <MagicCircle variant="full" speed={5} />
-                    </div>
-                    <div className="flex items-start justify-between gap-4" style={{ marginBottom: 8, position: 'relative', zIndex: 1 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="flex items-center gap-2 flex-wrap" style={{ marginBottom: 3 }}>
-                          <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'var(--ink)' }}>{p.title}</span>
-                          <span style={{ fontSize: '0.6rem', padding: '1px 7px', border: `1px solid ${dc.border}`, color: dc.dot, fontFamily: 'Cinzel, serif', letterSpacing: '0.08em', background: dc.bg }}>
-                            {p.difficulty}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--ink-dim)' }}>
-                          {p.paragraphs?.length ?? 0} paragraph{(p.paragraphs?.length ?? 0) !== 1 ? 's' : ''}
-                        </div>
-                      </div>
-                      {canEdit && (
-                        <div className="flex gap-2 items-center flex-shrink-0">
-                          <button
-                            className="btn btn-ghost"
-                            style={{ fontSize: '0.6rem', padding: '4px 10px' }}
-                            onClick={() => navigate(`/banks/${bankId}/passages/${p.id}/edit`)}
-                          >
-                            Edit
-                          </button>
-                          {pConfirmDel === p.id ? (
-                            <>
-                              <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px', color: '#b03030', borderColor: 'rgba(176,48,48,0.4)' }}
-                                onClick={() => { deletePassage.mutate(String(p.id)); setPConfirmDel(null) }}>Yes</button>
-                              <button className="btn btn-ghost" style={{ fontSize: '0.6rem', padding: '4px 10px' }}
-                                onClick={() => setPConfirmDel(null)}>Cancel</button>
-                            </>
-                          ) : (
-                            <button className="btn-danger" onClick={() => setPConfirmDel(p.id)}>✕</button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {p.paragraphs && p.paragraphs.length > 0 && (
-                      <p style={{ position: 'relative', zIndex: 1, fontSize: '0.85rem', color: 'var(--ink-dim)', lineHeight: 1.6, maxHeight: 100, overflow: 'hidden', maskImage: 'linear-gradient(to bottom, black 60%, transparent)', marginBottom: 8 }}>
-                        {p.paragraphs[0].text}
-                      </p>
-                    )}
-
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          {totalPassagePages > 1 && <PageInput page={passagePage} totalPages={totalPassagePages} onChange={setPassagePage} />}
-        </>
-      )}
-
       {/* ── Generate tab ────────────────────────────────────────── */}
       {activeTab === 'generate' && bank && (
-        <GenerateTab bank={bank} categories={categories} passages={passages} />
+        <GenerateTab bank={bank} />
       )}
 
       {/* ── Tests tab ───────────────────────────────────────────── */}
@@ -488,7 +372,7 @@ export default function BankPage() {
 
           {totalTests > 0 && (
             <div className="flex gap-3 items-center flex-wrap">
-              <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>Sort</span>
+              <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>Sort</span>
               <div style={{ width: 170 }}>
                 <Select
                   value={testSort}
@@ -522,7 +406,7 @@ export default function BankPage() {
           </div>
 
           {totalTests > 0 && (
-            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.62rem', letterSpacing: '0.14em', color: 'var(--ink-dim)', textTransform: 'uppercase', marginTop: -4 }}>
+            <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.62rem', letterSpacing: '0.14em', color: 'var(--ink-dim)', textTransform: 'uppercase', marginTop: -4 }}>
               {takenCount} of {totalTests} taken
               {overallBestPct >= 0 && <> · best <span style={{ color: GRADE_COLOR[gradeForPct(overallBestPct)] }}>{gradeForPct(overallBestPct)}</span></>}
             </div>
@@ -551,22 +435,6 @@ export default function BankPage() {
         </>
       )}
 
-      {/* ── Contribute tab (viewers) ────────────────────────────── */}
-      {activeTab === 'contribute' && !canEdit && (
-        <>
-          <OrnateDivider />
-          <ContributeTab bankId={bankId} categories={categories} />
-        </>
-      )}
-
-      {/* ── Review tab (editors+) ───────────────────────────────── */}
-      {activeTab === 'review' && canEdit && (
-        <>
-          <OrnateDivider />
-          <ReviewTab bankId={bankId} categories={categories} />
-        </>
-      )}
-
       <div style={{ height: 32 }} />
 
       {shareOpen && <ShareRecordDialog bankId={bankId} onClose={() => setShareOpen(false)} />}
@@ -577,7 +445,7 @@ export default function BankPage() {
           onClick={() => !deleteBank.isPending && setConfirmDel(false)}
           style={{
             position: 'fixed', inset: 0, zIndex: 80,
-            background: 'rgba(30,21,8,0.38)',
+            background: 'rgba(43,29,31,0.38)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
           }}
         >
@@ -586,17 +454,17 @@ export default function BankPage() {
             style={{
               width: 'min(440px, 96vw)',
               background: 'var(--bg-elevated)', border: '1px solid var(--gold-dim)',
-              borderRadius: 6, boxShadow: '0 20px 60px rgba(30,21,8,0.35)', position: 'relative',
+              borderRadius: 6, boxShadow: '0 20px 60px rgba(43,29,31,0.35)', position: 'relative',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--border-dim)' }}>
-              <span className="section-title" style={{ marginBottom: 0, color: '#b03030' }}>Delete Record</span>
+              <span className="section-title" style={{ marginBottom: 0, color: '#A3222D' }}>Delete Record</span>
               <button onClick={() => setConfirmDel(false)} disabled={deleteBank.isPending} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-dim)', fontSize: '1rem', lineHeight: 1 }}>✕</button>
             </div>
             <div style={{ padding: '20px 22px' }}>
               <p style={{ fontSize: '0.88rem', color: 'var(--ink)', lineHeight: 1.6, marginBottom: 8 }}>
                 Delete <strong>{bank.name}</strong> and everything inside it — its
-                questions, passages, and tests?
+                questions and tests?
               </p>
               <p style={{ fontSize: '0.8rem', color: 'var(--ink-dim)', lineHeight: 1.6, marginBottom: 18 }}>
                 The record is archived (soft-deleted) and will no longer appear for you or any members.

@@ -17,15 +17,15 @@ export interface BankMember {
   updated_at: string
 }
 
+export type GroupMode = 'mixed' | 'standalone' | 'groups'
+
 export interface TestConfig {
   easy_count: number
   medium_count: number
   hard_count: number
-  category_ids?: number[]
-  passage_ids?: number[]
   types?: string[]
   tags?: string[]
-  standalone_only?: boolean
+  group_mode?: GroupMode
 }
 
 export type BankVisibility = 'private' | 'public'
@@ -38,15 +38,6 @@ export interface Bank {
   default_config: TestConfig
   my_role: BankRole
   visibility: BankVisibility
-  created_at: string
-  updated_at: string
-}
-
-export interface Category {
-  id: number
-  bank_id: number
-  name: string
-  description: string
   created_at: string
   updated_at: string
 }
@@ -82,46 +73,15 @@ export interface QMultipleChoice {
   answers: string[]
 }
 
-export interface GroupContext {
-  sections?: Array<{ key: string; label: string }>
-  headings?: MCQOption[]
-  paragraphs?: MCQOption[]
-  options?: MCQOption[]
-  word_limit?: number
-  word_bank?: string[]
-  form_type?: string
-  title?: string
-  template?: string
-}
-
 export interface QuestionGroup {
   id: number
   bank_id: number
-  category_id: number
-  passage_id?: number
-  passage?: Passage
-  type: QuestionType
-  difficulty: QuestionDifficulty
-  context: GroupContext
-  questions?: Question[]
-  created_at: string
-  updated_at: string
-}
-
-export interface PassageParagraph {
-  label: string
-  text: string
-}
-
-export interface Passage {
-  id: number
-  bank_id: number
-  category_id: number
-  category?: Category
   title: string
-  paragraphs?: PassageParagraph[]
+  instructions: string
+  passage: string
+  options: MCQOption[]
   difficulty: QuestionDifficulty
-  groups?: QuestionGroup[]
+  tags: string[]
   created_at: string
   updated_at: string
 }
@@ -129,10 +89,7 @@ export interface Passage {
 export interface Question {
   id: number
   bank_id: number
-  category_id: number
-  category?: Category
   group_id?: number
-  group?: QuestionGroup
   type: QuestionType
   difficulty: QuestionDifficulty
   tags: string[]
@@ -163,12 +120,13 @@ export interface Test {
   description: string
   config: TestConfig
   questions?: TestQuestion[]
+  groups: QuestionGroup[]
   created_by?: number
   creator?: User
   created_at: string
   updated_at: string
-  best_result?: BestResult // the caller's best completed attempt, if any
-  attempt_count?: number   // completed attempts by anyone (History count)
+  best_result?: BestResult
+  attempt_count?: number
 }
 
 export interface TestAttempt {
@@ -185,7 +143,6 @@ export interface TestAttempt {
 }
 
 export interface QuestionFilter {
-  category_ids?: number[]
   difficulty?: string
   type?: string
   tags?: string[]
@@ -198,20 +155,13 @@ export interface QuestionPage {
   page_size: number
 }
 
-export interface PassagePage {
-  data:      Passage[]
-  total:     number
-  page:      number
-  page_size: number
-}
-
 export type TestSort  = 'newest' | 'oldest' | 'name' | 'size'
 export type TestTaken = 'all' | 'taken' | 'untaken'
 
 export interface TestsSummary {
   total:       number
   taken_count: number
-  best_pct:    number // caller's best across the set, -1 if none
+  best_pct:    number
 }
 
 export interface TestPage {
@@ -222,62 +172,10 @@ export interface TestPage {
   summary:   TestsSummary
 }
 
-// A public record (bank) as shown on the community home — lightweight, with counts.
 export interface PublicBank {
   id: number
   name: string
   description: string
   owner?: User
   question_count: number
-  category_count: number
-}
-
-export type ContributionStatus =
-  | 'pending' | 'changes_requested' | 'approved' | 'rejected' | 'merged' | 'withdrawn' | 'closed'
-// Reviewer decisions (the input to ReviewContribution)…
-export type ReviewDecision = 'approve' | 'reject' | 'request_changes'
-// Contributor-driven transitions (the input to TransitionContribution)…
-export type ContributorAction = 'resubmit' | 'withdraw' | 'reopen' | 'close'
-// …together with revise/merge, the full event log vocabulary.
-export type ContributionEventType = ReviewDecision | ContributorAction | 'revise' | 'merge'
-
-export interface ProposedQuestion {
-  category_id: number
-  type: QuestionType
-  difficulty: QuestionDifficulty
-  tags: string[]
-  content: string
-  answer?: string
-  options?: MCQOption[]
-  answers?: string[]
-}
-
-export interface ContributionEvent {
-  id: number
-  actor_id: number
-  event: ContributionEventType
-  created_at: string
-  actor?: User
-}
-
-export interface ContributionComment {
-  id: number
-  author_id: number
-  body: string
-  created_at: string
-  author?: User
-}
-
-export interface Contribution {
-  id: number
-  bank_id: number
-  contributor_id: number
-  proposed: ProposedQuestion
-  status: ContributionStatus
-  question_id?: number
-  events: ContributionEvent[]
-  comments: ContributionComment[]
-  created_at: string
-  updated_at: string
-  contributor?: User
 }

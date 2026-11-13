@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import RuneCorners from './RuneCorners'
 
 interface Props {
   message: string
@@ -24,7 +23,7 @@ export default function ConfirmDialog({ message, confirmLabel = 'Delete', onConf
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(20,14,4,0.55)',
+        background: 'rgba(43,29,31,0.55)',
         backdropFilter: 'blur(3px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
@@ -41,15 +40,14 @@ export default function ConfirmDialog({ message, confirmLabel = 'Delete', onConf
           padding: '32px 36px 28px',
           maxWidth: 420,
           width: '90%',
-          boxShadow: '0 8px 48px rgba(20,14,4,0.38), 0 0 0 1px var(--border-dim)',
+          boxShadow: '0 8px 48px rgba(43,29,31,0.38), 0 0 0 1px var(--border-dim)',
         }}
         onClick={e => e.stopPropagation()}
       >
-        <RuneCorners color="var(--gold-dim)" opacity={0.5} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <p style={{
-            fontFamily: 'Cinzel, serif',
+            fontFamily: 'IBM Plex Mono, monospace',
             fontSize: '0.6rem',
             letterSpacing: '0.28em',
             color: 'var(--gold-dim)',
@@ -60,7 +58,7 @@ export default function ConfirmDialog({ message, confirmLabel = 'Delete', onConf
           </p>
 
           <p style={{
-            fontFamily: 'EB Garamond, serif',
+            fontFamily: 'IBM Plex Sans, sans-serif',
             fontSize: '1rem',
             color: 'var(--ink)',
             lineHeight: 1.65,

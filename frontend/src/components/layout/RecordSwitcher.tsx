@@ -31,7 +31,7 @@ export default function RecordSwitcher() {
           display: 'flex', alignItems: 'center', gap: 7,
           background: 'none', border: '1px solid var(--border-dim)', borderRadius: 4,
           padding: '5px 12px', cursor: 'pointer',
-          fontFamily: 'Cinzel, serif', fontSize: '0.72rem', letterSpacing: '0.08em',
+          fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.72rem', letterSpacing: '0.08em',
           color: active ? 'var(--gold)' : 'var(--ink-dim)',
         }}
       >
@@ -46,7 +46,7 @@ export default function RecordSwitcher() {
           position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 60,
           minWidth: 200, maxHeight: 360, overflowY: 'auto',
           background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
-          borderRadius: 5, boxShadow: '0 8px 24px rgba(154,112,24,0.18)', padding: 4,
+          borderRadius: 5, boxShadow: '0 8px 24px rgba(163,34,45,0.18)', padding: 4,
         }}>
           {banks.length === 0 ? (
             <div style={{ padding: '10px 12px', fontSize: '0.8rem', color: 'var(--ink-dim)' }}>No records yet</div>
@@ -59,9 +59,9 @@ export default function RecordSwitcher() {
                   onClick={() => { navigate(`/banks/${b.id}`); setOpen(false) }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-                    background: isActive ? 'linear-gradient(90deg, rgba(200,160,48,0.10), transparent)' : 'none',
+                    background: isActive ? 'linear-gradient(90deg, rgba(163,34,45,0.10), transparent)' : 'none',
                     border: 'none', textAlign: 'left', cursor: 'pointer',
-                    padding: '8px 12px', fontSize: '0.85rem', fontFamily: 'EB Garamond, serif',
+                    padding: '8px 12px', fontSize: '0.85rem', fontFamily: 'IBM Plex Sans, sans-serif',
                     color: isActive ? 'var(--gold)' : 'var(--ink)',
                   }}
                 >

@@ -49,7 +49,7 @@ export default function TopBar() {
           <>
             <input
               className="form-input"
-              style={{ width: 160, padding: '6px 10px', borderColor: createError ? '#b03030' : undefined }}
+              style={{ width: 160, padding: '6px 10px', borderColor: createError ? '#A3222D' : undefined }}
               placeholder="Record name…"
               title={createError ? 'Creating the record failed — try again.' : undefined}
               value={name}
@@ -63,7 +63,7 @@ export default function TopBar() {
             <button className="btn btn-ghost" onClick={() => { setCreating(false); setCreateError(false) }}>✕</button>
           </>
         ) : (
-          <button className="btn btn-primary pulse" onClick={() => setCreating(true)}>
+          <button className="btn btn-primary" onClick={() => setCreating(true)}>
             <span className="hidden sm:inline">＋ New Record</span>
             <span className="sm:hidden">＋</span>
           </button>
@@ -74,7 +74,7 @@ export default function TopBar() {
             {user.avatar_url && (
               <img src={user.avatar_url} alt={user.name} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid var(--border-dim)', flexShrink: 0 }} />
             )}
-            <span className="hidden sm:block" style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.1em', color: 'var(--ink-dim)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span className="hidden sm:block" style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.1em', color: 'var(--ink-dim)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {user.name}
             </span>
             <button className="btn btn-ghost" style={{ padding: '4px 8px', fontSize: '0.6rem' }} onClick={logout}>

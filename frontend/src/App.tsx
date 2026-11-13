@@ -8,10 +8,8 @@ import LoginPage from './pages/LoginPage'
 import OAuthCallbackPage from './pages/OAuthCallbackPage'
 import BankPage from './pages/BankPage'
 import QuestionFormPage from './pages/QuestionFormPage'
-import PassageFormPage from './pages/PassageFormPage'
 import AttemptPage from './pages/AttemptPage'
 import ResultsPage from './pages/ResultsPage'
-import { MagicCircleBackground } from './components/ui/MagicCircle'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -27,7 +25,6 @@ function ProtectedRoutes() {
   // differently-positioned detailed magic circle that then vanishes.
   if (loading) return (
     <div style={{ minHeight: '100vh' }}>
-      <MagicCircleBackground leftOffset={0} />
     </div>
   )
 
@@ -43,8 +40,6 @@ function ProtectedRoutes() {
         <Route path="/banks/:bankId" element={<BankPageKeyed />} />
         <Route path="/banks/:bankId/questions/new" element={<QuestionFormPage />} />
         <Route path="/banks/:bankId/questions/:questionId/edit" element={<QuestionFormPage />} />
-        <Route path="/banks/:bankId/passages/new" element={<PassageFormPage />} />
-        <Route path="/banks/:bankId/passages/:passageId/edit" element={<PassageFormPage />} />
       </Route>
 
       <Route path="/attempts/:bankId/:id" element={<AttemptPage />} />

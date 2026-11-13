@@ -46,7 +46,7 @@ export default function ShareRecordDialog({ bankId, onClose }: { bankId: string;
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 80,
-        background: 'rgba(30,21,8,0.38)',
+        background: 'rgba(43,29,31,0.38)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
       }}
     >
@@ -55,7 +55,7 @@ export default function ShareRecordDialog({ bankId, onClose }: { bankId: string;
         style={{
           width: 'min(520px, 96vw)', maxHeight: '88vh', overflowY: 'auto',
           background: 'var(--bg-elevated)', border: '1px solid var(--gold-dim)',
-          borderRadius: 6, boxShadow: '0 20px 60px rgba(30,21,8,0.35)', position: 'relative',
+          borderRadius: 6, boxShadow: '0 20px 60px rgba(43,29,31,0.35)', position: 'relative',
         }}
       >
         {/* Header */}
@@ -80,7 +80,7 @@ export default function ShareRecordDialog({ bankId, onClose }: { bankId: string;
               <div className="flex gap-1" style={{ border: '1px solid var(--border-dim)', padding: 3, borderRadius: 4 }}>
                 {(['viewer', 'editor'] as const).map(r => (
                   <button key={r} onClick={() => setRole(r)} style={{
-                    fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.1em',
+                    fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.1em',
                     padding: '5px 12px', border: 'none', cursor: 'pointer', borderRadius: 2,
                     background: role === r ? 'var(--gold-dim)' : 'transparent',
                     color: role === r ? 'var(--bg)' : 'var(--ink-dim)',
@@ -95,7 +95,7 @@ export default function ShareRecordDialog({ bankId, onClose }: { bankId: string;
               {addMember.isPending ? '…' : '＋ Add'}
             </button>
           </div>
-          {error && <div style={{ fontSize: '0.8rem', color: '#b03030', marginTop: 10 }}>{error}</div>}
+          {error && <div style={{ fontSize: '0.8rem', color: '#A3222D', marginTop: 10 }}>{error}</div>}
         </div>
 
         {/* Members */}
@@ -109,7 +109,7 @@ export default function ShareRecordDialog({ bankId, onClose }: { bankId: string;
                   <span style={{ color: 'var(--ink-dim)', marginLeft: 8, fontSize: '0.78rem' }}>{m.user?.email}</span>
                 </div>
                 <div className="flex items-center gap-3" style={{ flexShrink: 0 }}>
-                  <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '0.12em', color: m.role === 'owner' ? 'var(--gold)' : 'var(--gold-dim)', textTransform: 'uppercase' }}>{m.role}</span>
+                  <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.55rem', letterSpacing: '0.12em', color: m.role === 'owner' ? 'var(--gold)' : 'var(--gold-dim)', textTransform: 'uppercase' }}>{m.role}</span>
                   {m.user_id !== user?.id && m.role !== 'owner' && (
                     <button className="btn-danger" style={{ fontSize: '0.6rem', padding: '2px 6px' }} disabled={removeMember.isPending} onClick={() => removeMember.mutate(m.user_id)}>✕</button>
                   )}

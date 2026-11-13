@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Question } from '../../types'
-import MagicCircle from '../ui/MagicCircle'
 import { TypeTag, DifficultyTag } from '../ui/Tag'
 
 export interface CardData {
@@ -19,8 +18,8 @@ const CARD_W     = 155
 const CARD_H     = 320
 const EXPANDED_W = 540
 const CHAMFER    = 'polygon(13px 0%, 100% 0%, 100% calc(100% - 13px), calc(100% - 13px) 100%, 0% 100%, 0% 13px)'
-const FRAME      = 'rgba(154,112,24,0.55)'
-const ACCENT     = 'rgba(154,112,24,0.55)'
+const FRAME      = 'rgba(163,34,45,0.55)'
+const ACCENT     = 'rgba(163,34,45,0.55)'
 
 function mod(n: number, m: number) { return ((n % m) + m) % m }
 function questionText(q: Question) { return q.item?.content ?? q.choice?.content ?? '' }
@@ -37,16 +36,16 @@ function AnswerDetail({ question: q, userAnswer, correct }: Omit<CardData, 'inde
         return (
           <div key={opt.key} style={{
             padding: '7px 12px', border: '1px solid',
-            borderColor: isCorrectOpt ? 'rgba(42,138,58,0.5)' : isSelected ? 'rgba(176,48,48,0.5)' : 'var(--border-dim)',
-            background: isCorrectOpt ? 'rgba(42,138,58,0.06)' : isSelected ? 'rgba(176,48,48,0.06)' : 'transparent',
+            borderColor: isCorrectOpt ? 'rgba(31,122,114,0.5)' : isSelected ? 'rgba(163,34,45,0.5)' : 'var(--border-dim)',
+            background: isCorrectOpt ? 'rgba(31,122,114,0.06)' : isSelected ? 'rgba(163,34,45,0.06)' : 'transparent',
             fontSize: '0.8rem', color: 'var(--ink)',
             display: 'flex', gap: 8, alignItems: 'center',
           }}>
-            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.62rem', color: 'var(--gold-dim)', minWidth: 12, flexShrink: 0 }}>
+            <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.62rem', color: 'var(--gold-dim)', minWidth: 12, flexShrink: 0 }}>
               {opt.key}
             </span>
             <span style={{ flex: 1, lineHeight: 1.45 }}>{opt.text}</span>
-            {isCorrectOpt && <span style={{ color: '#2a8a3a', fontSize: '0.76rem', flexShrink: 0 }}>✓</span>}
+            {isCorrectOpt && <span style={{ color: '#1F7A72', fontSize: '0.76rem', flexShrink: 0 }}>✓</span>}
           </div>
         )
       })}
@@ -56,9 +55,9 @@ function AnswerDetail({ question: q, userAnswer, correct }: Omit<CardData, 'inde
   if (q.item && ['tf_ng','yn_ng','matching_headings','matching_information','matching_features'].includes(q.type)) return (
     <div style={{ fontSize: '0.86rem', color: 'var(--ink-dim)', lineHeight: 2 }}>
       Your answer:{' '}
-      <strong style={{ color: correct ? '#2a8a3a' : '#b03030' }}>{userAnswer ?? '—'}</strong>
+      <strong style={{ color: correct ? '#1F7A72' : '#A3222D' }}>{userAnswer ?? '—'}</strong>
       {'  ·  '}Correct:{' '}
-      <strong style={{ color: '#2a8a3a' }}>{q.item.answer}</strong>
+      <strong style={{ color: '#1F7A72' }}>{q.item.answer}</strong>
     </div>
   )
 
@@ -72,8 +71,8 @@ function AnswerDetail({ question: q, userAnswer, correct }: Omit<CardData, 'inde
             {pi < parts.length - 1 && (
               <span style={{
                 display: 'inline-block', padding: '0 10px',
-                borderBottom: `2px solid ${correct ? 'rgba(42,138,58,0.7)' : 'rgba(176,48,48,0.7)'}`,
-                color: correct ? '#2a8a3a' : '#b03030',
+                borderBottom: `2px solid ${correct ? 'rgba(31,122,114,0.7)' : 'rgba(163,34,45,0.7)'}`,
+                color: correct ? '#1F7A72' : '#A3222D',
                 fontWeight: 600, minWidth: 56, textAlign: 'center',
               }}>
                 {userAnswer || '—'}
@@ -83,7 +82,7 @@ function AnswerDetail({ question: q, userAnswer, correct }: Omit<CardData, 'inde
         ))}
         {!correct && q.item && (
           <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--ink-dim)' }}>
-            Correct: <strong style={{ color: '#2a8a3a' }}>{q.item.answer}</strong>
+            Correct: <strong style={{ color: '#1F7A72' }}>{q.item.answer}</strong>
           </div>
         )}
       </div>
@@ -91,13 +90,13 @@ function AnswerDetail({ question: q, userAnswer, correct }: Omit<CardData, 'inde
   }
 
   if (q.item && q.type === 'short_answer') return (
-    <div style={{ background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', padding: '10px 14px', fontSize: '0.86rem' }}>
+    <div style={{ background: 'rgba(163,34,45,0.04)', border: '1px solid var(--border-dim)', padding: '10px 14px', fontSize: '0.86rem' }}>
       <div style={{ color: 'var(--ink-dim)', fontSize: '0.68rem', marginBottom: 4 }}>Your answer</div>
       <div style={{ color: 'var(--ink)' }}>
         {userAnswer || <span style={{ fontStyle: 'italic', color: 'var(--ink-dim)' }}>No answer provided</span>}
       </div>
       <div style={{ color: 'var(--ink-dim)', fontSize: '0.68rem', marginTop: 10, marginBottom: 4 }}>Reference answer</div>
-      <div style={{ color: '#2a8a3a' }}>{q.item.answer}</div>
+      <div style={{ color: '#1F7A72' }}>{q.item.answer}</div>
     </div>
   )
 
@@ -119,23 +118,14 @@ const rulerTicks = (totalH: number) =>
   })
 
 function CardShell({ h, children, isCenter: center, correct }: { h: number; children: React.ReactNode; isCenter: boolean; correct: boolean | null }) {
-  const frameColor = correct === false ? 'rgba(176,48,48,0.52)' : FRAME
+  const frameColor = correct === false ? 'rgba(163,34,45,0.52)' : FRAME
   const glowFilter = correct === false
-    ? 'drop-shadow(0 0 5px rgba(176,48,48,0.60)) drop-shadow(0 0 14px rgba(176,48,48,0.30))'
-    : 'drop-shadow(0 0 5px rgba(154,112,24,0.55)) drop-shadow(0 0 14px rgba(154,112,24,0.28))'
+    ? 'drop-shadow(0 0 5px rgba(163,34,45,0.60)) drop-shadow(0 0 14px rgba(163,34,45,0.30))'
+    : 'drop-shadow(0 0 5px rgba(163,34,45,0.55)) drop-shadow(0 0 14px rgba(163,34,45,0.28))'
   return (
     <div style={{ filter: center ? glowFilter : undefined }}>
       <div style={{ clipPath: CHAMFER, background: frameColor, padding: '1px' }}>
         <div style={{ clipPath: CHAMFER, background: 'var(--bg-card)', height: h, position: 'relative', overflow: 'hidden' }}>
-          {/* Magic circle — 1/4 at BR corner */}
-          <div style={{
-            position: 'absolute', bottom: -204, right: -204,
-            width: 408, height: 408,
-            opacity: center ? 0.22 : 0.09,
-            color: 'var(--gold)', pointerEvents: 'none',
-          }}>
-            <MagicCircle variant="inner" speed={0.45} />
-          </div>
           {/* Ruler */}
           <svg aria-hidden="true"
             style={{ position: 'absolute', top: 0, right: 3, pointerEvents: 'none' }}
@@ -263,7 +253,7 @@ export default function QuestionCarousel({ cards }: Props) {
           const opacity = isExpanded && !isCenter ? baseOpacity * 0.18 : baseOpacity
           const x       = slot * SPACING
           const zIndex  = cardIsExpanded ? 50 : Math.round(20 - absSlot * 5)
-          const symbolColor = card.correct === null ? 'var(--gold-dim)' : card.correct ? '#2a8a3a' : '#b03030'
+          const symbolColor = card.correct === null ? 'var(--gold-dim)' : card.correct ? '#1F7A72' : '#A3222D'
 
           return (
             <div
@@ -289,7 +279,7 @@ export default function QuestionCarousel({ cards }: Props) {
                     display: 'flex', flexDirection: 'column',
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, marginBottom: 8 }}>
-                      <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: 'var(--gold-dim)', letterSpacing: '0.18em' }}>
+                      <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', color: 'var(--gold-dim)', letterSpacing: '0.18em' }}>
                         {String(card.index + 1).padStart(2, '0')}
                       </span>
                       <span style={{ color: symbolColor, fontSize: '0.88rem', fontWeight: 700, lineHeight: 1 }}>
@@ -314,7 +304,7 @@ export default function QuestionCarousel({ cards }: Props) {
                       <div style={{
                         flexShrink: 0, textAlign: 'center',
                         fontSize: '0.52rem', letterSpacing: '0.22em',
-                        fontFamily: 'Cinzel, serif', color: 'var(--gold-dim)',
+                        fontFamily: 'IBM Plex Mono, monospace', color: 'var(--gold-dim)',
                         opacity: 0.6, marginTop: 8,
                       }}>
                         {cardIsExpanded ? '✦ TAP TO CLOSE ✦' : '✦ TAP TO REVEAL ✦'}
@@ -345,10 +335,10 @@ export default function QuestionCarousel({ cards }: Props) {
                         <DifficultyTag difficulty={card.question.difficulty} />
                         {card.correct !== null && (
                           <span style={{
-                            fontFamily: 'Cinzel, serif', fontSize: '0.52rem', letterSpacing: '0.1em',
+                            fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.52rem', letterSpacing: '0.1em',
                             padding: '2px 7px', border: '1px solid',
-                            borderColor: card.correct ? 'rgba(42,138,58,0.4)' : 'rgba(176,48,48,0.4)',
-                            color: card.correct ? '#2a8a3a' : '#b03030',
+                            borderColor: card.correct ? 'rgba(31,122,114,0.4)' : 'rgba(163,34,45,0.4)',
+                            color: card.correct ? '#1F7A72' : '#A3222D',
                             textTransform: 'uppercase' as const,
                           }}>
                             {card.correct ? '✓ Correct' : '✕ Wrong'}
@@ -369,7 +359,7 @@ export default function QuestionCarousel({ cards }: Props) {
       </div>
 
       {/* Counter */}
-      <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.22em', color: 'var(--gold-dim)' }}>
+      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.22em', color: 'var(--gold-dim)' }}>
         {String(activeIndex + 1).padStart(2, '0')} / {String(n).padStart(2, '0')}
       </div>
     </div>

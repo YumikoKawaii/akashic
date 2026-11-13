@@ -11,7 +11,7 @@ interface Props {
   size?: number
 }
 
-export default function GradeStamp({ letter, color = '#8b1a1a', size = 104 }: Props) {
+export default function GradeStamp({ letter, color = '#7E1822', size = 104 }: Props) {
   const id = `stamp-${uid++}`
   return (
     <svg
@@ -49,10 +49,10 @@ export default function GradeStamp({ letter, color = '#8b1a1a', size = 104 }: Pr
           <polygon points="86.2,50 88.8,47.6 91.4,50 88.8,52.4" />
         </g>
 
-        <text fontFamily="Cinzel, serif" fontSize="6.8" fontWeight={700} letterSpacing="1.4" fill={color}>
+        <text fontFamily="IBM Plex Mono, monospace" fontSize="6.8" fontWeight={700} letterSpacing="1.4" fill={color}>
           <textPath href={`#${id}-arc-t`} startOffset="50%" textAnchor="middle">AKASHIC · ARCHIVE</textPath>
         </text>
-        <text fontFamily="Cinzel, serif" fontSize="6.8" fontWeight={700} letterSpacing="2.6" fill={color}>
+        <text fontFamily="IBM Plex Mono, monospace" fontSize="6.8" fontWeight={700} letterSpacing="2.6" fill={color}>
           <textPath href={`#${id}-arc-b`} startOffset="50%" textAnchor="middle">FINAL GRADE</textPath>
         </text>
 
@@ -61,7 +61,7 @@ export default function GradeStamp({ letter, color = '#8b1a1a', size = 104 }: Pr
           y={51.5}
           textAnchor="middle"
           dominantBaseline="central"
-          fontFamily="Cinzel, serif"
+          fontFamily="Newsreader, serif"
           fontSize={32}
           fontWeight={700}
           fill={color}

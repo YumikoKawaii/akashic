@@ -1,14 +1,9 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useAttempt, useSubmitAttempt, useSaveAttemptProgress } from '../hooks/useAttempts'
-import { Passage, Question, QuestionGroup, TestQuestion } from '../types'
+import { Question, QuestionGroup, TestQuestion } from '../types'
 import { TypeTag, DifficultyTag } from '../components/ui/Tag'
-import Starfield from '../components/ui/Starfield'
-import MagicCircle, { Spinner } from '../components/ui/MagicCircle'
-import SolarSystemBackground from '../components/ui/SolarSystemBackground'
-import RuneCorners from '../components/ui/RuneCorners'
-import StarTrails from '../components/ui/StarTrails'
-import OghamBorder from '../components/ui/OghamBorder'
+import Spinner from '../components/ui/Spinner'
 import OrnateDivider from '../components/ui/OrnateDivider'
 import Select from '../components/ui/Select'
 
@@ -51,9 +46,9 @@ function checkAnswer(q: Question, answer: string): boolean {
 
 function CorrectAnswerBox({ answer }: { answer: string }) {
   return (
-    <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
-      <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>CORRECT ANSWER</div>
-      <div style={{ color: '#2a8a3a' }}>{answer}</div>
+    <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(163,34,45,0.04)', border: '1px solid var(--border-dim)', fontSize: '0.88rem' }}>
+      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--gold-dim)', marginBottom: 6 }}>CORRECT ANSWER</div>
+      <div style={{ color: '#1F7A72' }}>{answer}</div>
     </div>
   )
 }
@@ -136,88 +131,50 @@ function QuestionTabs({ questions, answers, currentId, onJump }: {
 
 // ── Group context box ──────────────────────────────────────────────────────────
 
-function GroupContextBox({ group }: { group: QuestionGroup }) {
-  const ctx = group.context
+const GROUP_OPTION_LABEL: Partial<Record<Question['type'], string>> = {
+  matching_headings:    'Headings',
+  matching_information: 'Paragraphs',
+  matching_features:    'Features',
+}
 
-  if (group.type === 'sentence_completion' || group.type === 'form_completion') {
-    const instruction = ctx.title ?? (
-      group.type === 'form_completion'
-        ? 'Complete the form below.'
-        : ctx.word_limit
-          ? `Complete the sentences using NO MORE THAN ${ctx.word_limit} WORD${ctx.word_limit > 1 ? 'S' : ''} from the passage.`
-          : 'Complete the sentences using words from the passage.'
-    )
-    return (
-      <div style={{ position: 'relative', marginBottom: 12, padding: '10px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.92rem', fontFamily: 'EB Garamond, serif', color: 'var(--ink-dim)' }}>
-        <RuneCorners size={18} color="var(--gold-dim)" opacity={0.4} />
-        {instruction}
-      </div>
-    )
-  }
-
-  let label = ''
-  let items: { key: string; text: string }[] = []
-  let defaultTitle = ''
-
-  if (group.type === 'matching_headings' && ctx.headings?.length) {
-    label = 'Headings'; items = ctx.headings
-    defaultTitle = 'Match each paragraph with the correct heading from the list below.'
-  } else if (group.type === 'matching_features' && ctx.options?.length) {
-    label = 'Features'; items = ctx.options
-    defaultTitle = 'Match each statement with the correct feature.'
-  } else if (group.type === 'matching_information') {
-    label = 'Paragraphs'; items = ctx.paragraphs ?? ctx.options ?? []
-    defaultTitle = 'Which paragraph contains the following information?'
-  }
-  if (!items.length) {
-    const title = ctx.title
-    if (!title) return null
-    return (
-      <div style={{ position: 'relative', marginBottom: 12, padding: '10px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.92rem', fontFamily: 'EB Garamond, serif', color: 'var(--ink-dim)' }}>
-        <RuneCorners size={18} color="var(--gold-dim)" opacity={0.4} />
-        {title}
-      </div>
-    )
-  }
-
-  const instruction = ctx.title ?? defaultTitle
+function GroupContextBox({ group, type }: { group: QuestionGroup; type?: Question['type'] }) {
+  const instructions = group.instructions.trim()
+  const options      = group.options
+  if (!instructions && !options.length) return null
 
   return (
-    <div style={{ position: 'relative', overflow: 'hidden', marginBottom: 12, padding: '12px 14px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)' }}>
-      <div style={{ position: 'absolute', top: -32, right: -32, width: 80, height: 80, color: 'var(--gold)', opacity: 0.28, pointerEvents: 'none', zIndex: 0 }}>
-        <MagicCircle variant="halo" speed={2} />
-      </div>
-      <div style={{ position: 'absolute', bottom: -32, left: -32, width: 70, height: 70, color: '#6b4c8a', opacity: 0.22, pointerEvents: 'none', zIndex: 0 }}>
-        <MagicCircle variant="halo" speed={2} />
-      </div>
-      <RuneCorners size={20} color="var(--gold-dim)" opacity={0.45} />
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        {instruction && (
-          <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '0.92rem', color: 'var(--ink-dim)', marginBottom: 10 }}>
-            {instruction}
-          </div>
-        )}
-        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.14em', color: 'var(--gold-dim)', marginBottom: 8, textTransform: 'uppercase' }}>{label}</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {items.map(item => (
-            <div key={item.key} style={{ display: 'flex', gap: 10, fontSize: '0.9rem', fontFamily: 'EB Garamond, serif', color: 'var(--ink)' }}>
-              <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'var(--gold-dim)', minWidth: 22 }}>{item.key}.</span>
-              <span>{item.text}</span>
-            </div>
-          ))}
+    <div style={{ marginBottom: 14, padding: '12px 16px', border: '1px solid var(--border-dim)', borderRadius: 'var(--radius)', background: 'var(--bg-muted)' }}>
+      {instructions && (
+        <div style={{ fontSize: '0.92rem', color: 'var(--ink)', lineHeight: 1.55, marginBottom: options.length ? 10 : 0, whiteSpace: 'pre-line' }}>
+          {instructions}
         </div>
-      </div>
+      )}
+      {options.length > 0 && (
+        <>
+          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.68rem', letterSpacing: '0.1em', color: 'var(--ink-dim)', marginBottom: 8, textTransform: 'uppercase' }}>
+            {(type && GROUP_OPTION_LABEL[type]) ?? 'Options'}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {options.map(item => (
+              <div key={item.key} style={{ display: 'flex', gap: 10, fontSize: '0.9rem', color: 'var(--ink)' }}>
+                <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.78rem', color: 'var(--gold)', minWidth: 22 }}>{item.key}.</span>
+                <span>{item.text}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
 
 // ── Answer options ─────────────────────────────────────────────────────────────
 
-function AnswerOptions({ q, selected, onSelect, revealed = false, attemptId = 0 }: {
-  q: Question; selected: string; onSelect: (v: string) => void; revealed?: boolean; attemptId?: number
+function AnswerOptions({ q, group, selected, onSelect, revealed = false, attemptId = 0 }: {
+  q: Question; group?: QuestionGroup; selected: string; onSelect: (v: string) => void; revealed?: boolean; attemptId?: number
 }) {
-  const locked = revealed
-  const ctx    = q.group?.context
+  const locked     = revealed
+  const groupOpts  = group?.options ?? []
 
   const shuffledMCQ = useMemo(() => {
     if (!q.choice) return []
@@ -249,13 +206,10 @@ function AnswerOptions({ q, selected, onSelect, revealed = false, attemptId = 0 
           return (
             <button key={opt.key} className={`answer-option ${!locked && isSel ? 'selected' : ''}`}
               onClick={() => toggle(opt.key)}
-              style={{ cursor: locked ? 'default' : 'pointer', borderColor: isCorr ? 'rgba(42,138,58,0.6)' : isWrong ? 'rgba(176,48,48,0.6)' : undefined, background: isCorr ? 'rgba(42,138,58,0.08)' : isWrong ? 'rgba(176,48,48,0.06)' : undefined }}>
-              <div style={{ position: 'absolute', bottom: -22, right: -22, width: 55, height: 55, color: 'var(--gold)', opacity: 0.18, pointerEvents: 'none', zIndex: 0 }}>
-                <MagicCircle variant="sigil" speed={4} />
-              </div>
+              style={{ cursor: locked ? 'default' : 'pointer', borderColor: isCorr ? 'rgba(31,122,114,0.6)' : isWrong ? 'rgba(163,34,45,0.6)' : undefined, background: isCorr ? 'rgba(31,122,114,0.08)' : isWrong ? 'rgba(163,34,45,0.06)' : undefined }}>
               <span className="answer-key" style={{ position: 'relative', zIndex: 1 }}>{label}</span>
               <span className="answer-text" style={{ position: 'relative', zIndex: 1 }}>{opt.text}</span>
-              {isCorr && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.8rem', position: 'relative', zIndex: 1 }}>✓</span>}
+              {isCorr && <span style={{ marginLeft: 'auto', color: '#1F7A72', fontSize: '0.8rem', position: 'relative', zIndex: 1 }}>✓</span>}
             </button>
           )
         })}
@@ -274,9 +228,9 @@ function AnswerOptions({ q, selected, onSelect, revealed = false, attemptId = 0 
           return (
             <button key={val} className={`answer-option ${!locked && selected === val ? 'selected' : ''}`}
               onClick={() => !locked && onSelect(val === selected ? '' : val)}
-              style={{ justifyContent: 'center', cursor: locked ? 'default' : 'pointer', borderColor: isCorr ? 'rgba(42,138,58,0.6)' : isWrong ? 'rgba(176,48,48,0.6)' : undefined, background: isCorr ? 'rgba(42,138,58,0.08)' : isWrong ? 'rgba(176,48,48,0.06)' : undefined }}>
+              style={{ justifyContent: 'center', cursor: locked ? 'default' : 'pointer', borderColor: isCorr ? 'rgba(31,122,114,0.6)' : isWrong ? 'rgba(163,34,45,0.6)' : undefined, background: isCorr ? 'rgba(31,122,114,0.08)' : isWrong ? 'rgba(163,34,45,0.06)' : undefined }}>
               <span className="answer-text" style={{ textAlign: 'center' }}>{val}</span>
-              {isCorr && <span style={{ marginLeft: 8, color: '#2a8a3a' }}>✓</span>}
+              {isCorr && <span style={{ marginLeft: 8, color: '#1F7A72' }}>✓</span>}
             </button>
           )
         })}
@@ -288,7 +242,7 @@ function AnswerOptions({ q, selected, onSelect, revealed = false, attemptId = 0 
     const parts = questionContent(q).split('___')
     const correct = q.item?.answer ?? ''
     const isCorr = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
-    const col = locked ? (isCorr ? 'rgba(42,138,58,0.7)' : 'rgba(176,48,48,0.7)') : 'var(--gold-dim)'
+    const col = locked ? (isCorr ? 'rgba(31,122,114,0.7)' : 'rgba(163,34,45,0.7)') : 'var(--gold-dim)'
     return (
       <div style={{ width: '100%' }}>
         <p style={{ fontSize: '1.1rem', lineHeight: 2, color: 'var(--ink)', display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '0 4px' }}>
@@ -308,32 +262,16 @@ function AnswerOptions({ q, selected, onSelect, revealed = false, attemptId = 0 
     )
   }
 
-  if (q.type === 'matching_headings' && ctx?.headings?.length) {
+  if ((q.type === 'matching_headings' || q.type === 'matching_features' || q.type === 'matching_information') && groupOpts.length) {
     const correct   = q.item?.answer ?? ''
     const isCorr    = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
-    const corrLabel = ctx.headings.find(h => h.key.toLowerCase() === correct.toLowerCase())
+    const corrLabel = groupOpts.find(o => o.key.toLowerCase() === correct.toLowerCase())
     return (
       <div style={{ width: '100%' }}>
         <Select value={selected} onChange={val => !locked && onSelect(val)}
-          options={ctx.headings.map(h => ({ value: h.key, label: `${h.key}. ${h.text}` }))}
-          placeholder="— Select a heading —" disabled={locked} clearable
-          triggerStyle={locked ? { borderColor: isCorr ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorr ? '#2a8a3a' : '#b03030' } : undefined} />
-        {locked && !isCorr && <CorrectAnswerBox answer={`${correct}${corrLabel ? ` — ${corrLabel.text}` : ''}`} />}
-      </div>
-    )
-  }
-
-  if ((q.type === 'matching_features' || q.type === 'matching_information') && (ctx?.options?.length || ctx?.paragraphs?.length)) {
-    const opts      = ctx?.options ?? ctx?.paragraphs ?? []
-    const correct   = q.item?.answer ?? ''
-    const isCorr    = locked && selected.trim().toLowerCase() === correct.trim().toLowerCase()
-    const corrLabel = opts.find(o => o.key.toLowerCase() === correct.toLowerCase())
-    return (
-      <div style={{ width: '100%' }}>
-        <Select value={selected} onChange={val => !locked && onSelect(val)}
-          options={opts.map(o => ({ value: o.key, label: `${o.key}. ${o.text}` }))}
+          options={groupOpts.map(o => ({ value: o.key, label: `${o.key}. ${o.text}` }))}
           placeholder="— Select —" disabled={locked} clearable
-          triggerStyle={locked ? { borderColor: isCorr ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorr ? '#2a8a3a' : '#b03030' } : undefined} />
+          triggerStyle={locked ? { borderColor: isCorr ? 'rgba(31,122,114,0.5)' : 'rgba(163,34,45,0.5)', color: isCorr ? '#1F7A72' : '#A3222D' } : undefined} />
         {locked && !isCorr && <CorrectAnswerBox answer={`${correct}${corrLabel ? ` — ${corrLabel.text}` : ''}`} />}
       </div>
     )
@@ -345,7 +283,7 @@ function AnswerOptions({ q, selected, onSelect, revealed = false, attemptId = 0 
     <div style={{ width: '100%' }}>
       <input type="text" className="form-input" value={selected} onChange={e => !locked && onSelect(e.target.value)} readOnly={locked}
         placeholder="Your answer…"
-        style={{ borderColor: locked ? (isCorr ? 'rgba(42,138,58,0.6)' : 'rgba(176,48,48,0.6)') : undefined, color: locked ? (isCorr ? '#2a8a3a' : '#b03030') : undefined }} />
+        style={{ borderColor: locked ? (isCorr ? 'rgba(31,122,114,0.6)' : 'rgba(163,34,45,0.6)') : undefined, color: locked ? (isCorr ? '#1F7A72' : '#A3222D') : undefined }} />
       {locked && !isCorr && <CorrectAnswerBox answer={correct} />}
     </div>
   )
@@ -353,22 +291,12 @@ function AnswerOptions({ q, selected, onSelect, revealed = false, attemptId = 0 
 
 // ── Passage body ───────────────────────────────────────────────────────────────
 
-function PassageBody({ passage }: { passage: Passage }) {
+function PassageBody({ text }: { text: string }) {
+  const paragraphs = text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean)
   return (
-    <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '1rem', lineHeight: 1.9, color: 'var(--ink)' }}>
-      {(passage.paragraphs ?? []).map((para, i) => (
-        <p key={i} style={{ marginBottom: 18, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-          {para.label && (
-            <span style={{
-              fontFamily: 'Cinzel, serif', fontSize: '0.78rem', fontWeight: 700,
-              color: 'var(--gold)', minWidth: 20, paddingTop: 3, flexShrink: 0,
-              textShadow: '0 0 8px rgba(154,112,24,0.3)',
-            }}>
-              {para.label}
-            </span>
-          )}
-          <span className={i === 0 ? 'drop-cap' : undefined}>{para.text}</span>
-        </p>
+    <div style={{ fontSize: '1rem', lineHeight: 1.85, color: 'var(--ink)' }}>
+      {paragraphs.map((para, i) => (
+        <p key={i} className={i === 0 ? 'drop-cap' : undefined} style={{ marginBottom: 18, whiteSpace: 'pre-line' }}>{para}</p>
       ))}
     </div>
   )
@@ -378,23 +306,23 @@ function PassageBody({ passage }: { passage: Passage }) {
 
 interface GroupedSection { groupId: number; group?: QuestionGroup; items: TestQuestion[] }
 
-function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmit, isPending }: {
+function PassageAttemptLayout({ attempt, questions, groups, answers, setAnswers, onSubmit, isPending }: {
   attempt: any
   questions: TestQuestion[]
+  groups: Map<number, QuestionGroup>
   answers: Record<string, string>
   setAnswers: React.Dispatch<React.SetStateAction<Record<string, string>>>
   onSubmit: () => void
   isPending: boolean
 }) {
-  // A test may span several passages ("Passage A + Passage B") — show all of them.
   const passages = useMemo(() => {
-    const seen = new Map<number, Passage>()
+    const seen = new Map<number, QuestionGroup>()
     questions.forEach(tq => {
-      const p = tq.question?.group?.passage
-      if (p && !seen.has(p.id)) seen.set(p.id, p)
+      const g = tq.question?.group_id != null ? groups.get(tq.question.group_id) : undefined
+      if (g && g.passage.trim() && !seen.has(g.id)) seen.set(g.id, g)
     })
     return [...seen.values()]
-  }, [questions])
+  }, [questions, groups])
 
   // Group questions into sections; standalone questions (no group) get a
   // trailing section of their own rather than disappearing from the page.
@@ -404,33 +332,25 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
       const q = tq.question
       if (!q) return
       const gid = q.group_id ?? 0
-      if (!map.has(gid)) map.set(gid, { groupId: gid, group: q.group, items: [] })
+      if (!map.has(gid)) map.set(gid, { groupId: gid, group: groups.get(gid), items: [] })
       map.get(gid)!.items.push(tq)
     })
     return [...map.values()]
       .map(s => ({ ...s, items: [...s.items].sort((a, b) => a.position - b.position) }))
       .sort((a, b) => Math.min(...a.items.map(t => t.position)) - Math.min(...b.items.map(t => t.position)))
-  }, [questions])
+  }, [questions, groups])
 
   const answered = Object.values(answers).filter(Boolean).length
 
   return (
     <div className="passage-attempt-root" style={{ background: 'var(--bg)' }}>
-      <Starfield />
-      <SolarSystemBackground />
 
       {/* ── Header ── */}
       <div style={{ position: 'relative', overflow: 'hidden', zIndex: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 28px', borderBottom: '1px solid var(--border-dim)', background: 'linear-gradient(90deg, var(--bg-panel) 0%, var(--bg-elevated) 100%)' }}>
-        <StarTrails />
-        <RuneCorners size={22} color="var(--gold-dim)" opacity={0.5} />
 
-        {/* decorative circle — top-right */}
-        <div style={{ position: 'absolute', top: -28, right: 120, width: 72, height: 72, color: 'var(--gold)', opacity: 0.22, pointerEvents: 'none' }}>
-          <MagicCircle variant="orbit" speed={3} />
-        </div>
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'var(--ink)' }}>{attempt.test.name}</div>
+          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.95rem', color: 'var(--ink)' }}>{attempt.test.name}</div>
           <div style={{ fontSize: '0.72rem', color: 'var(--ink-dim)', marginTop: 2 }}>
             {answered} / {questions.length} answered
           </div>
@@ -446,25 +366,20 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
 
         {/* Left — passage */}
         <div className="passage-panel-left">
-          <OghamBorder side="right" color="var(--gold-dim)" opacity={0.30} />
 
           {passages.map((passage, pi) => (
             <div key={passage.id} style={{ marginTop: pi > 0 ? 36 : 0 }}>
               <div style={{ position: 'relative', marginBottom: 6 }}>
-                {/* accent circle top-right */}
-                <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, color: 'var(--gold)', opacity: 0.20, pointerEvents: 'none' }}>
-                  <MagicCircle variant="spark" speed={2} />
-                </div>
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '0.18em', color: 'var(--gold-dim)', marginBottom: 8, textTransform: 'uppercase', position: 'relative' }}>
+                <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.18em', color: 'var(--gold-dim)', marginBottom: 8, textTransform: 'uppercase', position: 'relative' }}>
                   Passage{passages.length > 1 ? ` ${pi + 1} of ${passages.length}` : ''}
                 </div>
-                <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'var(--ink)', lineHeight: 1.4, position: 'relative', marginBottom: 14 }}>
-                  {passage.title}
+                <h2 style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1.1rem', color: 'var(--ink)', lineHeight: 1.4, position: 'relative', marginBottom: 14 }}>
+                  {passage.title || 'Untitled passage'}
                 </h2>
               </div>
               <OrnateDivider />
               <div style={{ marginTop: 18 }}>
-                <PassageBody passage={passage} />
+                <PassageBody text={passage.passage} />
               </div>
             </div>
           ))}
@@ -484,11 +399,7 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
           </div>
           {sections.map(({ groupId, group, items }) => (
             <div key={groupId} style={{ position: 'relative', marginBottom: 36, paddingLeft: 12, borderLeft: '2px solid var(--border-dim)' }}>
-              {/* small sigil at section start */}
-              <div style={{ position: 'absolute', top: -18, left: -18, width: 42, height: 42, color: 'var(--gold)', opacity: 0.30, pointerEvents: 'none' }}>
-                <MagicCircle variant="sigil" speed={2} />
-              </div>
-              {group && <GroupContextBox group={group} />}
+              {group && <GroupContextBox group={group} type={items[0]?.question?.type} />}
               {items.map((tq) => {
                 const q = tq.question!
                 const sel = answers[String(q.id)] ?? ''
@@ -497,25 +408,25 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
                   <div key={q.id} id={`attempt-q-${q.id}`} style={{ marginBottom: 20, scrollMarginTop: 80 }}>
                     {isFillBlank ? (
                       <div style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
-                        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 28, flexShrink: 0 }}>
+                        <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 28, flexShrink: 0 }}>
                           {tq.position}.
                         </span>
                         <div style={{ flex: 1 }}>
-                          <AnswerOptions q={q} selected={sel} onSelect={val => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))} attemptId={attempt.id} />
+                          <AnswerOptions q={q} group={group} selected={sel} onSelect={val => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))} attemptId={attempt.id} />
                         </div>
                       </div>
                     ) : (
                       <>
                         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
-                          <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 28, paddingTop: 2 }}>
+                          <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.8rem', color: 'var(--gold-dim)', minWidth: 28, paddingTop: 2 }}>
                             {tq.position}.
                           </span>
-                          <p style={{ flex: 1, margin: 0, fontFamily: 'EB Garamond, serif', fontSize: '1rem', color: 'var(--ink)', lineHeight: 1.5 }}>
+                          <p style={{ flex: 1, margin: 0, fontFamily: 'IBM Plex Sans, sans-serif', fontSize: '1rem', color: 'var(--ink)', lineHeight: 1.5 }}>
                             {questionContent(q)}
                           </p>
                         </div>
                         <div style={{ paddingLeft: 40 }}>
-                          <AnswerOptions q={q} selected={sel} onSelect={val => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))} attemptId={attempt.id} />
+                          <AnswerOptions q={q} group={group} selected={sel} onSelect={val => setAnswers(prev => ({ ...prev, [String(q.id)]: val }))} attemptId={attempt.id} />
                         </div>
                       </>
                     )}
@@ -541,9 +452,10 @@ function PassageAttemptLayout({ attempt, questions, answers, setAnswers, onSubmi
 // Reveal/lock state is session-local (not persisted): a reload restores answers
 // but no question is locked, so the taker can keep checking from there.
 
-function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPending }: {
+function ExamLayout({ attempt, questions, groups, answers, setAnswers, onSubmit, isPending }: {
   attempt: any
   questions: TestQuestion[]
+  groups: Map<number, QuestionGroup>
   answers: Record<string, string>
   setAnswers: React.Dispatch<React.SetStateAction<Record<string, string>>>
   onSubmit: () => void
@@ -568,8 +480,7 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
   const q   = tq?.question
   if (!q) return null
 
-  const group    = q.group
-  const passage  = group?.passage
+  const group    = q.group_id != null ? groups.get(q.group_id) : undefined
   const content  = questionContent(q)
   const sel      = answers[String(q.id)] ?? ''
   const answered = Object.values(answers).filter(v => v?.trim()).length
@@ -604,22 +515,15 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
 
   return (
     <>
-      <Starfield />
-      <SolarSystemBackground flash={flash} center={{ x: '78%', y: '82%' }} scale={0.7} />
       {flash && <div key={flash.key} className={`bg-flash bg-flash-${flash.type}`}
         style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }} />}
       <div className="attempt-layout">
 
         {/* ── Header ── */}
         <div className="attempt-header">
-          <StarTrails />
-          <RuneCorners size={22} color="var(--gold-dim)" opacity={0.50} />
-          <div style={{ position: 'absolute', top: -24, left: 80, width: 64, height: 64, color: '#6b4c8a', opacity: 0.20, pointerEvents: 'none' }}>
-            <MagicCircle variant="halo" speed={2} />
-          </div>
 
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>{attempt.test.name}</div>
+            <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1rem', color: 'var(--ink)' }}>{attempt.test.name}</div>
             <div style={{ fontSize: '0.78rem', color: 'var(--ink-dim)', marginTop: 2 }}>
               Question {idx + 1} / {total} · {answered} answered
             </div>
@@ -628,13 +532,10 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
           <div style={{ display: 'flex', alignItems: 'center', gap: 20, position: 'relative', zIndex: 1 }}>
             {scorable > 0 && (
               <div style={{ textAlign: 'right', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '50%', right: -8, transform: 'translateY(-50%)', width: 64, height: 64, color: 'var(--gold)', opacity: 0.25, pointerEvents: 'none' }}>
-                  <MagicCircle variant="halo" speed={1.5} />
-                </div>
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.4rem', color: 'var(--gold)', lineHeight: 1, position: 'relative' }}>
+                <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1.4rem', color: 'var(--gold)', lineHeight: 1, position: 'relative' }}>
                   {score}<span style={{ fontSize: '0.85rem', color: 'var(--ink-dim)', marginLeft: 2 }}>/ {scorable}</span>
                 </div>
-                <div style={{ fontSize: '0.68rem', color: 'var(--ink-dim)', letterSpacing: '0.12em', fontFamily: 'Cinzel, serif' }}>SCORE</div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--ink-dim)', letterSpacing: '0.12em', fontFamily: 'IBM Plex Mono, monospace' }}>SCORE</div>
               </div>
             )}
             <button className="btn btn-primary" onClick={onSubmit} disabled={isPending} style={{ padding: '9px 26px' }}>
@@ -648,31 +549,25 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
           <QuestionTabs questions={questions} answers={answers} currentId={q.id} onJump={setCurrentIdx} />
 
           <div className="book-page">
-            <RuneCorners size={26} color="var(--gold-dim)" opacity={0.4} />
-            <div style={{ position: 'absolute', bottom: -60, right: -60, width: 170, height: 170, color: 'var(--gold)', opacity: 0.07, pointerEvents: 'none' }}>
-              <MagicCircle variant="inner" speed={0.5} />
-            </div>
 
             <div className="book-page-inner">
-              {passage && (
-                <div style={{ position: 'relative', marginBottom: 14, padding: '12px 16px', border: '1px solid var(--border-dim)', background: 'var(--bg-panel)', fontSize: '0.88rem', color: 'var(--ink-dim)', fontFamily: 'Cinzel, serif', letterSpacing: '0.06em' }}>
-                  <RuneCorners size={18} color="var(--gold-dim)" opacity={0.38} />
-                  <span style={{ color: 'var(--gold-dim)', marginRight: 8 }}>Passage</span>
-                  {passage.title}
+              {group?.title && (
+                <div style={{ marginBottom: 12, fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.72rem', letterSpacing: '0.08em', color: 'var(--ink-dim)', textTransform: 'uppercase' }}>
+                  {group.title}
                 </div>
               )}
 
-              {group && <GroupContextBox group={group} />}
+              {group && <GroupContextBox group={group} type={q.type} />}
 
               {/* Page head — chapter-style number + tags + verdict */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
-                <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.62rem', letterSpacing: '0.22em', color: 'var(--gold-dim)' }}>
+                <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.62rem', letterSpacing: '0.22em', color: 'var(--gold-dim)' }}>
                   QUESTION {String(idx + 1).padStart(2, '0')}
                 </span>
                 <TypeTag type={q.type} />
                 <DifficultyTag difficulty={q.difficulty} />
                 {revealed && isScoreable && (
-                  <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.56rem', letterSpacing: '0.1em', padding: '2px 8px', border: '1px solid', borderColor: isCorrect ? 'rgba(42,138,58,0.5)' : 'rgba(176,48,48,0.5)', color: isCorrect ? '#2a8a3a' : '#b03030', textTransform: 'uppercase' }}>
+                  <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.56rem', letterSpacing: '0.1em', padding: '2px 8px', border: '1px solid', borderColor: isCorrect ? 'rgba(31,122,114,0.5)' : 'rgba(163,34,45,0.5)', color: isCorrect ? '#1F7A72' : '#A3222D', textTransform: 'uppercase' }}>
                     {isCorrect ? '✓ Correct' : '✕ Wrong'}
                   </span>
                 )}
@@ -682,7 +577,7 @@ function ExamLayout({ attempt, questions, answers, setAnswers, onSubmit, isPendi
 
               <p className="question-text" style={{ marginTop: 18, marginBottom: 22 }}>{content}</p>
 
-              <AnswerOptions q={q} selected={sel} onSelect={setAnswer} revealed={revealed} attemptId={attempt.id} />
+              <AnswerOptions q={q} group={group} selected={sel} onSelect={setAnswer} revealed={revealed} attemptId={attempt.id} />
 
               <div style={{ display: 'flex', gap: 12, marginTop: 24, alignItems: 'center' }}>
                 <button className="btn" onClick={() => setCurrentIdx(i => Math.max(0, i - 1))} disabled={idx === 0}
@@ -785,10 +680,8 @@ export default function AttemptPage() {
 
   if (isError) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <Starfield />
-      <SolarSystemBackground />
       <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center', position: 'relative', zIndex: 1 }}>
-        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>Attempt Not Found</div>
+        <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1rem', color: 'var(--ink)' }}>Attempt Not Found</div>
         <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>This attempt could not be loaded — it may have been removed, or you may not have access.</div>
         <button className="btn btn-primary" onClick={() => navigate('/')} style={{ padding: '10px 28px' }}>Go Home</button>
       </div>
@@ -797,8 +690,6 @@ export default function AttemptPage() {
 
   if (!attempt?.test || !hydrated) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <Starfield />
-      <SolarSystemBackground />
       <Spinner size={100} />
     </div>
   )
@@ -813,16 +704,19 @@ export default function AttemptPage() {
 
   if (total === 0) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <Starfield />
       <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
-        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>No Questions</div>
+        <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1rem', color: 'var(--ink)' }}>No Questions</div>
         <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>This test was generated with no matching questions.</div>
         <button className="btn btn-primary" onClick={() => navigate(-1)} style={{ padding: '10px 28px' }}>Go Back</button>
       </div>
     </div>
   )
 
-  const isPassageTest = questions.some(tq => !!tq.question?.group?.passage_id)
+  const groups        = new Map(attempt.test.groups.map(g => [g.id, g]))
+  const isPassageTest = questions.some(tq => {
+    const gid = tq.question?.group_id
+    return gid != null && !!groups.get(gid)?.passage.trim()
+  })
 
   const handleSubmit = async () => {
     if (submit.isPending || submittedRef.current) return
@@ -842,7 +736,7 @@ export default function AttemptPage() {
       onClick={() => setSubmitError(null)}
       style={{
         position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 200,
-        padding: '10px 18px', background: 'rgba(176,48,48,0.95)', color: '#fff',
+        padding: '10px 18px', background: 'rgba(163,34,45,0.95)', color: '#fff',
         fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
       }}
     >
@@ -857,6 +751,7 @@ export default function AttemptPage() {
         <PassageAttemptLayout
           attempt={attempt}
           questions={questions}
+          groups={groups}
           answers={answers}
           setAnswers={updateAnswers}
           onSubmit={handleSubmit}
@@ -872,6 +767,7 @@ export default function AttemptPage() {
       <ExamLayout
         attempt={attempt}
         questions={questions}
+        groups={groups}
         answers={answers}
         setAnswers={updateAnswers}
         onSubmit={handleSubmit}

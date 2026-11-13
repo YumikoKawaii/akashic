@@ -2,7 +2,7 @@
 // badge and the Tests-tab summary so they never drift apart.
 
 export const GRADE_COLOR: Record<string, string> = {
-  S: '#c89030', A: '#2a8a3a', B: '#3a60c0', C: '#b8942a', D: '#b03030',
+  S: '#8A1C26', A: '#1F7A72', B: '#3E6390', C: '#6E5E58', D: '#A3222D',
 }
 
 export function gradeForPct(pct: number): string {

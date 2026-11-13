@@ -1,8 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { TestConfig as PbTestConfig } from '../gen/akashic/v1/common_pb'
 import { TestSort as PbTestSort, TakenFilter as PbTakenFilter } from '../gen/akashic/v1/test_pb'
 import { testClient } from '../api/connect'
-import { fromTest, toQuestionType } from '../api/adapters'
+import { fromTest, toProtoConfig } from '../api/adapters'
 import type { TestConfig, TestSort, TestTaken } from '../types'
 
 export const TEST_PAGE_SIZE = 9
@@ -27,19 +26,6 @@ const TAKEN_TO_PB: Record<TestTaken, PbTakenFilter> = {
   all:     PbTakenFilter.ALL,
   taken:   PbTakenFilter.TAKEN,
   untaken: PbTakenFilter.UNTAKEN,
-}
-
-function toProtoConfig(cfg?: Partial<TestConfig>): PbTestConfig {
-  return new PbTestConfig({
-    easyCount:      cfg?.easy_count   ?? 0,
-    mediumCount:    cfg?.medium_count ?? 0,
-    hardCount:      cfg?.hard_count   ?? 0,
-    categoryIds:    cfg?.category_ids ?? [],
-    passageIds:     cfg?.passage_ids  ?? [],
-    types:          (cfg?.types ?? []).map(toQuestionType),
-    tags:           cfg?.tags         ?? [],
-    standaloneOnly: cfg?.standalone_only ?? false,
-  })
 }
 
 // One page of a bank's shared tests, sorted + filtered server-side. The server

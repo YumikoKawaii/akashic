@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import Starfield from '../components/ui/Starfield'
 import { authClient } from '../api/connect'
 
 const STATE_KEY = 'oauth_state'
@@ -39,16 +38,15 @@ export default function LoginPage() {
 
   return (
     <>
-      <Starfield />
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         minHeight: '100vh', gap: 40,
       }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: 'Cinzel, serif', fontSize: '2.2rem', letterSpacing: '0.3em', color: 'var(--gold)', marginBottom: 8 }}>
+          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '2.2rem', letterSpacing: '0.3em', color: 'var(--gold)', marginBottom: 8 }}>
             AKASHIC
           </div>
-          <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', letterSpacing: '0.25em', color: 'var(--ink-dim)' }}>
+          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.7rem', letterSpacing: '0.25em', color: 'var(--ink-dim)' }}>
             QUESTION ARCHIVE
           </div>
         </div>
@@ -62,7 +60,7 @@ export default function LoginPage() {
             border: '1px solid var(--border-dim)',
             background: 'var(--surface)',
             color: 'var(--ink)',
-            fontFamily: 'Cinzel, serif',
+            fontFamily: 'IBM Plex Mono, monospace',
             fontSize: '0.75rem',
             letterSpacing: '0.15em',
             textDecoration: 'none',

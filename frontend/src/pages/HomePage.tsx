@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useExplore } from '../hooks/useExplore'
 import PublicRecordCarousel from '../components/explore/PublicRecordCarousel'
-import { Spinner } from '../components/ui/MagicCircle'
+import Spinner from '../components/ui/Spinner'
 
 export default function HomePage() {
   const [input, setInput] = useState('')
@@ -23,7 +23,7 @@ export default function HomePage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
           <span style={{ color: 'var(--gold-dim)', fontSize: '0.85rem' }}>✦</span>
           <h1 style={{
-            fontFamily: 'Cinzel Decorative, serif', fontWeight: 700,
+            fontFamily: 'Newsreader, serif', fontWeight: 700,
             letterSpacing: '0.22em', textIndent: '0.22em',  // textIndent re-centers the trailing letter-spacing
             color: 'var(--gold)', fontSize: '1.75rem', margin: 0, lineHeight: 1,
           }}>

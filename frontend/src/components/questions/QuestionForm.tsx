@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Category, Question, QuestionDifficulty, QuestionType, MCQOption } from '../../types'
+import { Question, QuestionDifficulty, QuestionType, MCQOption } from '../../types'
 import { FormField, Input, Textarea } from '../ui/FormField'
 import Select from '../ui/Select'
 import OrnatePanel from '../ui/OrnatePanel'
@@ -8,7 +8,6 @@ import { useCreateQuestion, useUpdateQuestion } from '../../hooks/useQuestions'
 
 interface Props {
   bankId: string
-  categories: Category[]
   initial?: Question
 }
 
@@ -41,7 +40,7 @@ const OPTION_KEYS = ['A', 'B', 'C', 'D', 'E', 'F']
 function isMCQ(t: QuestionType) { return t === 'mcq' }
 function isFillBlank(t: QuestionType) { return t === 'sentence_completion' || t === 'form_completion' }
 
-export default function QuestionForm({ bankId, categories, initial }: Props) {
+export default function QuestionForm({ bankId, initial }: Props) {
   const navigate = useNavigate()
   const create   = useCreateQuestion(bankId)
   const update   = useUpdateQuestion(bankId)
@@ -62,19 +61,11 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
   const [content,      setContent]      = useState(initial?.item?.content ?? initial?.choice?.content ?? '')
   const [type,         setType]         = useState<QuestionType>(initial?.type ?? 'mcq')
   const [difficulty,   setDifficulty]   = useState<QuestionDifficulty>(initial?.difficulty ?? 'medium')
-  const [categoryId,   setCategoryId]   = useState<number>(initial?.category_id ?? (categories[0]?.id ?? 0))
   const [tags,         setTags]         = useState(initial?.tags?.join(', ') ?? '')
   const [answer,       setAnswer]       = useState(initial?.item?.answer ?? '')
   const [mcqTexts,     setMcqTexts]     = useState<string[]>(seedMcqTexts)
   const [mcqAnswers,   setMcqAnswers]   = useState<string[]>(initial?.choice?.answers ?? [])
   const [submitError,  setSubmitError]  = useState<string | null>(null)
-
-  // Categories usually load after mount on the "new" page — adopt the first one
-  // once they arrive so the form doesn't submit category_id 0.
-  useEffect(() => {
-    if (!categoryId && categories.length) setCategoryId(categories[0].id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categories])
 
   const handleTypeChange = (t: QuestionType) => {
     setType(t)
@@ -98,7 +89,7 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
   const survivingAnswers = mcqAnswers.filter(k => survivingOptions.some(o => o.key === k))
 
   const valid = (() => {
-    if (!content.trim() || !categoryId || !type) return false
+    if (!content.trim() || !type) return false
     if (isMCQ(type)) return survivingOptions.length > 0 && survivingAnswers.length > 0
     return !!answer.trim()
   })()
@@ -110,11 +101,11 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
 
     try {
       if (isMCQ(type)) {
-        const payload = { category_id: categoryId, type, difficulty, tags: tagList, content, options: survivingOptions, answers: survivingAnswers }
+        const payload = { type, difficulty, tags: tagList, content, options: survivingOptions, answers: survivingAnswers }
         if (isEdit) await update.mutateAsync({ id: String(initial!.id), data: payload })
         else        await create.mutateAsync(payload)
       } else {
-        const payload = { category_id: categoryId, type, difficulty, tags: tagList, content, answer }
+        const payload = { type, difficulty, tags: tagList, content, answer }
         if (isEdit) await update.mutateAsync({ id: String(initial!.id), data: payload })
         else        await create.mutateAsync(payload)
       }
@@ -142,15 +133,7 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
           />
         </FormField>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <FormField label="Category">
-            <Select
-              value={String(categoryId)}
-              onChange={v => setCategoryId(Number(v))}
-              options={categories.map(c => ({ value: String(c.id), label: c.name }))}
-              placeholder="Select category"
-            />
-          </FormField>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField label="Type">
             {/* The update RPC cannot change a question's type — the backend
                 writes into the shape the row already has, so a changed type
@@ -176,7 +159,7 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
             <div className="section-title">Answer Options</div>
             {mcqTexts.map((opt, i) => (
               <div key={i} className="flex gap-3 items-center">
-                <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'var(--gold-dim)', minWidth: 20 }}>
+                <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.7rem', color: 'var(--gold-dim)', minWidth: 20 }}>
                   {OPTION_KEYS[i]}
                 </span>
                 <Input
@@ -231,7 +214,7 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
             />
             {isFillBlank(type) && (
               <p style={{ fontSize: '0.75rem', color: 'var(--ink-dim)', marginTop: 6 }}>
-                Use <code style={{ fontFamily: 'monospace', background: 'rgba(154,112,24,0.08)', padding: '1px 5px' }}>___</code> in the question text to mark the blank. Grading is case-insensitive.
+                Use <code style={{ fontFamily: 'monospace', background: 'rgba(163,34,45,0.08)', padding: '1px 5px' }}>___</code> in the question text to mark the blank. Grading is case-insensitive.
               </p>
             )}
           </FormField>
@@ -246,7 +229,7 @@ export default function QuestionForm({ bankId, categories, initial }: Props) {
         </FormField>
 
         {submitError && (
-          <div style={{ padding: '10px 14px', background: 'rgba(176,48,48,0.06)', border: '1px solid rgba(176,48,48,0.3)', fontSize: '0.85rem', color: '#b03030' }}>
+          <div style={{ padding: '10px 14px', background: 'rgba(163,34,45,0.06)', border: '1px solid rgba(163,34,45,0.3)', fontSize: '0.85rem', color: '#A3222D' }}>
             {submitError}
           </div>
         )}

@@ -12,7 +12,6 @@ export const questionKeys = {
 }
 
 export interface CreateQuestionPayload {
-  category_id: number
   type: string
   difficulty: string
   tags: string[]
@@ -23,7 +22,6 @@ export interface CreateQuestionPayload {
 }
 
 export interface UpdateQuestionPayload {
-  category_id?: number
   difficulty?: string
   tags?: string[]
   content?: string
@@ -61,11 +59,9 @@ export function useQuestions(bankId: string, filter: QuestionFilter = {}, page =
         page,
         pageSize: PAGE_SIZE,
         filter: {
-          categoryIds:   (filter.category_ids ?? []).map(Number),
-          difficulty:    toDifficulty(filter.difficulty ?? ''),
-          type:          toQuestionType(filter.type ?? ''),
-          tags:          filter.tags ?? [],
-          standaloneOnly: false,
+          difficulty: toDifficulty(filter.difficulty ?? ''),
+          type:       toQuestionType(filter.type ?? ''),
+          tags:       filter.tags ?? [],
         },
       })
       return {
@@ -77,24 +73,6 @@ export function useQuestions(bankId: string, filter: QuestionFilter = {}, page =
     },
     enabled: !!bankId,
     placeholderData: (prev) => prev,
-  })
-}
-
-// Every question belonging to the passage's groups, in document order
-// (group, then position), each with its group embedded.
-export function usePassageQuestions(bankId: string, passageId: string) {
-  return useQuery({
-    queryKey: ['questions', bankId, 'passage', passageId] as const,
-    queryFn:  async () => {
-      const res = await questionClient.listQuestions({
-        bankId:   Number(bankId),
-        page:     1,
-        pageSize: 100,
-        filter:   { passageId: Number(passageId) },
-      })
-      return res.questions.map(fromQuestion)
-    },
-    enabled: !!bankId && !!passageId,
   })
 }
 
@@ -116,7 +94,6 @@ export function useCreateQuestion(bankId: string) {
       const isMcq = data.type === 'mcq'
       const res = await questionClient.createQuestion({
         bankId:     Number(bankId),
-        categoryId: data.category_id,
         type:       toQuestionType(data.type),
         difficulty: toDifficulty(data.difficulty),
         tags:       data.tags,
@@ -138,7 +115,6 @@ export function useUpdateQuestion(bankId: string) {
       const res = await questionClient.updateQuestion({
         bankId:     Number(bankId),
         id:         Number(id),
-        categoryId: data.category_id ?? 0,
         difficulty: toDifficulty(data.difficulty ?? ''),
         tags:       data.tags ?? [],
         content: isMcq

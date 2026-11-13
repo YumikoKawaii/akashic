@@ -17,8 +17,8 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const glowRgba  = correct === null ? 'rgba(154,112,24,0.25)' : correct ? 'rgba(42,138,58,0.25)' : 'rgba(176,48,48,0.25)'
-  const rimColor  = correct === null ? 'rgba(154,112,24,0.4)'  : correct ? 'rgba(42,138,58,0.4)'  : 'rgba(176,48,48,0.4)'
+  const glowRgba  = correct === null ? 'rgba(163,34,45,0.25)' : correct ? 'rgba(31,122,114,0.25)' : 'rgba(163,34,45,0.25)'
+  const rimColor  = correct === null ? 'rgba(163,34,45,0.4)'  : correct ? 'rgba(31,122,114,0.4)'  : 'rgba(163,34,45,0.4)'
 
   return (
     <div
@@ -26,7 +26,7 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
         position: 'fixed',
         inset: 0,
         zIndex: 1000,
-        background: 'rgba(8,6,2,0.72)',
+        background: 'rgba(43,29,31,0.72)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -59,7 +59,7 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
             color: 'var(--gold-dim)',
             cursor: 'pointer',
             fontSize: '0.8rem',
-            fontFamily: 'Cinzel, serif',
+            fontFamily: 'IBM Plex Mono, monospace',
             letterSpacing: '0.1em',
             padding: '4px 8px',
             opacity: 0.75,
@@ -70,7 +70,7 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-          <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.62rem', color: 'var(--gold-dim)', letterSpacing: '0.18em' }}>
+          <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.62rem', color: 'var(--gold-dim)', letterSpacing: '0.18em' }}>
             {String(index + 1).padStart(2, '0')}
           </span>
           <div style={{ width: 1, height: 14, background: 'var(--border-dim)', flexShrink: 0 }} />
@@ -78,13 +78,13 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
           <DifficultyTag difficulty={q.difficulty} />
           {correct !== null && (
             <span style={{
-              fontFamily: 'Cinzel, serif',
+              fontFamily: 'IBM Plex Mono, monospace',
               fontSize: '0.56rem',
               letterSpacing: '0.1em',
               padding: '2px 8px',
               border: '1px solid',
-              borderColor: correct ? 'rgba(42,138,58,0.4)' : 'rgba(176,48,48,0.4)',
-              color: correct ? '#2a8a3a' : '#b03030',
+              borderColor: correct ? 'rgba(31,122,114,0.4)' : 'rgba(163,34,45,0.4)',
+              color: correct ? '#1F7A72' : '#A3222D',
               textTransform: 'uppercase' as const,
             }}>
               {correct ? '✓ Correct' : '✕ Wrong'}
@@ -107,19 +107,19 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
                 <div key={opt.key} style={{
                   padding: '9px 14px',
                   border: '1px solid',
-                  borderColor: isCorrectOpt ? 'rgba(42,138,58,0.5)' : isSelected ? 'rgba(176,48,48,0.5)' : 'var(--border-dim)',
-                  background: isCorrectOpt ? 'rgba(42,138,58,0.06)' : isSelected ? 'rgba(176,48,48,0.06)' : 'transparent',
+                  borderColor: isCorrectOpt ? 'rgba(31,122,114,0.5)' : isSelected ? 'rgba(163,34,45,0.5)' : 'var(--border-dim)',
+                  background: isCorrectOpt ? 'rgba(31,122,114,0.06)' : isSelected ? 'rgba(163,34,45,0.06)' : 'transparent',
                   fontSize: '0.88rem',
                   color: 'var(--ink)',
                   display: 'flex',
                   gap: 10,
                   alignItems: 'center',
                 }}>
-                  <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.68rem', color: 'var(--gold-dim)', minWidth: 16 }}>
+                  <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.68rem', color: 'var(--gold-dim)', minWidth: 16 }}>
                     {opt.key}
                   </span>
                   {opt.text}
-                  {isCorrectOpt && <span style={{ marginLeft: 'auto', color: '#2a8a3a', fontSize: '0.8rem' }}>✓</span>}
+                  {isCorrectOpt && <span style={{ marginLeft: 'auto', color: '#1F7A72', fontSize: '0.8rem' }}>✓</span>}
                 </div>
               )
             })}
@@ -130,10 +130,10 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
         {q.item && ['tf_ng','yn_ng','matching_headings','matching_information','matching_features'].includes(q.type) && (
           <div style={{ fontSize: '0.9rem', color: 'var(--ink-dim)', lineHeight: 2 }}>
             Your answer:{' '}
-            <strong style={{ color: correct ? '#2a8a3a' : '#b03030' }}>{userAnswer ?? '—'}</strong>
+            <strong style={{ color: correct ? '#1F7A72' : '#A3222D' }}>{userAnswer ?? '—'}</strong>
             {'  ·  '}
             Correct:{' '}
-            <strong style={{ color: '#2a8a3a' }}>{q.item.answer}</strong>
+            <strong style={{ color: '#1F7A72' }}>{q.item.answer}</strong>
           </div>
         )}
 
@@ -149,8 +149,8 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
                     <span style={{
                       display: 'inline-block',
                       padding: '0 10px',
-                      borderBottom: `2px solid ${correct ? 'rgba(42,138,58,0.7)' : 'rgba(176,48,48,0.7)'}`,
-                      color: correct ? '#2a8a3a' : '#b03030',
+                      borderBottom: `2px solid ${correct ? 'rgba(31,122,114,0.7)' : 'rgba(163,34,45,0.7)'}`,
+                      color: correct ? '#1F7A72' : '#A3222D',
                       fontWeight: 600,
                       minWidth: 64,
                       textAlign: 'center',
@@ -162,7 +162,7 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
               ))}
               {!correct && (
                 <div style={{ marginTop: 6, fontSize: '0.82rem', color: 'var(--ink-dim)' }}>
-                  Correct: <strong style={{ color: '#2a8a3a' }}>{q.item!.answer}</strong>
+                  Correct: <strong style={{ color: '#1F7A72' }}>{q.item!.answer}</strong>
                 </div>
               )}
             </div>
@@ -171,13 +171,13 @@ export default function QuestionDetailModal({ card, onClose }: Props) {
 
         {/* short_answer */}
         {q.item && q.type === 'short_answer' && (
-          <div style={{ background: 'rgba(154,112,24,0.04)', border: '1px solid var(--border-dim)', padding: '12px 16px', fontSize: '0.9rem' }}>
+          <div style={{ background: 'rgba(163,34,45,0.04)', border: '1px solid var(--border-dim)', padding: '12px 16px', fontSize: '0.9rem' }}>
             <div style={{ color: 'var(--ink-dim)', fontSize: '0.72rem', marginBottom: 4 }}>Your answer</div>
             <div style={{ color: 'var(--ink)' }}>
               {userAnswer || <span style={{ fontStyle: 'italic', color: 'var(--ink-dim)' }}>No answer provided</span>}
             </div>
             <div style={{ color: 'var(--ink-dim)', fontSize: '0.72rem', marginTop: 10, marginBottom: 4 }}>Reference answer</div>
-            <div style={{ color: '#2a8a3a' }}>{q.item.answer}</div>
+            <div style={{ color: '#1F7A72' }}>{q.item.answer}</div>
           </div>
         )}
       </div>

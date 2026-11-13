@@ -4,18 +4,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        parchment: '#f0e8d5',
-        gold: '#9a7018',
-        'gold-light': '#c89030',
-        'gold-glow': '#e8a820',
-        'gold-dim': '#b8942a',
-        ink: '#2a1f0e',
-        'ink-dim': '#7a6848',
+        paper: '#F3ECE8',
+        lab: '#A3222D',
+        'lab-dark': '#7E1822',
+        rose: '#F6D9DC',
+        'rose-soft': '#FBECEE',
+        ink: '#2B1D1F',
+        'ink-dim': '#6E5E58',
       },
       fontFamily: {
-        cinzel: ['Cinzel', 'serif'],
-        'cinzel-decorative': ['Cinzel Decorative', 'serif'],
-        garamond: ['EB Garamond', 'Georgia', 'serif'],
+        serif: ['Newsreader', 'Georgia', 'serif'],
+        sans: ['IBM Plex Sans', 'system-ui', 'sans-serif'],
+        mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'],
       },
     },
   },

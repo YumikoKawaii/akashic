@@ -81,7 +81,7 @@ export default function Select({ value, onChange, options, placeholder = '', dis
           textAlign: 'left',
           color: selected ? 'var(--ink)' : 'var(--ink-dim)',
           borderColor: open ? 'var(--gold)' : undefined,
-          boxShadow: open ? '0 0 8px rgba(154,112,24,0.15)' : undefined,
+          boxShadow: open ? '0 0 8px rgba(163,34,45,0.15)' : undefined,
           ...triggerStyle,
         }}
       >
@@ -105,7 +105,7 @@ export default function Select({ value, onChange, options, placeholder = '', dis
             zIndex: 9999,
             background: '#f5ecda',
             border: '1px solid var(--gold)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(154,112,24,0.08)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(163,34,45,0.08)',
             maxHeight: 220,
             overflowY: 'auto',
           }}
@@ -117,14 +117,14 @@ export default function Select({ value, onChange, options, placeholder = '', dis
               style={{
                 padding: '8px 12px',
                 fontSize: '0.9rem',
-                fontFamily: 'EB Garamond, serif',
+                fontFamily: 'IBM Plex Sans, sans-serif',
                 color: opt.value === value ? 'var(--gold)' : 'var(--ink)',
-                background: opt.value === value ? 'rgba(154,112,24,0.08)' : 'transparent',
+                background: opt.value === value ? 'rgba(163,34,45,0.08)' : 'transparent',
                 cursor: 'pointer',
                 borderLeft: opt.value === value ? '2px solid var(--gold)' : '2px solid transparent',
                 transition: 'background 0.12s',
               }}
-              onMouseEnter={e => { if (opt.value !== value) (e.currentTarget as HTMLElement).style.background = 'rgba(154,112,24,0.05)' }}
+              onMouseEnter={e => { if (opt.value !== value) (e.currentTarget as HTMLElement).style.background = 'rgba(163,34,45,0.05)' }}
               onMouseLeave={e => { if (opt.value !== value) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
             >
               {opt.label}

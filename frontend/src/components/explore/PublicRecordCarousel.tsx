@@ -1,18 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PublicBank } from '../../types'
-import MagicCircle from '../ui/MagicCircle'
 
 // Cards are books: tall and thin, with a spine on the left and a fore-edge on
 // the right. Thinner than they are tall, so the carousel packs them tighter.
 const SPACING  = 172
 const CARD_W   = 210
 const CARD_H   = 344
-const FRAME    = 'rgba(154,112,24,0.55)'
-const ACCENT   = 'rgba(154,112,24,0.55)'
+const FRAME    = 'rgba(163,34,45,0.55)'
+const ACCENT   = 'rgba(163,34,45,0.55)'
 const ROTATE_MS = 4000
 // Radiant gold aura for the centre card — same treatment as the results carousel.
-const GLOW = 'drop-shadow(0 0 5px rgba(154,112,24,0.55)) drop-shadow(0 0 14px rgba(154,112,24,0.28))'
+const GLOW = 'drop-shadow(0 0 5px rgba(163,34,45,0.55)) drop-shadow(0 0 14px rgba(163,34,45,0.28))'
 
 function mod(n: number, m: number) { return ((n % m) + m) % m }
 
@@ -135,17 +134,13 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
                 display: 'flex', flexDirection: 'column',
                 boxShadow: isCenter ? 'none' : '0 5px 16px rgba(0,0,0,0.12)',
               }}>
-                {/* Magic circle — top-left corner */}
-                <div style={{ position: 'absolute', top: -110, left: -110, width: 230, height: 230, opacity: isCenter ? 0.18 : 0.08, color: 'var(--gold)', pointerEvents: 'none' }}>
-                  <MagicCircle variant="inner" speed={0.4} />
-                </div>
 
                 {/* Cover content */}
                 <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
                   <div style={{ textAlign: 'center', color: 'var(--gold)', fontSize: '1.05rem', lineHeight: 1, marginBottom: 10 }}>◈</div>
 
                   <div style={{
-                    fontFamily: 'Cinzel, serif', fontSize: '0.92rem', color: 'var(--ink)',
+                    fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.92rem', color: 'var(--ink)',
                     textAlign: 'center', lineHeight: 1.3, marginBottom: 10,
                     overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
                   } as React.CSSProperties}>
@@ -169,7 +164,6 @@ export default function PublicRecordCarousel({ records, autoRotate = true }: { r
 
                   <div style={{ marginTop: 10, textAlign: 'center', fontSize: '0.7rem', color: 'var(--ink-dim)', lineHeight: 1.6 }}>
                     <div>{rec.question_count.toLocaleString()} questions</div>
-                    <div>{rec.category_count} categories</div>
                     {rec.owner && <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 4 }}>by {rec.owner.name}</div>}
                   </div>
                 </div>

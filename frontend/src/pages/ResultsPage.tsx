@@ -3,8 +3,7 @@ import { useAttempt } from '../hooks/useAttempts'
 import { Question } from '../types'
 import OrnatePanel from '../components/ui/OrnatePanel'
 import OrnateDivider from '../components/ui/OrnateDivider'
-import Starfield from '../components/ui/Starfield'
-import { Spinner, MagicCircleBackground } from '../components/ui/MagicCircle'
+import Spinner from '../components/ui/Spinner'
 import QuestionCarousel from '../components/results/QuestionCarousel'
 import GradeStamp from '../components/ui/GradeStamp'
 
@@ -40,10 +39,8 @@ export default function ResultsPage() {
 
   if (isError) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <Starfield />
-      <MagicCircleBackground />
       <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center', position: 'relative', zIndex: 1 }}>
-        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>Attempt Not Found</div>
+        <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1rem', color: 'var(--ink)' }}>Attempt Not Found</div>
         <div style={{ fontSize: '0.88rem', color: 'var(--ink-dim)' }}>This attempt could not be loaded — it may have been removed, or you may not have access.</div>
         <button className="btn btn-primary" onClick={() => navigate('/')} style={{ padding: '10px 28px' }}>Go Home</button>
       </div>
@@ -52,8 +49,6 @@ export default function ResultsPage() {
 
   if (!attempt?.test) return (
     <div className="attempt-layout" style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <Starfield />
-      <MagicCircleBackground />
       <Spinner size={100} />
     </div>
   )
@@ -64,15 +59,13 @@ export default function ResultsPage() {
   const questions = attempt.test.questions ?? []
 
   const grade = pct >= 90 ? 'S' : pct >= 75 ? 'A' : pct >= 60 ? 'B' : pct >= 45 ? 'C' : 'D'
-  const gradeColor = { S: '#c89030', A: '#2a8a3a', B: '#3a60c0', C: '#b8942a', D: '#b03030' }[grade]
+  const gradeColor = { S: '#8A1C26', A: '#1F7A72', B: '#3a60c0', C: '#6E5E58', D: '#A3222D' }[grade]
 
   return (
     <>
-      <Starfield />
-      <MagicCircleBackground />
       <div className="attempt-layout">
         <div className="attempt-header">
-          <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'var(--ink)' }}>
+          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '1rem', color: 'var(--ink)' }}>
             {attempt.test.name} — Results
           </div>
           <div className="flex gap-3">
@@ -84,7 +77,7 @@ export default function ResultsPage() {
 
         <div className="attempt-body">
           <OrnatePanel style={{ textAlign: 'center', padding: '40px 60px' } as React.CSSProperties}>
-            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', letterSpacing: '0.3em', color: 'var(--gold-dim)', textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.72rem', letterSpacing: '0.3em', color: 'var(--gold-dim)', textTransform: 'uppercase', marginBottom: 16 }}>
               Final Score
             </div>
             <div className="results-score" style={{ color: gradeColor }}>
